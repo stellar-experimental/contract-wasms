@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to find JSON files with rsver 1.90.0 or 1.90.0-nightly
+# Script to find JSON files with rsver 1.91.0 or 1.91.0-nightly
 # and output filenames with their associated contract instances
 
 for file in meta/*.json; do
@@ -8,7 +8,7 @@ for file in meta/*.json; do
     if [[ -f "$file" && -r "$file" ]]; then
         # Use jq to check if rsver is 1.90.0 or 1.90.0-nightly
         rsver=$(jq -r '.[] | select(.sc_meta_v0.key == "rsver") | .sc_meta_v0.val' "$file" 2>/dev/null)
-        if [[ "$rsver" == "1.90.0" || "$rsver" == "1.90.0-nightly" ]]; then
+        if [[ "$rsver" == "1.91.0" || "$rsver" == "1.91.0-nightly" ]]; then
             # Get filename without .json extension and meta/ prefix
             wasm_hash="${file#meta/}"
             wasm_hash="${wasm_hash%.json}"
