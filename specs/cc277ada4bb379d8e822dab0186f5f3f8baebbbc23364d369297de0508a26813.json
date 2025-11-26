@@ -1,0 +1,390 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LobsterPools",
+      "fields": [
+        {
+          "doc": "The address of the lobster contract for the liquidity pool",
+          "name": "lobster_address",
+          "type_": "address"
+        },
+        {
+          "doc": "The address of the owner of the pool",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "The asset A in the pool together with asset amounts",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "The asset B in the pool together with asset amounts",
+          "name": "token1",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingFeeChange",
+      "fields": [
+        {
+          "doc": "The timestamp when the change was announced",
+          "name": "announcement_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "The timestamp when the change can be executed (announcement + delay)",
+          "name": "execution_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "The new fee value in basis points",
+          "name": "new_fee_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reentrancy guard exit: clears the temporary flag.",
+      "name": "exit_reentrancy",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the Factory contract with admin, WASM hash for deployment, and fee configuration.\\n\\n# Parameters\\n- `admin`: The address of the factory admin who can manage settings\\n- `wasm_hash`: Hash of the Lobster contract WASM for deterministic deployment\\n- `fee_bps`: Default fee percentage in basis points (0-10000, where 10000 = 100%)\\n\\n# Panics\\n- If contract is already initialized\\n- If fee_bps exceeds 10000",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Creates a new Lobster pool for a user with the specified token pair.\\nDeploys a new Lobster contract instance deterministically and registers it.\\n\\n# Parameters\\n- `user`: Address of the user who will own the pool\\n- `token0`: Address of the first token in the pair\\n- `token1`: Address of the second token in the pair\\n\\n# Returns\\nThe address of the newly deployed Lobster contract\\n\\n# Panics\\n- If contract is not initialized\\n- If token0 and token1 are the same\\n- If a pool already exists for this user and token pair\\n- If reentrancy is detected",
+      "name": "create_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the factory admin.\\n\\n# Returns\\nThe admin address stored during initialization\\n\\n# Panics\\nIf contract is not initialized",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the WASM hash used for deploying new Lobster contracts.\\n\\n# Returns\\nThe WASM hash (32 bytes) stored during initialization, or zero hash if not set",
+      "name": "get_wasm_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total number of pools created by this factory.\\n\\n# Returns\\nTotal count of pools created (starts at 0)",
+      "name": "get_pool_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves pool information by its sequential ID.\\n\\n# Parameters\\n- `id`: Sequential pool ID (1-indexed)\\n\\n# Returns\\n`Some(LobsterPools)` if pool exists, `None` otherwise",
+      "name": "get_pool_by_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "LobsterPools"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves pool information by the Lobster contract address.\\n\\n# Parameters\\n- `addr`: Address of the Lobster contract\\n\\n# Returns\\n`Some(LobsterPools)` if pool exists, `None` otherwise",
+      "name": "get_pool_by_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "LobsterPools"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves all pools owned by a specific user.\\n\\n# Parameters\\n- `user`: Address of the user/owner\\n\\n# Returns\\nVector of all LobsterPools owned by the user (empty if none)",
+      "name": "get_pools_by_user",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "LobsterPools"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves all pools for a specific token pair.\\nChecks both (token0, token1) and (token1, token0) orderings.\\n\\n# Parameters\\n- `token0`: Address of the first token\\n- `token1`: Address of the second token\\n\\n# Returns\\nVector of all LobsterPools for this token pair (empty if none)",
+      "name": "get_pools_by_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "LobsterPools"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the factory admin address.\\n\\n# Parameters\\n- `new_admin`: New admin address to set\\n\\n# Access\\nOnly current admin\\n\\n# Panics\\n- If contract is not initialized\\n- If caller is not the current admin",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the WASM hash used for deploying new Lobster contracts.\\n\\n# Parameters\\n- `wasm_hash`: New WASM hash (32 bytes) to use for deployments\\n\\n# Access\\nOnly admin\\n\\n# Panics\\n- If contract is not initialized\\n- If caller is not the admin",
+      "name": "set_wasm_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Announces a fee change, starting a 2-week delay period before execution.\\nThis provides transparency and allows users to prepare for fee changes.\\n\\n# Parameters\\n- `new_fee_bps`: New fee value in basis points (0-10000, where 10000 = 100%)\\n\\n# Access\\nOnly admin\\n\\n# Panics\\n- If contract is not initialized\\n- If caller is not the admin\\n- If new_fee_bps exceeds 10000\\n- If a fee change is already pending",
+      "name": "announce_fee_change",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Executes the previously announced fee change after the 2-week delay period.\\nUpdates the fee and clears the pending change.\\n\\n# Access\\nOnly admin\\n\\n# Panics\\n- If contract is not initialized\\n- If caller is not the admin\\n- If no fee change has been announced\\n- If the delay period has not yet passed",
+      "name": "execute_fee_change",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AlreadyExists",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PoolAlreadyExists",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PoolNotFound",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "PoolNotOwned",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "PoolNotActive",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "PoolNotValid",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InitializeFailed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "FeeChangeNotAnnounced",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "FeeChangeNotReady",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeValue",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "FeeChangeAlreadyPending",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidPoolTokens",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "ContractMathError",
+          "value": 15
+        }
+      ]
+    }
+  }
+]
