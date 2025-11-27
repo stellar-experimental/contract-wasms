@@ -1,0 +1,786 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Match not found",
+          "name": "MatchNotFound",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not a player in this match",
+          "name": "NotPlayer",
+          "value": 2
+        },
+        {
+          "doc": "Player has already committed this round",
+          "name": "AlreadyCommitted",
+          "value": 3
+        },
+        {
+          "doc": "Player has already revealed this round",
+          "name": "AlreadyRevealed",
+          "value": 4
+        },
+        {
+          "doc": "Cannot reveal before committing",
+          "name": "NotCommitted",
+          "value": 5
+        },
+        {
+          "doc": "Both players must commit before revealing",
+          "name": "WaitingForCommits",
+          "value": 6
+        },
+        {
+          "doc": "Invalid choice (must be 0=Rock, 1=Paper, 2=Scissors)",
+          "name": "InvalidChoice",
+          "value": 7
+        },
+        {
+          "doc": "Revealed choice doesn't match commitment",
+          "name": "CommitmentMismatch",
+          "value": 8
+        },
+        {
+          "doc": "Match has already ended",
+          "name": "MatchAlreadyEnded",
+          "value": 9
+        },
+        {
+          "doc": "Cannot play against yourself",
+          "name": "SelfPlay",
+          "value": 10
+        },
+        {
+          "doc": "Round is not complete yet",
+          "name": "RoundNotComplete",
+          "value": 11
+        },
+        {
+          "doc": "Timeout: player failed to act in time",
+          "name": "Timeout",
+          "value": 12
+        },
+        {
+          "doc": "Player is already in queue",
+          "name": "AlreadyInQueue",
+          "value": 13
+        },
+        {
+          "doc": "Player is not in queue",
+          "name": "NotInQueue",
+          "value": 14
+        },
+        {
+          "doc": "Player is already in an active match",
+          "name": "AlreadyInMatch",
+          "value": 15
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Match state",
+      "lib": "",
+      "name": "Match",
+      "fields": [
+        {
+          "doc": "Current round number (starts at 1)",
+          "name": "current_round",
+          "type_": "u32"
+        },
+        {
+          "doc": "Current phase",
+          "name": "phase",
+          "type_": {
+            "udt": {
+              "name": "MatchPhase"
+            }
+          }
+        },
+        {
+          "doc": "Timestamp when current phase started (for timeout handling)",
+          "name": "phase_started_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Player 1 address",
+          "name": "player1",
+          "type_": "address"
+        },
+        {
+          "doc": "Player 1's revealed choice for current round",
+          "name": "player1_choice",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Player 1's commitment for current round",
+          "name": "player1_commit",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Player 1 score (rounds won)",
+          "name": "player1_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "Player 1 wager (FP)",
+          "name": "player1_wager",
+          "type_": "i128"
+        },
+        {
+          "doc": "Player 2 address",
+          "name": "player2",
+          "type_": "address"
+        },
+        {
+          "doc": "Player 2's revealed choice for current round",
+          "name": "player2_choice",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Player 2's commitment for current round",
+          "name": "player2_commit",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Player 2 score (rounds won)",
+          "name": "player2_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "Player 2 wager (FP)",
+          "name": "player2_wager",
+          "type_": "i128"
+        },
+        {
+          "doc": "Winner address (None until match ends)",
+          "name": "winner",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Rock = 0, Paper = 1, Scissors = 2",
+      "lib": "",
+      "name": "Choice",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Rock",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Paper",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Scissors",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Match",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BlendizzardAddress"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Timeout duration in seconds (default: 5 minutes = 300)",
+            "name": "TimeoutSeconds"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The matchmaking queue (single waiting player for simplicity)",
+            "name": "Queue"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next session ID counter",
+            "name": "NextSessionId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Player's current active match (player address -> session_id)",
+            "name": "PlayerMatch",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Current phase of the match",
+      "lib": "",
+      "name": "MatchPhase",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Waiting for both players to commit",
+            "name": "Committing"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Waiting for both players to reveal",
+            "name": "Revealing"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Match is complete",
+            "name": "Complete"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Queue entry for matchmaking",
+      "lib": "",
+      "name": "QueueEntry",
+      "fields": [
+        {
+          "doc": "Player address",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "Timestamp when queued",
+          "name": "queued_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Wager amount (FP)",
+          "name": "wager",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Result of find_match call",
+      "lib": "",
+      "name": "FindMatchResult",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Player added to queue, waiting for opponent",
+            "name": "Queued"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Match found! Contains session_id and opponent address",
+            "name": "Matched",
+            "type_": [
+              "u32",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Commit a choice for the current round\\n\\nCommitment = keccak256(choice || salt || session_id || round)\\nwhere choice is 0, 1, or 2 as a single byte",
+      "name": "commit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reveal a choice for the current round\\n\\nThe contract verifies that keccak256(choice || salt || session_id || round)\\nmatches the player's commitment.",
+      "name": "reveal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "choice",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the contract WASM hash (upgrade contract)",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current admin address",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get match information",
+      "name": "get_match",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Match"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current queue status",
+      "name": "get_queue",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "QueueEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new admin address",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Find a match - either join queue (maker) or match with waiting player (taker)\\n\\nIf no one is waiting: Player joins queue, returns Queued\\nIf someone is waiting: Match is created, returns Matched(session_id, opponent)\\n\\nWager amount must be specified. For now, any wager matches any other.\\nFuture: Could add wager-tier matching.",
+      "name": "find_match",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wager",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "FindMatchResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the timeout duration",
+      "name": "get_timeout",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the timeout duration",
+      "name": "set_timeout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "timeout_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Start a new match between two players (legacy - use find_match instead)\\n\\nBoth players must authorize with their wagers.\\nThis creates a session in Blendizzard and locks FP.",
+      "name": "start_match",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "player1",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "player2",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "player1_wager",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "player2_wager",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel queue - remove yourself from the matchmaking queue",
+      "name": "cancel_queue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with Blendizzard address and admin",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blendizzard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim victory by timeout if opponent hasn't acted\\n\\nCan be called if the opponent hasn't committed or revealed\\nwithin the timeout period.",
+      "name": "claim_timeout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "claimer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current Blendizzard contract address",
+      "name": "get_blendizzard",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new Blendizzard contract address",
+      "name": "set_blendizzard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_blendizzard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get player's current active match session ID",
+      "name": "get_player_match",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Clear the Blendizzard contract address (disables Blendizzard integration)",
+      "name": "clear_blendizzard",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute a commitment hash\\n\\nThis is a helper for the frontend to compute commitments.\\ncommitment = keccak256(choice || salt || session_id || round)",
+      "name": "compute_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "choice",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "round",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  }
+]
