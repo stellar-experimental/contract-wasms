@@ -1,0 +1,2512 @@
+[
+  {
+    "function_v0": {
+      "doc": "Initialize the incentives contract\\n\\n# Arguments\\n- `emission_manager`: Address authorized to configure rewards\\n- `lending_pool`: Address authorized to call `handle_action`",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "emission_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lending_pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Handle action called by token contracts (aToken/debtToken) when balances change\\n\\nThis is the core function that updates reward indices and calculates user rewards.\\nCalled after balance updates (mint/burn) to update rewards.\\n\\nFollowing Aave's pattern: the asset is determined by the token_address parameter (which should\\nbe the token contract calling this). This makes it safe for anyone to call with arbitrary parameters -\\nif the token_address is not a registered reward-bearing asset, the function simply returns without doing anything.\\n\\n# Arguments\\n- `token_address`: The aToken or debtToken address (the asset identifier)\\n- `user`: The user address whose balance changed\\n- `total_supply`: Total scaled supply/borrow for the asset\\n- `user_balance`: User's scaled balance\\n- `reward_type`: 0 for supply, 1 for borrow\\n\\n# Security\\n- Asset is determined by `token_address` parameter (following Aave's msg.sender pattern)\\n- If token_address is not a registered asset, function returns early (no-op)\\n- Parameters cannot affect re",
+      "name": "handle_action",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_supply",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "user_balance",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim rewards for specific assets and reward token\\n\\n# Arguments\\n- `caller`: Address calling the function (must be authorized)\\n- `assets`: List of assets to claim rewards for\\n- `reward_token`: The reward token to claim\\n- `amount`: Amount to claim (0 = claim all available)\\n- `to`: Address to receive the rewards\\n\\n# Returns\\nThe amount of rewards actually claimed\\n\\n# Errors\\nReturns `InsufficientRewards` if `amount > 0` and the requested amount exceeds\\nthe total claimable rewards across all assets and reward types.",
+      "name": "claim_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim all rewards for all configured reward tokens\\n\\nThis function batches transfers by reward token to reduce gas costs.\\nInstead of one transfer per (asset, reward_token, reward_type) combination,\\nit accumulates all rewards per reward token and does a single transfer per token.\\n\\n# Gas Optimization\\n- **Before**: N transfers for N reward positions (e.g., 3 assets \\xc3\\x97 2 tokens \\xc3\\x97 2 types = 12 transfers)\\n- **After**: M transfers for M unique reward tokens (e.g., 2 transfers for 2 unique tokens)\\n- **Savings**: Reduces transfers from O(assets \\xc3\\x97 tokens \\xc3\\x97 types) to O(unique_tokens)\\n\\n# Arguments\\n- `caller`: Address calling the function (must be authorized)\\n- `assets`: List of assets to claim rewards for\\n- `to`: Address to receive the rewards",
+      "name": "claim_all_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure asset rewards (admin function)\\n\\nFollowing Aave's pattern: rewards are configured per token contract (aToken/debtToken),\\nnot per underlying asset. The `asset` parameter is the token address that will call handle_action.\\n\\n# Arguments\\n- `caller`: Must be emission_manager\\n- `asset`: The token address (aToken or debtToken) - this is the asset identifier\\n- `reward_token`: The reward token to distribute\\n- `reward_type`: 0 for supply, 1 for borrow\\n- `emission_per_second`: Emission rate in reward tokens per second\\n- `distribution_end`: Distribution end timestamp (0 = no end)",
+      "name": "configure_asset_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "emission_per_second",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "distribution_end",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set emission per second for an asset reward (admin function)\\n\\n# Arguments\\n- `caller`: Must be emission_manager\\n- `asset`: The underlying asset address\\n- `reward_token`: The reward token address\\n- `reward_type`: 0 for supply, 1 for borrow\\n- `new_emission_per_second`: New emission rate",
+      "name": "set_emission_per_second",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "new_emission_per_second",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set distribution end timestamp (admin function)\\n\\n# Arguments\\n- `caller`: Must be emission_manager\\n- `asset`: The underlying asset address\\n- `reward_token`: The reward token address\\n- `reward_type`: 0 for supply, 1 for borrow\\n- `new_distribution_end`: New distribution end timestamp (0 = no end)",
+      "name": "set_distribution_end",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "new_distribution_end",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove/deactivate asset reward (admin function)\\n\\n# Arguments\\n- `caller`: Must be emission_manager\\n- `asset`: The underlying asset address\\n- `reward_token`: The reward token address\\n- `reward_type`: 0 for supply, 1 for borrow",
+      "name": "remove_asset_reward",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause the incentives contract (emergency admin function)\\n\\nWhen paused, users cannot claim rewards. Admin functions remain available.\\nRewards continue to accrue via `handle_action`, but claims are blocked.\\n\\n# Arguments\\n- `caller`: Must be emission_manager",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpause the incentives contract (emergency admin function)\\n\\n# Arguments\\n- `caller`: Must be emission_manager",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if the contract is paused\\n\\n# Returns\\n`true` if paused, `false` otherwise",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fund the contract with reward tokens (admin function)\\n\\nTransfers reward tokens from the emission manager to the contract.\\nThe contract must be funded before users can claim rewards.\\n\\n# Arguments\\n- `caller`: Must be emission_manager\\n- `reward_token`: The reward token address to fund\\n- `amount`: Amount of reward tokens to transfer to the contract",
+      "name": "fund_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "IncentivesError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get asset reward configuration",
+      "name": "get_asset_reward_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "AssetRewardConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get asset reward index",
+      "name": "get_asset_reward_index",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AssetRewardIndex"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get user reward data",
+      "name": "get_user_reward_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UserRewardData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get user's accrued rewards",
+      "name": "get_user_accrued_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all configured assets",
+      "name": "get_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get reward tokens for an asset",
+      "name": "get_reward_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the contract's balance for a reward token\\n\\nReturns the amount of reward tokens held by the contract.\\nThis can be used to check if the contract has sufficient funds\\nto cover pending reward claims.\\n\\n# Arguments\\n- `reward_token`: The reward token address to check\\n\\n# Returns\\nThe contract's balance of the reward token",
+      "name": "get_reward_token_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Incentives contract errors",
+      "lib": "",
+      "name": "IncentivesError",
+      "cases": [
+        {
+          "doc": "Contract already initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Unauthorized access",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "Invalid reward type (must be 0 for supply or 1 for borrow)",
+          "name": "InvalidRewardType",
+          "value": 4
+        },
+        {
+          "doc": "Asset reward configuration not found",
+          "name": "AssetRewardConfigNotFound",
+          "value": 5
+        },
+        {
+          "doc": "Math overflow occurred during calculation",
+          "name": "MathOverflow",
+          "value": 6
+        },
+        {
+          "doc": "Insufficient rewards available to claim",
+          "name": "InsufficientRewards",
+          "value": 7
+        },
+        {
+          "doc": "Contract is paused",
+          "name": "ContractPaused",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when rewards are claimed",
+      "lib": "",
+      "name": "RewardsClaimedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when asset rewards are configured",
+      "lib": "",
+      "name": "AssetRewardConfiguredEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "distribution_end",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "emission_per_second",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when emission rate is updated",
+      "lib": "",
+      "name": "EmissionRateUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_emission_per_second",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when distribution end is updated",
+      "lib": "",
+      "name": "DistributionEndUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_distribution_end",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when asset reward is removed/deactivated",
+      "lib": "",
+      "name": "AssetRewardRemovedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when rewards are updated for a user",
+      "lib": "",
+      "name": "RewardUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_accrued",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "total_accrued",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "updated_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when rewards are funded to the contract",
+      "lib": "",
+      "name": "RewardsFundedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "funder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when contract is paused",
+      "lib": "",
+      "name": "ContractPausedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "paused_by",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when contract is unpaused",
+      "lib": "",
+      "name": "ContractUnpausedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "unpaused_by",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Asset reward configuration",
+      "lib": "",
+      "name": "AssetRewardConfig",
+      "fields": [
+        {
+          "doc": "Distribution end timestamp (0 = no end)",
+          "name": "distribution_end",
+          "type_": "u64"
+        },
+        {
+          "doc": "Emission rate in reward tokens per second",
+          "name": "emission_per_second",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether rewards are currently active",
+          "name": "is_active",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Asset reward index tracking global reward accumulation",
+      "lib": "",
+      "name": "AssetRewardIndex",
+      "fields": [
+        {
+          "doc": "Current reward index (scaled by RAY)",
+          "name": "index",
+          "type_": "u128"
+        },
+        {
+          "doc": "Last time the index was updated",
+          "name": "last_update_timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "User reward data tracking individual user rewards",
+      "lib": "",
+      "name": "UserRewardData",
+      "fields": [
+        {
+          "doc": "Total accrued rewards (not yet claimed)",
+          "name": "accrued",
+          "type_": "u128"
+        },
+        {
+          "doc": "Balance snapshot when user last interacted (prevents front-running)",
+          "name": "balance_snapshot",
+          "type_": "u128"
+        },
+        {
+          "doc": "Index snapshot when user last interacted",
+          "name": "index_snapshot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KineticRouterError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AssetNotActive",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AssetFrozen",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "AssetPaused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "BorrowingNotEnabled",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "StableBorrowingNotEnabled",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InsufficientCollateral",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "HealthFactorLowerThanLiquidationThreshold",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidInterestRateMode",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "PriceOracleNotFound",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiquidation",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "LiquidationAmountTooHigh",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NoDebtOfRequestedType",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidFlashLoanParams",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanNotAuthorized",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "IsolationModeViolation",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "SupplyCapExceeded",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "BorrowCapExceeded",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "DebtCeilingExceeded",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "UserInIsolationMode",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "ReserveNotFound",
+          "value": 24
+        },
+        {
+          "doc": "",
+          "name": "UserNotFound",
+          "value": 25
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 26
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 27
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 28
+        },
+        {
+          "doc": "",
+          "name": "ReserveAlreadyInitialized",
+          "value": 29
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanExecutionFailed",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanNotRepaid",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLiquidityForFlashLoan",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLiquidity",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "ATokenMintFailed",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "ATokenBurnFailed",
+          "value": 46
+        },
+        {
+          "doc": "",
+          "name": "DebtTokenMintFailed",
+          "value": 34
+        },
+        {
+          "doc": "",
+          "name": "UnderlyingTransferFailed",
+          "value": 35
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanTransferFailed",
+          "value": 36
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 37
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 38
+        },
+        {
+          "doc": "",
+          "name": "InsufficientSwapOut",
+          "value": 39
+        },
+        {
+          "doc": "",
+          "name": "MinProfitNotMet",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "TreasuryNotSet",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "AMMRequired",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedAMM",
+          "value": 44
+        },
+        {
+          "doc": "",
+          "name": "AdapterNotInitialized",
+          "value": 45
+        },
+        {
+          "doc": "",
+          "name": "WASMHashNotSet",
+          "value": 47
+        },
+        {
+          "doc": "",
+          "name": "TokenDeploymentFailed",
+          "value": 48
+        },
+        {
+          "doc": "",
+          "name": "TokenInitializationFailed",
+          "value": 49
+        },
+        {
+          "doc": "",
+          "name": "AddressNotWhitelisted",
+          "value": 50
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AssetPriceNotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "PriceSourceNotSet",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidPriceSource",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PriceTooOld",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PriceHeartbeatExceeded",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AssetNotWhitelisted",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AssetDisabled",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "OracleQueryFailed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidCalculation",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "FallbackNotImplemented",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "AssetAlreadyWhitelisted",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "PriceManipulationDetected",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "PriceChangeTooLarge",
+          "value": 16
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "TransferFailed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "MintFailed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BurnFailed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidRecipient",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TokenNotFound",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SupplyEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BorrowEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "borrow_rate_mode",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RepayEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "repayer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "use_a_tokens",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LiquidationCallEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidated_collateral_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "liquidator_collateral",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "receive_a_token",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LiquidationFeeTransferFailedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashLoanEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "premium",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveUsedAsCollateralEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveDataUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "stable_borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_rate",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AMMRouterUpdated",
+      "fields": [
+        {
+          "doc": "",
+          "name": "added",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "configuration",
+          "type_": {
+            "udt": {
+              "name": "ReserveConfiguration"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "current_liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "current_variable_borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_strategy_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "last_update_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_index",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Bitmap layout:\\ndata_low: LTV (0-13), liquidation_threshold (14-27), liquidation_bonus (28-41),\\ndecimals (42-49), flags (50-56), reserve_factor (57-70)\\ndata_high: borrow_cap (0-63), supply_cap (64-127)",
+      "lib": "",
+      "name": "ReserveConfiguration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data_high",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "data_low",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Bitmap: each pair of bits = [collateral, borrowed] for reserve index",
+      "lib": "",
+      "name": "UserConfiguration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Isolation mode configuration",
+      "lib": "",
+      "name": "IsolationModeData",
+      "fields": [
+        {
+          "doc": "Maximum debt ceiling for isolated asset",
+          "name": "debt_ceiling",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether isolation mode is enabled",
+          "name": "isolation_mode_enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Current total debt for isolated asset",
+          "name": "total_debt",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Interest rate calculation parameters",
+      "lib": "",
+      "name": "InterestRateData",
+      "fields": [
+        {
+          "doc": "Available liquidity in the reserve",
+          "name": "available_liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Reserve factor",
+          "name": "reserve_factor",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total variable debt",
+          "name": "total_variable_debt",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Liquidation call parameters",
+      "lib": "",
+      "name": "LiquidationCallParams",
+      "fields": [
+        {
+          "doc": "Collateral asset to liquidate",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Debt asset to repay",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount of debt to cover",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether to receive aToken or underlying asset",
+          "name": "receive_a_token",
+          "type_": "bool"
+        },
+        {
+          "doc": "User being liquidated",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash loan parameters",
+      "lib": "",
+      "name": "FlashLoanParams",
+      "fields": [
+        {
+          "doc": "Amounts to flash loan",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "u128"
+            }
+          }
+        },
+        {
+          "doc": "Assets to flash loan",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Interest rate modes (0 = no open debt, 1 = variable)",
+          "name": "modes",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "User on whose behalf the flash loan is taken",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "Additional parameters for flash loan callback",
+          "name": "params",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash loan fee configuration",
+      "lib": "",
+      "name": "FlashLoanConfig",
+      "fields": [
+        {
+          "doc": "Flash loan fee in basis points (e.g., 30 = 0.3%)",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Flash loan premium to protocol (vs LP suppliers)",
+          "name": "premium_to_protocol",
+          "type_": "u128"
+        },
+        {
+          "doc": "Flash loan premium percentage (total to protocol)",
+          "name": "premium_total",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "User account data",
+      "lib": "",
+      "name": "UserAccountData",
+      "fields": [
+        {
+          "doc": "Available borrows in base currency",
+          "name": "available_borrows_base",
+          "type_": "u128"
+        },
+        {
+          "doc": "Current liquidation threshold",
+          "name": "current_liquidation_threshold",
+          "type_": "u128"
+        },
+        {
+          "doc": "Health factor",
+          "name": "health_factor",
+          "type_": "u128"
+        },
+        {
+          "doc": "Loan to value ratio",
+          "name": "ltv",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total collateral in base currency",
+          "name": "total_collateral_base",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total debt in base currency",
+          "name": "total_debt_base",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash liquidation validation parameters\\nPassed to helper contract to reduce parameter count",
+      "lib": "",
+      "name": "FlashLiquidationValidationParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_reserve",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "collateral_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_balance",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_reserve",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_output_bps",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_swap_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash liquidation validation result\\nReturned by the flash liquidation helper contract",
+      "lib": "",
+      "name": "FlashLiquidationValidationResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_amount_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover_base",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "effective_min_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "expected_debt_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "total_debt_base",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Calculated interest rates from strategy",
+      "lib": "",
+      "name": "CalculatedRates",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_rate",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Reserve initialization parameters",
+      "lib": "",
+      "name": "InitReserveParams",
+      "fields": [
+        {
+          "doc": "Borrow cap in whole tokens (e.g., 500000 = 500K tokens)\\nWhen checking caps, multiply by 10^decimals to get smallest units",
+          "name": "borrow_cap",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether borrowing is enabled",
+          "name": "borrowing_enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Number of decimals for the asset",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether flash loans are enabled",
+          "name": "flashloan_enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Liquidation bonus (in basis points)",
+          "name": "liquidation_bonus",
+          "type_": "u32"
+        },
+        {
+          "doc": "Liquidation threshold (in basis points)",
+          "name": "liquidation_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "Loan to value ratio (in basis points)",
+          "name": "ltv",
+          "type_": "u32"
+        },
+        {
+          "doc": "Reserve factor (in basis points)",
+          "name": "reserve_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "Supply cap in whole tokens (e.g., 1000000 = 1M tokens)\\nWhen checking caps, multiply by 10^decimals to get smallest units",
+          "name": "supply_cap",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Asset identifier for price queries",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Price data returned from oracle",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Asset configuration for whitelist",
+      "lib": "",
+      "name": "AssetConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "manual_override_price",
+          "type_": {
+            "option": {
+              "value_type": "u128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle configuration settings",
+      "lib": "",
+      "name": "OracleConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "basis_points",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "conversion_factor",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "ltv_precision",
+          "type_": "u128"
+        },
+        {
+          "doc": "Circuit breaker: max price change between consecutive queries in basis points.\\nDefault: 2000 = 20%. Prevents oracle failures from causing extreme price jumps.\\nSet to 0 to disable. See L-8 security audit finding.",
+          "name": "max_price_change_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_price_deviation_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price_precision",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price_staleness_threshold",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "twap_periods",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "use_twap",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "wad_precision",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of atomic flash liquidation",
+      "lib": "",
+      "name": "LiquidationResult",
+      "fields": [
+        {
+          "doc": "Amount of collateral seized from user",
+          "name": "collateral_seized",
+          "type_": "u128"
+        },
+        {
+          "doc": "Debt asset address (needed for profit distribution)",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount of debt repaid",
+          "name": "debt_repaid",
+          "type_": "u128"
+        },
+        {
+          "doc": "Liquidator's profit after covering debt + fees",
+          "name": "profit",
+          "type_": "u128"
+        },
+        {
+          "doc": "Protocol fee charged from liquidation",
+          "name": "protocol_fee",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Soroswap configuration settings",
+      "lib": "",
+      "name": "SoroswapConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "factory_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router_address",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Internal debt tracking during flash loan execution",
+      "lib": "",
+      "name": "FlashLoanDebt",
+      "fields": [
+        {
+          "doc": "Asset being borrowed",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Initial balance before flash loan",
+          "name": "initial_balance",
+          "type_": "u128"
+        },
+        {
+          "doc": "Premium amount only",
+          "name": "premium",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total amount owed (principal + premium)",
+          "name": "total_owed",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Liquidation callback parameters for flash loan-based liquidation",
+      "lib": "",
+      "name": "LiquidationCallbackParams",
+      "fields": [
+        {
+          "doc": "Collateral asset to seize",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Collateral price from oracle (validated at call time)",
+          "name": "collateral_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "Collateral amount to seize",
+          "name": "collateral_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "Deadline timestamp",
+          "name": "deadline_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "Debt asset to repay",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Debt price from oracle (validated at call time)",
+          "name": "debt_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "Amount of debt to cover",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "Liquidator address (receives profit)",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "Minimum swap output for slippage protection",
+          "name": "min_swap_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "User being liquidated",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error conditions for upgradeable contract operations.",
+      "lib": "",
+      "name": "UpgradeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidWasmHash",
+          "value": 2
+        }
+      ]
+    }
+  }
+]
