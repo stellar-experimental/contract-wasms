@@ -1,0 +1,1170 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AutoUnstakeInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "stake_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "stake_timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Contains all pool and router addresses for different protocols",
+      "lib": "",
+      "name": "PoolAddresses",
+      "fields": [
+        {
+          "doc": "Aquarius pool address",
+          "name": "aquarius_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Phoenix pool address",
+          "name": "phoenix_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Soroswap pool address",
+          "name": "soroswap_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Soroswap router address",
+          "name": "soroswap_router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for withdraw operations (different pools need different params)",
+      "lib": "",
+      "name": "WithdrawParams",
+      "fields": [
+        {
+          "doc": "Minimum amount of token0 to receive (i128 for Soroswap/Phoenix, u128 for Aquarius)\\nFor Aquarius, this will be cast from u128",
+          "name": "amount0_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Minimum amount of token1 to receive (i128 for Soroswap/Phoenix, u128 for Aquarius)\\nFor Aquarius, this will be cast from u128",
+          "name": "amount1_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount LP for Phoenix (optional, usually not needed as we withdraw all)",
+          "name": "amount_lp",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Auto-unstake flag for Phoenix (optional)",
+          "name": "auto_unstake",
+          "type_": {
+            "option": {
+              "value_type": "bool"
+            }
+          }
+        },
+        {
+          "doc": "Deadline for Soroswap/Phoenix (ledger number)",
+          "name": "deadline",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for add liquidity operations (different pools need different params)",
+      "lib": "",
+      "name": "AddLiquidityParams",
+      "fields": [
+        {
+          "doc": "Amount of token0 to add (optional - if None, uses contract balance)",
+          "name": "amount0",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Minimum amount of token0 to add (slippage protection)",
+          "name": "amount0_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount of token1 to add (optional - if None, uses contract balance)",
+          "name": "amount1",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Minimum amount of token1 to add (slippage protection)",
+          "name": "amount1_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Deadline for Soroswap/Phoenix (ledger number)",
+          "name": "deadline",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        },
+        {
+          "doc": "Slippage for Phoenix (optional, in basis points)",
+          "name": "slippage",
+          "type_": {
+            "option": {
+              "value_type": "i64"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the Lobster contract with owner, multisig admin, token pair, and fee configuration.\\n\\n# Parameters\\n- `owner`: The address of the pool owner who can manage positions\\n- `multisig`: The address of the multisig admin (LOBSTER) that can also manage positions\\n- `token0`: Address of the first token in the pair\\n- `token1`: Address of the second token in the pair\\n- `fee_cut_bps`: Fee percentage in basis points (0-10000, where 10000 = 100%)\\n\\n# Panics\\n- If contract is already initialized\\n- If fee_cut_bps exceeds 10000",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "multisig",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_cut_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reentrancy guard exit: clears the temporary flag.",
+      "name": "exit_reentrancy",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency function to reset reentrancy flag if it gets stuck.\\nThis can happen if a panic occurs after `enter_reentrancy` but before `exit_reentrancy`.\\nThe flag will eventually expire with temporary storage TTL, but this provides immediate recovery.\\n\\n# Parameters\\n- `caller`: The address calling this function (must be owner or admin)\\n\\n# Access\\nOnly owner or multisig admin\\n\\n# Panics\\n- If caller is not owner or admin",
+      "name": "reset_reentrancy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extends TTL for all critical storage entries to maximum (6 months).\\nThis should be called at the start of public functions to ensure all data remains accessible.\\n\\nExtends TTL for:\\n- Contract instance (instance storage)\\n- All persistent storage keys (OWNER, LOBSTER, TOKEN0, TOKEN1, FEE_CUT_BPS,\\nACT_DEX, ACT_SHARE, ACT_POOL, ACT_ROUTER, LAST_POOL_BALANCE_A, LAST_POOL_BALANCE_B,\\nTOKEN0_TVL, TOKEN1_TVL)\\n\\nThis function is safe to call multiple times and only extends TTL if entries exist.",
+      "name": "extend_all_storage_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the contract owner.\\n\\n# Returns\\nThe owner address stored during initialization\\n\\n# Panics\\nIf contract is not initialized",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the multisig admin (LOBSTER).\\n\\n# Returns\\nThe multisig admin address stored during initialization\\n\\n# Panics\\nIf contract is not initialized",
+      "name": "get_multisig",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the multisig admin (LOBSTER) address.\\n\\n# Parameters\\n- `caller`: Must be either the pool owner or current multisig admin\\n- `new_multisig`: The new multisig admin address to store\\n\\n# Access\\nOnly owner or multisig admin\\n\\n# Panics\\n- If contract is not initialized\\n- If caller is not authorized",
+      "name": "set_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_multisig",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the first token (token0) in the pair.\\n\\n# Returns\\nThe token0 address stored during initialization\\n\\n# Panics\\nIf contract is not initialized",
+      "name": "get_token0",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the second token (token1) in the pair.\\n\\n# Returns\\nThe token1 address stored during initialization\\n\\n# Panics\\nIf contract is not initialized",
+      "name": "get_token1",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the currently active DEX protocol identifier.\\n\\n# Returns\\nProtocol identifier: 0 = Soroswap, 1 = Phoenix, 2 = Aquarius, 5 = No active position\\n\\n# Panics\\nIf contract is not initialized",
+      "name": "get_active_protocol",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the currently active liquidity pool.\\n\\n# Returns\\nThe pool address where liquidity is currently deployed\\n\\n# Panics\\nIf contract is not initialized or no active pool exists",
+      "name": "get_actual_pool",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the currently active router (for Soroswap).\\n\\n# Returns\\nThe router address used for Soroswap operations\\n\\n# Panics\\nIf contract is not initialized or no active router exists",
+      "name": "get_actual_router",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the LP token/share token for the active position.\\n\\n# Returns\\nThe LP token address representing the current liquidity position\\n\\n# Panics\\nIf contract is not initialized or no active position exists",
+      "name": "get_actual_share",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pull tokens from `caller` into this contract using `transfer_from`.\\nAccess: only `owner` or multisig `admin`.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw tokens that were accidentally sent to the contract.\\nAllows owner or multisig admin to recover tokens that don't belong to the pool.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `token_address`: Address of the token contract to withdraw\\n- `amount`: Amount of tokens to withdraw\\n\\n# Access\\nOnly owner or multisig admin\\n\\n# Panics\\n- If caller is not authorized\\n- If amount is negative\\n- If token transfer fails",
+      "name": "withdraw_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for adding liquidity to a Phoenix pool.\\nValidates access and delegates to internal implementation.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `amount0`: Desired amount of token0 to add\\n- `amount1`: Desired amount of token1 to add\\n- `amount0_min`: Minimum amount of token0 to accept (slippage protection)\\n- `amount1_min`: Minimum amount of token1 to accept (slippage protection)\\n- `pool_address`: Address of the Phoenix pool\\n- `deadline`: Ledger number deadline for the transaction\\n- `slippage`: Allowed slippage in basis points\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "add_liquidity_phoenix",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount0_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "slippage",
+          "type_": "i64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Calculates optimal deposit amounts for adding liquidity while maintaining pool ratio.\\nEnsures amounts respect minimum requirements and allowed slippage.\\n\\n# Parameters\\n- `desired_a`: Desired amount of token A to deposit\\n- `min_a`: Optional minimum amount of token A (slippage protection)\\n- `desired_b`: Desired amount of token B to deposit\\n- `min_b`: Optional minimum amount of token B (slippage protection)\\n- `pool_balance_a`: Current balance of token A in the pool\\n- `pool_balance_b`: Current balance of token B in the pool\\n- `my_allowed_slippage`: Allowed slippage in basis points\\n\\n# Returns\\nTuple of (optimal_amount_a, optimal_amount_b) that maintains pool ratio\\n\\n# Panics\\n- If desired amounts are <= 0\\n- If min amounts are negative\\n- If calculated amounts exceed allowed slippage\\n- If calculated amounts are below minimum requirements",
+      "name": "get_deposit_amounts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "desired_a",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_a",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "desired_b",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_b",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_balance_a",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool_balance_b",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "my_allowed_slippage",
+          "type_": "i64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for adding liquidity to a Soroswap pool via router.\\nValidates access and delegates to internal implementation.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `amount0`: Desired amount of token0 to add\\n- `amount1`: Desired amount of token1 to add\\n- `amount0_min`: Minimum amount of token0 to accept (slippage protection)\\n- `amount1_min`: Minimum amount of token1 to accept (slippage protection)\\n- `deadline_ledger`: Ledger number deadline for the transaction\\n- `router_address`: Address of the Soroswap router\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "add_liquidity_soroswap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount0_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "router_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for adding liquidity to an Aquarius pool.\\nValidates access and delegates to internal implementation.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `amount0`: Amount of token0 to add\\n- `amount1`: Amount of token1 to add\\n- `pool_address`: Address of the Aquarius pool\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "add_liquidity_aquarius",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for withdrawing all liquidity from an Aquarius pool.\\nValidates access and delegates to internal implementation.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `pool_address`: Address of the Aquarius pool to withdraw from\\n- `amount0_min`: Minimum amount of token0 to receive (slippage protection)\\n- `amount1_min`: Minimum amount of token1 to receive (slippage protection)\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "withdraw_aquarius",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_min",
+          "type_": "u128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current LP token balance and LP token address for an Aquarius pool.\\n\\n# Parameters\\n- `pool_address`: Address of the Aquarius pool\\n\\n# Returns\\nTuple of (lp_balance, lp_token_address) - current LP balance and LP token contract address\\n\\n# Panics\\nIf pool queries fail",
+      "name": "get_lp_aquarius",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for withdrawing all liquidity from a Phoenix pool.\\nValidates access and delegates to internal implementation.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `pool_address`: Address of the Phoenix pool to withdraw from\\n- `amount0_min`: Minimum amount of token0 to receive (slippage protection)\\n- `amount1_min`: Minimum amount of token1 to receive (slippage protection)\\n- `deadline`: Ledger number deadline for the transaction\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "withdraw_phoenix",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current LP token balance and LP token address for a Phoenix pool.\\n\\n# Parameters\\n- `pool_address`: Address of the Phoenix pool\\n\\n# Returns\\nTuple of (lp_balance, lp_token_address) - current LP balance and LP token contract address\\n\\n# Panics\\nIf pool queries fail",
+      "name": "get_lp_phoenix",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for withdrawing all liquidity from a Soroswap pool via router.\\nValidates access and delegates to internal implementation.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `amount0_min`: Minimum amount of token0 to receive (slippage protection)\\n- `amount1_min`: Minimum amount of token1 to receive (slippage protection)\\n- `pool_address`: Address of the Soroswap pool to withdraw from\\n- `router_address`: Address of the Soroswap router\\n- `deadline`: Ledger number deadline for the transaction\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "withdraw_soroswap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current LP token balance for a Soroswap pool.\\nIn Soroswap, the LP token is the pool address itself.\\n\\n# Parameters\\n- `pool_address`: Address of the Soroswap pool (also the LP token address)\\n\\n# Returns\\nCurrent LP token balance held by this contract\\n\\n# Panics\\nIf balance query fails",
+      "name": "get_lp_soroswap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public entry point for withdrawing tokens directly from the contract balance.\\nTransfers tokens from contract to owner without interacting with pools.\\n\\n# Parameters\\n- `caller`: Address of the caller (must be owner or multisig admin)\\n- `amount0`: Amount of token0 to withdraw\\n- `amount1`: Amount of token1 to withdraw\\n\\n# Access\\nOnly owner or multisig admin",
+      "name": "withdraw_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves token reserves from a pool, handling different DEX protocols.\\nReturns reserves in pool order (not contract order) to maintain consistency\\nwith amounts from correct_token_order and TVL calculations.\\n\\n# Parameters\\n- `pool_address`: Address of the liquidity pool\\n- `protocol_tvl`: Protocol identifier (0 = Soroswap, 1 = Phoenix, 2 = Aquarius)\\n\\n# Returns\\nTuple of (reserve0, reserve1) in pool order (pool's token0, pool's token1)\\n\\n# Panics\\n- If protocol is invalid\\n- If reserves are zero\\n- If pool query fails",
+      "name": "get_reserves",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_tvl",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Calculates token prices from pool reserves.\\n\\n# Parameters\\n- `reserve0`: Reserve amount of token0 in the pool\\n- `reserve1`: Reserve amount of token1 in the pool\\n\\n# Returns\\nTuple of (price_0_in_1, price_1_in_0) where:\\n- price_0_in_1: Price of token0 denominated in token1\\n- price_1_in_0: Price of token1 denominated in token0\\n\\n# Panics\\n- If reserves are zero (division by zero)\\n- On arithmetic overflow",
+      "name": "get_prices_from_reserves",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reserve0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "reserve1",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Calculates Total Value Locked (TVL) for both tokens in the position.\\nTVL represents the total value of tokens, accounting for their relative prices.\\n\\n# Parameters\\n- `amount0`: Amount of token0\\n- `amount1`: Amount of token1\\n- `price0_in_1`: Price of token0 in terms of token1\\n- `price1_in_0`: Price of token1 in terms of token0\\n\\n# Returns\\nTuple of (token0_tvl, token1_tvl) where:\\n- token0_tvl: Total value of position in token0 terms\\n- token1_tvl: Total value of position in token1 terms\\n\\n# Panics\\nOn arithmetic overflow",
+      "name": "get_token_tvl_from_reserves",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "price0_in_1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "price1_in_0",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Calculates the fee amount to be deducted from profits on each token.\\nFee is calculated as a percentage of total profit, distributed proportionally.\\n\\n# Parameters\\n- `init_tvl0`: Initial TVL in token0 terms when position was opened\\n- `init_tvl1`: Initial TVL in token1 terms when position was opened\\n- `current_tvl0`: Current TVL in token0 terms\\n- `current_tvl1`: Current TVL in token1 terms\\n- `current_amount0`: Current amount of token0\\n- `current_amount1`: Current amount of token1\\n\\n# Returns\\nTuple of (fee_token0, fee_token1) - fee amounts in each token\\nReturns (0, 0) if there's no profit or total TVL is zero\\n\\n# Panics\\nOn arithmetic overflow",
+      "name": "get_fee_cut",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "init_tvl0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "init_tvl1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "current_tvl0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "current_tvl1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "current_amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "current_amount1",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves the underlying token amounts represented by LP position in a Phoenix pool.\\n\\n# Parameters\\n- `pool_address`: Address of the Phoenix pool\\n\\n# Returns\\nTuple of (amount_a, amount_b) ordered to match contract's token0/token1\\n\\n# Panics\\nIf pool query fails or LP balance cannot be determined",
+      "name": "get_amounts_from_phoenix",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves the underlying token amounts represented by LP position in a Soroswap pool.\\nCalculates amounts proportionally based on LP share of total supply.\\n\\n# Parameters\\n- `pool_address`: Address of the Soroswap pool\\n\\n# Returns\\nTuple of (amount_a, amount_b) ordered to match contract's token0/token1\\n\\n# Panics\\nIf pool query fails or calculation overflows",
+      "name": "get_amounts_from_soroswap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieves the underlying token amounts represented by LP position in an Aquarius pool.\\nCalculates amounts proportionally based on LP share of total supply.\\n\\n# Parameters\\n- `pool_address`: Address of the Aquarius pool\\n\\n# Returns\\nTuple of (amount_a, amount_b) ordered to match contract's token0/token1\\n\\n# Panics\\nIf pool query fails or calculation overflows",
+      "name": "get_amounts_from_aquarius",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current token balances held directly by this contract (not in pools).\\n\\n# Returns\\nTuple of (amount0, amount1) - current balances of token0 and token1 in contract\\n\\n# Panics\\nIf token balance queries fail",
+      "name": "get_amounts_tokens",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 401
+        },
+        {
+          "doc": "",
+          "name": "GetDepositAmountsMinABiggerThenDesiredA",
+          "value": 306
+        },
+        {
+          "doc": "",
+          "name": "GetDepositAmountsMinBBiggerThenDesiredB",
+          "value": 307
+        },
+        {
+          "doc": "",
+          "name": "GetDepositAmountsAmountABiggerThenDesiredA",
+          "value": 308
+        },
+        {
+          "doc": "",
+          "name": "GetDepositAmountsAmountALessThenMinA",
+          "value": 309
+        },
+        {
+          "doc": "",
+          "name": "GetDepositAmountsAmountBBiggerThenDesiredB",
+          "value": 310
+        },
+        {
+          "doc": "",
+          "name": "GetDepositAmountsAmountBLessThenMinB",
+          "value": 311
+        },
+        {
+          "doc": "",
+          "name": "DesiredAmountsBelowOrEqualZero",
+          "value": 313
+        },
+        {
+          "doc": "",
+          "name": "MinAmountsBelowZero",
+          "value": 314
+        },
+        {
+          "doc": "",
+          "name": "ContractMathError",
+          "value": 328
+        },
+        {
+          "doc": "",
+          "name": "TokenTransferFailed",
+          "value": 330
+        },
+        {
+          "doc": "SoroswapRouter: insufficient a amount",
+          "name": "InsufficientAAmount",
+          "value": 405
+        },
+        {
+          "doc": "SoroswapRouter: insufficient b amount",
+          "name": "InsufficientBAmount",
+          "value": 406
+        },
+        {
+          "doc": "",
+          "name": "RouterFactoryQueryFailed",
+          "value": 407
+        },
+        {
+          "doc": "",
+          "name": "QueryPoolInfoFailed",
+          "value": 500
+        },
+        {
+          "doc": "",
+          "name": "PoolInfoConversionError",
+          "value": 501
+        },
+        {
+          "doc": "",
+          "name": "ProvideLiquidityFailed",
+          "value": 502
+        },
+        {
+          "doc": "",
+          "name": "PoolToken0QueryFailed",
+          "value": 510
+        },
+        {
+          "doc": "",
+          "name": "RouterGetReservesFailed",
+          "value": 511
+        },
+        {
+          "doc": "",
+          "name": "RouterQuoteFailed",
+          "value": 512
+        },
+        {
+          "doc": "",
+          "name": "RouterAddLiquidityFailed",
+          "value": 513
+        },
+        {
+          "doc": "",
+          "name": "RouterRemoveLiquidityFailed",
+          "value": 514
+        },
+        {
+          "doc": "",
+          "name": "AquariusGetTokensFailed",
+          "value": 520
+        },
+        {
+          "doc": "",
+          "name": "AquariusDepositFailed",
+          "value": 521
+        },
+        {
+          "doc": "",
+          "name": "AquariusWithdrawFailed",
+          "value": 522
+        },
+        {
+          "doc": "",
+          "name": "AquariusShareIdQueryFailed",
+          "value": 523
+        },
+        {
+          "doc": "",
+          "name": "AquariusReserveTooLarge",
+          "value": 524
+        },
+        {
+          "doc": "",
+          "name": "PhoenixShareTokenQueryFailed",
+          "value": 530
+        },
+        {
+          "doc": "",
+          "name": "PhoenixWithdrawLiquidityFailed",
+          "value": 531
+        },
+        {
+          "doc": "",
+          "name": "LpTokenBalanceQueryFailed",
+          "value": 540
+        },
+        {
+          "doc": "",
+          "name": "PoolLpBalanceQueryFailed",
+          "value": 541
+        },
+        {
+          "doc": "",
+          "name": "RouterPairForFailed",
+          "value": 542
+        },
+        {
+          "doc": "",
+          "name": "InvalidProtocol",
+          "value": 550
+        },
+        {
+          "doc": "",
+          "name": "ZeroReserves",
+          "value": 551
+        },
+        {
+          "doc": "",
+          "name": "ActivePositionExists",
+          "value": 552
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 560
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeValue",
+          "value": 561
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 562
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 563
+        },
+        {
+          "doc": "",
+          "name": "ReentrancyDetected",
+          "value": 564
+        }
+      ]
+    }
+  }
+]
