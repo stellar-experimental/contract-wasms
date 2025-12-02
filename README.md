@@ -19,4 +19,6 @@ It also generates a docs website about all the contracts at:
 
 - [`instances/`](./instances) - array of known contract addresses that are or have used the contract wasm (note this is a best guess from daily downloads, and is not derived from tracking every ledger)
 
+- [`callgraph/`](./callgraph) – call graphs for each contract
+
 - [`analysis/`](./analysis) – summary data about a variety of things to do with the contracts
