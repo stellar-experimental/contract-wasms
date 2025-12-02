@@ -67,6 +67,12 @@ jobs:
 
       - uses: stellar/stellar-cli@v23.2.1
 
+      - name: Install wasm-call-graph (from https://github.com/graydon/wasm-call-graph/pull/4)
+        run: cargo install --git https://github.com/graydon/wasm-call-graph --rev 79483bbb376d0faf12924bfe186d4fa34ca24dbd wasm-call-graph
+
+      - name: Download env.json for wasm-call-graph
+        run: curl -sL https://raw.githubusercontent.com/stellar/rs-soroban-env/main/soroban-env-common/env.json -o /tmp/env.json
+
       - name: Restore cached bucket0
         uses: actions/cache@v4
         if: ${{ needs.list-buckets.outputs.bucket0 != '' }}
@@ -306,6 +312,14 @@ jobs:
         run: >
           cargo run --locked --release --manifest-path .scripts/dupe-specs-analysis/Cargo.toml contracts/ > analysis/dupe-specs.csv
 
+      - name: Run wasm-call-graph
+        run: |
+          mkdir -p callgraph
+          for wasm in contracts/*.wasm; do
+            hash=$(basename "$wasm" .wasm)
+            wasm-call-graph --leaves-only --env-symbols /tmp/env.json "$wasm" > "callgraph/${hash}.txt"
+          done
+
       - name: Run imports-usage
         run: >
           cargo run --locked --release --manifest-path .scripts/imports-usage/Cargo.toml imports analysis/
@@ -320,6 +334,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add analysis/
+          git add callgraph/
           git add contracts/
           git add wat/
           git add meta/
