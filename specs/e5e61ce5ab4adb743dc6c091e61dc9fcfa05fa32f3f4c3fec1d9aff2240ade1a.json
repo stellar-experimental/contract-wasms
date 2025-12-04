@@ -1,0 +1,183 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle hints for deterministic footprint bounding\\n\\nBundles slot and checkpoint hints to bound storage reads during oracle operations.\\nThis enables strategies to perform swaps without footprint explosion.",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "Checkpoint hint for bounding historical checkpoint reads",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "Slot hint for bounding recent bucket reads",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a flash loan is executed successfully",
+      "lib": "",
+      "name": "FlashExecutedEvent",
+      "prefix_topics": [
+        "flash_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters passed to FlashStrategy.execute()",
+      "lib": "",
+      "name": "FlashStrategyParams",
+      "fields": [
+        {
+          "doc": "Amount of token0 borrowed",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Amount of token1 borrowed",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "Custom data for strategy execution",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Fee required for token0 repayment",
+          "name": "fee0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Fee required for token1 repayment",
+          "name": "fee1",
+          "type_": "u128"
+        },
+        {
+          "doc": "Oracle hints for swap operations (from flash_begin)",
+          "name": "oracle_hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        },
+        {
+          "doc": "Pool address tokens were borrowed from",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Address of token0 in the pool",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "Address of token1 in the pool",
+          "name": "token1",
+          "type_": "address"
+        },
+        {
+          "doc": "User who initiated the flash loan",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute flash loan with custom flash strategy\\n\\nThis is the safe entry point for all flash loans. The FlashExecutor:\\n1. Validates the user authorized this transaction (user.require_auth)\\n2. Calls flash_begin() as the initiator (only FlashExecutor is authorized)\\n3. Invokes the user's FlashStrategy contract with borrowed tokens\\n4. Always calls flash_end() to verify repayment\\n\\n# Arguments\\n* `pool` - Pool address to borrow from\\n* `strategy` - User's strategy contract address\\n* `user` - Address of user initiating the flash loan (must sign transaction)\\n* `amount0` - Amount of token0 to borrow\\n* `amount1` - Amount of token1 to borrow\\n* `data` - Arbitrary data passed to strategy\\n\\n# Strategy Access Control\\nStrategies receive `user` in FlashStrategyParams and can:\\n- Ignore it for permissionless execution (default)\\n- Check against allowlist for restricted access\\n- Implement custom authorization logic\\n\\n# Returns\\n* `Ok(())` - Flash loan executed successfully\\n* `Err(Error)` - Flash loan failed (insufficient repayment, strat",
+      "name": "execute_flash_loan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
