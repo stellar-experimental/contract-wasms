@@ -1,0 +1,2129 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Descriptions of these on page 5 of Indigo white paper",
+      "lib": "",
+      "name": "CDPStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "A CDP that is fully collateralized, with its CR value above the xAsset\\xe2\\x80\\x99s MCR. Open CDPs remain fully usable by their lenders.",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "A CDP that is undercollateralized, with its CR value below the xAsset\\xe2\\x80\\x99s MCR. Insolvent CDPs remain fully usable by their lenders but eligible to be frozen by any user.\\nConsideration: does `Insolvent` need to be hard-coded? Or can it be calculated on-demand while data's small and as part of our eventual indexing layer once data's big?",
+            "name": "Insolvent"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "A CDP that has been confiscated by the protocol and no longer has an lender. A CDP becomes frozen after a user successfully submits a request against an insolvent CDP. Frozen CDPs cannot be used by their former lenders.",
+            "name": "Frozen"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "A CDP whose CR value is zero, no longer having any collateral or debt. A CDP is closed after all its debt is repaid and its collateral is withdrawn.",
+            "name": "Closed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Collateralized Debt Position for a specific account",
+      "lib": "",
+      "name": "CDPContract",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accrued_interest",
+          "type_": {
+            "udt": {
+              "name": "Interest"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "asset_lent",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "collateralization_ratio",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "last_interest_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "CDPStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "xlm_deposited",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Insufficient collateralization ratio",
+          "name": "InsufficientCollateralization",
+          "value": 1
+        },
+        {
+          "doc": "CDP already exists for this lender",
+          "name": "CDPAlreadyExists",
+          "value": 2
+        },
+        {
+          "doc": "CDP not found",
+          "name": "CDPNotFound",
+          "value": 3
+        },
+        {
+          "doc": "CDP not insolvent",
+          "name": "CDPNotInsolvent",
+          "value": 4
+        },
+        {
+          "doc": "CDP must be Open to borrow asset",
+          "name": "CDPNotOpen",
+          "value": 5
+        },
+        {
+          "doc": "Insufficient collateral",
+          "name": "InsufficientCollateral",
+          "value": 6
+        },
+        {
+          "doc": "Insufficient balance",
+          "name": "InsufficientBalance",
+          "value": 7
+        },
+        {
+          "doc": "Repayment amount exceeds debt",
+          "name": "RepaymentExceedsDebt",
+          "value": 8
+        },
+        {
+          "doc": "Cannot close CDP with outstanding debt",
+          "name": "OutstandingDebt",
+          "value": 9
+        },
+        {
+          "doc": "\"At least two CDPs are required for merging\" or \"All CDPs must be frozen to merge\"",
+          "name": "InvalidMerge",
+          "value": 10
+        },
+        {
+          "doc": "\"CDP must be frozen to be liquidated\" or \"Debt and collateral must be positive\"",
+          "name": "InvalidLiquidation",
+          "value": 11
+        },
+        {
+          "doc": "Withdrawal would cause undercollateralization",
+          "name": "InvalidWithdrawal",
+          "value": 12
+        },
+        {
+          "doc": "CDP must be Open or Insolvent to add collateral",
+          "name": "CDPNotOpenOrInsolvent",
+          "value": 13
+        },
+        {
+          "doc": "CDP must be Open or Insolvent to repay debt",
+          "name": "CDPNotOpenOrInsolventForRepay",
+          "value": 14
+        },
+        {
+          "doc": "User already has a stake. Use deposit function to add to existing stake.",
+          "name": "StakeAlreadyExists",
+          "value": 15
+        },
+        {
+          "doc": "User does not have a stake. Use stake function to create one.",
+          "name": "StakeDoesntExist",
+          "value": 16
+        },
+        {
+          "doc": "live_until_ledger must be greater than or equal to the current ledger number",
+          "name": "InvalidLedgerSequence",
+          "value": 17
+        },
+        {
+          "doc": "Failed to fetch price data from the Oracle",
+          "name": "OraclePriceFetchFailed",
+          "value": 18
+        },
+        {
+          "doc": "Failed to fetch decimals from the Oracle",
+          "name": "OracleDecimalsFetchFailed",
+          "value": 19
+        },
+        {
+          "doc": "Failed to transfer XLM",
+          "name": "XLMTransferFailed",
+          "value": 20
+        },
+        {
+          "doc": "Claim rewards from previous epoch before modifying position",
+          "name": "ClaimRewardsFirst",
+          "value": 21
+        },
+        {
+          "doc": "Insufficient amount of xAsset staked",
+          "name": "InsufficientStake",
+          "value": 22
+        },
+        {
+          "doc": "Insufficient interest",
+          "name": "InsufficientInterest",
+          "value": 23
+        },
+        {
+          "doc": "Payment exceeds interest due",
+          "name": "PaymentExceedsInterestDue",
+          "value": 24
+        },
+        {
+          "doc": "Interest must be paid before debt can be repaid",
+          "name": "InterestMustBePaidFirst",
+          "value": 25
+        },
+        {
+          "doc": "Insufficient XLM to pay interest",
+          "name": "InsufficientXLMForInterest",
+          "value": 26
+        },
+        {
+          "doc": "Approval needed for interest repayment",
+          "name": "InsufficientApprovedXLMForInterestRepayment",
+          "value": 27
+        },
+        {
+          "doc": "Invoking XLM SAC contract failed",
+          "name": "XLMInvocationFailed",
+          "value": 28
+        },
+        {
+          "doc": "Value must be greater than or equal to 0",
+          "name": "ValueNotPositive",
+          "value": 29
+        },
+        {
+          "doc": "Insufficient allowance; spender must call `approve` first",
+          "name": "InsufficientAllowance",
+          "value": 30
+        },
+        {
+          "doc": "Arithmetic overflow or underflow occurred",
+          "name": "ArithmeticError",
+          "value": 31
+        },
+        {
+          "doc": "Cannot transfer to self",
+          "name": "CannotTransferToSelf",
+          "value": 32
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CDP",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accrued_interest",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_lent",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "interest_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_interest_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "CDPStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "xlm_deposited",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakePosition",
+      "fields": [
+        {
+          "doc": "",
+          "name": "compounded_constant",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "epoch",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "product_constant",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rewards_claimed",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "xasset_deposit",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Liquidation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accrued_interest_repaid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "cdp_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_applied_to_interest",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_liquidated",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "collateralization_ratio",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "principal_repaid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "xasset_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "xlm_price",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintXasset",
+      "prefix_topics": [
+        "mintx"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BurnXasset",
+      "prefix_topics": [
+        "burnx"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakerPosition",
+      "fields": [
+        {
+          "doc": "",
+          "name": "compounded_constant",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "epoch",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "product_constant",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "xasset_deposit",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AvailableAssets",
+      "fields": [
+        {
+          "doc": "",
+          "name": "available_rewards",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "available_xasset",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Txn",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "1",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Allowance",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CDPInternal",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accrued_interest",
+          "type_": {
+            "udt": {
+              "name": "Interest"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "asset_lent",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last time (in seconds) interest was calculated for each CDP",
+          "name": "last_interest_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "CDPStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "xlm_deposited",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AllowanceValue",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Balance",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Interest",
+      "fields": [
+        {
+          "doc": "Amount of interest accrued",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount of interest paid",
+          "name": "paid",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InterestDetail",
+      "fields": [
+        {
+          "doc": "Amount of interest accrued",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount of interest accrued in XLM",
+          "name": "amount_in_xlm",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount of interest in XLM that will accrue 5 minutes from now",
+          "name": "approval_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp of when interest accrual was last calculated",
+          "name": "last_interest_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Amount of interest paid",
+          "name": "paid",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Mapping of account addresses to their token balances",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Mapping of transactions to their associated allowances",
+            "name": "Allowance",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Txn"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Mapping of addresses to their authorization status",
+            "name": "Authorized",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Mapping of addresses to their CDP; each address can only have one CDP",
+            "name": "CDP",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stability pool deposits",
+            "name": "StakerPosition",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stability pool compound records",
+            "name": "CompoundRecord",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stability pool interest collected records",
+            "name": "InterestRecord",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenStorage",
+      "fields": [
+        {
+          "doc": "Oracle contract ID for asset price feed",
+          "name": "asset_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "current compounded constant of the stability pool",
+          "name": "compounded_constant",
+          "type_": "i128"
+        },
+        {
+          "doc": "Number of decimal places for token amounts",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "stability pool deposit fee",
+          "name": "deposit_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "current epoch of the stability pool",
+          "name": "epoch",
+          "type_": "u64"
+        },
+        {
+          "doc": "current total of collected fees for stability pool",
+          "name": "fees_collected",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total interest collected (in XLM) by the protocol",
+          "name": "interest_collected",
+          "type_": "i128"
+        },
+        {
+          "doc": "Annual interest rate in basis points (e.g., 500 = 5%)",
+          "name": "interest_rate",
+          "type_": "u32"
+        },
+        {
+          "doc": "basis points; default 110%; updateable by admin",
+          "name": "min_collat_ratio",
+          "type_": "u32"
+        },
+        {
+          "doc": "Name of the token",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "Oracle asset ID this asset tracks.",
+          "name": "pegged_asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "current product constant of the stability pool",
+          "name": "product_constant",
+          "type_": "i128"
+        },
+        {
+          "doc": "stability pool stake fee",
+          "name": "stake_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Symbol of the token",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "total collateral in the stability pool",
+          "name": "total_collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "total xasset in the stability pool",
+          "name": "total_xasset",
+          "type_": "i128"
+        },
+        {
+          "doc": "stability pool fee amount returned upon unstaking",
+          "name": "unstake_return",
+          "type_": "i128"
+        },
+        {
+          "doc": "Oracle contract ID for XLM price feed",
+          "name": "xlm_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "XLM Stellar Asset Contract address, for XLM transfers",
+          "name": "xlm_sac",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pegged_asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "min_collat_ratio",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "annual_interest_rate",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract to new wasm. Admin-only.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Increase the allowance that one address can spend on behalf of another address.",
+      "name": "increase_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Decrease the allowance that one address can spend on behalf of another address.",
+      "name": "decrease_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the spendable balance of tokens for a specific address",
+      "name": "spendable_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a specific address is authorized",
+      "name": "authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "authorize",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "clawback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the allowance for `spender` to transfer from `from`.",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the allowance by `amount` for `spender` to transfer/burn from `from`",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the balance of `id`",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer `amount` from `from` to `to`",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "muxed_address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer `amount` from `from` to `to`, consuming the allowance of `spender`",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `amount` from `from`",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `amount` from `from`, consuming the allowance of `spender`",
+      "name": "burn_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the number of decimals used to represent amounts of this token",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the name for this token",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the symbol for this token",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Oracle contract used for this contract's XLM price feed. Example: `CBJSHY5PQQ4LS7VMHI4BJODEDP5MLANRNUSHKNSVKK7BQ4Y6LSTBDGMR`",
+      "name": "xlm_contract",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stellar asset contract address",
+      "name": "xlm_sac",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Oracle contract used for this contract's pegged asset. Example: `CBJSHY5PQQ4LS7VMHI4BJODEDP5MLANRNUSHKNSVKK7BQ4Y6LSTBDGMR`",
+      "name": "asset_contract",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Which asset from Oracle this tracks. For `--asset '{\"Other\":\"USD\"}'` on asset contract, set to `USD`",
+      "name": "pegged_asset",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Basis points. Default: 110%",
+      "name": "minimum_collateralization_ratio",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the most recent price for XLM",
+      "name": "lastprice_xlm",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PriceData"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the most recent price for the pegged asset",
+      "name": "lastprice_asset",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PriceData"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the number of decimals used by the xlm oracle contract. This is NOT the same as the number of decimals used by the XLM Stellar Asset Contract.",
+      "name": "decimals_xlm_feed",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the number of decimals used by the asset oracle contract. This is NOT the same as the number of decimals used by the xAsset Fungible Token contract.",
+      "name": "decimals_asset_feed",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a new Collateralized Debt Position (CDP) by depositing collateral and minting xAsset",
+      "name": "open_cdp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_lent",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieve the CDP information for a specific lender",
+      "name": "cdp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "CDPContract"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Freeze a CDP if its Collateralization Ratio (CR) is below the xAsset's Minimum Collateralization Ratio (MCR).\\nA frozen CDP is no longer usable or interactable by its former owner.",
+      "name": "freeze_cdp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Increase the Collateralization Ratio (CR) by depositing more collateral to an existing CDP.",
+      "name": "add_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lower the Collateralization Ratio (CR) by withdrawing part or all of the collateral from a CDP.\\nCollateral cannot be withdrawn if it brings CR below the xAsset's MCR.",
+      "name": "withdraw_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lower the Collateralization Ratio (CR) by minting additional xAsset against existing collateral",
+      "name": "borrow_xasset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Increase the Collateralization Ratio (CR) by repaying debt in the form of xAsset",
+      "name": "repay_debt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Liquidate a frozen CDP. Upon liquidation, CDP debt is repaid by withdrawing xAsset from a Stability Pool",
+      "name": "liquidate_cdp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  {
+                    "udt": {
+                      "name": "CDPStatus"
+                    }
+                  }
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Merge two or more frozen CDPs into one CDP",
+      "name": "merge_cdps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lenders",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close a CDP when its Collateralization Ratio (CR) value is zero, having no collateral or debt",
+      "name": "close_cdp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update and return the accrued interest on a CDP",
+      "name": "get_accrued_interest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "InterestDetail"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay the accrued interest (but not principal) on a CDP.",
+      "name": "pay_interest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in_xasset",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "CDPContract"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the address of the XLM contract",
+      "name": "set_xlm_sac",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the oracle price feed contract for xlm",
+      "name": "set_xlm_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the oracle price feed contract for xAsset",
+      "name": "set_asset_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the asset the xAsset is pegged to",
+      "name": "set_pegged_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set minimum collateralization ratio",
+      "name": "set_min_collat_ratio",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set annual interest rate",
+      "name": "set_interest_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_rate",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get annual interest rate",
+      "name": "get_interest_rate",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get total interest collected",
+      "name": "get_total_interest_collected",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Report the version of this contract",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit xasset tokens into the Stability Pool",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw xasset tokens from the Stability Pool",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Process a liquidation event for a CDP, returning the amount of debt and collateral liquidated and the CDP status",
+      "name": "liquidate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  {
+                    "udt": {
+                      "name": "CDPStatus"
+                    }
+                  }
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim a user's share of collateral rewards",
+      "name": "claim_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieve the current deposit amount for a given address",
+      "name": "get_staker_deposit_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieve the total amount of xasset tokens in the Stability Pool",
+      "name": "get_total_xasset",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retrieve the total amount of collateral rewards in the Stability Pool",
+      "name": "get_total_collateral",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a stake to the pool",
+      "name": "stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a user's stake from the pool",
+      "name": "unstake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View a user's available xasset and rewards",
+      "name": "get_available_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "AvailableAssets"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View a user's current position",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "StakerPosition"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View the stability pool's current constants",
+      "name": "get_constants",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "StakerPosition"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]
