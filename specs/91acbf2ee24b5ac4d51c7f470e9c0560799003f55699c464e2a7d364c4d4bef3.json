@@ -1,0 +1,501 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AccountBanned",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AccountAlreadyAuthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "FailedToAuthorizeWithSAC",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ContractPaused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "FailedToSetAdmin",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "FailedToTransferWithSAC",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NoSuchRedemptionRequest",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "RedemptionRequestMustBePositive",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "FailedToClawbackWithSAC",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "ConversionError",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "CannotAuthorizeAdminContract",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TooManyAccounts",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NoTrustline",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current admin",
+      "name": "admin_get",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer to new admin\\nShould be called in the same transaction as deploying the contract to ensure that\\na different account try to become admin",
+      "name": "admin_set",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin can upgrade the contract with given hash.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor to set the admin",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The source account should should be the issuer of the asset which is intially the admin of this contract.\\nThis contract is set as the admin of the SAC and the operator is set to this contract.\\nLastly the contract is unpaused.",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add to the contract\\xe2\\x80\\x99s set of banned accounts. Max 50 accounts per call.",
+      "name": "add_banned_accounts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove from the contract\\xe2\\x80\\x99s set of banned accounts. Max 50 accounts per call.",
+      "name": "remove_banned_accounts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Since AUTH_REQUIRED is set, accounts must call this method to request authorizing their trustline.\\nThe method will check if the account is banned,\\nif not will call the SAC's set_authorized method and add the account to the contract\\xe2\\x80\\x99s set of authorized accounts.",
+      "name": "authorize_trustline",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The issuer can remove an account\\xe2\\x80\\x99s authorization via the SAC's set_authorized method.",
+      "name": "deauthorize_trustline",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Start the pausing process",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "End the pausing process",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "An iterator method which removes a batch from the set of authorized accounts,\\nrevoking authorization from each with a call to the SAC's set_authorized method and transfers the batch to the set of paused accounts.",
+      "name": "batch_pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Batches of accounts are removed from the set of paused accounts, authorized, and returned to the set of authorized accounts.",
+      "name": "batch_unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "burn funds from an account.",
+      "name": "clawback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mint to a normal authoirzed account",
+      "name": "mint_to_account",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ban account and remove authorization",
+      "name": "freeze_accounts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unban account and authorize",
+      "name": "unfreeze_accounts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ASac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AUnpaused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AB",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

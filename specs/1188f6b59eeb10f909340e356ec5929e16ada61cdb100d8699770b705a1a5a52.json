@@ -1,0 +1,933 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the smart wallet",
+      "lib": "",
+      "name": "SmartWalletStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The EVM address (20 bytes) that owns this wallet",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The secp256k1 verifier contract address",
+            "name": "Verifier"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Context rule metadata by ID",
+            "name": "Meta",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Signers for a context rule",
+            "name": "Signers",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Policies for a context rule",
+            "name": "Policies",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Context rule IDs by type",
+            "name": "Ids",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ContextRuleType"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next available context rule ID",
+            "name": "NextId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Count of context rules",
+            "name": "Count"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Nonce for replay protection (used in management operations)",
+            "name": "Nonce"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current nonce (for management operations)",
+      "name": "get_nonce",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the EVM address that owns this wallet.\\n\\n# Panics\\nPanics with `SmartWalletError::OwnerNotSet` if owner is not initialized.",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds a new policy to an existing context rule.\\nThis operation requires owner signature.",
+      "name": "add_policy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "install_param",
+          "type_": "val"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Main authorization entry point called by Soroban runtime.\\n\\nThis function:\\n1. Verifies all provided signatures against their signers\\n2. Finds applicable context rules for each authorization context\\n3. Checks if policies allow the operation\\n4. Enforces policies (state changes if any)\\n\\n# Arguments\\n\\n* `signature_payload` - Hash of the transaction/auth data being signed\\n* `signatures` - Map of signers to their signatures\\n* `auth_contexts` - List of contexts being authorized",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "udt": {
+              "name": "Signatures"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "SmartWalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructs a new smart wallet with the given owner and initial configuration.\\n\\n# Arguments\\n\\n* `owner_evm_address` - The 20-byte Ethereum address that will control this wallet\\n* `secp256k1_verifier` - Address of the deployed Secp256k1Verifier contract\\n* `defindex_policy` - Address of the deployed DeFindexPolicy contract\\n* `initial_wasm_hashes` - List of allowed WASM hashes for the policy\\n\\n# Note\\n\\nThis creates a default context rule that:\\n- Uses the secp256k1 verifier with owner's EVM address as key data\\n- Attaches the DeFindex policy with the provided WASM hashes",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner_evm_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "secp256k1_verifier",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "defindex_policy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "initial_wasm_hashes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes a policy from a context rule.\\nThis operation requires owner signature.",
+      "name": "remove_policy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds a new context rule.\\nThis operation requires owner signature.",
+      "name": "add_context_rule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_type",
+          "type_": {
+            "udt": {
+              "name": "ContextRuleType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "valid_until",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policies",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ContextRule"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns a context rule by ID",
+      "name": "get_context_rule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ContextRule"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns all context rules of a specific type",
+      "name": "get_context_rules",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_type",
+          "type_": {
+            "udt": {
+              "name": "ContextRuleType"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "ContextRule"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes a context rule.\\nThis operation requires owner signature.",
+      "name": "remove_context_rule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of context rules",
+      "name": "get_context_rules_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Installation parameters for the DeFindex policy",
+      "lib": "",
+      "name": "DeFindexPolicyParams",
+      "fields": [
+        {
+          "doc": "List of allowed WASM hashes (e.g., DeFindex vault WASM hash)",
+          "name": "allowed_wasm_hashes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enforcement hook - no state changes needed for this policy",
+      "name": "enforce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": {
+            "udt": {
+              "name": "Context"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "authenticated_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Installs the policy with the given allowed WASM hashes",
+      "name": "install",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "install_params",
+          "type_": {
+            "udt": {
+              "name": "DeFindexPolicyParams"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the DeFindex policy",
+      "lib": "",
+      "name": "DeFindexPolicyStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Allowed WASM hashes for a specific (account, rule_id) pair",
+            "name": "AllowedHashes",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Uninstalls the policy, cleaning up storage",
+      "name": "uninstall",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks if the context is allowed by this policy.\\n\\nAllows:\\n- Stellar Asset Contracts (SAC) - native tokens\\n- Contracts with WASM hash in the allowed list\\n\\nBlocks:\\n- All other contracts\\n- Contract creation (unless WASM hash is allowed)",
+      "name": "can_enforce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": {
+            "udt": {
+              "name": "Context"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "authenticated_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds a WASM hash to the allowed list for a specific account and rule.\\nNote: This should be called through the smart wallet's policy management.",
+      "name": "add_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rule_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets the list of allowed WASM hashes for a specific account and rule.",
+      "name": "get_allowed_hashes",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rule_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes a WASM hash from the allowed list.",
+      "name": "remove_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rule_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for smart wallet operations.",
+      "lib": "",
+      "name": "SmartWalletError",
+      "cases": [
+        {
+          "doc": "The specified context rule does not exist.",
+          "name": "ContextRuleNotFound",
+          "value": 3000
+        },
+        {
+          "doc": "A duplicate context rule already exists.",
+          "name": "DuplicateContextRule",
+          "value": 3001
+        },
+        {
+          "doc": "The provided context cannot be validated against any rule.",
+          "name": "UnvalidatedContext",
+          "value": 3002
+        },
+        {
+          "doc": "External signature verification failed.",
+          "name": "ExternalVerificationFailed",
+          "value": 3003
+        },
+        {
+          "doc": "Context rule must have at least one signer or policy.",
+          "name": "NoSignersAndPolicies",
+          "value": 3004
+        },
+        {
+          "doc": "The valid_until timestamp is in the past.",
+          "name": "PastValidUntil",
+          "value": 3005
+        },
+        {
+          "doc": "The specified signer was not found.",
+          "name": "SignerNotFound",
+          "value": 3006
+        },
+        {
+          "doc": "The signer already exists in the context rule.",
+          "name": "DuplicateSigner",
+          "value": 3007
+        },
+        {
+          "doc": "The specified policy was not found.",
+          "name": "PolicyNotFound",
+          "value": 3008
+        },
+        {
+          "doc": "The policy already exists in the context rule.",
+          "name": "DuplicatePolicy",
+          "value": 3009
+        },
+        {
+          "doc": "Too many signers in the context rule.",
+          "name": "TooManySigners",
+          "value": 3010
+        },
+        {
+          "doc": "Too many policies in the context rule.",
+          "name": "TooManyPolicies",
+          "value": 3011
+        },
+        {
+          "doc": "Too many context rules in the smart account.",
+          "name": "TooManyContextRules",
+          "value": 3012
+        },
+        {
+          "doc": "Unauthorized operation.",
+          "name": "Unauthorized",
+          "value": 3013
+        },
+        {
+          "doc": "Invalid signature format.",
+          "name": "InvalidSignature",
+          "value": 3014
+        },
+        {
+          "doc": "Invalid EVM address.",
+          "name": "InvalidEvmAddress",
+          "value": 3015
+        },
+        {
+          "doc": "Policy enforcement failed.",
+          "name": "PolicyEnforcementFailed",
+          "value": 3016
+        },
+        {
+          "doc": "Owner not set or not found.",
+          "name": "OwnerNotSet",
+          "value": 3017
+        },
+        {
+          "doc": "Verifier not set or not found.",
+          "name": "VerifierNotSet",
+          "value": 3018
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Metadata for a context rule.",
+      "lib": "",
+      "name": "Meta",
+      "fields": [
+        {
+          "doc": "The type of context this rule applies to.",
+          "name": "context_type",
+          "type_": {
+            "udt": {
+              "name": "ContextRuleType"
+            }
+          }
+        },
+        {
+          "doc": "Human-readable name for the context rule.",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "Optional expiration ledger sequence for the rule.",
+          "name": "valid_until",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents different types of signers in the smart wallet system.",
+      "lib": "",
+      "name": "Signer",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "A delegated signer that uses built-in Soroban signature verification.\\nThe Address will be required to authorize via `require_auth`.",
+            "name": "Delegated",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "An external signer with custom verification logic.\\nContains (verifier_contract_address, public_key_data).\\nThe verifier contract implements the `Verifier` trait.",
+            "name": "External",
+            "type_": [
+              "address",
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A collection of signatures mapped to their respective signers.\\nUsed in `__check_auth` to provide signatures for verification.",
+      "lib": "",
+      "name": "Signatures",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "map": {
+              "key_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              },
+              "value_type": "bytes"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A complete context rule defining authorization requirements.\\n\\nContext rules are the fundamental building blocks of smart wallet authorization:\\n- Each rule has a unique ID and applies to a specific context type\\n- Rules can contain multiple signers and policies\\n- Rules can have expiration times for temporary authorization",
+      "lib": "",
+      "name": "ContextRule",
+      "fields": [
+        {
+          "doc": "The type of context this rule applies to.",
+          "name": "context_type",
+          "type_": {
+            "udt": {
+              "name": "ContextRuleType"
+            }
+          }
+        },
+        {
+          "doc": "Unique identifier for the context rule.",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Human-readable name for the context rule.",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "List of policy contracts that must be satisfied.",
+          "name": "policies",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "List of signers authorized by this rule.",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Optional expiration ledger sequence for the rule.",
+          "name": "valid_until",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Types of contexts that can be authorized by smart wallet rules.",
+      "lib": "",
+      "name": "ContextRuleType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Default rules that can authorize any context.",
+            "name": "Default"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Rules specific to calling a particular contract.",
+            "name": "CallContract",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Rules specific to creating a contract with a particular WASM hash.",
+            "name": "CreateContract",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

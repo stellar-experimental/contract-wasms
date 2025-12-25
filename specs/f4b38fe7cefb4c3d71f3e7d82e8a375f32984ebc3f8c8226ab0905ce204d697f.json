@@ -1,0 +1,287 @@
+[
+  {
+    "function_v0": {
+      "doc": "Read current nonce (monotonic).",
+      "name": "get_nonce",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the stored passkey pubkey (for debugging/verification).",
+      "name": "get_passkey",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 65
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: Automatically called during deployment\\nInitializes the contract with the passkey secp256r1 public key (65-byte uncompressed),\\nthe DeFindex vault contract address, and the USDC token address.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "vault_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer USDC from this contract to a recipient address.\\nOnly the registered passkey can authorize.\\n\\n`auth_data` and `client_data_json` come from the WebAuthn assertion.\\nThe signature is over SHA256(auth_data || SHA256(client_data_json)).\\nThe challenge inside `client_data_json` must equal SHA256(\"transfer_usdc\" | amount | nonce).",
+      "name": "transfer_usdc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the fee rates (vault_fee, protocol_fee) in basis points.",
+      "name": "get_vault_fees",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u32",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit assets into the DeFindex vault.\\nOnly the registered passkey can authorize.\\n\\n`auth_data` and `client_data_json` come from the WebAuthn assertion.\\nThe signature is over SHA256(auth_data || SHA256(client_data_json)).\\nThe challenge inside `client_data_json` must equal:\\nSHA256(\"deposit\" || amount1_le || amount2_le || ... || nonce_le)",
+      "name": "deposit_to_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amounts_desired",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts_min",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "invest",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "vec": {
+                  "element_type": "i128"
+                }
+              },
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the assets managed by the vault.",
+      "name": "get_vault_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "AssetStrategySet"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the stored vault contract address.",
+      "name": "get_vault_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw assets from the DeFindex vault.\\nOnly the registered passkey can authorize.\\n\\n`auth_data` and `client_data_json` come from the WebAuthn assertion.\\nThe signature is over SHA256(auth_data || SHA256(client_data_json)).\\nThe challenge inside `client_data_json` must equal:\\nSHA256(\"withdraw\" || withdraw_shares_le || nonce_le)",
+      "name": "withdraw_from_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "withdraw_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_amounts_out",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the asset amounts corresponding to a given number of vault shares.",
+      "name": "get_vault_amounts_per_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the total managed funds of the vault.",
+      "name": "get_vault_total_managed_funds",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "CurrentAssetInvestmentAllocation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

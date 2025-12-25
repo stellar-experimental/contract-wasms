@@ -1,0 +1,707 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarginManagerError",
+      "cases": [
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not authorized to perform this action",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "Contract has not been initialized",
+          "name": "NotInitialized",
+          "value": 3
+        },
+        {
+          "doc": "Aqua router not configured",
+          "name": "RouterNotConfigured",
+          "value": 4
+        },
+        {
+          "doc": "Swap configuration not set",
+          "name": "SwapConfigNotSet",
+          "value": 5
+        },
+        {
+          "doc": "Slippage exceeded",
+          "name": "SlippageExceeded",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashLoanReceivedEvent",
+      "prefix_topics": [
+        "flash_loan_received_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokensSwappedEvent",
+      "prefix_topics": [
+        "tokens_swapped_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokensTransferredEvent",
+      "prefix_topics": [
+        "tokens_transferred_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokensReturnedEvent",
+      "prefix_topics": [
+        "tokens_returned_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AquaRouter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SwapConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single hop in a swap chain\\nEach hop represents a swap through a specific pool",
+      "lib": "",
+      "name": "SwapHop",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pool_index",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokens_in_pool",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Swap configuration for the current operation",
+      "lib": "",
+      "name": "SwapConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap_chain",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapHop"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A request to be made against the Blend pool",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash loan parameters",
+      "lib": "",
+      "name": "FlashLoan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "User positions in the pool",
+      "lib": "",
+      "name": "Positions",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liabilities",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "supply",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with admin and pool addresses",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarginManagerError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the Aquarius AMM router address",
+      "name": "set_aqua_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarginManagerError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the swap configuration for the next operation\\nThis should be called before initiating a flash loan\\n\\nArguments:\\n- caller: The address setting the config (no auth required)\\n- token_out: Final output token address\\n- min_amount_out: Minimum output amount (slippage protection)\\n- swap_chain: Custom swap chain (Vec of SwapHop). If empty, builds default direct swap.\\n\\nNote: No auth required as this is a temporary config cleared after exec_op",
+      "name": "set_swap_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap_chain",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapHop"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Helper to create a SwapHop for use in swap_chain",
+      "name": "make_swap_hop",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tokens_in_pool",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_index",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SwapHop"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Helper to create default pool index (32 zero bytes)",
+      "name": "default_pool_index",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the pool address",
+      "name": "get_pool",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin address",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the Aquarius router address",
+      "name": "get_aqua_router",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "exec_op - The callback function called by Blend Pool during flash loan\\n\\nThis is the Modified ERC-3156 interface that Blend uses.\\nThe pool calls this function after transferring the flash loan tokens.\\n\\nBehavior:\\n1. Receives flash loaned tokens\\n2. If swap config is set, swaps tokens via Aquarius AMM\\n3. Transfers output tokens to the caller (user)\\n\\nArguments:\\n- caller: The address that initiated the flash loan\\n- token: The token address being flash loaned (token_in for swap)\\n- amount: The amount of tokens received\\n- fee: The fee for the flash loan (currently 0 in Blend)",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a supply collateral request",
+      "name": "make_supply_collateral_request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Request"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a borrow request",
+      "name": "make_borrow_request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Request"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a repay request",
+      "name": "make_repay_request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Request"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a withdraw collateral request",
+      "name": "make_withdraw_collateral_request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Request"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a supply request",
+      "name": "make_supply_request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Request"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a withdraw request",
+      "name": "make_withdraw_request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Request"
+          }
+        }
+      ]
+    }
+  }
+]

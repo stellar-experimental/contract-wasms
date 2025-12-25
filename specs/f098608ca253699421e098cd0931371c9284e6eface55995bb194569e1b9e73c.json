@@ -1,0 +1,235 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for factory operations",
+      "lib": "",
+      "name": "FactoryError",
+      "cases": [
+        {
+          "doc": "The factory has not been initialized with constructor",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "The verifier address has not been configured",
+          "name": "VerifierNotSet",
+          "value": 2
+        },
+        {
+          "doc": "The policy address has not been configured",
+          "name": "PolicyNotSet",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the factory",
+      "lib": "",
+      "name": "FactoryStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The WASM hash of the SmartWallet contract",
+            "name": "WalletWasmHash"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The address of the Secp256k1Verifier contract",
+            "name": "Verifier"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The address of the DeFindexPolicy contract",
+            "name": "Policy"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Default WASM hashes to initialize wallets with",
+            "name": "DefaultWasmHashes"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploys a new SmartWallet for the given EVM address.\\n\\nThe wallet will be deployed at a deterministic address based on\\nthe EVM address. If a wallet already exists at that address,\\nthis will fail.\\n\\n# Arguments\\n\\n* `owner_evm_address` - The 20-byte Ethereum address that will own the wallet\\n\\n# Returns\\n\\nThe address of the deployed SmartWallet",
+      "name": "deploy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner_evm_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the configured policy address.\\n\\n# Panics\\nPanics with `FactoryError::PolicyNotSet` if policy is not configured.",
+      "name": "get_policy",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the configured verifier address.\\n\\n# Panics\\nPanics with `FactoryError::VerifierNotSet` if verifier is not configured.",
+      "name": "get_verifier",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the factory with the necessary configuration.\\n\\n# Arguments\\n\\n* `wallet_wasm_hash` - The WASM hash of the SmartWallet contract\\n* `secp256k1_verifier` - Address of the deployed Secp256k1Verifier\\n* `defindex_policy` - Address of the deployed DeFindexPolicy\\n* `default_wasm_hashes` - Default allowed WASM hashes for new wallets",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "secp256k1_verifier",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "defindex_policy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "default_wasm_hashes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Calculates the deterministic address for a wallet based on EVM address.\\n\\nThis can be called before deployment to know where the wallet will be.\\nUseful for pre-funding the wallet address before deployment.\\n\\n# Arguments\\n\\n* `owner_evm_address` - The 20-byte Ethereum address\\n\\n# Returns\\n\\nThe Stellar address where the wallet will be deployed",
+      "name": "calculate_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner_evm_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploys a wallet with custom configuration.\\n\\nAllows specifying custom verifier, policy, and WASM hashes\\ninstead of using the factory defaults.\\n\\n# Arguments\\n\\n* `owner_evm_address` - The 20-byte Ethereum address\\n* `secp256k1_verifier` - Custom verifier address\\n* `defindex_policy` - Custom policy address\\n* `wasm_hashes` - Custom allowed WASM hashes",
+      "name": "deploy_with_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner_evm_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "secp256k1_verifier",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "defindex_policy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hashes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the configured wallet WASM hash.\\n\\n# Panics\\nPanics with `FactoryError::NotInitialized` if factory is not initialized.",
+      "name": "get_wallet_wasm_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the default WASM hashes",
+      "name": "get_default_wasm_hashes",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

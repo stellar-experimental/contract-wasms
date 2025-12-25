@@ -1,0 +1,378 @@
+[
+  {
+    "function_v0": {
+      "doc": "Initialize the competition\\n- admin: The backend oracle address that can submit scores\\n- end_time: Unix timestamp when first epoch ends\\n- token: Token contract address for prize pool (native XLM SAC address)\\n- epoch_duration: Optional epoch duration in seconds (defaults to 3 days)",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "end_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "epoch_duration",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Award entire prize pool to #1 player. Callable by anyone after end_time.\\nReturns true if prize was distributed, false if no pool or no participants",
+      "name": "payout",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract to a new WASM binary\\nCan only be called by admin",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get competition state",
+      "name": "get_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "GameConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update token address (admin only)\\nUse this to fix misconfigured token address",
+      "name": "set_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Leaderboard"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PersonalBest",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoundHistory",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoundConfig",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current leader (backwards compatible - returns top of leaderboard)",
+      "name": "get_leader",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "address",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit a verified score (called by backend oracle)\\nOnly updates if it's a new personal best",
+      "name": "submit_score",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Game configuration (stored in instance storage)",
+      "lib": "",
+      "name": "GameConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "end_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "epoch_duration",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "finalized",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "paid_out",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Migrate old 6-field GameConfig to new 7-field GameConfig\\nCall this once after upgrade if get_state fails with \"UnexpectedSize\"",
+      "name": "migrate_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency function to recover all funds\\nCan ONLY be called by the hardcoded panic admin address\\nReturns all XLM to the panic admin",
+      "name": "panic_withdraw",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the full leaderboard (top 10)",
+      "name": "get_leaderboard",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "LeaderboardEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Start a new epoch (admin only)\\n- Archives current leaderboard to RoundHistory(current_round_id)\\n- Archives current config to RoundConfig(current_round_id)\\n- Clears current leaderboard\\n- Increments round_id\\n- Sets new end_time based on epoch_duration from now\\n- Resets finalized/paid_out flags",
+      "name": "start_new_epoch",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Legacy function for backwards compatibility\\nNow calls start_new_epoch internally",
+      "name": "start_new_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "_new_end_time",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get historical config for a specific completed round",
+      "name": "get_round_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "GameConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a player's personal best score",
+      "name": "get_personal_best",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get historical leaderboard for a specific completed round",
+      "name": "get_round_history",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "LeaderboardEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update epoch duration (admin only)\\nTakes effect on the next epoch",
+      "name": "set_epoch_duration",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "duration_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Single leaderboard entry",
+      "lib": "",
+      "name": "LeaderboardEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]
