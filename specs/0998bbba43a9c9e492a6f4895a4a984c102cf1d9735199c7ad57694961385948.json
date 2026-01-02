@@ -1,0 +1,250 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the ArbitrageProxy contract",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Arbitrage was not profitable after execution",
+          "name": "Unprofitable",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not authorized",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "Invalid path provided",
+          "name": "InvalidPath",
+          "value": 3
+        },
+        {
+          "doc": "Insufficient balance for trade",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "Swap failed on external DEX",
+          "name": "SwapFailed",
+          "value": 5
+        },
+        {
+          "doc": "Path too long (max 4 hops)",
+          "name": "PathTooLong",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw tokens from the contract (admin only)",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin address",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Swap instruction for a single leg of the arbitrage",
+      "lib": "",
+      "name": "SwapLeg",
+      "fields": [
+        {
+          "doc": "Amount to swap (0 = use all available balance)",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "Minimum amount to receive",
+          "name": "min_amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "The specific Pair/Pool address (Required for Auth)",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "DEX/Router contract address",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "Token to sell",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "Token to buy",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Arbitrage execution result",
+      "lib": "",
+      "name": "ArbResult",
+      "fields": [
+        {
+          "doc": "Gas/fees consumed",
+          "name": "fees",
+          "type_": "i128"
+        },
+        {
+          "doc": "Number of legs executed",
+          "name": "legs_executed",
+          "type_": "u32"
+        },
+        {
+          "doc": "Net profit in base asset",
+          "name": "profit",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a cyclic arbitrage atomically\\n\\nThe entire transaction reverts if the final balance is less than\\ninitial balance + min_profit. This ensures atomic safety.\\n\\n# Arguments\\n* `initiator` - The caller who initiated the arbitrage\\n* `base_asset` - The asset we start and end with (e.g., USDC)\\n* `legs` - Vector of swap instructions\\n* `min_profit` - Minimum profit required (reverts if not met)\\n\\n# Returns\\n* `ArbResult` - Profit, fees, and legs executed",
+      "name": "execute_cycle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ArbResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor (CAP-0058) replaces initialize\\nAtomically sets the admin during deployment",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Receive a flash loan callback\\nImplements the FlashLoanReceiver trait for xycLoans/Blend integration",
+      "name": "receive_flash_loan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
