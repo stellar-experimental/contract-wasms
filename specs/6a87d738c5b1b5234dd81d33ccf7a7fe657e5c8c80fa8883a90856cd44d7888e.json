@@ -1,0 +1,1477 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Custom errors for the ZapRouter contract",
+      "lib": "",
+      "name": "ZapError",
+      "cases": [
+        {
+          "doc": "Router has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Router has not been initialized",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Transaction deadline has passed",
+          "name": "DeadlineExpired",
+          "value": 10
+        },
+        {
+          "doc": "Invalid swap path provided",
+          "name": "InvalidPath",
+          "value": 11
+        },
+        {
+          "doc": "Invalid amount (zero or negative)",
+          "name": "InvalidAmount",
+          "value": 12
+        },
+        {
+          "doc": "Invalid tick range",
+          "name": "InvalidTickRange",
+          "value": 13
+        },
+        {
+          "doc": "Zero amount provided",
+          "name": "ZeroAmount",
+          "value": 14
+        },
+        {
+          "doc": "Path too long (exceeds max hops)",
+          "name": "PathTooLong",
+          "value": 15
+        },
+        {
+          "doc": "Empty fee vector for required swap",
+          "name": "EmptyFeeVector",
+          "value": 16
+        },
+        {
+          "doc": "Insufficient liquidity minted",
+          "name": "InsufficientLiquidity",
+          "value": 30
+        },
+        {
+          "doc": "Insufficient output amount",
+          "name": "InsufficientOutput",
+          "value": 31
+        },
+        {
+          "doc": "Slippage tolerance exceeded",
+          "name": "SlippageExceeded",
+          "value": 35
+        },
+        {
+          "doc": "Swap operation failed",
+          "name": "SwapFailed",
+          "value": 40
+        },
+        {
+          "doc": "Math overflow",
+          "name": "MathOverflow",
+          "value": 50
+        },
+        {
+          "doc": "Pool not found",
+          "name": "PoolNotFound",
+          "value": 52
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Zap router initialization event",
+      "lib": "",
+      "name": "ZapInitializedEvent",
+      "prefix_topics": [
+        "zap_initialized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "position_manager",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Zap in completed event",
+      "lib": "",
+      "name": "ZapInEvent",
+      "prefix_topics": [
+        "zap_in"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "refund",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Zap out completed event",
+      "lib": "",
+      "name": "ZapOutEvent",
+      "prefix_topics": [
+        "zap_out"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fees0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fees1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for zap-router specific data",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "XlmAddress"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PositionManager"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirror of Pool's Slot0 return type for cross-contract decoding",
+      "lib": "",
+      "name": "Slot0Return",
+      "fields": [
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "Current tick (received from pool but not currently used)",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle hints for deterministic footprint (must match pool's OracleHints)",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool state returned by get_full_pool_state() (must match dex-pool's PoolState)",
+      "lib": "",
+      "name": "PoolState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of a swap operation (must match dex-pool's SwapResult)",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "SwapResult for quote operations (mirrors pool's SwapResult)",
+      "lib": "",
+      "name": "QuoteSwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for zap in operation",
+      "lib": "",
+      "name": "ZapInParams",
+      "fields": [
+        {
+          "doc": "Minimum amount of token0 to use in mint",
+          "name": "amount0_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "Minimum amount of token1 to use in mint",
+          "name": "amount1_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "Amount of token_in to zap",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "Transaction deadline (ledger timestamp)",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "Fee tiers for each hop to token0 (len = path_to_token0.len() - 1)",
+          "name": "fees_to_token0",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Fee tiers for each hop to token1 (len = path_to_token1.len() - 1)",
+          "name": "fees_to_token1",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Minimum liquidity to receive",
+          "name": "min_liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Full path from token_in to token0: [token_in, intermediate..., token0]\\nEmpty if token_in == token0 (no swap needed for token0 side)",
+          "name": "path_to_token0",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Full path from token_in to token1: [token_in, intermediate..., token1]\\nEmpty if token_in == token1 (no swap needed for token1 side)",
+          "name": "path_to_token1",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Target liquidity pool address",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Address to receive the NFT position",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Address providing the input tokens (must authorize)",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "Optional client-computed swap amount hint for gas optimization.\\n\\nWhen zapping, the input must be split between token0 and token1. This hint\\ntells the contract how much to swap (avoiding on-chain calculation).\\n- `None`: Contract calculates optimal split on-chain (costs more gas)\\n- `Some(amount)`: Contract uses this value (get it from `quote_zap_in`)\\n\\nThe hint is validated against slippage bounds regardless.",
+          "name": "swap_amount_hint",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Minimum output from swap to token0 (per-swap slippage protection)\\nSet to 0 to skip this check",
+          "name": "swap_to_token0_min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Minimum output from swap to token1 (per-swap slippage protection)\\nSet to 0 to skip this check",
+          "name": "swap_to_token1_min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Lower tick boundary for position",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "Upper tick boundary for position",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "Input token address (can be ANY token)",
+          "name": "token_in",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for zap out operation",
+      "lib": "",
+      "name": "ZapOutParams",
+      "fields": [
+        {
+          "doc": "Minimum amounts from liquidity removal",
+          "name": "amount0_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "Minimum final output amount after all swaps",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Transaction deadline (ledger timestamp)",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "Fee tiers for each hop from token0 (len = path_from_token0.len() - 1)",
+          "name": "fees_from_token0",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Fee tiers for each hop from token1 (len = path_from_token1.len() - 1)",
+          "name": "fees_from_token1",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Amount of liquidity to remove (use position's full liquidity for complete exit)",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Full path from token0 to token_out: [token0, intermediate..., token_out]\\nEmpty if token_out == token0 (no swap needed)",
+          "name": "path_from_token0",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Full path from token1 to token_out: [token1, intermediate..., token_out]\\nEmpty if token_out == token1 (no swap needed)",
+          "name": "path_from_token1",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Address to receive output tokens",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Position owner or approved operator (must authorize)",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "NFT position token ID",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Desired output token (can be ANY token)",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of a zap in operation",
+      "lib": "",
+      "name": "ZapInResult",
+      "fields": [
+        {
+          "doc": "Amount of token0 used",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Amount of token1 used",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "Liquidity minted",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Amount of token_in refunded as dust",
+          "name": "refund_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "NFT position token ID",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of a zap out operation",
+      "lib": "",
+      "name": "ZapOutResult",
+      "fields": [
+        {
+          "doc": "Amount of token0 from liquidity removal",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Amount of token1 from liquidity removal",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total amount of token_out received",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Fees collected (token0)",
+          "name": "fees0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Fees collected (token1)",
+          "name": "fees1",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for quoting a zap in",
+      "lib": "",
+      "name": "QuoteZapInParams",
+      "fields": [
+        {
+          "doc": "Amount of token_in",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "Fees for path to token0",
+          "name": "fees_to_token0",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Fees for path to token1",
+          "name": "fees_to_token1",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Path to token0 (if needed)",
+          "name": "path_to_token0",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Path to token1 (if needed)",
+          "name": "path_to_token1",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Target pool address",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Lower tick",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "Upper tick",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "Input token address",
+          "name": "token_in",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of quoting a zap in",
+      "lib": "",
+      "name": "QuoteZapInResult",
+      "fields": [
+        {
+          "doc": "Estimated amount0 used",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Estimated amount1 used",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "Estimated liquidity",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Estimated refund",
+          "name": "refund_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Optimal amount to swap (if token_in is a pool token)",
+          "name": "swap_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for quoting a zap out",
+      "lib": "",
+      "name": "QuoteZapOutParams",
+      "fields": [
+        {
+          "doc": "Fees for path from token0",
+          "name": "fees_from_token0",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Fees for path from token1",
+          "name": "fees_from_token1",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Liquidity to remove",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Path from token0 (if needed)",
+          "name": "path_from_token0",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Path from token1 (if needed)",
+          "name": "path_from_token1",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Position token ID",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Desired output token",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of quoting a zap out",
+      "lib": "",
+      "name": "QuoteZapOutResult",
+      "fields": [
+        {
+          "doc": "Estimated amount0 from position",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Estimated amount1 from position",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "Estimated total output amount",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Estimated fees0",
+          "name": "fees0",
+          "type_": "u128"
+        },
+        {
+          "doc": "Estimated fees1",
+          "name": "fees1",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Zap Router\\n\\n# Arguments\\n* `factory` - DEX factory address (for pool lookups and token ordering)\\n* `xlm` - Native XLM token address (for gas refunds)\\n* `position_manager` - NonFungiblePositionManager address (for NFT minting)",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Zap in with a single token to receive an NFT LP position\\n\\n# Flow\\n1. Transfer token_in from sender to zap contract\\n2. Calculate optimal split (or use hint)\\n3. Execute swaps to acquire pool tokens\\n4. Mint NFT position via position manager\\n5. Refund any dust to sender\\n\\n# Returns\\n* `token_id` - NFT position ID\\n* `liquidity` - Liquidity minted\\n* `amount0` - Amount of token0 used\\n* `amount1` - Amount of token1 used",
+      "name": "zap_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "ZapInParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ZapInResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Zap out from an NFT LP position to a single token\\n\\n# Flow\\n1. Decrease liquidity on position\\n2. Collect tokens + accrued fees\\n3. Swap all to desired output token\\n4. Transfer to recipient\\n\\n# Note\\nNFT burning is NOT supported via zap_out. To burn an NFT after a full exit,\\ncall `position_manager.burn(token_id)` directly.\\n\\n# Returns\\n* `amount_out` - Total amount of token_out received",
+      "name": "zap_out",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "ZapOutParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ZapOutResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quote a zap in operation (no state changes)\\n\\n# Returns\\nEstimated liquidity, amounts, and optimal swap split",
+      "name": "quote_zap_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "QuoteZapInParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteZapInResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quote a zap out operation (no state changes)\\n\\n# Returns\\nEstimated output amount after swaps",
+      "name": "quote_zap_out",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "QuoteZapOutParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteZapOutResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the factory address",
+      "name": "get_factory",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the XLM address",
+      "name": "get_xlm_address",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the position manager address",
+      "name": "get_position_manager",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ZapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if the contract is initialized",
+      "name": "is_initialized",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the periphery libraries",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Hex string length is insufficient for the requested conversion",
+          "name": "HexLengthInsufficient",
+          "value": 2001
+        },
+        {
+          "doc": "mul_div operation failed in liquidity calculation",
+          "name": "MulDivFailed",
+          "value": 2002
+        },
+        {
+          "doc": "Invalid price range (division by zero)",
+          "name": "InvalidPriceRange",
+          "value": 2003
+        },
+        {
+          "doc": "U256 to u128 conversion failed (overflow)",
+          "name": "U256ToU128ConversionFailed",
+          "value": 2004
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters required to construct a token URI (see original Solidity code for semantics)",
+      "lib": "",
+      "name": "ConstructTokenURIParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "base_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base_token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "base_token_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "flip_ratio",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote_token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "quote_token_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "tick_current",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Data structure for weighted tick aggregation across multiple pools",
+      "lib": "",
+      "name": "WeightedTickData",
+      "fields": [
+        {
+          "doc": "Tick value from a pool",
+          "name": "tick",
+          "type_": "i32"
+        },
+        {
+          "doc": "Weight for this tick (typically liquidity or volume)",
+          "name": "weight",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the periphery base contract",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Transaction has exceeded the deadline",
+          "name": "TransactionTooOld",
+          "value": 1001
+        },
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 1002
+        },
+        {
+          "doc": "Factory address has not been initialized",
+          "name": "FactoryNotInitialized",
+          "value": 1003
+        },
+        {
+          "doc": "XLM address has not been initialized",
+          "name": "XlmAddressNotInitialized",
+          "value": 1004
+        },
+        {
+          "doc": "Token does not exist",
+          "name": "TokenDoesNotExist",
+          "value": 1005
+        },
+        {
+          "doc": "Not the owner of the token",
+          "name": "NotTokenOwner",
+          "value": 1006
+        },
+        {
+          "doc": "Unauthorized operation",
+          "name": "Unauthorized",
+          "value": 1007
+        },
+        {
+          "doc": "Insufficient token balance for operation",
+          "name": "InsufficientBalance",
+          "value": 1008
+        },
+        {
+          "doc": "Tick range is invalid (lower >= upper)",
+          "name": "InvalidTickRange",
+          "value": 1009
+        },
+        {
+          "doc": "Tick values are not aligned to pool tick spacing",
+          "name": "TickNotAligned",
+          "value": 1010
+        },
+        {
+          "doc": "Tick is out of allowable bounds",
+          "name": "TickOutOfBounds",
+          "value": 1011
+        },
+        {
+          "doc": "Expected pool not found or inaccessible",
+          "name": "PoolNotFound",
+          "value": 1012
+        },
+        {
+          "doc": "Mathematical operation resulted in overflow",
+          "name": "MathOverflow",
+          "value": 1013
+        },
+        {
+          "doc": "Price slippage check failed (amount received below minimum)",
+          "name": "PriceSlippageCheck",
+          "value": 1014
+        },
+        {
+          "doc": "No tokens to collect (both amount0_max and amount1_max are zero)",
+          "name": "NothingToCollect",
+          "value": 1015
+        },
+        {
+          "doc": "Tokens Not Ordered",
+          "name": "TokensNotOrdered",
+          "value": 1016
+        },
+        {
+          "doc": "Liquidity calculation failed",
+          "name": "LiquidityCalculationFailed",
+          "value": 1017
+        },
+        {
+          "doc": "Pool key data is missing for the given pool ID",
+          "name": "PoolKeyMissing",
+          "value": 1018
+        },
+        {
+          "doc": "Token descriptor contract address is not set",
+          "name": "TokenDescriptorNotSet",
+          "value": 1019
+        },
+        {
+          "doc": "No approved address for the given token",
+          "name": "NoApprovedAddress",
+          "value": 1020
+        },
+        {
+          "doc": "Position must have zero liquidity and no owed tokens before burning",
+          "name": "PositionNotCleared",
+          "value": 1021
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Keys under which we'll store the immutable fields",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "XlmAddress"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Q128.128 fixed-point number\\n\\nRepresents a number as: value / 2^128\\n\\nUsed exclusively for fee growth tracking in Uniswap V3 architecture.\\nFor price calculations, use FixedPoint96 instead.",
+      "lib": "",
+      "name": "FixedPoint128",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Q64.96 fixed-point number\\n\\nInternally stored as a U256 where the value represents:\\n`actual_value = stored_value / 2^96`",
+      "lib": "",
+      "name": "FixedPoint96",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapStepResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_ratio_next",
+          "type_": {
+            "udt": {
+              "name": "SqrtPriceX96"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "512-bit unsigned integer\\n\\nRepresented as two 256-bit components:\\n- `low`: bits 0-255\\n- `high`: bits 256-511\\n\\nThe actual value is: high * 2^256 + low",
+      "lib": "",
+      "name": "U512",
+      "fields": [
+        {
+          "doc": "",
+          "name": "high",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "low",
+          "type_": "u256"
+        }
+      ]
+    }
+  }
+]

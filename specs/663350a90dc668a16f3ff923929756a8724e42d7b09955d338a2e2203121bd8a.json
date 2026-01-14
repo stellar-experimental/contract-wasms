@@ -1,0 +1,1248 @@
+[
+  {
+    "function_v0": {
+      "doc": "Initializes the LongShortPair contract.\\n\\nThis constructor is intended to be called exactly once at deploy time. It:\\n- Sets core admin roles (`Admin`, `PauseAdmin`, `EmergencyAdmin`) to `params.admin`\\n- Stores immutable-ish pair configuration such as the underlying `asset`\\n- Stores collateral configuration (`collateral_token`, `collateral_per_pair`)\\n- Stores token contract addresses for the LONG and SHORT tokens\\n- Stores oracle and calculator addresses\\n- Initializes price bounds (`lower_bound`, `upper_bound`)\\n\\n### Reverts\\n- [`LongShortPairError::AlreadyInitialized`] if the contract has already been initialized.\\n\\n### Arguments\\n- `e`: Soroban environment.\\n- `params`: Full set of pair parameters used to bootstrap the contract.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "PairParams"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mints equal amounts of LONG and SHORT tokens by depositing collateral.\\n\\nFor `tokens_to_mint`, the contract:\\n1. Calculates `collateral_used = tokens_to_mint * collateral_per_pair`\\n2. Transfers `collateral_used` of collateral from `user` into the Pair contract\\n3. Mints `tokens_to_mint` LONG and `tokens_to_mint` SHORT to the user\\n4. Increments the tracked `total_collateral`\\n\\nThis is the primary entry mechanism for creating new synthetic exposure.\\n\\n### Reverts\\n- [`LongShortPairError::InvalidInput`] if `tokens_to_mint == 0`.\\n- [`LongShortPairError::ActionPaused`] if minting is paused.\\n- [`LongShortPairError::MintingDisabled`] if the pair is not [`PairStatus::Active`].\\n\\n### Returns\\nReturns the amount of collateral transferred in (`collateral_used`).",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokens_to_mint",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Redeems equal amounts of LONG and SHORT tokens for collateral.\\n\\nFor `tokens_to_redeem`, the contract:\\n1. Synchronizes internal collateral accounting (`sync_collateral`)\\n2. Burns `tokens_to_redeem` LONG and `tokens_to_redeem` SHORT from the user\\n3. Calculates `collateral_returned = tokens_to_redeem * collateral_per_pair`\\n4. Transfers `collateral_returned` of collateral back to the user\\n5. Decrements the tracked `total_collateral`\\n\\nThis redemption path requires burning *both* legs (LONG and SHORT) in equal quantity.\\n\\n### Reverts\\n- [`LongShortPairError::InvalidInput`] if `tokens_to_redeem == 0`.\\n- [`LongShortPairError::ActionPaused`] if redeeming is paused.\\n- [`LongShortPairError::InsufficientInventory`] if the contract does not have enough collateral.\\n\\n### Returns\\nReturns the amount of collateral returned (`collateral_returned`).",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokens_to_redeem",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Redeems a single side (LONG *or* SHORT) for collateral after expiration.\\n\\nThis method is only enabled when the pair status is [`PairStatus::Expired`]. At expiry,\\nsettlement determines the collateral split between LONG and SHORT using\\n`collateral_percent_long` (and `1 - collateral_percent_long` for SHORT).\\n\\nThe contract:\\n1. Synchronizes internal collateral accounting (`sync_collateral`)\\n2. Requires the pair to be expired\\n3. Determines the payout percent for `side`\\n4. Burns `tokens_to_redeem` of the chosen `side`\\n5. Pays out `tokens_to_redeem * collateral_per_pair * side_pct`\\n6. Decrements tracked `total_collateral`\\n\\n### Notes\\n- Redeeming a worthless side is forbidden (e.g., side percent is 0).\\n- A computed payout of 0 is rejected (e.g., tiny redemption amount).\\n\\n### Reverts\\n- [`LongShortPairError::InvalidInput`] if `tokens_to_redeem == 0` or payout would be 0.\\n- [`LongShortPairError::ActionPaused`] if redeeming is paused.\\n- [`LongShortPairError::InvalidStatus`] if the pair is not expired.\\n- [`LongShortPairErro",
+      "name": "redeem_one",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "side",
+          "type_": {
+            "udt": {
+              "name": "Side"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens_to_redeem",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the Pair's settlement allocation (`collateral_percent_long`) using the oracle TWAP.\\n\\nThis is a passthrough to `crate::utils::sync_collateral(&e)`.\\n\\nDespite the name, this does **not** transfer collateral or reconcile balances. It only:\\n- Queries the oracle TWAP\\n- Computes a new `collateral_percent_long` via the calculator\\n- Updates `last_update_ts` and `collateral_percent_long`\\n- Potentially marks the Pair as [`PairStatus::Expired`] and sets `expiration_ts`\\nif the TWAP reaches or crosses the configured bounds.\\n\\nThis function is useful for keepers/frontends that want to \\xe2\\x80\\x9cpoke\\xe2\\x80\\x9d the Pair so that\\nsettlement state is fresh before mint/redeem flows or UI display.",
+      "name": "sync_collateral",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the token contract addresses for the Pair: LONG, SHORT, and collateral.",
+      "name": "get_tokens",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairTokens"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current configured price bounds for the Pair.\\n\\nThese bounds define the linear mapping used to convert settlement percent into a scaled price.",
+      "name": "get_price_bounds",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairPriceBounds"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the user's balances of LONG and SHORT tokens.",
+      "name": "get_user_token_balances",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairAmounts"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total supply of LONG and SHORT tokens.",
+      "name": "get_total_token_supplies",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairAmounts"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns current collateral configuration and settlement information.\\n\\n`collateral_percent_long` is the settlement allocation to LONG in `PRICE_PRECISION` units.\\nSHORT receives `PRICE_PRECISION - collateral_percent_long`.",
+      "name": "get_collateral_info",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "CollateralInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns an aggregated snapshot of the Pair state.\\n\\nThis is a convenience method for frontends/indexers to avoid multiple round-trips.",
+      "name": "get_summary",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairSummary"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current pair status.",
+      "name": "get_status",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairStatus"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the calculator address used by this Pair.\\n\\n### Reverts\\n- Reverts if `admin` is not authorized.",
+      "name": "set_calculator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "calculator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the oracle address used by this Pair.\\n\\n### Reverts\\n- Reverts if `admin` is not authorized.",
+      "name": "set_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "kill_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "kill_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unkill_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unkill_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_is_killed_mint",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_is_killed_redeem",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current settlement allocation to LONG in `PRICE_PRECISION` units.\\n\\nThis is not a spot price. It is the settlement fraction of collateral assigned to LONG.",
+      "name": "get_price",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the \"scaled price\" implied by the current settlement allocation.\\n\\nThis maps `collateral_percent_long` linearly into the configured `[lower_bound, upper_bound]` range:\\n\\n```text\\nscaled_price = lower_bound + (upper_bound - lower_bound) * collateral_percent_long / PRICE_PRECISION\\n```\\n\\n### Returns\\nReturns the scaled price in the same units as the configured bounds.",
+      "name": "get_scaled_price",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "contract_name",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "commit_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "apply_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revert_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_emergency_mode",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "emergency_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_emergency_mode",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "commit_transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "new_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "apply_transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revert_transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_future_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LongShortPairError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "InvalidOracle",
+          "value": 203
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 204
+        },
+        {
+          "doc": "",
+          "name": "FailedToGetPoolReserves",
+          "value": 206
+        },
+        {
+          "doc": "",
+          "name": "FailedToGetCalculatorPercent",
+          "value": 207
+        },
+        {
+          "doc": "",
+          "name": "FailedToUpdateTokenScalingFactor",
+          "value": 208
+        },
+        {
+          "doc": "",
+          "name": "FailedToGetOraclePrice",
+          "value": 209
+        },
+        {
+          "doc": "",
+          "name": "PoolsNotSet",
+          "value": 210
+        },
+        {
+          "doc": "",
+          "name": "FundingRateRequiresPoolLiquidity",
+          "value": 211
+        },
+        {
+          "doc": "",
+          "name": "InvalidCalculatorValue",
+          "value": 212
+        },
+        {
+          "doc": "",
+          "name": "MintingDisabled",
+          "value": 213
+        },
+        {
+          "doc": "",
+          "name": "InvalidStatus",
+          "value": 214
+        },
+        {
+          "doc": "",
+          "name": "InsufficientInventory",
+          "value": 215
+        },
+        {
+          "doc": "",
+          "name": "ActionPaused",
+          "value": 216
+        },
+        {
+          "doc": "",
+          "name": "PairExpired",
+          "value": 217
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "BadRoleUsage",
+          "value": 104
+        },
+        {
+          "doc": "",
+          "name": "AnotherActionActive",
+          "value": 2906
+        },
+        {
+          "doc": "",
+          "name": "NoActionActive",
+          "value": 2907
+        },
+        {
+          "doc": "",
+          "name": "ActionNotReadyYet",
+          "value": 2908
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "OracleError: OracleNonPositive",
+          "name": "OracleNonPositive",
+          "value": 601
+        },
+        {
+          "doc": "",
+          "name": "OracleTooVolatile",
+          "value": 602
+        },
+        {
+          "doc": "",
+          "name": "OracleStaleForPair",
+          "value": 603
+        },
+        {
+          "doc": "",
+          "name": "OracleInvalid",
+          "value": 604
+        },
+        {
+          "doc": "",
+          "name": "FailedToGetOraclePrice",
+          "value": 605
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 606
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleValidity",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NonPositive"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TooVolatile"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "StaleForPair"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Frozen"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Valid"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HistoricalOracleData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "last_delay_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "last_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "last_price_twap",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "last_update_ts",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OraclePriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": {
+            "udt": {
+              "name": "Delay"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleSource",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Reflector"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "calculator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_per_pair",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "long_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lower_bound",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "short_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "upper_bound",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Side",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Long"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Short"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Direction",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Buy"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sell"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairPriceBounds",
+      "fields": [
+        {
+          "doc": "",
+          "name": "lower",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "upper",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairAmounts",
+      "fields": [
+        {
+          "doc": "",
+          "name": "long",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "short",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairAmountsWithUSDC",
+      "fields": [
+        {
+          "doc": "",
+          "name": "long",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "short",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairTokens",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "long",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "short",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Inactive"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Active"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Expired"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollateralInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_per_pair",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_percent_long",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_collateral",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairSummary",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "calculator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": {
+            "udt": {
+              "name": "CollateralInfo"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price_bounds",
+          "type_": {
+            "udt": {
+              "name": "PairPriceBounds"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "PairStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "udt": {
+              "name": "PairTokens"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AnotherActionActive",
+          "value": 2906
+        },
+        {
+          "doc": "",
+          "name": "NoActionActive",
+          "value": 2907
+        },
+        {
+          "doc": "",
+          "name": "ActionNotReadyYet",
+          "value": 2908
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MathError",
+      "cases": [
+        {
+          "doc": "MathError: NumberOverflow",
+          "name": "NumberOverflow",
+          "value": 510
+        },
+        {
+          "doc": "MathError: Generic math error",
+          "name": "MathError",
+          "value": 511
+        },
+        {
+          "doc": "MathError: Addition operation caused overflow",
+          "name": "AdditionOverflow",
+          "value": 512
+        },
+        {
+          "doc": "MathError: Subtraction operation caused underflow",
+          "name": "SubtractionUnderflow",
+          "value": 513
+        },
+        {
+          "doc": "MathError: Multiplication operation caused overflow",
+          "name": "MultiplicationOverflow",
+          "value": 514
+        },
+        {
+          "doc": "MathError: Division by zero",
+          "name": "DivisionByZero",
+          "value": 515
+        },
+        {
+          "doc": "MathError: Type conversion overflow",
+          "name": "ConversionOverflow",
+          "value": 516
+        },
+        {
+          "doc": "MathError: Attempted to convert negative value to unsigned type",
+          "name": "NegativeToUnsigned",
+          "value": 517
+        },
+        {
+          "doc": "MathError: Fixed-point arithmetic overflow",
+          "name": "FixedPointOverflow",
+          "value": 518
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StorageError",
+      "cases": [
+        {
+          "doc": "StorageError",
+          "name": "AlreadyInitialized",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "ValueNotInitialized",
+          "value": 501
+        },
+        {
+          "doc": "",
+          "name": "ValueMissing",
+          "value": 502
+        },
+        {
+          "doc": "",
+          "name": "ValueConversionError",
+          "value": 503
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ValidationError",
+      "cases": [
+        {
+          "doc": "ValidationError",
+          "name": "InvalidToken",
+          "value": 801
+        },
+        {
+          "doc": "",
+          "name": "InvalidPercentage",
+          "value": 802
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 804
+        },
+        {
+          "doc": "",
+          "name": "InvalidOracleTimestamp",
+          "value": 805
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Delay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]
