@@ -1,0 +1,794 @@
+[
+  {
+    "function_v0": {
+      "doc": "Vote on a proposal. The caller must be an owner and the proposal must be pending.\\nAn error is returned if the proposal is not pending, the caller is not an owner,\\nor the voter has already voted (votes cannot be changed once cast).",
+      "name": "vote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vote",
+          "type_": {
+            "udt": {
+              "name": "VoteType"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Proposal"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new invoke proposal to invoke an arbitrary contract function.\\nThe caller must be an owner and the invoke must be valid (i.e. the contract exists and the function is valid).\\nInvoke proposals require (threshold - 1) additional votes since the proposer auto-votes Yes.",
+      "name": "invoke",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_entries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "InvokerContractAuthEntry"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Proposes a new proposal. The owner must be the signer of the transaction, and the proposal\\nmust be valid (and not an Invoke variant since Invoke proposals are not\\nallowed to be directly proposed).\\n\\nProposals have a short TTL (approximately 1 week) and can be implicitly prematurely revoked if the\\nconfig is changed.",
+      "name": "propose",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal",
+          "type_": {
+            "udt": {
+              "name": "ProposalInput"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Proposal"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the version of the contract.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the config of the contract. There's no practical way this actually\\nreturns an error due to other initialization checks, but we return a Result for consistency.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ConfigInput"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a proposal by id, returning an error if the proposal is not pending\\n(which happens if the proposal expires in the ledger, is revoked/rejected, is executed,\\nor is before the last config change).",
+      "name": "get_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Proposal"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the contract with a config. The Option<ConfigInput> is used to work around the test harness, which is why we reject any\\nattempt to initialize the contract without a config.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "ConfigInput"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Revokes a proposal. The caller must be the original proposer and the proposal must be pending.",
+      "name": "revoke_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Call",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_entries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "InvokerContractAuthEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owners",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": {
+                "tuple": {
+                  "value_types": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Proposal",
+      "fields": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proposal_type",
+          "type_": {
+            "udt": {
+              "name": "ProposalType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "ProposalStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "votes",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": {
+                "udt": {
+                  "name": "VoteType"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoteType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Abstain",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Yes",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "No",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Public input type for Config - uses Vec for simplicity",
+      "lib": "",
+      "name": "ConfigInput",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owners",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProposalType",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Config",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Config"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Invoke",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Upgrade",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidOwners",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidThreshold",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "ProposalNotFound",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "VoterAlreadyVoted",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "ProposalNotPending",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvokeError",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NoConfigChanges",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "NotCaller",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvokeNotAllowed",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "InvalidUpgrade",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "AddressNotOnLedger",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "InvalidFunctionName",
+          "value": 24
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Public input type for Config proposals - uses Vec for simplicity",
+      "lib": "",
+      "name": "ProposalInput",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Config",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ConfigInput"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Invoke",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Upgrade",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProposalStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Approved",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Rejected",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Executed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Revoked",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InvokeOk",
+      "prefix_topics": [
+        "inv_ok"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "result",
+          "type_": "val",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ConfigSet",
+      "prefix_topics": [
+        "cfg_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoteEvent",
+      "prefix_topics": [
+        "vote"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vote",
+          "type_": {
+            "udt": {
+              "name": "VoteType"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "ProposalStatus"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProposalEvent",
+      "prefix_topics": [
+        "proposal_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "event_type",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "proposal",
+          "type_": {
+            "udt": {
+              "name": "Proposal"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InvokeConversionError",
+      "prefix_topics": [
+        "inv_err"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
