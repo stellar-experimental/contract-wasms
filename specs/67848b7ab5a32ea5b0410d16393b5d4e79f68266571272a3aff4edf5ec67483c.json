@@ -1,0 +1,856 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ContractLocked",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "LowShareCount",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidShareTotal",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "ZeroTransferAmount",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "TransferAmountAboveBalance",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "TransferAmountAboveUnusedBalance",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "ZeroWithdrawalAmount",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "WithdrawalAmountAboveAllocation",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NoSharesToSell",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NoActiveListing",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InsufficientSharesInListing",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvalidShareAmount",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "CannotBuyOwnShares",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "NoSharesToTransfer",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "InsufficientSharesToTransfer",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "CannotTransferToSelf",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "NegativeShareAmount",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "DuplicateShareholder",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "InvalidCommissionRate",
+          "value": 24
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Data key for keeping all of the shareholders in the contract",
+            "name": "Shareholders"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Data key for keeping the share of a shareholder.\\nUser addresses are mapped to their shares",
+            "name": "Share",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Data key for keeping the total allocation amount for a token.\\nToken addresses are mapped to their total allocation amount.",
+            "name": "TotalAllocation",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Data key for keeping the allocation amount for a shareholder.\\nUser addresses with token addresses are mapped to their allocation amount.\\n\\n(UserAddr, TokenAddr) -> Allocation",
+            "name": "Allocation",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Data key for keeping the sale listing for a seller.\\nSeller addresses are mapped to their sale listing.",
+            "name": "SaleListing",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Data key for keeping all active listings in the marketplace.",
+            "name": "ActiveListings"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Data key for keeping the commission configuration",
+            "name": "Commission"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ShareDataKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "share",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "shareholder",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ConfigDataKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "mutable",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CommissionConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "buy_rate_bps",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "distribution_rate_bps",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SaleListingDataKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "payment_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price_per_share",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares_for_sale",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "ShareDataKey"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "mutable",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_share",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shareholder",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": "i128"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "buy_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ConfigDataKey"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_listing",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": {
+                  "udt": {
+                    "name": "SaleListingDataKey"
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "list_shares",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "udt": {
+                    "name": "ShareDataKey"
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "lock_contract",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "ShareDataKey"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_listing",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_allocation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shareholder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "list_all_sales",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "udt": {
+                    "name": "SaleListingDataKey"
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "distribute_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw_allocation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shareholder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "list_shares_for_sale",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "price_per_share",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "payment_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_commission_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "CommissionConfig"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_buy_commission_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_rate_bps",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_commission_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_distribution_commission_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_rate_bps",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
