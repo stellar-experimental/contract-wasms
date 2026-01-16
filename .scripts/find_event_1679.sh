@@ -34,6 +34,24 @@ for file in specs/*.json; do
             home_domain=""
         fi
 
+        # Filter by rssdkver: only include versions >= 23.0.0 and <= 23.4.x
+        # Extract version number before # (e.g., "23.3.0" from "23.3.0#hash")
+        version_part="${rssdkver%%#*}"
+        if [ -n "$version_part" ]; then
+            major=$(echo "$version_part" | cut -d. -f1)
+            minor=$(echo "$version_part" | cut -d. -f2)
+            # Skip if no version, or major < 23, or major > 23, or (major == 23 and minor > 4)
+            if [ -z "$major" ] || [ "$major" -lt 23 ] 2>/dev/null || [ "$major" -gt 23 ] 2>/dev/null; then
+                continue
+            fi
+            if [ "$major" -eq 23 ] && [ "$minor" -gt 4 ] 2>/dev/null; then
+                continue
+            fi
+        else
+            # No version info, skip
+            continue
+        fi
+
         # Extract events with data_format="vec" and 2+ data params, only affected, output as CSV
         jq -r --arg wasm "$wasm_hash" --arg instances "$instances" \
               --arg rsver "$rsver" --arg rssdkver "$rssdkver" \
