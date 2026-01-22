@@ -1,0 +1,446 @@
+[
+  {
+    "function_v0": {
+      "doc": "Burn an identity NFT permanently\\n\\nThis removes the identity entirely. Use with caution.\\nTypically you'd use `rotate` instead to update to a new commitment.\\n\\n# Events\\n* `(\"burn\", wallet)` -> `(commitment, version)`",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mint a new soulbound identity NFT\\n\\nThe wallet mints its own identity - no admin required.\\nEach wallet can only have ONE identity at a time.\\n\\n# Arguments\\n* `wallet` - The wallet address that will own this identity\\n* `commitment` - The ZK identity commitment (32 bytes)\\n* `recovery_commitment` - Recovery commitment for key rotation\\n* `channels` - Bitmap of configured recovery channels (bit 0=passkey, 1=4word, 2=email, 3=telegram, 4=phone)\\n\\n# Events\\n* `(\"mint\", wallet)` -> `(commitment, channels, version)`",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recovery_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "channels",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get contract name",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate identity by burning the old NFT and minting a new version\\n\\nThis is the key mechanism for handling compromised keys:\\n1. Burns the current NFT (preserving history in burn event)\\n2. Mints new NFT with incremented version\\n\\n# Arguments\\n* `wallet` - The wallet address\\n* `new_commitment` - New ZK commitment\\n* `new_recovery_commitment` - New recovery commitment\\n* `new_channels` - Updated channel bitmap\\n\\n# Events\\n* `(\"burn\", wallet)` -> `(old_commitment, old_channels, old_version)`\\n* `(\"mint\", wallet)` -> `(new_commitment, new_channels, new_version)`",
+      "name": "rotate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_recovery_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_channels",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get contract symbol",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer is intentionally NOT implemented\\nCalling this will always fail - NFTs are soulbound",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "_from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "_to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Contract metadata",
+      "lib": "",
+      "name": "Metadata",
+      "fields": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a channel to the existing bitmap",
+      "name": "add_channel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "channel",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current version for a wallet's identity",
+      "name": "get_version",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a specific channel is configured\\nUse channel constants: Channels::PASSKEY, Channels::EMAIL, etc.",
+      "name": "has_channel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "channel",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the channel bitmap for a wallet\\nReturns 0 if no identity minted",
+      "name": "get_channels",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the identity for a wallet (returns None if not minted)",
+      "name": "get_identity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "IdentityNFT"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a wallet has an identity minted",
+      "name": "has_identity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get total number of active identities",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Identity data for a wallet: wallet_address -> IdentityNFT",
+            "name": "Identity",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Contract metadata (name, symbol)",
+            "name": "Metadata"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total number of active identities",
+            "name": "TotalSupply"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with metadata",
+      "name": "__constructor",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The identity NFT data stored for each wallet",
+      "lib": "",
+      "name": "IdentityNFT",
+      "fields": [
+        {
+          "doc": "Channel bitmap: which recovery methods are configured\\nBits: 0=passkey, 1=4word, 2=email, 3=telegram, 4=phone, 5-7=reserved",
+          "name": "channels",
+          "type_": "u32"
+        },
+        {
+          "doc": "The ZK identity commitment (Poseidon hash)",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger timestamp when minted",
+          "name": "minted_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "The owner wallet address (immutable)",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "Recovery commitment (for future key rotation verification)",
+          "name": "recovery_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Version number (increments on each rotation)",
+          "name": "version",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get just the commitment for a wallet",
+      "name": "get_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a channel from the existing bitmap",
+      "name": "remove_channel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "channel",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update channels without rotating the identity\\n\\nUse this to add/remove recovery methods without changing commitments.\\nIncrements version since it's still a state change.\\n\\n# Arguments\\n* `wallet` - The wallet address\\n* `new_channels` - New channel bitmap\\n\\n# Events\\n* `(\"channels\", wallet)` -> `(old_channels, new_channels, version)`",
+      "name": "update_channels",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_channels",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SoulboundError",
+      "cases": [
+        {
+          "doc": "Wallet already has an identity minted",
+          "name": "AlreadyMinted",
+          "value": 1
+        },
+        {
+          "doc": "No identity exists for this wallet",
+          "name": "NotMinted",
+          "value": 2
+        },
+        {
+          "doc": "Transfers are not allowed (soulbound)",
+          "name": "TransferNotAllowed",
+          "value": 3
+        },
+        {
+          "doc": "Only the owner can perform this action",
+          "name": "Unauthorized",
+          "value": 4
+        }
+      ]
+    }
+  }
+]
