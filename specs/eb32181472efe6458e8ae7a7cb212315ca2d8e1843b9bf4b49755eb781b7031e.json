@@ -1,0 +1,1870 @@
+[
+  {
+    "function_v0": {
+      "doc": "Initializes the Treasury contract.\\n\\nThis constructor is intended to be called exactly once at deploy time. It:\\n- Sets up core admin roles (`Admin`, `PauseAdmin`, `EmergencyAdmin`) to the provided `admin`\\n- Stores the canonical USDC oracle used by the Treasury\\n\\n### Reverts\\n- [`TreasuryError::AlreadyInitialized`] if the contract has already been initialized.\\n\\n### Arguments\\n- `e`: Soroban environment.\\n- `admin`: Address to assign administrative roles to.\\n- `usdc_oracle`: Address of the Normal Oracle contract used for USDC pricing.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits LP collateral into the Treasury in exchange for newly-minted LP shares.\\n\\nA deposit consists of:\\n- `pairs_to_deposit` LONG tokens\\n- `pairs_to_deposit` SHORT tokens\\n- `pairs_to_deposit * collateral_per_pair` USDC\\n\\nShares are minted proportional to the deposit's NAV relative to the Treasury's total NAV.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `pairs_to_deposit == 0`.\\n- [`TreasuryError::ActionPaused`] if deposits are paused.\\n\\n### Returns\\nReturns the number of LP shares minted for the depositor.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pairs_to_deposit",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws LP collateral from the Treasury by burning LP shares.\\n\\nThe caller specifies the number of shares to burn. The Treasury computes the\\nproportional amount of LONG/SHORT/USDC owed, validates safety constraints, and\\ntransfers the tokens to the user.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `shares == 0`.\\n- [`TreasuryError::ActionPaused`] if withdrawals are paused.\\n- [`TreasuryError::InsufficientShares`] if `shares > user_shares` or `total_shares == 0`.\\n\\n### Returns\\nReturns the token amounts withdrawn: `{ long, short, usdc }`.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairAmountsWithUSDC"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the stored token configuration for a given Pair.\\n\\nThis includes the contract addresses for the Pair, LONG, SHORT, and collateral (USDC) tokens.",
+      "name": "get_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current oracle prices for the given Pair.\\n\\nPrices are returned in the same precision as `PRICE_PRECISION`.",
+      "name": "get_prices",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairAmountsWithUSDC"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the Treasury\\xe2\\x80\\x99s internal accounting balances for the given Pair.\\n\\nThese balances represent the Treasury\\xe2\\x80\\x99s tracked inventory and may be used for quoting,\\nrisk checks, and LP accounting.",
+      "name": "get_balances",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PairAmountsWithUSDC"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total LP shares outstanding for the given Pair.",
+      "name": "get_total_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the LP share balance for `user` for the given Pair.\\n\\nMissing records default to zero for read-only UX.",
+      "name": "get_user_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current fee configuration for the given Pair.",
+      "name": "get_fee_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TreasuryFeeConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns a snapshot of the Treasury state for the given Pair.\\n\\nThis is a convenience method for frontends/indexers to avoid multiple round-trips.",
+      "name": "get_summary",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TreasurySummary"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns a snapshot of the Treasury state for a Pair plus the user's share balance.\\n\\nThis is a convenience method for frontends/indexers to fetch summary + user position in one call.",
+      "name": "get_user_with_summary",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TreasuryUserSummary"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Estimates a trade output and fee without executing any token transfers.\\n\\nThis helper is intended for quoting in UIs and off-chain routing. It uses the same\\npricing + fee model as the on-chain trade methods.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `amount_in == 0`.\\n- Reverts if `pair` is not configured (via `get_config`).\\n\\n### Returns\\nReturns `(amount_out, usdc_fee)`.",
+      "name": "estimate_trade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "side",
+          "type_": {
+            "udt": {
+              "name": "Side"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buys **LONG** tokens from the Treasury using USDC.\\n\\nThe caller supplies `usdc_in` and receives `long_out` quoted from the current\\noracle price and fee model. This trade is executed **against Treasury inventory**:\\nthe Treasury must already hold sufficient LONG to deliver the trade.\\n\\n### Pricing & Fees\\n- Uses `prices.long` from the oracle.\\n- Computes a dynamic taker fee via `calculate_fee(...)`.\\n- `quote_buy_token` returns `(long_out, usdc_fee)`; `usdc_fee` is retained and tracked.\\n\\n### Slippage Protection\\nReverts if `long_out < min_long_out`.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `usdc_in == 0`.\\n- [`TreasuryError::ActionPaused`] if trading is paused.\\n- [`TreasuryError::Slippage`] if output is zero or below `min_long_out`.\\n- [`TreasuryError::InsufficientInventory`] if the Treasury lacks LONG inventory.\\n\\n### Returns\\nReturns the amount of LONG transferred to the user.",
+      "name": "buy_long",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_in",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_long_out",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sells **LONG** tokens to the Treasury in exchange for USDC.\\n\\nThe caller supplies `long_in` and receives `usdc_out` quoted from the current\\noracle price and fee model. This trade is executed **against Treasury USDC inventory**:\\nthe Treasury must have sufficient USDC to pay out.\\n\\nAdditional safety checks apply to protect LPs:\\n- LONG-side trades may be blocked as \"toxic\"\\n- USDC floor constraints prevent draining too much collateral in a single trade\\n\\n### Slippage Protection\\nReverts if `usdc_out < min_usdc_out`.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `long_in == 0`.\\n- [`TreasuryError::ActionPaused`] if trading is paused.\\n- [`TreasuryError::ToxicSideNotAccepted`] if risk logic blocks LONG sells.\\n- [`TreasuryError::Slippage`] if output is zero or below `min_usdc_out`.\\n- [`TreasuryError::InsufficientInventory`] if the Treasury lacks USDC to pay out.\\n- [`TreasuryError::CannotPassFloor`] if paying out violates the USDC floor.\\n\\n### Returns\\nReturns the amount of USDC transferred to the user.",
+      "name": "sell_long",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "long_in",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_usdc_out",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buys **SHORT** tokens from the Treasury using USDC.\\n\\nThe caller supplies `usdc_in` and receives `short_out` quoted from the current\\noracle price and fee model. This trade is executed **against Treasury inventory**:\\nthe Treasury must already hold sufficient SHORT to deliver the trade.\\n\\n### Pricing & Fees\\n- Uses `prices.short` from the oracle.\\n- Computes a dynamic taker fee via `calculate_fee(...)`.\\n- `quote_buy_token` returns `(short_out, usdc_fee)`; `usdc_fee` is retained and tracked.\\n\\n### Slippage Protection\\nReverts if `short_out < min_short_out`.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `usdc_in == 0`.\\n- [`TreasuryError::ActionPaused`] if trading is paused.\\n- [`TreasuryError::Slippage`] if output is zero or below `min_short_out`.\\n- [`TreasuryError::InsufficientInventory`] if the Treasury lacks SHORT inventory.\\n\\n### Returns\\nReturns the amount of SHORT transferred to the user.",
+      "name": "buy_short",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_in",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_short_out",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sells **SHORT** tokens to the Treasury in exchange for USDC.\\n\\nThe caller supplies `short_in` and receives `usdc_out` quoted from the current\\noracle price and fee model. This trade is executed **against Treasury USDC inventory**:\\nthe Treasury must have sufficient USDC to pay out.\\n\\nAdditional safety checks apply to protect LPs:\\n- SHORT-side trades may be blocked as \"toxic\"\\n- USDC floor constraints prevent draining too much collateral in a single trade\\n\\n### Slippage Protection\\nReverts if `usdc_out < min_usdc_out`.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `short_in == 0`.\\n- [`TreasuryError::ActionPaused`] if trading is paused.\\n- [`TreasuryError::ToxicSideNotAccepted`] if risk logic blocks SHORT sells.\\n- [`TreasuryError::Slippage`] if output is zero or below `min_usdc_out`.\\n- [`TreasuryError::InsufficientInventory`] if the Treasury lacks USDC to pay out.\\n- [`TreasuryError::CannotPassFloor`] if paying out violates the USDC floor.\\n\\n### Returns\\nReturns the amount of USDC transferred to the user.",
+      "name": "sell_short",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "short_in",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_usdc_out",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registers a new Pair with the Treasury and initializes its state.\\n\\nThis call:\\n- Stores the token addresses for LONG/SHORT/USDC from the Pair contract\\n- Initializes balances, shares, risk parameters, fee config, and protocol fee counters\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if fee fields are out of range.",
+      "name": "add_pair",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the fee configuration for an existing Pair.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if any configured fee exceeds its maximum bound.",
+      "name": "set_fee_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "TreasuryFeeConfig"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the risk parameters for an existing Pair.\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if any parameter exceeds its maximum bound.",
+      "name": "set_risk_parameters",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "parameters",
+          "type_": {
+            "udt": {
+              "name": "TreasuryRiskParameters"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the global USDC floor fraction used by risk checks.\\n\\nThe floor fraction is expressed in `PRICE_PRECISION` units (e.g. `0.10e7` for 10%).\\n\\n### Reverts\\n- [`TreasuryError::InvalidInput`] if `floor_fraction` is zero or below the minimum allowed.",
+      "name": "set_usdc_floor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "floor_fraction",
+          "type_": "u128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the protocol fees accumulated for the given Pair (denominated in USDC).",
+      "name": "get_protocol_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers accumulated protocol fees for `pair` to `destination`.\\n\\n### Reverts\\n- Reverts if `admin` is not authorized.\\n\\n### Returns\\nReturns the amount of fees transferred.",
+      "name": "claim_protocol_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "kill_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "kill_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "kill_trade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "kill_withdraw_floor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unkill_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unkill_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unkill_trade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unkill_withdraw_floor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_is_killed_deposit",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_is_killed_withdraw",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_is_killed_trade",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_is_killed_withdraw_floor",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "contract_name",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "commit_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "apply_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revert_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_emergency_mode",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "emergency_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_emergency_mode",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "commit_transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "new_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "apply_transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revert_transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_future_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreasuryError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 204
+        },
+        {
+          "doc": "",
+          "name": "InvalidPair",
+          "value": 205
+        },
+        {
+          "doc": "",
+          "name": "FailedToCallPairContract",
+          "value": 209
+        },
+        {
+          "doc": "",
+          "name": "ActionPaused",
+          "value": 213
+        },
+        {
+          "doc": "",
+          "name": "InsufficientInventory",
+          "value": 215
+        },
+        {
+          "doc": "",
+          "name": "Slippage",
+          "value": 216
+        },
+        {
+          "doc": "",
+          "name": "InsufficientShares",
+          "value": 217
+        },
+        {
+          "doc": "",
+          "name": "DepositTooSmall",
+          "value": 218
+        },
+        {
+          "doc": "",
+          "name": "WithdrawTooSmall",
+          "value": 219
+        },
+        {
+          "doc": "",
+          "name": "InvalidBalance",
+          "value": 220
+        },
+        {
+          "doc": "",
+          "name": "CannotPassFloor",
+          "value": 221
+        },
+        {
+          "doc": "",
+          "name": "ToxicSideNotAccepted",
+          "value": 222
+        },
+        {
+          "doc": "",
+          "name": "FailedToGetOraclePrice",
+          "value": 223
+        },
+        {
+          "doc": "",
+          "name": "InvalidFee",
+          "value": 224
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Static configuration for a supported LongShortPair.\\n\\nStored per-pair and used to find the token contracts the Treasury should interact with.",
+      "lib": "",
+      "name": "PairConfig",
+      "fields": [
+        {
+          "doc": "LONG token contract address.",
+          "name": "long",
+          "type_": "address"
+        },
+        {
+          "doc": "The LongShortPair contract address.",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "SHORT token contract address.",
+          "name": "short",
+          "type_": "address"
+        },
+        {
+          "doc": "Collateral token contract address (USDC).",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Convenient aggregation used by frontend/indexers.\\n\\nNote: this is not stored directly; it is assembled from other stored keys.",
+      "lib": "",
+      "name": "TreasurySummary",
+      "fields": [
+        {
+          "doc": "Treasury inventory (what the Treasury actually holds / accounts for).",
+          "name": "balances",
+          "type_": {
+            "udt": {
+              "name": "PairAmountsWithUSDC"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "PairConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_config",
+          "type_": {
+            "udt": {
+              "name": "TreasuryFeeConfig"
+            }
+          }
+        },
+        {
+          "doc": "Quoting inputs (LONG/SHORT settlement fractions + USDC oracle TWAP).",
+          "name": "prices",
+          "type_": {
+            "udt": {
+              "name": "PairAmountsWithUSDC"
+            }
+          }
+        },
+        {
+          "doc": "Total LP share supply for this pair.",
+          "name": "total_shares",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A per-user view that combines [`TreasurySummary`] plus the user's LP share balance.",
+      "lib": "",
+      "name": "TreasuryUserSummary",
+      "fields": [
+        {
+          "doc": "",
+          "name": "summary",
+          "type_": {
+            "udt": {
+              "name": "TreasurySummary"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user_shares",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Fee model parameters for a pair.\\n\\n`base_fee` are expressed in `PRICE_PRECISION` units.\\nThe remaining parameters are model-specific knobs used by `calculate_fee(...)`.",
+      "lib": "",
+      "name": "TreasuryFeeConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "base_fee",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Risk parameters enforced by the Treasury when executing trades.\\n\\nValues are interpreted by `crate::risk::*` checks.",
+      "lib": "",
+      "name": "TreasuryRiskParameters",
+      "fields": [
+        {
+          "doc": "Maximum fee adjustment (additive or subtractive) driven by whether a trade\\nincreases or decreases `abs(net_imbalance)`; expressed in `PRICE_PRECISION`.\\n\\nExample: `50_000` = 0.50% max surcharge/rebate.",
+          "name": "imbalance_fee_max",
+          "type_": "u128"
+        },
+        {
+          "doc": "Hard cap on absolute net inventory imbalance in **token units**:\\n`abs(long_balance - short_balance) <= max_net_imbalance_tokens`.\\n\\nSet to 0 to disable the guard (not recommended).",
+          "name": "max_net_imbalance_tokens",
+          "type_": "u128"
+        },
+        {
+          "doc": "Threshold in `PRICE_PRECISION` units used by toxic-trade logic.",
+          "name": "toxic_threshold",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Composite key for `(pair, user)` LP share balances.\\n\\nStored under [`TreasuryDataKey::UserShares`].",
+      "lib": "",
+      "name": "UserSharesKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Persistent storage keys for all per-pair state.\\n\\nEverything here is stored in **persistent** storage and must be TTL-bumped\\n(`bump_persistent`) on read/write to avoid expiry.",
+      "lib": "",
+      "name": "TreasuryDataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Pair -> token/config addresses.",
+            "name": "Config",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pair -> Treasury inventory amounts.",
+            "name": "Balances",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pair -> risk knobs (toxicity threshold, etc.).",
+            "name": "RiskParameters",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pair -> total LP share supply.",
+            "name": "TotalShares",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "(Pair, User) -> user's LP share balance.",
+            "name": "UserShares",
+            "type_": [
+              {
+                "udt": {
+                  "name": "UserSharesKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pair -> fee configuration.",
+            "name": "FeeConfig",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pair -> accumulated protocol fees (in USDC units).",
+            "name": "ProtocolFees",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "BadRoleUsage",
+          "value": 104
+        },
+        {
+          "doc": "",
+          "name": "AnotherActionActive",
+          "value": 2906
+        },
+        {
+          "doc": "",
+          "name": "NoActionActive",
+          "value": 2907
+        },
+        {
+          "doc": "",
+          "name": "ActionNotReadyYet",
+          "value": 2908
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "OracleError: OracleNonPositive",
+          "name": "OracleNonPositive",
+          "value": 601
+        },
+        {
+          "doc": "",
+          "name": "OracleTooVolatile",
+          "value": 602
+        },
+        {
+          "doc": "",
+          "name": "OracleStaleForPair",
+          "value": 603
+        },
+        {
+          "doc": "",
+          "name": "OracleInvalid",
+          "value": 604
+        },
+        {
+          "doc": "",
+          "name": "FailedToGetOraclePrice",
+          "value": 605
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 606
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleValidity",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NonPositive"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TooVolatile"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "StaleForPair"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Frozen"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Valid"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HistoricalOracleData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "last_delay_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "last_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "last_price_twap",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "last_update_ts",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OraclePriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": {
+            "udt": {
+              "name": "Delay"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleSource",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Reflector"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "calculator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_per_pair",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "long_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lower_bound",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "short_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "upper_bound",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Side",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Long"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Short"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Direction",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Buy"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sell"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairPriceBounds",
+      "fields": [
+        {
+          "doc": "",
+          "name": "lower",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "upper",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairAmounts",
+      "fields": [
+        {
+          "doc": "",
+          "name": "long",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "short",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairAmountsWithUSDC",
+      "fields": [
+        {
+          "doc": "",
+          "name": "long",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "short",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairTokens",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "long",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "short",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Inactive"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Active"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Expired"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollateralInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_per_pair",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_percent_long",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_collateral",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairSummary",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "calculator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": {
+            "udt": {
+              "name": "CollateralInfo"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price_bounds",
+          "type_": {
+            "udt": {
+              "name": "PairPriceBounds"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "PairStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "udt": {
+              "name": "PairTokens"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AnotherActionActive",
+          "value": 2906
+        },
+        {
+          "doc": "",
+          "name": "NoActionActive",
+          "value": 2907
+        },
+        {
+          "doc": "",
+          "name": "ActionNotReadyYet",
+          "value": 2908
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MathError",
+      "cases": [
+        {
+          "doc": "MathError: NumberOverflow",
+          "name": "NumberOverflow",
+          "value": 510
+        },
+        {
+          "doc": "MathError: Generic math error",
+          "name": "MathError",
+          "value": 511
+        },
+        {
+          "doc": "MathError: Addition operation caused overflow",
+          "name": "AdditionOverflow",
+          "value": 512
+        },
+        {
+          "doc": "MathError: Subtraction operation caused underflow",
+          "name": "SubtractionUnderflow",
+          "value": 513
+        },
+        {
+          "doc": "MathError: Multiplication operation caused overflow",
+          "name": "MultiplicationOverflow",
+          "value": 514
+        },
+        {
+          "doc": "MathError: Division by zero",
+          "name": "DivisionByZero",
+          "value": 515
+        },
+        {
+          "doc": "MathError: Type conversion overflow",
+          "name": "ConversionOverflow",
+          "value": 516
+        },
+        {
+          "doc": "MathError: Attempted to convert negative value to unsigned type",
+          "name": "NegativeToUnsigned",
+          "value": 517
+        },
+        {
+          "doc": "MathError: Fixed-point arithmetic overflow",
+          "name": "FixedPointOverflow",
+          "value": 518
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StorageError",
+      "cases": [
+        {
+          "doc": "StorageError",
+          "name": "AlreadyInitialized",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "ValueNotInitialized",
+          "value": 501
+        },
+        {
+          "doc": "",
+          "name": "ValueMissing",
+          "value": 502
+        },
+        {
+          "doc": "",
+          "name": "ValueConversionError",
+          "value": 503
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ValidationError",
+      "cases": [
+        {
+          "doc": "ValidationError",
+          "name": "InvalidToken",
+          "value": 801
+        },
+        {
+          "doc": "",
+          "name": "InvalidPercentage",
+          "value": 802
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 804
+        },
+        {
+          "doc": "",
+          "name": "InvalidOracleTimestamp",
+          "value": 805
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Delay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]
