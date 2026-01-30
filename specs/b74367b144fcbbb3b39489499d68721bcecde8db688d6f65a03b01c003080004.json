@@ -1,0 +1,417 @@
+[
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Denomination",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OneXLM",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "FiveXLM",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TenXLM",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "HundredXLM",
+          "value": 100
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Commitments",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Denomination"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CommitmentCount",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Denomination"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Allowances"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Managers"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidDenomination",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InsufficientAllowance",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with an owner who becomes the first manager\\nNO wallet signer modification - just contract setup!",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approve the contract to spend tokens on behalf of the user\\n\\xe2\\x9c\\x85 NO Blockaid warnings - uses standard token allowance!\\n\\xe2\\x9c\\x85 NO wallet signer modification!\\n\\nParameters:\\n- owner: The address approving the spending\\n- token: Which token to approve\\n- amount: Maximum amount the contract can spend\\n\\nExample: Approve contract to spend up to 100 XLM",
+      "name": "approve_spending",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit using pre-approved allowance (AVOIDS Blockaid warnings!)\\nManager can initiate deposit on behalf of user who has approved spending\\n\\nThis is the KEY function to avoid wallet signer modifications!\\nUser calls approve_spending() once, then manager can deposit anytime\\n\\nParameters:\\n- manager: Authorized manager initiating the deposit\\n- from: User whose tokens are being deposited (must have approved allowance)\\n- denomination: Which fixed amount pool\\n- token: Token contract address\\n- commitment: Hash commitment for privacy",
+      "name": "deposit_from_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add an authorized manager (doesn't modify wallet signers - avoids Blockaid warnings!)\\nOnly existing managers can add new managers",
+      "name": "add_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a manager\\nOnly existing managers can remove managers",
+      "name": "remove_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "manager_to_remove",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an address is a manager",
+      "name": "is_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current allowance for an owner-token pair",
+      "name": "get_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current commitment count for a specific denomination pool",
+      "name": "get_commitment_count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get commitment by index for a specific denomination pool",
+      "name": "get_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the fixed amount for a denomination",
+      "name": "get_denomination_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
