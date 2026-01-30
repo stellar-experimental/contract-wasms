@@ -1,0 +1,452 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Pending",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VerificationKey"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Pending",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "timeout_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "ZK version: 0 = legacy SHA256, 1 = BN254 ZK (Poseidon-compatible)",
+          "name": "zk_version",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "ZK Proof structure for Groth16-style verification\\nUses BN254 curve (Ethereum-compatible, ~100-bit security)",
+      "lib": "",
+      "name": "ZkProof",
+      "fields": [
+        {
+          "doc": "Proof element A (G1 point, 64 bytes)",
+          "name": "proof_a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Proof element B (G2 point, 128 bytes)",
+          "name": "proof_b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Proof element C (G1 point, 64 bytes)",
+          "name": "proof_c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EscrowError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AmountTooSmall",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TimeoutTooSoon",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "MaxPendings",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "HashUsed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidPreimage",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotExpired",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidZkProof",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "VkNotSet",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Legacy claim with preimage (for backwards compatibility)",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "preimage",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_vk",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "VerificationKey"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Verification key for the circuit (stored once at deployment)\\nBN254 curve - compatible with Circom/snarkjs Poseidon circuits",
+      "lib": "",
+      "name": "VerificationKey",
+      "fields": [
+        {
+          "doc": "Alpha (G1, 64 bytes)",
+          "name": "alpha",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Beta (G2, 128 bytes)",
+          "name": "beta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Delta (G2, 128 bytes)",
+          "name": "delta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Gamma (G2, 128 bytes)",
+          "name": "gamma",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "IC (input commitments) - array of G1 points\\nFor our use case: IC[0] + IC[1]*commitment_hash",
+          "name": "ic_0",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ic_1",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit funds with a commitment (ZK-compatible)\\nThe commitment can be:\\n- SHA256 hash of preimage (legacy, zk_version=0)\\n- Poseidon/Pedersen commitment (ZK, zk_version=1)",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timeout_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "zk_version",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "ZK claim with Groth16-style proof verification\\nUses BN254 pairing check for verification (Ethereum-compatible)\\n\\nThe proof demonstrates knowledge of:\\n- Private data (email/TG/SMS) that corresponds to the commitment\\n- Without revealing the actual data\\n\\nCircuit should use Poseidon hash for ZK-friendly commitments",
+      "name": "claim_zk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "ZkProof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pending",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Pending"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_deployed",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor called once at deployment\\n\\nArgs:\\n- owner: The wallet C-address that owns this escrow satellite\\n- vk: The BN254 Groth16 verification key for ZK claims (same for all users)",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vk",
+          "type_": {
+            "udt": {
+              "name": "VerificationKey"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public reclaim after timeout",
+      "name": "reclaim_expired",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the verification key for ZK proofs (admin only)\\nThis should be called once with the circuit's verification key",
+      "name": "set_verification_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vk",
+          "type_": {
+            "udt": {
+              "name": "VerificationKey"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
