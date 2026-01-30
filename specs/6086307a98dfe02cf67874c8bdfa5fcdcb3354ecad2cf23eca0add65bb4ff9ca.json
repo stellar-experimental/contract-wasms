@@ -1,0 +1,499 @@
+[
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Denomination",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OneXLM",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "FiveXLM",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TenXLM",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "HundredXLM",
+          "value": 100
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "MerkleRoot",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Denomination"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Nullifiers"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Commitments",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Denomination"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CommitmentCount",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Denomination"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NullifierAlreadyUsed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidCommitment",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidDenomination",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the privacy contract with all denomination pools",
+      "name": "initialize",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit assets into a FIXED denomination privacy pool\\nThe amount is determined by the denomination pool selected\\nThis makes ALL deposits in the same pool identical - hiding amounts from Lobstr UI\\n\\nParameters:\\n- denomination: Which fixed amount pool (1, 5, 10, or 100 XLM)\\n- caller: Who is depositing\\n- token: Token contract address\\n- commitment: Hash commitment (hiding the secret and recipient)\\n\\nExample: Everyone depositing to OneXLM pool deposits exactly 1 XLM",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw assets from a FIXED denomination privacy pool\\nUses ZK proof to prove ownership without revealing which deposit is being spent\\nThe amount is determined by the denomination pool\\n\\nParameters:\\n- denomination: Which fixed amount pool to withdraw from\\n- proof: ZK-SNARK proof (would use BN254 pairing check in production)\\n- nullifier: Prevents double-spending (hash of secret)\\n- recipient: Who receives the funds\\n- token: Which token to withdraw",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Make a shielded transfer - deposit and withdraw in one transaction\\nBoth operations use the SAME denomination (same fixed amount)",
+      "name": "shielded_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Query if a nullifier has been used (public, for transparency)",
+      "name": "is_nullifier_used_public",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current commitment count for a specific denomination pool",
+      "name": "get_commitment_count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get commitment by index for a specific denomination pool",
+      "name": "get_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the fixed amount for a denomination (helper for external callers)",
+      "name": "get_denomination_amount_public",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "denomination",
+          "type_": {
+            "udt": {
+              "name": "Denomination"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a commitment using Poseidon hash (ZK-friendly)\\ncommitment = Poseidon(amount, secret, nullifier, recipient_hash)",
+      "name": "create_commitment_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "secret",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a nullifier using Poseidon hash\\nnullifier = Poseidon(secret, index)",
+      "name": "create_nullifier_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "secret",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "commitment_index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  }
+]
