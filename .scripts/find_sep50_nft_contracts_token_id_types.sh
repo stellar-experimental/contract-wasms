@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Find contracts with owner_of function in their spec
-# Outputs CSV with wasm_hash, instance count, token_id type, functions, and events
+# Find contracts with owner_of function in their spec (SEP-50 NFT standard)
+# Outputs CSV with one row per instance
 
 # Output CSV header
-echo "wasm_hash,instances_count,token_id_type,functions,events,instances"
+echo "instance,wasm_hash,token_id_type,functions,events"
 
 for file in specs/*.json; do
     if [ -f "$file" ] && [ -r "$file" ]; then
@@ -15,16 +15,6 @@ for file in specs/*.json; do
         has_owner_of=$(jq -r '[.[] | select(.function_v0.name == "owner_of")] | length' "$file" 2>/dev/null)
         
         if [ "$has_owner_of" -gt 0 ] 2>/dev/null; then
-            # Get instance count and list
-            instances_file="instances/${wasm_hash}.json"
-            if [ -f "$instances_file" ] && [ -r "$instances_file" ]; then
-                instances_count=$(jq -r 'length' "$instances_file" 2>/dev/null)
-                instances_list=$(jq -r 'join(",")' "$instances_file" 2>/dev/null)
-            else
-                instances_count="0"
-                instances_list=""
-            fi
-
             # Extract token_id type (first param of owner_of function)
             # Handle both simple types (strings) and complex types (objects)
             token_id_type=$(jq -r '
@@ -42,8 +32,14 @@ for file in specs/*.json; do
                 [.[] | select(.event_v0) | .event_v0.name] | join(",")
             ' "$file" 2>/dev/null)
 
-            # Output as CSV row (quote fields that may contain commas)
-            echo "\"$wasm_hash\",$instances_count,\"$token_id_type\",\"$functions\",\"$events\",\"$instances_list\""
+            # Get instances and output one row per instance
+            instances_file="instances/${wasm_hash}.json"
+            if [ -f "$instances_file" ] && [ -r "$instances_file" ]; then
+                # Read each instance and output a row
+                jq -r '.[]' "$instances_file" 2>/dev/null | while read -r instance; do
+                    echo "\"$instance\",\"$wasm_hash\",\"$token_id_type\",\"$functions\",\"$events\""
+                done
+            fi
         fi
     fi
 done
