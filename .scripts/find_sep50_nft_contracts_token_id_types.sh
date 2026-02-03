@@ -4,7 +4,7 @@
 # Outputs CSV with wasm_hash, instance count, token_id type, functions, and events
 
 # Output CSV header
-echo "wasm_hash,instances_count,token_id_type,functions,events"
+echo "wasm_hash,instances_count,token_id_type,functions,events,instances"
 
 for file in specs/*.json; do
     if [ -f "$file" ] && [ -r "$file" ]; then
@@ -15,12 +15,14 @@ for file in specs/*.json; do
         has_owner_of=$(jq -r '[.[] | select(.function_v0.name == "owner_of")] | length' "$file" 2>/dev/null)
         
         if [ "$has_owner_of" -gt 0 ] 2>/dev/null; then
-            # Get instance count
+            # Get instance count and list
             instances_file="instances/${wasm_hash}.json"
             if [ -f "$instances_file" ] && [ -r "$instances_file" ]; then
                 instances_count=$(jq -r 'length' "$instances_file" 2>/dev/null)
+                instances_list=$(jq -r 'join(",")' "$instances_file" 2>/dev/null)
             else
                 instances_count="0"
+                instances_list=""
             fi
 
             # Extract token_id type (first param of owner_of function)
@@ -41,7 +43,7 @@ for file in specs/*.json; do
             ' "$file" 2>/dev/null)
 
             # Output as CSV row (quote fields that may contain commas)
-            echo "\"$wasm_hash\",$instances_count,\"$token_id_type\",\"$functions\",\"$events\""
+            echo "\"$wasm_hash\",$instances_count,\"$token_id_type\",\"$functions\",\"$events\",\"$instances_list\""
         fi
     fi
 done
