@@ -1,0 +1,477 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Vkey"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Attestation",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 proof points (BN254 curve)\\npi_a: G1 point (64 bytes uncompressed)\\npi_b: G2 point (128 bytes uncompressed)\\npi_c: G1 point (64 bytes uncompressed)",
+      "lib": "",
+      "name": "Groth16Proof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pi_a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pi_b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pi_c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract to a new WASM hash. Only callable by admin.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A verified tier attestation stored on-chain",
+      "lib": "",
+      "name": "TierAttestation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "farmer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "verified_at",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 verification key stored on-chain\\nThis encodes the circuit-specific parameters from tier_proof.circom",
+      "lib": "",
+      "name": "VerificationKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "alpha_g1",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "beta_g2",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "delta_g2",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gamma_g2",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "IC points: one for each public input + 1\\nFor tier_proof: 3 IC points (1 base + 2 public inputs)",
+          "name": "ic",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the admin address. Admin only.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with an admin address and verification key.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vkey",
+          "type_": {
+            "udt": {
+              "name": "VerificationKey"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TierVerifierError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidTier",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidPublicInputs",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Legacy attestation for backwards compatibility during migration.\\nStores attestation with proof hash for off-chain verification.\\nWill be deprecated once all clients upgrade to verify_and_attest.",
+      "name": "attest_tier",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "farmer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the verification key. Admin only.\\nThis allows changing the circuit parameters without redeploying.",
+      "name": "update_vkey",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vkey",
+          "type_": {
+            "udt": {
+              "name": "VerificationKey"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Generic Groth16 verification logic.\\nCan be used by other contracts or callers to verify ANY BN254 proof.",
+      "name": "verify_groth16",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "public_inputs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Groth16Proof"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lookup a farmer's tier attestation.",
+      "name": "get_attestation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "farmer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "TierAttestation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a Groth16 proof and store the tier attestation on-chain.\\n\\nThis performs the full Groth16 pairing check:\\ne(pi_a, pi_b) == e(alpha, beta) * e(vk_x, gamma) * e(pi_c, delta)\\n\\nWhich is equivalent to checking:\\ne(-pi_a, pi_b) * e(alpha, beta) * e(vk_x, gamma) * e(pi_c, delta) == 1\\n\\nWhere vk_x = IC[0] + sum(pub_input[i] * IC[i+1])\\n\\n# Arguments\\n* `farmer` - Address of the farmer (requires auth)\\n* `tier` - Claimed tier (0-3, public input to circuit)\\n* `commitment` - Poseidon commitment (public input to circuit)\\n* `proof` - The Groth16 proof (pi_a, pi_b, pi_c)",
+      "name": "verify_and_attest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "farmer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Groth16Proof"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "TierVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
