@@ -1,0 +1,1181 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract to a new WASM hash\\nOnly owner can upgrade the contract\\n@param new_wasm_hash - The hash of the new WASM binary",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an address is an admin (has ADMIN_ROLE or OWNER_ROLE)",
+      "name": "is_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the owner address\\n@return Option<Address> - Some(address) if owner exists, None if no owner is set",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the bridge\\nNote: Authorization is handled by AccessControl crate (Owner, Admin, SystemWallet roles)\\n\\nStorage Type Strategy:\\n- Instance Storage: CurrentChainId, ProposedOwner\\n- Configuration data set during initialization\\n- Survives upgrades but tied to instance\\n\\n- Persistent Storage: TransactionIds, LockedBalances\\n- TransactionIds: CRITICAL for preventing replay attacks\\n* MUST use persistent storage in PRODUCTION (uncomment persistent, comment temporary)\\n* Can use temporary storage in DEVELOPMENT ONLY for lower fees during testing\\n- LockedBalances: Financial state that must be preserved accurately\\n* Uses persistent storage but relies on Protocol 23 automatic restoration\\n* When archived, Stellar SDK's simulateTransaction() auto-restores before execution\\n* Users pay minimal restoration fees (~7 ledgers) only when accessing expired entries\\n* No need to extend TTL on every lock operation (saves gas for users)\\n- Each entry has independent TTL management\\n- Survives contract upgrades with data integ",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CurrentChainId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ProposedOwner"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "LockedBalances",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TransactionIds",
+            "type_": [
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "extend_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "extend_to",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "DataKey"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "grant_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Grant admin role to an address\\n@param admin - The address to grant admin role",
+      "name": "grant_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revoke_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Revoke admin role from an address\\n@param admin - The address to revoke admin role",
+      "name": "revoke_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "renounce_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with owner and system wallet\\n@param owner - The owner address (can upgrade, manage admins)\\n@param system_wallet - The system wallet address (can mint/release)\\n@param current_chain_id - The current chain identifier (CAIP-2 format)",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "system_wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "current_chain_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_role_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "symbol"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "renounce_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_role_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "admin_role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_role_member",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set admin for a token contract\\nOnly owner can set token admin to prevent unauthorized takeover\\n@param admin_token - The token contract address\\n@param new_admin - The new admin address for the token\\n@param caller - The caller address (must be owner)",
+      "name": "set_admin_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept ownership transfer\\n@param caller - The caller address (must be proposed owner)\\n@notice This is a two-step ownership transfer to prevent accidental transfers\\n@notice First, the new owner must be proposed by the current owner\\n@notice Then, the new owner must accept the transfer by calling this function\\n@notice This function can only be called by the proposed owner",
+      "name": "accept_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an address is a system wallet\\n@param account - The address to check\\n@return true if the address has SYSTEM_WALLET_ROLE",
+      "name": "is_system_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a system wallet address (supports multiple system wallets)\\n@param new_system_wallet - The system wallet address to add\\nOnly owner or admin can add system wallets",
+      "name": "add_system_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_system_wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new owner address\\n@param new_owner - The new owner address",
+      "name": "propose_new_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Bridge operation types matching EVM implementation",
+      "lib": "",
+      "name": "BridgeOperation",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Lock",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Burn",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Release",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Mint",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Token information for bridge operations (struct-based API)",
+      "lib": "",
+      "name": "TokenBridgeData",
+      "fields": [
+        {
+          "doc": "Amount to bridge",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Email address of the user (for KYC/AML purposes)",
+          "name": "email",
+          "type_": "string"
+        },
+        {
+          "doc": "Address on the source chain",
+          "name": "from_address",
+          "type_": "string"
+        },
+        {
+          "doc": "Source chain identifier (CAIP-2 format)",
+          "name": "from_network",
+          "type_": "string"
+        },
+        {
+          "doc": "Token address on the source chain",
+          "name": "from_token",
+          "type_": "string"
+        },
+        {
+          "doc": "Address on the destination chain",
+          "name": "to_address",
+          "type_": "string"
+        },
+        {
+          "doc": "Destination chain identifier (CAIP-2 format)",
+          "name": "to_network",
+          "type_": "string"
+        },
+        {
+          "doc": "Token address on the destination chain",
+          "name": "to_token",
+          "type_": "string"
+        },
+        {
+          "doc": "Unique transaction identifier",
+          "name": "transaction_id",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the locked balance for a token",
+      "name": "get_locked_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all system wallet addresses\\n@return Result<Vec<Address>, TokenBridgeError> - Ok(wallets) if system wallets exist, Err if none configured",
+      "name": "get_system_wallets",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "address"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "TokenBridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Custom error types",
+      "lib": "",
+      "name": "TokenBridgeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "TransactionIdAlreadyUsed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidAddress",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidChainIdentifier",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidReleaseOnSameChain",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLockedBalance",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InvalidSourceChain",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "OnlyOwner",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvalidOperation",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "AmountExceedsMaximum",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "InvalidTransactionId",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "NoSystemWalletsConfigured",
+          "value": 19
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "extend_ttl_instance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "extend_to",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a transaction ID has been used\\n",
+      "name": "is_transaction_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "transaction_id",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current chain ID",
+      "name": "get_current_chain_id",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a system wallet address\\n@param system_wallet - The system wallet address to remove\\nOnly owner or admin can remove system wallets",
+      "name": "remove_system_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "system_wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the current chain ID\\n@param new_chain_id - The new chain ID\\n@param caller - The caller address (must be owner)",
+      "name": "set_current_chain_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_chain_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin_transfer",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_role_member_count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the count of system wallets\\n@return Number of addresses with SYSTEM_WALLET_ROLE",
+      "name": "get_system_wallet_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a bridge operation\\n@param operation - The bridge operation type (Lock=0, Burn=1, Release=2, Mint=3)\\n@param token_info - Token and amount information\\n@param route - Network and address routing information\\n@param metadata - Transaction metadata (ID and email)\\n@param caller - The caller address",
+      "name": "execute_bridge_operation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operation",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "bridge_data",
+          "type_": {
+            "udt": {
+              "name": "TokenBridgeData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 1200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 1201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 1202
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1210
+        },
+        {
+          "doc": "",
+          "name": "AdminNotSet",
+          "value": 1211
+        },
+        {
+          "doc": "",
+          "name": "IndexOutOfBounds",
+          "value": 1212
+        },
+        {
+          "doc": "",
+          "name": "AdminRoleNotFound",
+          "value": 1213
+        },
+        {
+          "doc": "",
+          "name": "RoleCountIsNotZero",
+          "value": 1214
+        },
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 1215
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 1216
+        },
+        {
+          "doc": "",
+          "name": "RoleNotHeld",
+          "value": 1217
+        },
+        {
+          "doc": "",
+          "name": "RoleIsEmpty",
+          "value": 1218
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key for enumeration of accounts per role.",
+      "lib": "",
+      "name": "RoleAccountKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the access control",
+      "lib": "",
+      "name": "AccessControlStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccounts",
+            "type_": [
+              {
+                "udt": {
+                  "name": "RoleAccountKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "HasRole",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountsCount",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAdmin",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 1220
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 1221
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 1222
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for `Ownable` utility.",
+      "lib": "",
+      "name": "OwnableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingOwner"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableError",
+      "cases": [
+        {
+          "doc": "When migration is attempted but not allowed due to upgrade state.",
+          "name": "MigrationNotAllowed",
+          "value": 1100
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MerkleDistributorError",
+      "cases": [
+        {
+          "doc": "The merkle root is not set.",
+          "name": "RootNotSet",
+          "value": 1300
+        },
+        {
+          "doc": "The provided index was already claimed.",
+          "name": "IndexAlreadyClaimed",
+          "value": 1301
+        },
+        {
+          "doc": "The proof is invalid.",
+          "name": "InvalidProof",
+          "value": 1302
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `MerkleDistributor`",
+      "lib": "",
+      "name": "MerkleDistributorStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The Merkle root of the distribution tree",
+            "name": "Root"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps an index to its claimed status",
+            "name": "Claimed",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CryptoError",
+      "cases": [
+        {
+          "doc": "The merkle proof length is out of bounds.",
+          "name": "MerkleProofOutOfBounds",
+          "value": 1400
+        },
+        {
+          "doc": "The index of the leaf is out of bounds.",
+          "name": "MerkleIndexOutOfBounds",
+          "value": 1401
+        },
+        {
+          "doc": "No data in hasher state.",
+          "name": "HasherEmptyState",
+          "value": 1402
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausableError",
+      "cases": [
+        {
+          "doc": "The operation failed because the contract is paused.",
+          "name": "EnforcedPause",
+          "value": 1000
+        },
+        {
+          "doc": "The operation failed because the contract is not paused.",
+          "name": "ExpectedPause",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for the pausable state",
+      "lib": "",
+      "name": "PausableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Indicates whether the contract is in paused state.",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  }
+]
