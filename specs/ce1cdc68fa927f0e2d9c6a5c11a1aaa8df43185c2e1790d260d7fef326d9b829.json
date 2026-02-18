@@ -1,0 +1,532 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RedPacket",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ClaimRecord",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Claimers",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Whitelist",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedPacketInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "creator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "has_whitelist",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "is_active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "is_refunded",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "remaining_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "remaining_users",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_users",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ClaimRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claimed_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidUserCount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AmountTooLowPerUser",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "RedPacketNotFound",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "RedPacketExpired",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "RedPacketNotExpired",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AlreadyClaimed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "RedPacketEmpty",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NotInWhitelist",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "WhitelistTooLarge",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidExpiration",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRefunded",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "WhitelistTooSmall",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with USDC token address",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new red packet (with optional whitelist)",
+      "name": "create_red_packet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "creator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_users",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "whitelist",
+          "type_": {
+            "option": {
+              "value_type": {
+                "vec": {
+                  "element_type": "address"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "expiration_days",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim from a red packet",
+      "name": "claim_red_packet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refund remaining amount to creator after expiration\\nAnyone can trigger this",
+      "name": "refund_red_packet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get red packet info",
+      "name": "get_red_packet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "RedPacketInfo"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if user is in whitelist for a packet",
+      "name": "is_whitelisted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if user has claimed a specific packet",
+      "name": "has_claimed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get user's claim record for a packet",
+      "name": "get_claim_record",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ClaimRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all claimers for a packet (with pagination)",
+      "name": "get_claimers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "start",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "ClaimRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get total number of red packets created",
+      "name": "get_total_packets",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if red packet is expired",
+      "name": "is_expired",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "packet_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get admin address",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get USDC token address",
+      "name": "get_usdc",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  }
+]
