@@ -1,0 +1,4832 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProtocolPausedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "paused_by",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProtocolUnpausedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "unpaused_by",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveInitializedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_strategy",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveDroppedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashLoanPremiumUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_premium_bps",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "old_premium_bps",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreasuryUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "old_treasury",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceOracleUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "old_oracle",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "F-09: Liquidation-specific errors",
+      "lib": "",
+      "name": "LiquidationError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "LeavesTooLittleDebt",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the lending pool contract\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pool_admin` - Address with pool admin privileges\\n* `emergency_admin` - Address with emergency admin privileges\\n* `price_oracle` - Address of the price oracle contract\\n* `treasury` - Address of the treasury (receives protocol fees)\\n* `dex_router` - Address of DEX router (Soroswap router)",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "emergency_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "dex_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "incentives_contract",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Supply assets to the protocol\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `caller` - The address calling this function\\n* `asset` - The address of the underlying asset to supply\\n* `amount` - The amount to be supplied\\n* `on_behalf_of` - The address that will receive the aTokens\\n* `_referral_code` - Code used to register the integrator (unused for now)\\n\\n# Returns\\n* `Ok(())` - Supply successful\\n* `Err(KineticRouterError)` - Supply failed due to validation or cap limits\\n\\n# Cap Enforcement\\nThis function enforces supply caps if configured. Caps are stored as whole tokens\\nand converted to smallest units during enforcement to maximize the effective range.",
+      "name": "supply",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "swap_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "swap_handler",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set DEX router address (admin only)",
+      "name": "set_dex_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get DEX router address",
+      "name": "get_dex_router",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set DEX factory address (admin only)",
+      "name": "set_dex_factory",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get DEX factory address",
+      "name": "get_dex_factory",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "borrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_mode",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "repay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "rate_mode",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Liquidate a position\\n\\n# Arguments\\n* `collateral_asset` - The address of the underlying asset used as collateral\\n* `debt_asset` - The address of the underlying borrowed asset to be repaid\\n* `user` - The address of the borrower getting liquidated\\n* `debt_to_cover` - The debt amount of borrowed asset to liquidate\\n* `receive_a_token` - True if liquidator receives aTokens, false for underlying asset",
+      "name": "liquidation_call",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "receive_a_token",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_flash_loan_premium",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "premium_bps",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set maximum flash loan premium allowed (admin only)\\n\\n# Arguments\\n* `max_premium_bps` - Maximum premium in basis points (e.g., 100 = 1%)\\n\\n# Returns\\n* `Ok(())` if max premium updated successfully\\n* `Err(Unauthorized)` if caller is not admin",
+      "name": "set_flash_loan_premium_max",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "max_premium_bps",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_flash_loan_premium_max",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_hf_liquidation_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_hf_liquidation_threshold",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_min_swap_output_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "min_output_bps",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_min_swap_output_bps",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_partial_liq_hf_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_partial_liq_hf_threshold",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_flash_loan_premium",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set extra premium charged for flash liquidations (admin only).\\nThis is on top of the regular protocol fee collected during liquidation.\\nSet to 0 to disable the extra fee (default).",
+      "name": "set_flash_liquidation_premium",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "premium_bps",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_flash_liquidation_premium",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the price tolerance for two-step liquidation execution (in basis points).\\nDefault is 300 (3%). Admin has full flexibility to set any value.",
+      "name": "set_liquidation_price_tolerance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tolerance_bps",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "M-07",
+      "name": "set_asset_staleness_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "threshold_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "M-07",
+      "name": "get_asset_staleness_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a flash loan\\n\\nFlash loans are permissionless - anyone can initiate them.\\nThe receiver contract must implement `execute_operation` callback.\\n\\n# Parameters\\n- `initiator`: Address initiating the flash loan (must authorize)\\n- `receiver`: Contract that will receive the loan and execute callback\\n- `assets`: Assets to borrow\\n- `amounts`: Amounts to borrow for each asset\\n- `params`: Arbitrary data passed to receiver\\n\\n# Receiver Callback\\nThe receiver must implement `execute_operation` with the standard flash loan interface.\\n\\n# Authorization\\nInitiator must authorize the call, but anyone can be an initiator.\\nThe receiver handles its own authorization logic.\\n\\n# Errors\\n- `InvalidFlashLoanParams`: Invalid parameters\\n- `InsufficientFlashLoanLiquidity`: Not enough liquidity\\n- `FlashLoanExecutionFailed`: Receiver callback failed\\n- `FlashLoanNotRepaid`: Loan not fully repaid",
+      "name": "flash_loan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "u128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Prepare a liquidation - validates and stores authorization (TX1 of 2-step liquidation)\\nThis is the expensive validation step (~40M CPU) but can fail/retry safely.\\n\\n# Arguments\\n* `liquidator` - Address executing the liquidation\\n* `user` - Address being liquidated\\n* `debt_asset` - Asset to repay\\n* `collateral_asset` - Asset to seize\\n* `debt_to_cover` - Amount of debt to repay\\n* `min_swap_out` - Minimum acceptable swap output (slippage protection)\\n* `swap_handler` - Optional custom swap handler address\\n\\n# Returns\\n* `LiquidationAuthorization` - Authorization token for execute_liquidation",
+      "name": "prepare_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_swap_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "swap_handler",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "LiquidationAuthorization"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a prepared liquidation - atomic swap + debt repayment (TX2 of 2-step liquidation)\\nUses pre-validated data from prepare_liquidation (~60M CPU).\\n\\n# Arguments\\n* `liquidator` - Address executing the liquidation (must match authorization)\\n* `user` - Address being liquidated (must match authorization)\\n* `debt_asset` - Asset to repay (must match authorization)\\n* `collateral_asset` - Asset to seize (must match authorization)\\n* `deadline` - Transaction deadline timestamp",
+      "name": "execute_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set treasury address for protocol fees (admin only)\\n\\n# Arguments\\n* `treasury` - New treasury address for protocol fee collection\\n\\n# Returns\\n* `Ok(())` if treasury updated successfully\\n* `Err(Unauthorized)` if caller is not admin",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_treasury",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "F-02\\nSafety net for when oracle precision changes without changing the oracle address.",
+      "name": "flush_oracle_config_cache",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "AC-01\\nMust be called once after contract upgrade to prevent whitelist/blacklist bypass.",
+      "name": "sync_access_control_flags",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_flash_liquidation_helper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "helper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_flash_liquidation_helper",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set pool configurator contract address (admin only)\\n\\n# Arguments\\n* `configurator` - Pool configurator contract address\\n\\n# Returns\\n* `Ok(())` if configurator address updated successfully\\n* `Err(Unauthorized)` if caller is not admin",
+      "name": "set_pool_configurator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "configurator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pool_configurator",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get available protocol reserves for an asset\\n\\nProtocol reserves accumulate due to the reserve factor, which reduces supplier APY.\\nReserves = underlying_balance_in_atoken - total_withdrawable_supply\\n\\n# Arguments\\n* `asset` - The address of the underlying asset\\n\\n# Returns\\n* `Ok(u128)` - Available reserves in smallest units\\n* `Err` - If reserve not found or calculation fails",
+      "name": "get_protocol_reserves",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "collect_protocol_reserves",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cover accumulated bad debt deficit for a reserve.\\nPermissionless: anyone can inject tokens to replenish pool liquidity.\\nReturns the actual amount covered (capped at current deficit).",
+      "name": "cover_deficit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get accumulated bad debt deficit for a reserve (0 if none).",
+      "name": "get_reserve_deficit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_user_use_reserve_as_coll",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "use_as_collateral",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get user account data\\n\\n# Arguments\\n* `user` - The address of the user",
+      "name": "get_user_account_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "UserAccountData"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reserve_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ReserveData"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_current_reserve_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ReserveData"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_current_liquidity_index",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_current_var_borrow_idx",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get incentives contract address\\n\\n# Arguments\\n* `env` - The Soroban environment\\n\\n# Returns\\n* `Option<Address>` - The incentives contract address if set, None otherwise",
+      "name": "get_incentives_contract",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_incentives_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "incentives",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get user configuration\\n\\n# Arguments\\n* `user` - The address of the user",
+      "name": "get_user_configuration",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UserConfiguration"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reserves_list",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L-02",
+      "name": "update_reserve_state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ReserveData"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize a new reserve\\n\\n# Note\\nThis function should be called by the pool configurator contract.\\nThe pool configurator should validate authorization before calling this function.\\n\\n# Arguments\\n* `underlying_asset` - The address of the underlying asset\\n* `a_token_impl` - The address of the aToken implementation\\n* `variable_debt_impl` - The address of the variable debt token implementation\\n* `interest_rate_strategy` - The address of the interest rate strategy\\n* `treasury` - The address of the treasury\\n* `params` - Reserve initialization parameters",
+      "name": "init_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "a_token_impl",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "variable_debt_impl",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "InitReserveParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the supply cap for a reserve.\\n\\nThe supply cap limits the total amount that can be supplied to a reserve.\\nCaps are stored as whole tokens (not smallest units) to maximize the\\neffective range within the 32-bit storage limit.\\n\\n# Arguments\\n- `env`: The Soroban environment\\n- `asset`: The underlying asset address\\n- `supply_cap`: New supply cap in whole tokens (0 = no cap, virtually unlimited)\\n\\n# Returns\\n- `Ok(())`: Supply cap updated successfully\\n- `Err(KineticRouterError::InvalidAmount)`: Invalid cap value\\n- `Err(KineticRouterError::Unauthorized)`: Caller is not admin\\n\\n# Events\\nEmits `(sup_cap, asset)` event with the new supply cap value.",
+      "name": "set_reserve_supply_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "supply_cap",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the borrow cap for a reserve.\\n\\nThe borrow cap limits the total amount that can be borrowed from a reserve.\\nCaps are stored as whole tokens (not smallest units) to maximize the\\neffective range within the 32-bit storage limit.\\n\\n# Arguments\\n- `env`: The Soroban environment\\n- `asset`: The underlying asset address\\n- `borrow_cap`: New borrow cap in whole tokens (0 = no cap, virtually unlimited)\\n\\n# Returns\\n- `Ok(())`: Borrow cap updated successfully\\n- `Err(KineticRouterError::InvalidAmount)`: Invalid cap value\\n- `Err(KineticRouterError::Unauthorized)`: Caller is not admin\\n\\n# Events\\nEmits `(bor_cap, asset)` event with the new borrow cap value.",
+      "name": "set_reserve_borrow_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "borrow_cap",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the minimum remaining debt after partial liquidation for a reserve.\\nValue is in whole tokens (same convention as borrow/supply caps).\\nPrevents dust debt positions that are uneconomical to liquidate.",
+      "name": "set_reserve_min_remaining_debt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_remaining_debt",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the debt ceiling for a reserve.\\n\\nThe debt ceiling limits the total amount of debt that can be borrowed across\\nall users for a specific reserve. This is different from borrow cap which limits\\nper-reserve borrowing. Debt ceiling is stored as whole tokens (not smallest units).\\n\\n# Arguments\\n- `env`: The Soroban environment\\n- `asset`: The underlying asset address\\n- `debt_ceiling`: New debt ceiling in whole tokens (0 = no ceiling)\\n\\n# Returns\\n- `Ok(())`: Debt ceiling updated successfully\\n- `Err(KineticRouterError::ReserveNotFound)`: Reserve does not exist\\n- `Err(KineticRouterError::Unauthorized)`: Caller is not admin\\n\\n# Events\\nEmits `(set_cap, asset)` event with `(debt_ceil, debt_ceiling)` value.",
+      "name": "set_reserve_debt_ceiling",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_ceiling",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets the debt ceiling for a reserve.\\n\\n# Arguments\\n- `asset`: The underlying asset address\\n\\n# Returns\\n- `Ok(u128)`: Debt ceiling in whole tokens (0 = no ceiling)\\n- `Err(KineticRouterError::ReserveNotFound)`: Reserve does not exist",
+      "name": "get_reserve_debt_ceiling",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u128",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update reserve configuration (called by pool configurator)\\n\\n# Arguments\\n- `caller`: The address calling this function (must be pool configurator)\\n- `asset`: The underlying asset address\\n- `configuration`: New reserve configuration",
+      "name": "update_reserve_configuration",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "configuration",
+          "type_": {
+            "udt": {
+              "name": "ReserveConfiguration"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_reserve_rate_strategy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_atoken_implementation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "a_token_impl",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_debt_token_implementation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_token_impl",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "drop_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade contract WASM (admin only)\\n\\n# Arguments\\n* `new_wasm_hash` - Hash of new WASM binary\\n\\n# Errors\\n* `Unauthorized` - Caller is not admin",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new upgrade admin address (two-step transfer, step 1).\\nOnly the current admin can propose a new admin.\\nThe proposed admin must call `accept_admin` to complete the transfer.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pending_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept upgrade admin role (two-step transfer, step 2).\\nOnly the pending admin can call this to finalize the transfer.",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending upgrade admin proposal.\\nOnly the current admin can cancel a pending proposal.",
+      "name": "cancel_admin_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the pending upgrade admin address, if any.",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new pool admin address (two-step transfer, step 1).",
+      "name": "propose_pool_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pending_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept pool admin role (two-step transfer, step 2).",
+      "name": "accept_pool_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending pool admin proposal.",
+      "name": "cancel_pool_admin_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the pending pool admin address, if any.",
+      "name": "get_pending_pool_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new emergency admin address (two-step transfer, step 1).",
+      "name": "propose_emergency_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pending_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept emergency admin role (two-step transfer, step 2).",
+      "name": "accept_emergency_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending emergency admin proposal.",
+      "name": "cancel_emergency_admin_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the pending emergency admin address, if any.",
+      "name": "get_pending_emergency_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set reserve whitelist (admin only)\\n\\n# Arguments\\n* `caller` - Pool admin address\\n* `asset` - Underlying asset address\\n* `whitelist` - Addresses allowed to interact with this reserve\\n\\n# Behavior\\n* Empty whitelist: open access\\n* Non-empty whitelist: restricted to listed addresses\\n\\n** Note **: This function replaces the entire whitelist. To add/remove addresses,\\nfirst get the current list, modify it, then set the complete new list.\\n\\n# Errors\\n* `Unauthorized` - Caller is not admin",
+      "name": "set_reserve_whitelist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "whitelist",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reserve_whitelist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_whitelisted_for_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_liquidation_whitelist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "whitelist",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_liquidation_whitelist",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_whitelisted_for_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_reserve_blacklist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blacklist",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reserve_blacklist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_blacklisted_for_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_liquidation_blacklist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "blacklist",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_liquidation_blacklist",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_blacklisted_for_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "M-01\\nOnly whitelisted handlers can be used for custom swaps.\\nEmpty whitelist = deny all custom handlers (only built-in DEX).",
+      "name": "set_swap_handler_whitelist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "whitelist",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_swap_handler_whitelist",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_swap_handler_whitelisted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "handler",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "WP-C1 + MEDIUM-1 fix: Validate sender HF and update bitmaps for aToken transfers.\\nCalled by aToken.transfer_internal() after computing balances but before writing them.\\nSingle cross-contract call replaces separate validate + finalize to save router size.\\n\\n1. HF check: if sender has debt, validate the transfer won't make them liquidatable\\n2. Bitmap sync: clear sender's collateral bit if balance \\xe2\\x86\\x92 0, set receiver's if new position",
+      "name": "validate_and_finalize_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "underlying_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "from_balance_after",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "to_balance_after",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "KineticRouterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Authorization for a prepared liquidation.\\nStores validation results from prepare_liquidation for use in execute_liquidation.",
+      "lib": "",
+      "name": "LiquidationAuthorization",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "health_factor_at_prepare",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_swap_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "swap_handler",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KineticRouterError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AssetNotActive",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AssetFrozen",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "AssetPaused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "BorrowingNotEnabled",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InsufficientCollateral",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "HealthFactorTooLow",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "PriceOracleNotFound",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiquidation",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "LiquidationAmountTooHigh",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NoDebtOfRequestedType",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidFlashLoanParams",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanNotAuthorized",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "IsolationModeViolation",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "PriceOracleInvocationFailed",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "PriceOracleError",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "SupplyCapExceeded",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "BorrowCapExceeded",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "DebtCeilingExceeded",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "UserInIsolationMode",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "ReserveNotFound",
+          "value": 24
+        },
+        {
+          "doc": "",
+          "name": "UserNotFound",
+          "value": 25
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 26
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 27
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 28
+        },
+        {
+          "doc": "",
+          "name": "ReserveAlreadyInitialized",
+          "value": 29
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanExecutionFailed",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanNotRepaid",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "InsufficientFlashLoanLiquidity",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "ATokenMintFailed",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "DebtTokenMintFailed",
+          "value": 34
+        },
+        {
+          "doc": "",
+          "name": "UnderlyingTransferFailed",
+          "value": 35
+        },
+        {
+          "doc": "",
+          "name": "FlashLoanTransferFailed",
+          "value": 36
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 37
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 38
+        },
+        {
+          "doc": "",
+          "name": "InsufficientSwapOut",
+          "value": 39
+        },
+        {
+          "doc": "",
+          "name": "MinProfitNotMet",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "TreasuryNotSet",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLiquidity",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "AMMRequired",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedAMM",
+          "value": 44
+        },
+        {
+          "doc": "",
+          "name": "AdapterNotInitialized",
+          "value": 45
+        },
+        {
+          "doc": "",
+          "name": "ATokenBurnFailed",
+          "value": 46
+        },
+        {
+          "doc": "",
+          "name": "WASMHashNotSet",
+          "value": 47
+        },
+        {
+          "doc": "",
+          "name": "TokenDeploymentFailed",
+          "value": 48
+        },
+        {
+          "doc": "",
+          "name": "TokenInitializationFailed",
+          "value": 49
+        },
+        {
+          "doc": "",
+          "name": "AddressNotWhitelisted",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 51
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAdmin",
+          "value": 52
+        },
+        {
+          "doc": "",
+          "name": "TokenCallFailed",
+          "value": 53
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AssetPriceNotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "PriceSourceNotSet",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidPriceSource",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PriceTooOld",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PriceHeartbeatExceeded",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AssetNotWhitelisted",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AssetDisabled",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "OracleQueryFailed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidCalculation",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "FallbackNotImplemented",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "AssetAlreadyWhitelisted",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "PriceManipulationDetected",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "PriceChangeTooLarge",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "OverrideExpired",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 19
+        },
+        {
+          "doc": "M-05",
+          "name": "InvalidConfig",
+          "value": 20
+        },
+        {
+          "doc": "L-04",
+          "name": "OverrideDurationTooLong",
+          "value": 21
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "TransferFailed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "MintFailed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BurnFailed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidRecipient",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TokenNotFound",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InsufficientAllowance",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidIndex",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedOperation",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 12
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveManagementError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "MaxReservesReached",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "CannotDropActiveReserve",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UserReserveError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "MaxUserReservesExceeded",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OperationError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidRecipient",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "RecipientIsAToken",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "RecipientIsDebtToken",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "DebtTokenBurnFailed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidRepayAmount",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SecurityError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ReentrancyDetected",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidFundingAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TTLExtensionFailed",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "L-13\\nReplaces raw panic!() calls for on-chain debuggability.",
+      "lib": "",
+      "name": "ConfigurationError",
+      "cases": [
+        {
+          "doc": "LTV exceeds 10000 bps (100%)",
+          "name": "InvalidLTV",
+          "value": 1
+        },
+        {
+          "doc": "Liquidation threshold exceeds 10000 bps (100%)",
+          "name": "InvalidLiquidationThreshold",
+          "value": 2
+        },
+        {
+          "doc": "Liquidation bonus exceeds 10000 bps (100%)",
+          "name": "InvalidLiquidationBonus",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SupplyEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BorrowEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "borrow_rate_mode",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RepayEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "repayer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "use_a_tokens",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LiquidationCallEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidated_collateral_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "liquidator_collateral",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "receive_a_token",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LiquidationFeeTransferFailedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashLoanEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "premium",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "referral_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveUsedAsCollateralEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveDataUpdatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "stable_borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_rate",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AMMRouterUpdated",
+      "fields": [
+        {
+          "doc": "",
+          "name": "added",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminProposedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pending_admin",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminAcceptedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminProposalCancelledEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cancelled_pending_admin",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "configuration",
+          "type_": {
+            "udt": {
+              "name": "ReserveConfiguration"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "current_liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "current_variable_borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_strategy_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "last_update_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_index",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Bitmap layout:\\ndata_low: LTV (0-13), liquidation_threshold (14-27), liquidation_bonus (28-41),\\ndecimals (42-49), flags (50-56), reserve_factor (57-70)\\ndata_high: borrow_cap (0-63), supply_cap (64-127)",
+      "lib": "",
+      "name": "ReserveConfiguration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data_high",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "data_low",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Bitmap: each pair of bits = [collateral, borrowed] for reserve index",
+      "lib": "",
+      "name": "UserConfiguration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Isolation mode configuration",
+      "lib": "",
+      "name": "IsolationModeData",
+      "fields": [
+        {
+          "doc": "Maximum debt ceiling for isolated asset",
+          "name": "debt_ceiling",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether isolation mode is enabled",
+          "name": "isolation_mode_enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Current total debt for isolated asset",
+          "name": "total_debt",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Interest rate calculation parameters",
+      "lib": "",
+      "name": "InterestRateData",
+      "fields": [
+        {
+          "doc": "Available liquidity in the reserve",
+          "name": "available_liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Reserve factor",
+          "name": "reserve_factor",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total variable debt",
+          "name": "total_variable_debt",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Liquidation call parameters",
+      "lib": "",
+      "name": "LiquidationCallParams",
+      "fields": [
+        {
+          "doc": "Collateral asset to liquidate",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Debt asset to repay",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount of debt to cover",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether to receive aToken or underlying asset",
+          "name": "receive_a_token",
+          "type_": "bool"
+        },
+        {
+          "doc": "User being liquidated",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash loan parameters",
+      "lib": "",
+      "name": "FlashLoanParams",
+      "fields": [
+        {
+          "doc": "Amounts to flash loan",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "u128"
+            }
+          }
+        },
+        {
+          "doc": "Assets to flash loan",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Interest rate modes (0 = no open debt, 1 = variable)",
+          "name": "modes",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "User on whose behalf the flash loan is taken",
+          "name": "on_behalf_of",
+          "type_": "address"
+        },
+        {
+          "doc": "Additional parameters for flash loan callback",
+          "name": "params",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash loan fee configuration",
+      "lib": "",
+      "name": "FlashLoanConfig",
+      "fields": [
+        {
+          "doc": "Flash loan fee in basis points (e.g., 30 = 0.3%)",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Flash loan premium to protocol (vs LP suppliers)",
+          "name": "premium_to_protocol",
+          "type_": "u128"
+        },
+        {
+          "doc": "Flash loan premium percentage (total to protocol)",
+          "name": "premium_total",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "User account data",
+      "lib": "",
+      "name": "UserAccountData",
+      "fields": [
+        {
+          "doc": "Available borrows in base currency",
+          "name": "available_borrows_base",
+          "type_": "u128"
+        },
+        {
+          "doc": "Current liquidation threshold",
+          "name": "current_liquidation_threshold",
+          "type_": "u128"
+        },
+        {
+          "doc": "Health factor",
+          "name": "health_factor",
+          "type_": "u128"
+        },
+        {
+          "doc": "Loan to value ratio",
+          "name": "ltv",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total collateral in base currency",
+          "name": "total_collateral_base",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total debt in base currency",
+          "name": "total_debt_base",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash liquidation validation parameters\\nPassed to helper contract to reduce parameter count",
+      "lib": "",
+      "name": "FlashLiquidationValidationParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_reserve",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "collateral_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_balance",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_reserve",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_output_bps",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_swap_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "oracle_price_precision",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash liquidation validation result\\nReturned by the flash liquidation helper contract",
+      "lib": "",
+      "name": "FlashLiquidationValidationResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral_amount_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover_base",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "effective_min_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "expected_debt_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "total_debt_base",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Calculated interest rates from strategy",
+      "lib": "",
+      "name": "CalculatedRates",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_rate",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Reserve initialization parameters",
+      "lib": "",
+      "name": "InitReserveParams",
+      "fields": [
+        {
+          "doc": "Borrow cap in whole tokens (e.g., 500000 = 500K tokens)\\nWhen checking caps, multiply by 10^decimals to get smallest units",
+          "name": "borrow_cap",
+          "type_": "u128"
+        },
+        {
+          "doc": "Whether borrowing is enabled",
+          "name": "borrowing_enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Number of decimals for the asset",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether flash loans are enabled",
+          "name": "flashloan_enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Liquidation bonus (in basis points)",
+          "name": "liquidation_bonus",
+          "type_": "u32"
+        },
+        {
+          "doc": "Liquidation threshold (in basis points)",
+          "name": "liquidation_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "Loan to value ratio (in basis points)",
+          "name": "ltv",
+          "type_": "u32"
+        },
+        {
+          "doc": "Reserve factor (in basis points)",
+          "name": "reserve_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "Supply cap in whole tokens (e.g., 1000000 = 1M tokens)\\nWhen checking caps, multiply by 10^decimals to get smallest units",
+          "name": "supply_cap",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Asset identifier for price queries",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Price data returned from oracle",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Asset configuration for whitelist",
+      "lib": "",
+      "name": "AssetConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        },
+        {
+          "doc": "Batch-capable adapter address (any oracle implementing read_price_data interface)",
+          "name": "batch_adapter",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "custom_oracle",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Feed identifier for the batch adapter (e.g. \"BTC\", \"ETH\")",
+          "name": "feed_id",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "manual_override_price",
+          "type_": {
+            "option": {
+              "value_type": "u128"
+            }
+          }
+        },
+        {
+          "doc": "Maximum age in seconds for custom/batch oracle prices (None = use global staleness threshold)",
+          "name": "max_age",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        },
+        {
+          "doc": "Cached decimals for the oracle source \\xe2\\x80\\x94 skips the decimals() cross-contract call when set",
+          "name": "oracle_decimals",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Unix timestamp in seconds (matching env.ledger().timestamp()) when manual override expires",
+          "name": "override_expiry_timestamp",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        },
+        {
+          "doc": "Unix timestamp when the manual override was set (returned as PriceData.timestamp\\nso downstream staleness checks detect stale overrides). H-01 fix.",
+          "name": "override_set_timestamp",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle configuration settings",
+      "lib": "",
+      "name": "OracleConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "basis_points",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "conversion_factor",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "ltv_precision",
+          "type_": "u128"
+        },
+        {
+          "doc": "Circuit breaker: max price change between consecutive queries in basis points.\\nDefault: 2000 = 20%. Prevents oracle failures from causing extreme price jumps.\\nSet to 0 to disable. See L-8 security audit finding.",
+          "name": "max_price_change_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price_precision",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price_staleness_threshold",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wad_precision",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of atomic flash liquidation",
+      "lib": "",
+      "name": "LiquidationResult",
+      "fields": [
+        {
+          "doc": "Amount of collateral seized from user",
+          "name": "collateral_seized",
+          "type_": "u128"
+        },
+        {
+          "doc": "Debt asset address (needed for profit distribution)",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount of debt repaid",
+          "name": "debt_repaid",
+          "type_": "u128"
+        },
+        {
+          "doc": "Liquidator's profit after covering debt + fees",
+          "name": "profit",
+          "type_": "u128"
+        },
+        {
+          "doc": "Protocol fee charged from liquidation",
+          "name": "protocol_fee",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Soroswap configuration settings",
+      "lib": "",
+      "name": "SoroswapConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "factory_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router_address",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Internal debt tracking during flash loan execution",
+      "lib": "",
+      "name": "FlashLoanDebt",
+      "fields": [
+        {
+          "doc": "Asset being borrowed",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "aToken address for the asset",
+          "name": "atoken_address",
+          "type_": "address"
+        },
+        {
+          "doc": "Initial balance before flash loan",
+          "name": "initial_balance",
+          "type_": "u128"
+        },
+        {
+          "doc": "Premium amount only",
+          "name": "premium",
+          "type_": "u128"
+        },
+        {
+          "doc": "Total amount owed (principal + premium)",
+          "name": "total_owed",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Liquidation callback parameters for flash loan-based liquidation",
+      "lib": "",
+      "name": "LiquidationCallbackParams",
+      "fields": [
+        {
+          "doc": "Collateral asset to seize",
+          "name": "collateral_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Collateral price from oracle (validated at call time)",
+          "name": "collateral_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "Collateral reserve data (cached to avoid re-reads)",
+          "name": "collateral_reserve_data",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "Collateral amount to seize",
+          "name": "collateral_to_seize",
+          "type_": "u128"
+        },
+        {
+          "doc": "Deadline timestamp",
+          "name": "deadline_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "Debt asset to repay",
+          "name": "debt_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Debt price from oracle (validated at call time)",
+          "name": "debt_price",
+          "type_": "u128"
+        },
+        {
+          "doc": "Debt reserve data (cached to avoid re-reads)",
+          "name": "debt_reserve_data",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "Amount of debt to cover",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "Liquidator address (receives profit)",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "Minimum swap output for slippage protection",
+          "name": "min_swap_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "Optional swap handler for DEX-agnostic swaps",
+          "name": "swap_handler",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "User being liquidated",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error conditions for upgradeable contract operations.",
+      "lib": "",
+      "name": "UpgradeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidWasmHash",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAdmin",
+          "value": 4
+        }
+      ]
+    }
+  }
+]

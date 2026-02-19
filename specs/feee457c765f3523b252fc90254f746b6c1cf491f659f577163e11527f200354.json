@@ -1,0 +1,366 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Game",
+      "fields": [
+        {
+          "doc": "",
+          "name": "player1",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "player1_move",
+          "type_": {
+            "udt": {
+              "name": "PlayerMove"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "player1_points",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "player2",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "player2_move",
+          "type_": {
+            "udt": {
+              "name": "PlayerMove"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "player2_points",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "winner",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "GameNotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotPlayer",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AlreadyMoved",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BothPlayersNotMoved",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "GameAlreadyEnded",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Game",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "GameHubAddress"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PlayerMove",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "None"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Rock"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Scissors"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current GameHub contract address\\n\\n# Returns\\n* `Address` - The GameHub contract address",
+      "name": "get_hub",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new GameHub contract address\\n\\n# Arguments\\n* `new_hub` - The new GameHub contract address",
+      "name": "set_hub",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_hub",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the contract WASM hash (upgrade contract)\\n\\n# Arguments\\n* `new_wasm_hash` - The hash of the new WASM binary",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get game information.\\n\\n# Arguments\\n* `session_id` - The session ID of the game\\n\\n# Returns\\n* `Game` - The game state",
+      "name": "get_game",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Game"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current admin address\\n\\n# Returns\\n* `Address` - The admin address",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new admin address\\n\\n# Arguments\\n* `new_admin` - The new admin address",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Start a new game between two players with points.\\nThis creates a session in the Game Hub and locks points before starting the game.\\n\\n**CRITICAL:** This method requires authorization from THIS contract (not players).\\nThe Game Hub will call `game_id.require_auth()` which checks this contract's address.\\n\\n# Arguments\\n* `session_id` - Unique session identifier (u32)\\n* `player1` - Address of first player\\n* `player2` - Address of second player\\n* `player1_points` - Points amount committed by player 1\\n* `player2_points` - Points amount committed by player 2",
+      "name": "start_game",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "player1",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "player2",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "player1_points",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "player2_points",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit a Rock, Paper, or Scissors move for the current game.\\nEach player may only submit once. The game resolves when both have moved.\\n\\n# Arguments\\n* `session_id` - The session ID of the game\\n* `player` - Address of the player submitting a move\\n* `game_move` - The chosen move: Rock, Paper, or Scissors",
+      "name": "submit_move",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "game_move",
+          "type_": {
+            "udt": {
+              "name": "PlayerMove"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with GameHub address and admin\\n\\n# Arguments\\n* `admin` - Admin address (can upgrade contract)\\n* `game_hub` - Address of the GameHub contract",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "game_hub",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reveal the winner once both players have submitted their moves.\\nRock beats Scissors, Scissors beats Paper, Paper beats Rock.\\nOn a tie, moves are reset and players must submit again (returns Ok(None)).\\n\\n# Arguments\\n* `session_id` - The session ID of the game\\n\\n# Returns\\n* `Option<Address>` - Some(winner) if decided, None if tied (moves reset)",
+      "name": "reveal_winner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": "address"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
