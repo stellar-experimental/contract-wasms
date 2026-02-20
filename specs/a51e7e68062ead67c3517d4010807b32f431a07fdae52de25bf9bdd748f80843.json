@@ -1,0 +1,653 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 Proof (must match groth16-verifier contract)",
+      "lib": "",
+      "name": "Proof",
+      "fields": [
+        {
+          "doc": "Point A (G1)",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Point B (G2)",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Point C (G1)",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for contract state",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address (can update server pubkey)",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Server's EdDSA public key (64 bytes) for attestation signing",
+            "name": "ServerPubKey"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address of the groth16-verifier contract",
+            "name": "VerifierId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address of the merkle-tree contract",
+            "name": "MerkleTreeId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Tracks used nullifiers: DataKey::Nullifier(hash) -> true",
+            "name": "Nullifier",
+            "type_": [
+              "u256"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether contract is initialized",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total number of authorizations processed",
+            "name": "AuthCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Verification key hash (to ensure correct circuit)",
+            "name": "VkHash"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract errors",
+      "lib": "",
+      "name": "GmailAuthError",
+      "cases": [
+        {
+          "doc": "Contract already initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Nullifier has already been used (replay attack prevented)",
+          "name": "NullifierAlreadyUsed",
+          "value": 3
+        },
+        {
+          "doc": "Groth16 proof verification failed",
+          "name": "InvalidProof",
+          "value": 4
+        },
+        {
+          "doc": "Caller not authorized",
+          "name": "Unauthorized",
+          "value": 5
+        },
+        {
+          "doc": "Invalid public inputs length",
+          "name": "InvalidPublicInputs",
+          "value": 6
+        },
+        {
+          "doc": "Commitment not found in authorized set",
+          "name": "CommitmentNotFound",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Configuration for the Gmail auth contract",
+      "lib": "",
+      "name": "GmailAuthConfig",
+      "fields": [
+        {
+          "doc": "Address of merkle-tree contract",
+          "name": "merkle_tree_id",
+          "type_": "address"
+        },
+        {
+          "doc": "Server's EdDSA public key for attestation verification",
+          "name": "server_pub_key",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Address of groth16-verifier contract",
+          "name": "verifier_id",
+          "type_": "address"
+        },
+        {
+          "doc": "Hash of the expected verification key",
+          "name": "vk_hash",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade this contract to a new WASM (admin only).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of an authorization check",
+      "lib": "",
+      "name": "AuthorizationResult",
+      "fields": [
+        {
+          "doc": "The commitment that was authorized",
+          "name": "commitment",
+          "type_": "u256"
+        },
+        {
+          "doc": "Index in the merkle tree (if applicable)",
+          "name": "merkle_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether the authorization succeeded",
+          "name": "success",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Authorize a user with a Gmail ZK proof.\\n\\nThis is the main entry point for proving Gmail ownership.\\nThe user provides a Groth16 proof that demonstrates:\\n1. They have a valid server attestation (semi-trusted mode)\\n2. The attestation is recent (within 24 hours)\\n3. The commitment correctly hides their gmail hash\\n4. The nullifier is correctly derived\\n\\n# Arguments\\n* `proof_a` - G1 point A from Groth16 proof\\n* `proof_b` - G2 point B from Groth16 proof\\n* `proof_c` - G1 point C from Groth16 proof\\n* `request` - Authorization request with commitment and nullifier\\n\\n# Returns\\n* `AuthorizationResult` on success\\n\\n# Errors\\n* `NotInitialized` - Contract not initialized\\n* `NullifierAlreadyUsed` - Replay attack prevented\\n* `InvalidProof` - Groth16 verification failed",
+      "name": "authorize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proof_a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof_b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof_c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "request",
+          "type_": {
+            "udt": {
+              "name": "AuthorizationRequest"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "AuthorizationResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Authorization request containing proof and public outputs.\\nFields MUST be in alphabetical order for Soroban struct encoding.",
+      "lib": "",
+      "name": "AuthorizationRequest",
+      "fields": [
+        {
+          "doc": "The commitment to the gmail hash (public output from circuit)",
+          "name": "commitment",
+          "type_": "u256"
+        },
+        {
+          "doc": "Maximum age of attestation in seconds (public input, e.g., 86400)",
+          "name": "max_attestation_age",
+          "type_": "u64"
+        },
+        {
+          "doc": "The nullifier hash (public output, prevents replay)",
+          "name": "nullifier_hash",
+          "type_": "u256"
+        },
+        {
+          "doc": "Server's public commitment (public input, binds attestation to server)",
+          "name": "server_pub_commitment",
+          "type_": "u256"
+        },
+        {
+          "doc": "Current timestamp (for freshness check)",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current configuration.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "GmailAuthConfig"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Gmail Auth contract.\\n\\nMust be called once after deployment to set up:\\n- Admin address (the deployer/owner)\\n- Server's EdDSA public key for attestation verification\\n- References to groth16-verifier and merkle-tree contracts\\n\\n# Arguments\\n* `admin` - Address that will control admin functions and upgrades\\n* `config` - Configuration containing server pubkey and contract addresses\\n\\n# Errors\\n* `AlreadyInitialized` - If contract was already initialized",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "GmailAuthConfig"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Authorize with raw proof bytes (alternative interface).\\n\\nSome clients may prefer to pass the proof as a single blob.",
+      "name": "authorize_raw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proof_bytes",
+          "type_": {
+            "bytes_n": {
+              "n": 256
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_attestation_age",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "server_pub_commitment",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "AuthorizationResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a commitment is authorized (exists in merkle tree).\\n\\nThis is used by dApps to verify a user's Gmail authorization status.\\n\\n# Arguments\\n* `commitment` - The commitment to check\\n* `merkle_proof` - Merkle proof of membership\\n* `leaf_index` - Index of the leaf in the tree\\n\\n# Returns\\ntrue if the commitment is in the authorized set",
+      "name": "is_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "merkle_proof",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "leaf_index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the total number of successful authorizations.",
+      "name": "get_auth_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if contract is initialized.",
+      "name": "is_initialized",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin role to a new address.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the server's public key.",
+      "name": "get_server_pubkey",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 64
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a nullifier has already been used.\\n\\nReturns true if the nullifier was used in a previous authorization,\\npreventing replay attacks.",
+      "name": "is_nullifier_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current merkle root of authorized commitments.",
+      "name": "get_authorized_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mark a nullifier as used (admin only, for recovery scenarios).\\n\\nThis should only be used in exceptional circumstances.",
+      "name": "mark_nullifier_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the server's EdDSA public key (admin only).\\n\\nUse this to rotate the attestation signing key.",
+      "name": "update_server_pubkey",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "GmailAuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

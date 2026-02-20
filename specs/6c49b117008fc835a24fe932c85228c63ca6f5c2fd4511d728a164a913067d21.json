@@ -1,0 +1,283 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The admin address (can upgrade)",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The current Merkle root",
+            "name": "Root"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of leaves inserted",
+            "name": "NextLeafIndex"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stores the \"filled subtrees\" - rightmost node at each level",
+            "name": "FilledSubtree",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stores all roots (for historical proof verification)",
+            "name": "RootHistory",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Count of historical roots",
+            "name": "RootCount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract errors",
+      "lib": "",
+      "name": "MerkleError",
+      "cases": [
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not the admin",
+          "name": "Unauthorized",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade this contract to a new WASM (admin only).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "MerkleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current root.",
+      "name": "get_root",
+      "inputs": [],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "MerkleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Hash a leaf value before insertion.\\n\\nLeaves should be hashed with a domain separator to prevent\\nsecond preimage attacks.",
+      "name": "hash_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute Poseidon hash of two values.\\n\\nThis is the core operation for building the tree.\\nH(left, right) combines two nodes into their parent.",
+      "name": "hash_pair",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "left",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "right",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the tree with zero values and set the admin.\\n\\nSets up the \"filled subtrees\" array with the hash of empty leaves.\\nThis is called once when deploying the contract.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Insert a new leaf into the tree.\\n\\nReturns the new root after insertion.",
+      "name": "insert_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute a simple Merkle root from a list of leaves (for testing).\\n\\nBuilds a complete binary tree and returns the root.\\nNumber of leaves must be a power of 2.",
+      "name": "compute_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaves",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a Merkle proof.\\n\\nGiven a leaf, its index, and a proof (sibling hashes from leaf to root),\\nverify that the leaf exists in the tree with the given root.\\n\\n# Arguments\\n* `leaf` - The leaf value to verify\\n* `leaf_index` - Position of the leaf (0-indexed from left)\\n* `proof` - Vector of sibling hashes (length = TREE_DEPTH)\\n* `root` - The root to verify against\\n\\n# Returns\\ntrue if the proof is valid",
+      "name": "verify_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "leaf_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a root exists in the history.\\n\\nThis allows verifying proofs against historical roots,\\nimportant for privacy pools where the root may have changed\\nbetween deposit and withdrawal.",
+      "name": "is_known_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the next leaf index (number of leaves inserted).",
+      "name": "get_next_index",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  }
+]
