@@ -4,7 +4,7 @@ use reqwest::Client;
 use std::collections::BTreeSet;
 use std::env;
 use std::fs;
-use std::io::Read;
+use std::io::{BufReader, Read};
 use std::path::Path;
 use stellar_xdr::curr::ContractDataDurability;
 use stellar_xdr::curr::{
@@ -43,14 +43,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rr = &bucket_name[4..6];
         let _remaining = &bucket_name[6..];
         let bucket_url = format!("{base_url}/bucket/{pp}/{qq}/{rr}/bucket-{bucket_name}.xdr.gz");
-        let cache_path = format!("cache/bucket-{bucket_name}.xdr");
+        let cache_path = format!("cache/bucket-{bucket_name}.xdr.gz");
 
-        let data = if Path::new(&cache_path).exists() {
-            // Load from cache
+        if Path::new(&cache_path).exists() {
             eprintln!("Bucket: {bucket_name} (cached)");
-            fs::read(&cache_path)?
         } else {
-            // Download from network
             eprintln!("Bucket: {bucket_name}");
 
             // First make a HEAD request to get the file size
@@ -75,23 +72,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             eprintln!("  Downloaded {}", human_bytes(data.len() as f64));
 
-            // Decompress the gzip data
-            let mut decoder = GzDecoder::new(&data[..]);
-            let mut data = Vec::new();
-            decoder.read_to_end(&mut data)?;
-
-            eprintln!("  Decompressed {}", human_bytes(data.len() as f64));
-
-            if status.is_success() && data.len() > 100 {
-                // Save to cache
-                fs::write(&cache_path, &data)?;
+            if !status.is_success() || data.len() <= 100 {
+                eprintln!("  Skipping {bucket_name}: status={status}, size={}", data.len());
+                continue;
             }
 
-            data.to_vec()
-        };
+            // Save the compressed bucket to cache. We never materialize the decompressed
+            // form on disk - the decoder below streams it.
+            fs::write(&cache_path, &data)?;
+        }
         processed_buckets += 1;
 
-        match decode_bucket(&data) {
+        // Stream-decompress directly into the XDR decoder so the decompressed bucket
+        // (often many GiB) never lives in memory or on disk all at once.
+        let file = fs::File::open(&cache_path)?;
+        let decoder = GzDecoder::new(BufReader::new(file));
+
+        match decode_bucket(decoder) {
             Ok(count) => {
                 found_contracts += count;
             }
@@ -106,13 +103,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn decode_bucket(data: &[u8]) -> Result<usize, Box<dyn std::error::Error>> {
+fn decode_bucket<R: Read>(reader: R) -> Result<usize, Box<dyn std::error::Error>> {
     // Create contracts and instances directory if it doesn't exist
     fs::create_dir_all("contracts")?;
     fs::create_dir_all("instances")?;
 
-    let mut cursor = std::io::Cursor::new(data);
-    let mut limited = Limited::new(&mut cursor, Limits::none());
+    let mut buf_reader = BufReader::new(reader);
+    let mut limited = Limited::new(&mut buf_reader, Limits::none());
 
     let mut contract_count = 0;
 
