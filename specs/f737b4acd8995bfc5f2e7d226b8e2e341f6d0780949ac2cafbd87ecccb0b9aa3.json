@@ -1,0 +1,1150 @@
+[
+  {
+    "function_v0": {
+      "doc": "Add a voter to the governance voter set.\\n\\nAuth:\\n- Admin only.\\n\\nEffects:\\n- Grants the address voting rights for future proposals.\\n- Emits a voter-added event.",
+      "name": "add_voter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cast a vote for the currently active proposal.\\n\\nAuth:\\n- The provided voter address must authorize the call.\\n\\nEffects:\\n- Records the voter\\xe2\\x80\\x99s approval for the supplied proposal hash.",
+      "name": "cast_vote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "UpgradeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current admin address.\\n\\nNotes:\\n- Read-only helper for configuration inspection.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured registry contract address.\\n\\nNotes:\\n- Read-only helper for dependency inspection.",
+      "name": "get_registry",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a voter from the governance voter set.\\n\\nAuth:\\n- Admin only.",
+      "name": "remove_voter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the factory admin address.\\n\\nAuth:\\n- Current admin authorization required.\\n\\nEffects:\\n- Replaces the account that controls privileged factory actions.\\n- Emits an admin update event.",
+      "name": "update_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the factory and its core dependencies.\\n\\nAuth:\\n- Intended to run once during contract setup.\\n\\nEffects:\\n- Stores admin and dependency contract addresses.\\n- Stores the initial approved wallet wasm hash.\\n- Adds the initial admin as a governance voter.\\n\\nNotes:\\n- Re-initialization is blocked once admin state exists.\\n- New wallets deployed after this point inherit the configured dependencies.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "social_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "UpgradeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a passed upgrade proposal.\\n\\nAuth:\\n- Admin authorization required to trigger execution.\\n\\nEffects:\\n- Applies the approved governance outcome.\\n- Returns the wasm hash that was applied or activated.",
+      "name": "apply_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "UpgradeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy and initialize a new wallet instance.\\n\\nEffects:\\n- Creates a new wallet using the currently approved wallet version.\\n- Passes wallet auth material into the deployment flow.\\n- Emits a wallet creation event after successful deployment.",
+      "name": "create_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 77
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "bls_keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 96
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "UpgradeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel the currently active proposal.\\n\\nAuth:\\n- Admin only.\\n\\nEffects:\\n- Clears the active proposal state before execution.",
+      "name": "cancel_proposal",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "UpgradeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured fee manager contract address.\\n\\nNotes:\\n- Read-only helper for dependency inspection.",
+      "name": "get_fee_manager",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new upgrade proposal.\\n\\nAuth:\\n- Admin only.\\n\\nEffects:\\n- Starts a new proposal for upgrade governance.\\n- Stores the proposed target hash for voting/execution flow.",
+      "name": "propose_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_type",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "UpgradeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the registry dependency used by the factory.\\n\\nAuth:\\n- Admin only.\\n\\nEffects:\\n- Replaces the registry address used for future wallet deployments.\\n- Emits a registry update event.",
+      "name": "update_registry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the currently approved wallet version hash.\\n\\nNotes:\\n- Read-only helper used to inspect deployment version state.",
+      "name": "get_wallet_version",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the fee manager dependency used by the factory.\\n\\nAuth:\\n- Admin only.\\n\\nEffects:\\n- Replaces the fee manager address used for future wallet deployments.\\n- Emits a fee manager update event.",
+      "name": "update_fee_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the social router dependency used by the factory.\\n\\nAuth:\\n- Admin only.\\n\\nEffects:\\n- Replaces the social router address used for future wallet deployments.\\n- Emits a social router update event.",
+      "name": "update_social_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "social_router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Shared access/config storage keys.\\n\\nDESIGN:\\n- Most addresses here are contract-wide configuration and live in instance storage.\\n- Some identity-related keys are included for compatibility with other modules,\\neven if they are not read/written directly in this file.\\n\\nIMPORTANT:\\n- This file provides low-level storage/auth helpers only.\\n- It does not enforce higher-level business rules such as uniqueness between\\nconfigured addresses or one-time initialization beyond what callers enforce.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Registry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeManager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SocialPayments"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PaymentManager"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UseridWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PasskeyWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents the type of upgrade proposal.\\n\\nVARIANTS:\\n- `Upgrade` \\xe2\\x86\\x92 upgrade the current contract WASM\\n- `WalletVersion` \\xe2\\x86\\x92 update approved wallet implementation hash\\n\\nDESIGN:\\n- Persisted in contract storage (`ProposalType`)\\n- Used to determine execution path during proposal finalization\\n\\nCRITICAL COMPATIBILITY NOTE:\\n- This enum is stored on-chain.\\n- DO NOT:\\n- reorder variants\\n- remove existing variants\\n\\n- Adding new variants requires:\\n- updating parsing logic (`upgrade_type`)\\n- ensuring existing stored values remain valid",
+      "lib": "",
+      "name": "UpgradeType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Upgrade"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "WalletVersion"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Supported social identity platforms.\\n\\nDESIGN:\\n- Used for identity binding (wallet \\xe2\\x86\\x94 platform \\xe2\\x86\\x94 user_id)\\n- Stored and compared in normalized lowercase string form\\n\\nIMPORTANT:\\n- Enum is persisted via contracttype \\xe2\\x86\\x92 must remain backward compatible\\n- Do NOT reorder variants in future upgrades",
+      "lib": "",
+      "name": "SocialPlatform",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "X"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Discord"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Telegram"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Email"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Tiktok"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sms"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a validator's signature over a message.\\n\\nFIELDS:\\n- `validator`: identifier of validator (typically public key or hash)\\n- `signature`: signature bytes (expected 64 bytes)\\n\\nASSUMPTIONS:\\n- Signature scheme is fixed (e.g. Ed25519, BLS, etc.)\\n- Validation logic is handled elsewhere (this is just a data container)\\n\\nIMPORTANT:\\n- Lengths are fixed:\\n- validator: 32 bytes\\n- signature: 64 bytes\\n- No validation is performed here",
+      "lib": "",
+      "name": "ValidatorSignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "validator",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RegistryError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "DuplicateValidator",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "ValidatorAlreadyExists",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "InvalidThreshold",
+          "value": 106
+        },
+        {
+          "doc": "",
+          "name": "NotValidator",
+          "value": 107
+        },
+        {
+          "doc": "",
+          "name": "IncorrectNumberOfSignatures",
+          "value": 108
+        },
+        {
+          "doc": "",
+          "name": "PlatformNotSupported",
+          "value": 409
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedAsset",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "UseridAlreadyMapped",
+          "value": 443
+        },
+        {
+          "doc": "",
+          "name": "PasskeyAlreadyMapped",
+          "value": 444
+        },
+        {
+          "doc": "",
+          "name": "NotClaimable",
+          "value": 457
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 459
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 461
+        },
+        {
+          "doc": "",
+          "name": "NotRefundable",
+          "value": 463
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 729
+        },
+        {
+          "doc": "",
+          "name": "InvalidUserId",
+          "value": 742
+        },
+        {
+          "doc": "",
+          "name": "UpperNotAllowed",
+          "value": 743
+        },
+        {
+          "doc": "",
+          "name": "SpacesNotAllowed",
+          "value": 744
+        },
+        {
+          "doc": "",
+          "name": "MaxLengthExceeded",
+          "value": 745
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys derived from normalized identity inputs.\\n\\nDESIGN:\\n- `UseridWalletMap` stores mappings derived from `(platform, user_id)`\\n- `PasskeyWalletMap` stores mappings derived from raw passkey bytes\\n\\nIMPORTANT:\\n- These keys depend on the exact hashing/domain-separation logic below.\\n- Changing encoding, validation, or domain strings will break compatibility\\nwith existing stored mappings.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UseridWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PasskeyWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoteEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "VoteCast"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AddVoterEvent",
+      "prefix_topics": [
+        "Add",
+        "Voter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveVoterEvent",
+      "prefix_topics": [
+        "Remove",
+        "Voter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateAdminEvent",
+      "prefix_topics": [
+        "Update",
+        "Admin"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateRegistryEvent",
+      "prefix_topics": [
+        "Update",
+        "Registry"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletCreationEvent",
+      "prefix_topics": [
+        "Wallet",
+        "Creation"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractUpgradeEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "ContractUpgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposalEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "ProposalCreated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voting_deadline",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateFeeManagerEvent",
+      "prefix_topics": [
+        "Update",
+        "FeeManager"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelledEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "UpgradeCancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateSocialRouterEvent",
+      "prefix_topics": [
+        "Update",
+        "SocialRouter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletVersionUpgradeEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "WalletVersion"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Shared storage keys for token utilities and asset configuration.\\n\\nNOTE:\\n- `AllowanceExpiration` is stored as a ledger offset, not an absolute ledger.\\n- Spend limits are stored in instance storage because they are contract-wide config.\\n- Supported assets are stored in persistent storage as a set-like `Map<Address, ()>`.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Relative ledger offset used when creating token approvals.",
+            "name": "AllowanceExpiration"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Default spend limit used when an asset-specific limit is not set.",
+            "name": "DefaultSpendLimit"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset spend limit override.",
+            "name": "SpendLimit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Set of assets supported by the caller contract.",
+            "name": "SupportedAssets"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeferData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "total_tx_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "updated_deferred_fee",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeDecision",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CollectNow",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CollectNowData"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Defer",
+            "type_": [
+              {
+                "udt": {
+                  "name": "DeferData"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollectNowData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_fee_in_asset",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_in_base",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_tx_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents the type of upgrade proposal.\\n\\nVARIANTS:\\n- Upgrade \\xe2\\x86\\x92 contract WASM upgrade\\n- WalletVersion \\xe2\\x86\\x92 update approved wallet implementation hash\\n\\nDESIGN NOTE:\\n- This enum is persisted in storage via `ProposalType`.\\n- Must remain backward-compatible across contract upgrades.\\n\\nIMPORTANT:\\n- Adding new variants in future requires:\\n- updating parsing logic (`upgrade_type`)\\n- ensuring backward compatibility with stored values",
+      "lib": "",
+      "name": "UpgradeType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Upgrade"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "WalletVersion"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 411
+        },
+        {
+          "doc": "",
+          "name": "AnotherUpgradePending",
+          "value": 1001
+        },
+        {
+          "doc": "",
+          "name": "NoPendingUpgradeAction",
+          "value": 1005
+        },
+        {
+          "doc": "",
+          "name": "UpgradeWasmNotFound",
+          "value": 1007
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTypeNotFound",
+          "value": 1008
+        },
+        {
+          "doc": "",
+          "name": "VotingClosed",
+          "value": 1009
+        },
+        {
+          "doc": "",
+          "name": "VotingStillOngoing",
+          "value": 1010
+        },
+        {
+          "doc": "",
+          "name": "InvalidUpgradeHash",
+          "value": 1011
+        },
+        {
+          "doc": "",
+          "name": "AlreadyVoted",
+          "value": 1013
+        },
+        {
+          "doc": "",
+          "name": "NotInVotersList",
+          "value": 1025
+        },
+        {
+          "doc": "",
+          "name": "DidNotPass",
+          "value": 1027
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys used by the upgrade governance module.\\n\\n-----------------------------------------------------------------------------\\nDESIGN OVERVIEW\\n-----------------------------------------------------------------------------\\n- Only ONE proposal can exist at any time.\\n- Proposal state is stored in instance storage (global, contract-wide).\\n- Voting data (`VotedList`) is stored in persistent storage.\\n\\nCORE INVARIANTS:\\n- `FutureWASM` and `ProposalType` MUST always be written together.\\n- `UpgradeVotingDeadline != 0` implies an active proposal exists.\\n- When a proposal is cleared, ALL related state must be removed.\\n\\nIMPORTANT:\\n- This module does NOT enforce authorization.\\n- Callers must enforce admin/governance permissions.\\n\\nSTORAGE SPLIT:\\n- Instance storage \\xe2\\x86\\x92 proposal metadata (cheap, global)\\n- Persistent storage \\xe2\\x86\\x92 voter participation (per-address state)",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "UNIX timestamp after which the pending proposal may be executed.\\n\\nNOTE:\\n- `0` means NO active proposal.",
+            "name": "UpgradeVotingDeadline"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "WASM hash currently under vote.\\n\\nINVARIANT:\\n- Must always exist together with `ProposalType`.",
+            "name": "FutureWASM"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Approved voter set.\\n\\nNOTE:\\n- Managed separately (add/remove voter functions).",
+            "name": "VotersList"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Addresses that have voted for the current active proposal.\\n\\nDESIGN:\\n- Global because only one proposal exists at a time.\\n- Cleared entirely when proposal ends.",
+            "name": "VotedList"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Latest approved wallet version hash.\\n\\nNOTE:\\n- Used when proposal type = WalletVersion.\\n- Survives across proposals.",
+            "name": "WalletVersion"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Type of the currently active proposal.\\n\\nINVARIANT:\\n- Must always exist together with `FutureWASM`.",
+            "name": "ProposalType"
+          }
+        }
+      ]
+    }
+  }
+]

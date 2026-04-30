@@ -1,0 +1,114 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "A single recipient entry passed to [`Distributor::distribute`].\\n\\nDefining this as a `#[contracttype]` ensures the Vec parameter is composed\\nof validated, contract-defined types rather than raw tuples.",
+      "lib": "",
+      "name": "Recipient",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits the sum of all recipient amounts into a defindex vault on behalf\\nof `caller`, then distributes the minted df tokens back to each recipient\\npro-rata (floor).  The last recipient absorbs any remainder from rounding.\\n\\nReturns `[(user, df_tokens_received)]` in the same order as `recipients`.\\n\\n# Auth\\n`caller` must authorise this invocation AND the nested sub-invocations:\\n- underlying token transfer from `caller` to the vault (pulled internally by the vault)\\n- `vault_df_token.transfer(caller \\xe2\\x86\\x92 userN, amountN)` for every recipient\\n\\n# Pro-rata note\\nThe vault may have a share price != 1:1 (e.g. 1 df token = 1.05 USDC if\\nthe vault has accrued yield).  As a result, the number of df tokens each\\nuser receives will differ from their input amount, but *proportionality*\\nis preserved: a user who contributed X% of the total receives X% of the\\nminted df tokens, which redeems for exactly X% of the deposited underlying.",
+      "name": "distribute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipients",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Recipient"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "i128"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted once per recipient after their df tokens are transferred.\\n\\n- topics - `[\"distributed\"]`\\n- data   - `[asset: Address, vault: Address, user: Address, underlying_amount: i128, df_tokens: i128]`",
+      "lib": "",
+      "name": "Distributed",
+      "prefix_topics": [
+        "distributed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "df_tokens",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

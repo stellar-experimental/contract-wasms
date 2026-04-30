@@ -1,0 +1,796 @@
+[
+  {
+    "function_v0": {
+      "doc": "Admin-only native Soroban WASM upgrade.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the contract generation for operational upgrade checks.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_game",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Game"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "round_index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "RoundData"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_stats",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Stats"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Start a new game. Burns the wager from the player's balance.\\nNo seeds or guesses \\xe2\\x80\\x94 returns game_id only.",
+      "name": "start_game",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "Tier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wager",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle a completed game with a ZK proof.\\nPublic inputs are constructed from on-chain data to prevent tampering.",
+      "name": "settle_game",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "won",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "num_rounds",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Commit a guess hash for the next round.\\nResolution must happen in a later ledger via `resolve_round`.",
+      "name": "commit_guess",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "guess_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim signup bonus (1,000 PHANTOM). One-time per player.\\nCalled by the admin on behalf of the player.",
+      "name": "signup_bonus",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolve a previously committed round in a later ledger.",
+      "name": "resolve_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: update configuration fields after deployment.",
+      "name": "update_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set contract configuration atomically at deployment time.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolve an abandoned game after timeout.\\nUnplayed games refund wager minus fee. In-progress games forfeit as a loss.",
+      "name": "refund_abandoned",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pending_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "game_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PendingRound"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PhantomError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Active game record stored on-chain.",
+      "lib": "",
+      "name": "Game",
+      "fields": [
+        {
+          "doc": "Ledger of the most recent player or resolver action.",
+          "name": "last_action_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_guesses",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "Number of fully resolved rounds.",
+          "name": "rounds_played",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "settled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "Tier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wager",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Difficulty tiers: Novice (10 guesses), Standard (7), Expert (5).",
+      "lib": "",
+      "name": "Tier",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Novice",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Standard",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Expert",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-player stats.",
+      "lib": "",
+      "name": "Stats",
+      "fields": [
+        {
+          "doc": "",
+          "name": "games_played",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signup_claimed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "total_earned",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_wagered",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "wins",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Global contract configuration.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Abandonment fee in basis points (500 = 5%). Forfeited portion of wager on abandon.",
+          "name": "abandon_fee_bp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Address allowed to resolve committed rounds.",
+          "name": "resolver",
+          "type_": "address"
+        },
+        {
+          "doc": "Signup bonus amount (in token smallest units, e.g. 1000 * 10^7).",
+          "name": "signup_bonus_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tier_expert",
+          "type_": {
+            "udt": {
+              "name": "TierConfig"
+            }
+          }
+        },
+        {
+          "doc": "Tier configs.",
+          "name": "tier_novice",
+          "type_": {
+            "udt": {
+              "name": "TierConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tier_standard",
+          "type_": {
+            "udt": {
+              "name": "TierConfig"
+            }
+          }
+        },
+        {
+          "doc": "Ledgers since the most recent game activity before refund is allowed.",
+          "name": "timeout_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "SAC token contract address for PHANTOM.",
+          "name": "token_id",
+          "type_": "address"
+        },
+        {
+          "doc": "UltraHonk verifier contract address.",
+          "name": "verifier_id",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key enum for all contract data.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextGameId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Game",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PendingRound",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Round",
+            "type_": [
+              "u64",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stats",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-round data stored on-chain.",
+      "lib": "",
+      "name": "RoundData",
+      "fields": [
+        {
+          "doc": "On-chain entropy generated during delayed resolution.",
+          "name": "entropy",
+          "type_": "u64"
+        },
+        {
+          "doc": "Poseidon2 hash of 4 guess digits, committed before entropy is resolved.",
+          "name": "guess_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-tier configuration.\\nbase_multiplier is stored in hundredths: 150 = 1.50x, 250 = 2.50x, 500 = 5.00x.",
+      "lib": "",
+      "name": "TierConfig",
+      "fields": [
+        {
+          "doc": "Base multiplier in hundredths (150 = 1.50x).",
+          "name": "base_multiplier",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_guesses",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_wager",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_wager",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A committed round waiting for resolver-side entropy generation.",
+      "lib": "",
+      "name": "PendingRound",
+      "fields": [
+        {
+          "doc": "",
+          "name": "commit_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "guess_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "round_index",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PhantomError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "WagerTooLow",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "WagerTooHigh",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "GameNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "GameAlreadySettled",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ProofVerificationFailed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TimeoutNotReached",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "SignupAlreadyClaimed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidGuessCount",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "GameAlreadyComplete",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "RoundPending",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NoPendingRound",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "ResolveTooEarly",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "RoundNotFound",
+          "value": 13
+        }
+      ]
+    }
+  }
+]

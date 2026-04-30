@@ -1,0 +1,157 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors returned to the caller. The backend middleware translates these\\ninto x402 402 responses with human-readable messages.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "The operator hasn't set a cap for this agent yet.",
+          "name": "NoBudgetSet",
+          "value": 1
+        },
+        {
+          "doc": "The agent's daily cap is zero (effectively blocked).",
+          "name": "CapIsZero",
+          "value": 2
+        },
+        {
+          "doc": "The agent has already spent their daily allowance.",
+          "name": "DailyCapExceeded",
+          "value": 3
+        },
+        {
+          "doc": "Negative or zero amount passed to try_spend.",
+          "name": "InvalidAmount",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key: (operator, agent) \\xe2\\x86\\x92 AgentBudget.\\nThe operator is part of the key so multiple operators can use the same\\ncontract instance without polluting each other's agent registries.",
+      "lib": "",
+      "name": "AgentKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-agent budget state stored on-chain.",
+      "lib": "",
+      "name": "AgentBudget",
+      "fields": [
+        {
+          "doc": "",
+          "name": "daily_cap_stroops",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "day_started_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "spent_today_stroops",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set (or update) the daily spending cap for an agent, in USDC stroops.\\nOnly the operator can call this. Passing 0 effectively blocks the agent.",
+      "name": "set_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Attempt to spend `amount_stroops` from the agent's daily budget.\\nReturns the remaining allowance after the spend. Fails if over cap.",
+      "name": "try_spend",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only: returns (spent_today, cap) for an agent. Used by dashboards.\\nReturns (0, 0) if no budget is set.",
+      "name": "get_budget",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,230 @@
+[
+  {
+    "function_v0": {
+      "doc": "Initialize the mixer contract.\\n\\n- `relayer`: address authorized to submit withdrawals on behalf of recipients.\\n- `token`:   SAC address for the deposited asset (native XLM on testnet:\\nCDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC).",
+      "name": "init",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Relayer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Depth"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextLeafIndex"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CurrentRootIndex"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CachedSubtree",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Root",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Leaf",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Nullifier",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a commitment in the Merkle tree.\\n\\nThe token transfer is handled separately by the frontend \\xe2\\x80\\x94 the user\\ncalls the SAC's `transfer()` directly to fund the contract, then\\ncalls this function to store the commitment on-chain.\\n\\nThis keeps the deposit function free of amount information.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_spent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw XLM from the mixer to a recipient.\\n\\nCalled by the relayer AFTER verifying the ZK proof off-chain.\\n\\n`proof_amount` is the BN254 field element from the ZK proof's public\\ninputs that encodes the withdrawal amount in stroops. The contract\\nderives the actual i128 amount by interpreting the lower 16 bytes of\\nthe 32-byte big-endian field element.\\n\\nThe contract:\\n1. Verifies the caller is the authorized relayer\\n2. Derives the amount from `proof_amount`\\n3. Ensures the nullifier has not been spent (prevents double-withdraw)\\n4. Marks the nullifier as spent\\n5. Transfers XLM from the contract to the recipient via SAC",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proof_amount",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_valid_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_next_index",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_latest_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,456 @@
+[
+  {
+    "function_v0": {
+      "doc": "Claim vested tokens using both linear time-based and milestone-based unlocking\\n\\nOnly the beneficiary can call this function.\\nMust be called after the cliff period has ended.\\nCombines:\\n- Track 1: Linear vesting (50% over 3 years)\\n- Track 2: Milestone-based vesting (50% via TWAP milestones)\\n- Track 3: Governance-unlocked tokens",
+      "name": "claim",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidTokenAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidCliffLedger",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "CliffNotReached",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InsufficientSnapshots",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "SnapshotTooFrequent",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "OverflowError",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Event",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Initialized",
+            "type_": [
+              "address",
+              "address",
+              "i128",
+              "i128"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SnapshotRecorded",
+            "type_": [
+              "i128",
+              "u32",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ClaimProcessed",
+            "type_": [
+              "i128",
+              "u32",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Oracle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OracleAsset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Beneficiary"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalTokens"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CliffLedger"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "IcoPrice"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MilestonesClaimed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalClaimed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SnapshotCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Snapshot",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastSnapshotLedger"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VestingEndLedger"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "GovernanceUnlocked"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LinearClaimed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get full vesting configuration",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VestingConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current vesting status",
+      "name": "get_status",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VestingStatus"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the vesting contract\\n\\n# Arguments\\n* `admin` - Contract administrator (must authorize this call)\\n* `token` - Project token SAC address\\n* `oracle` - Reflector Oracle contract address\\n* `oracle_asset` - Asset identifier for oracle queries\\n* `beneficiary` - Team address that receives vested tokens\\n* `total_tokens` - Total tokens in vesting pool\\n* `cliff_ledger` - Ledger number when cliff ends\\n* `ico_price` - ICO price in USDC (7 decimals)",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "beneficiary",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_tokens",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "cliff_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ico_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute time-weighted average price (TWAP) over the last ~3 months\\n\\nUses snapshots from the TWAP_WINDOW_LEDGERS window.\\nReturns 0 if fewer than 2 snapshots are available in the window.",
+      "name": "compute_twap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceSnapshot",
+      "fields": [
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VestingConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "beneficiary",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cliff_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ico_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_tokens",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vesting_end_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VestingStatus",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cliff_reached",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "current_twap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "governance_unlocked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "linear_unlocked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "milestones_claimed",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "next_milestone_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "remaining",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_claimed",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unlock milestone-locked tokens via governance override\\n\\nOnly callable by the contract admin.\\nAllows unlocking some or all of the milestone-locked tokens.\\nThe governance-unlocked amount gets added to claimable balance on next claim.",
+      "name": "governance_unlock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a price snapshot from the Reflector Oracle\\n\\nPermissionless function that can be called by anyone.\\nFetches the current token price from the oracle and stores it.\\nEnforces minimum 720-ledger interval between snapshots (~1 hour).",
+      "name": "record_price_snapshot",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]

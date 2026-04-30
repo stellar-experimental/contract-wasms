@@ -1,0 +1,452 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_amount",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "EmptyInstructions",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TotalFeeBpsTooHigh",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TargetNotWhitelisted",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "BpsOverflow",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidAdmin",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Whitelist",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Instruction",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AffiliateFee",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WhitelistAdd",
+      "prefix_topics": [
+        "whitelist_add"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminAccepted",
+      "prefix_topics": [
+        "admin_accepted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminProposed",
+      "prefix_topics": [
+        "admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Aggregate multiple contract calls in a single tx, taking affiliate fees up front.\\nReturns the actual `output_token` balance delta for `user`.\\n\\n`swap_id` is a caller-supplied 16-byte identifier (e.g. UUIDv4) emitted in the\\n`swap` event so off-chain systems can correlate transactions.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "instructions",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Instruction"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "affiliate_fees",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AffiliateFee"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL keep-alive. Anyone can call this to bump the contract's\\ninstance storage so admin/pending-admin entries don't decay during low traffic.",
+      "name": "bump_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WhitelistRemove",
+      "prefix_topics": [
+        "whitelist_remove"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Two-step admin rotation: existing admin proposes, new admin must accept.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_whitelisted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_to_whitelist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "remove_from_whitelist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

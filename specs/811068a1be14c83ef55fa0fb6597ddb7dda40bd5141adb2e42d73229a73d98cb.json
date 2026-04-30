@@ -1,0 +1,491 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientCollateral",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PositionAlreadyOpen",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NoOpenPosition",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedCollateral",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InsufficientPool",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SupportedCollateral",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserMargin",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PoolBalance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "LPShares",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Position",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "Human-readable symbol of the synthetic asset, e.g. `symbol_short!(\"XLM\")`.",
+          "name": "asset_symbol",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Amount of collateral locked while this position is open.",
+          "name": "collateral_locked",
+          "type_": "i128"
+        },
+        {
+          "doc": "Notional debt the user has taken on (scaled to 7 decimals).\\nComputed on-chain as xlm_amount * entry_price / SCALE.",
+          "name": "debt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Entry price of the synthetic asset (USDC per token, 7-decimal scaled).",
+          "name": "entry_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "true = long, false = short.",
+          "name": "is_long",
+          "type_": "bool"
+        },
+        {
+          "doc": "The user who owns this position.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "Size of the position in synthetic asset units (7-decimal scaled).",
+          "name": "xlm_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "LP deposits to the shared pool. Increments LPShares(user, token).",
+      "name": "lp_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "LP withdraws from the shared pool. Blocked if LP shares or pool balance insufficient.",
+      "name": "lp_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "LP share amount for a specific user and token.",
+      "name": "get_lp_share",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Position"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Closes the caller's open position and settles PnL against the LP pool.\\n\\nPnL is computed on-chain from stored entry data and the caller-provided\\nclose price:\\n- long:  pnl = (close_price - entry_price) * xlm_amount / SCALE\\n- short: pnl = (entry_price - close_price) * xlm_amount / SCALE\\n\\n- pnl > 0: pool pays the winner \\xe2\\x80\\x94 PoolBalance -= pnl, UserMargin += collateral + pnl\\n- pnl < 0: pool gains from the loser \\xe2\\x80\\x94 PoolBalance += |pnl|, UserMargin += collateral - |pnl|\\n- pnl = 0: UserMargin += collateral (no pool impact)\\n\\nReturns `InsufficientPool` if the pool cannot cover a winning payout.",
+      "name": "close_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "close_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Position"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Total LP pool balance for a token.",
+      "name": "get_pool_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "User deposits margin (collateral) to back their leveraged positions.",
+      "name": "deposit_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "User withdraws free margin. Blocked while a position is open.",
+      "name": "withdraw_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: allow a token to be used as collateral / LP token.",
+      "name": "add_collateral_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Free margin balance for a user (alias for UserMargin).",
+      "name": "get_collateral_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Opens a synthetic leveraged position.\\n\\nComputes `debt_amount = xlm_amount * entry_price / SCALE` on-chain so the\\ncaller cannot manipulate the notional. Locks `collateral_locked` from the\\nuser's free margin.",
+      "name": "open_synthetic_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_symbol",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "xlm_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "entry_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "is_long",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_locked",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

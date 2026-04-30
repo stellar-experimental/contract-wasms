@@ -1,0 +1,655 @@
+[
+  {
+    "function_v0": {
+      "doc": "Buy outcome tokens.\\n\\n# Arguments\\n* `user` - User buying tokens (must authorize)\\n* `outcome` - 0 for YES, 1 for NO\\n* `amount` - Amount of tokens to buy (scaled by 10^7)\\n* `max_cost` - Maximum collateral willing to pay (slippage protection).\\nThe transaction reverts if calculated cost exceeds this value,\\nprotecting users from price movements between quote and execution.\\n\\n# Returns\\nActual cost paid in collateral",
+      "name": "buy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_cost",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sell outcome tokens.\\n\\n# Arguments\\n* `user` - User selling tokens (must authorize)\\n* `outcome` - 0 for YES, 1 for NO\\n* `amount` - Amount of tokens to sell (scaled by 10^7)\\n* `min_return` - Minimum collateral to receive (slippage protection)\\n\\n# Returns\\nActual collateral received",
+      "name": "sell",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_return",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim winnings after market resolution.\\nEach winning token is redeemable for 1 unit of collateral (1:1 redemption),\\nminus a 2% fee that stays in the pool (recoverable by oracle via withdraw_remaining).\\nNote: Losing tokens have zero value and are not claimed.\\n\\n# Arguments\\n* `user` - User claiming (must authorize)\\n\\n# Returns\\nAmount of collateral claimed (after fee deduction)",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolve the market (oracle only).\\n\\n# Arguments\\n* `oracle` - Must match the oracle set at initialization\\n* `winning_outcome` - 0 for YES, 1 for NO",
+      "name": "resolve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "winning_outcome",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current price of an outcome.\\n\\n# Returns\\nPrice scaled by 10^7 (5_000_000 = 0.5 = 50%)",
+      "name": "get_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a quote for buying tokens.\\n\\n# Returns\\n(cost, price_after) both scaled by 10^7",
+      "name": "get_quote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get market state.\\n\\n# Returns\\n(yes_sold, no_sold, collateral_pool, is_resolved)",
+      "name": "get_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  "i128",
+                  "bool"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the oracle address.",
+      "name": "get_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the market with oracle, collateral token, liquidity parameter, and metadata.\\n\\nCan be called directly for manual deployment, or via constructor for factory deployment.\\n\\n# Arguments\\n* `oracle` - Address that can resolve the market\\n* `collateral_token` - Token contract for collateral (e.g., EURMTL SAC)\\n* `liquidity_param` - LMSR b parameter (scaled by 10^7)\\n* `metadata_hash` - IPFS hash for market metadata\\n* `initial_funding` - Initial collateral to fund the market (scaled by 10^7)",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_param",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "metadata_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "initial_funding",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get user's token balance for an outcome.",
+      "name": "get_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: Called automatically when deployed via factory's deploy_v2.\\n\\nDelegates to initialize() for the actual setup logic.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_param",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "metadata_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "initial_funding",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a quote for selling tokens.\\n\\n# Returns\\n(return_amount, price_after) both scaled by 10^7",
+      "name": "get_sell_quote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the metadata hash (IPFS CID for market metadata JSON).",
+      "name": "get_metadata_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw remaining pool after market resolution (oracle only).\\n\\nWithdraws only the excess funds (losers' bets + fees) while reserving\\nenough collateral for unclaimed winning tokens. This prevents the oracle\\nfrom withdrawing funds that winners haven't claimed yet.\\n\\n# Arguments\\n* `oracle` - Must match the oracle set at initialization\\n\\n# Returns\\nAmount of collateral withdrawn",
+      "name": "withdraw_remaining",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the liquidity parameter.",
+      "name": "get_liquidity_param",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the winning outcome (only valid after resolution).",
+      "name": "get_winning_outcome",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the collateral token address.",
+      "name": "get_collateral_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "MarketError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarketError",
+      "cases": [
+        {
+          "doc": "Contract already initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Market already resolved",
+          "name": "AlreadyResolved",
+          "value": 3
+        },
+        {
+          "doc": "Market not resolved yet",
+          "name": "NotResolved",
+          "value": 4
+        },
+        {
+          "doc": "Invalid outcome (must be 0 for YES or 1 for NO)",
+          "name": "InvalidOutcome",
+          "value": 5
+        },
+        {
+          "doc": "Amount must be positive",
+          "name": "InvalidAmount",
+          "value": 6
+        },
+        {
+          "doc": "Insufficient balance to sell",
+          "name": "InsufficientBalance",
+          "value": 7
+        },
+        {
+          "doc": "Slippage exceeded - cost exceeds max_cost",
+          "name": "SlippageExceeded",
+          "value": 8
+        },
+        {
+          "doc": "Slippage exceeded - return below min_return",
+          "name": "ReturnTooLow",
+          "value": 9
+        },
+        {
+          "doc": "Only oracle can perform this action",
+          "name": "Unauthorized",
+          "value": 10
+        },
+        {
+          "doc": "Liquidity parameter must be positive",
+          "name": "InvalidLiquidity",
+          "value": 11
+        },
+        {
+          "doc": "Arithmetic overflow",
+          "name": "Overflow",
+          "value": 12
+        },
+        {
+          "doc": "User has no winning tokens to claim",
+          "name": "NothingToClaim",
+          "value": 13
+        },
+        {
+          "doc": "Critical storage data missing (contract state corrupted)",
+          "name": "StorageCorrupted",
+          "value": 14
+        },
+        {
+          "doc": "Pool has insufficient funds (should not happen in normal operation)",
+          "name": "InsufficientPool",
+          "value": 15
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the contract.\\nUsing enum with variants for type-safe storage access.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Oracle address (can resolve market)",
+            "name": "Oracle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Collateral token contract address (e.g., EURMTL SAC)",
+            "name": "CollateralToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "LMSR liquidity parameter (b) scaled by SCALE_FACTOR",
+            "name": "LiquidityParam"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Quantity of YES tokens sold (scaled)",
+            "name": "YesSold"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Quantity of NO tokens sold (scaled)",
+            "name": "NoSold"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total collateral held in contract (scaled)",
+            "name": "CollateralPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether market is resolved",
+            "name": "Resolved"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Winning outcome (0 = YES, 1 = NO)",
+            "name": "WinningOutcome"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total unclaimed winning tokens (decremented as users claim)",
+            "name": "UnclaimedWinningTokens"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "IPFS metadata hash",
+            "name": "MetadataHash"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "User balance for outcome tokens: UserBalance(user, outcome)",
+            "name": "UserBalance",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

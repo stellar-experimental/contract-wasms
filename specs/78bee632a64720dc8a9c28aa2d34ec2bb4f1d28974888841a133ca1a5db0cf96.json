@@ -1,0 +1,285 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BondStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Live"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Settled"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Expired"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BondData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bond_root",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "counterparty_proof_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "counterparty_pubkey",
+          "type_": "string"
+        },
+        {
+          "doc": "counterparty settlement confirmed (\\xe2\\x89\\xa430)",
+          "name": "cp_settle_confirmed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "creator_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "creator_proof_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "creator settlement confirmed (\\xe2\\x89\\xa430)",
+          "name": "creator_settle_confirmed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "expiry_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "live_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "pinata_link",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "settled_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "BondStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time initialisation. Must be called immediately after deployment.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a new bond on-chain.\\nPhase 1: proof hashes stored as-is (no on-chain ZK verification).",
+      "name": "create_bond",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "bond_root",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "creator_proof_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "counterparty_pubkey",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "pinata_link",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "expiry_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Counterparty co-signs: Pending \\xe2\\x86\\x92 Live.\\nNo TTL change \\xe2\\x80\\x94 the bond was already funded with ACTIVE_TTL at creation.",
+      "name": "cosign_bond",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "counterparty_proof_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Either party confirms settlement. Both must confirm to reach Settled.\\nTTL is only reduced (to TERMINAL_TTL) when the bond fully settles.",
+      "name": "settle_bond",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "is_creator",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone can call this after the expiry timestamp to expire a PENDING bond.",
+      "name": "expire_bond",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Manually extend storage rent for active bonds.\\nOnly meaningful for Pending/Live bonds \\xe2\\x80\\x94 Settled/Expired bonds won't\\nneed rent renewal beyond their short terminal window.",
+      "name": "extend_bond_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public read-only view \\xe2\\x80\\x94 returns full bond state.",
+      "name": "get_bond",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "BondData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "bond_exists",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bond_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  }
+]

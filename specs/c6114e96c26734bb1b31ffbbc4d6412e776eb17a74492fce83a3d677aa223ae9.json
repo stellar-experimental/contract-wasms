@@ -1,0 +1,870 @@
+[
+  {
+    "function_v0": {
+      "doc": "Pauses the contract.\\n\\n# Arguments\\n* `env` - Contract environment.\\n\\n# Authorization\\nRequires authorization from the configured pauser.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns `true` when the contract is paused.\\n\\n# Arguments\\n* `env` - Contract environment.\\n\\n# Authorization\\nNo authorization required.\\n\\n# Returns\\n`true` if paused, otherwise `false`.",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpauses the contract.\\n\\n# Arguments\\n* `env` - Contract environment.\\n\\n# Authorization\\nRequires authorization from the configured pauser.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FactoryError",
+      "cases": [
+        {
+          "doc": "The debitor is not authorized for the issuer.",
+          "name": "DebitorNotAuthorized",
+          "value": 0
+        },
+        {
+          "doc": "The destination is not allowlisted for the issuer.",
+          "name": "NotAuthorizedDestination",
+          "value": 1
+        },
+        {
+          "doc": "Velocity configuration is invalid.",
+          "name": "InvalidVelocityConfig",
+          "value": 2
+        },
+        {
+          "doc": "Transfer amount is invalid.",
+          "name": "InvalidTransferAmount",
+          "value": 3
+        },
+        {
+          "doc": "Transfer exceeds per-transaction spend limit.",
+          "name": "PerTransactionSpendLimitExceeded",
+          "value": 4
+        },
+        {
+          "doc": "Transfer exceeds rolling period spend limit.",
+          "name": "PeriodSpendLimitExceeded",
+          "value": 5
+        },
+        {
+          "doc": "More than one transfer was attempted in the same ledger for this user scope.",
+          "name": "OneTransferPerLedger",
+          "value": 6
+        },
+        {
+          "doc": "Issuer for the `(issuer_id, token)` pair does not exist.",
+          "name": "IssuerNotFound",
+          "value": 7
+        },
+        {
+          "doc": "Issuer manager for `issuer_id` does not exist.",
+          "name": "IssuerManagerNotFound",
+          "value": 8
+        },
+        {
+          "doc": "Issuer for the `(issuer_id, token)` pair already exists.",
+          "name": "IssuerAlreadyExists",
+          "value": 9
+        },
+        {
+          "doc": "Operation requires the contract to be unpaused.",
+          "name": "EnforcedPause",
+          "value": 1000
+        },
+        {
+          "doc": "Operation requires the contract to be paused.",
+          "name": "ExpectedPause",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UserVelocity",
+      "fields": [
+        {
+          "doc": "Whether any spend has occurred in the current period.",
+          "name": "has_spent",
+          "type_": "bool"
+        },
+        {
+          "doc": "Most recent ledger sequence where a transfer was recorded.",
+          "name": "ledger_last_spent",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum spend allowed per transfer.",
+          "name": "per_transaction_spend_limit",
+          "type_": "i128"
+        },
+        {
+          "doc": "Rolling period length in seconds.",
+          "name": "period_duration_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger timestamp when the period was last reset.",
+          "name": "period_last_reset_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Maximum spend allowed during a rolling period.",
+          "name": "period_spend_limit",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount spent in the current period.",
+          "name": "period_spent",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes contract roles and issuer deployment configuration.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `owner` - Address authorized for owner-only operations.\\n* `pauser` - Address authorized to pause and unpause the contract.\\n* `issuer_wasm_hash` - Wasm hash used when deploying issuer contracts.\\n\\n# Authorization\\nNo runtime authorization check. This entrypoint is only callable at contract initialization.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pauser",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "issuer_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploys an issuer contract for `issuer_id` and configures its initial manager and destination.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier used for per-issuer state.\\n* `token` - Token address associated with this issuer deployment.\\n* `manager` - Initial manager for issuer-scoped operations.\\n* `destination` - Initial allowed destination for transfers.\\n\\n# Authorization\\nRequires owner authorization and a non-paused contract state.\\n\\n# Returns\\nThe deployed issuer contract address.",
+      "name": "create_issuer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns velocity limits and spend tracking for `user` under an issuer/token scope.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier.\\n* `token` - Token address.\\n* `user` - User address.\\n\\n# Authorization\\nNo authorization required.\\n\\n# Returns\\nCurrent `UserVelocity` state for this `(issuer_id, token, user)` scope.",
+      "name": "get_user_velocity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UserVelocity"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the issuer contract address for an `(issuer_id, token)` pair.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier.\\n* `token` - Token address associated with the issuer contract.\\n\\n# Returns\\nThe issuer contract address stored for this `(issuer_id, token)` pair.",
+      "name": "get_issuer_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets velocity limits for `user` under `issuer_id` and `token`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier whose limits are being configured.\\n* `token` - Token address for the velocity configuration scope.\\n* `user` - User address whose velocity is configured.\\n* `period_duration_seconds` - Rolling period length in seconds.\\n* `period_spend_limit` - Maximum spend allowed per period.\\n* `per_transaction_spend_limit` - Maximum spend per transfer.\\n\\n# Authorization\\nRequires issuer-manager authorization and a non-paused contract state.",
+      "name": "update_user_velocity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "period_duration_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "period_spend_limit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "per_transaction_spend_limit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks whether `debitor` is authorized for `issuer_id`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier.\\n* `debitor` - Debitor address to check.\\n\\n# Authorization\\nNo authorization required.\\n\\n# Returns\\n`true` if the debitor is authorized for this issuer, otherwise `false`.",
+      "name": "is_authorized_debitor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "debitor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks whether `manager` is the configured manager for `issuer_id`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier.\\n* `manager` - Manager address to check.\\n\\n# Authorization\\nNo authorization required.\\n\\n# Returns\\n`true` if `manager` is currently authorized for this issuer, otherwise `false`.",
+      "name": "is_authorized_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotates the manager for `issuer_id`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier to update.\\n* `manager` - New manager address for issuer-scoped operations.\\n\\n# Authorization\\nRequires owner authorization and a non-paused contract state.",
+      "name": "set_authorized_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `amount` from `account` to `destination` through the issuer contract.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier whose policy applies to this transfer.\\n* `token` - Token address being transferred.\\n* `debitor` - Authorized debitor that signs this request.\\n* `account` - Debited account used as the token source.\\n* `amount` - Transfer amount.\\n* `destination` - Destination address that must be allowlisted.\\n* `uuid` - Offchain transfer correlation identifier emitted in events.\\n\\n# Authorization\\nRequires a non-paused contract state and authentication for an authorized debitor.",
+      "name": "transfer_to_destination",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debitor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks whether `destination` is allowlisted for `issuer_id`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier.\\n* `destination` - Destination address to check.\\n\\n# Authorization\\nNo authorization required.\\n\\n# Returns\\n`true` if the destination is authorized for this issuer, otherwise `false`.",
+      "name": "is_authorized_destination",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates whether `debitor` is authorized for `issuer_id`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier to update.\\n* `debitor` - Debitor address being modified.\\n* `authorized` - If `true`, authorize debitor; if `false`, revoke authorization.\\n\\n# Authorization\\nRequires issuer-manager authorization and a non-paused contract state.",
+      "name": "update_authorized_debitor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "debitor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "authorized",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates whether `destination` is allowed for `issuer_id`.\\n\\n# Arguments\\n* `env` - Contract environment.\\n* `issuer_id` - Issuer identifier to update.\\n* `destination` - Destination address being modified.\\n* `allowed` - If `true`, add destination to allowlist; if `false`, remove it.\\n\\n# Authorization\\nRequires owner authorization and a non-paused contract state.",
+      "name": "update_issuer_destination",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "IssuerCreated",
+      "prefix_topics": [
+        "issuer_created"
+      ],
+      "params": [
+        {
+          "doc": "Issuer identifier.",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Deployed issuer contract address.",
+          "name": "issuer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Initial issuer manager.",
+          "name": "manager",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Initial allowlisted destination.",
+          "name": "destination",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DebitorUpdated",
+      "prefix_topics": [
+        "debitor_updated"
+      ],
+      "params": [
+        {
+          "doc": "Issuer identifier.",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Debitor address that was updated.",
+          "name": "debitor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "`true` when authorized, `false` when revoked.",
+          "name": "authorized",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ManagedUpdated",
+      "prefix_topics": [
+        "managed_updated"
+      ],
+      "params": [
+        {
+          "doc": "Issuer identifier.",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Previous manager address.",
+          "name": "old_manager",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "New manager address.",
+          "name": "manager",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TransferExecuted",
+      "prefix_topics": [
+        "transfer_executed"
+      ],
+      "params": [
+        {
+          "doc": "Offchain transfer correlation identifier.",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Debited source account.",
+          "name": "account",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Credited destination account.",
+          "name": "destination",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Token contract address.",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Transfer amount.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DestinationUpdated",
+      "prefix_topics": [
+        "destination_updated"
+      ],
+      "params": [
+        {
+          "doc": "Issuer identifier.",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Destination address updated in the allowlist.",
+          "name": "destination",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "`true` when added, `false` when removed.",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UserVelocityUpdated",
+      "prefix_topics": [
+        "user_velocity_updated"
+      ],
+      "params": [
+        {
+          "doc": "Issuer identifier.",
+          "name": "issuer_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Token address for velocity scope.",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "User address for velocity scope.",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Rolling period length in seconds.",
+          "name": "period_duration_seconds",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "Max spend in a rolling period.",
+          "name": "period_spend_limit",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Max spend per transaction.",
+          "name": "per_transaction_spend_limit",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Instance-storage keys for global contract configuration.",
+      "lib": "",
+      "name": "ConfigKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Contract owner address.",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address authorized to pause and unpause the contract.",
+            "name": "Pauser"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Global pause flag.",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Wasm hash used when deploying issuer contracts.",
+            "name": "IssuerWasmHash"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Persistent-storage keys for issuer-scoped and user-scoped state.",
+      "lib": "",
+      "name": "PersistentKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Destination allowlist membership for a given issuer.\\n\\nTuple fields:\\n1. `issuer_id`\\n2. `destination`",
+            "name": "AllowedDestination",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Manager address for a given issuer.\\n\\nTuple fields:\\n1. `issuer_id`",
+            "name": "IssuerManager",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Issuer contract address for a given issuer and token pair.\\n\\nTuple fields:\\n1. `issuer_id`\\n2. `token`",
+            "name": "IssuerAddress",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Debitor authorization membership for a given issuer.\\n\\nTuple fields:\\n1. `issuer_id`\\n2. `debitor`",
+            "name": "AuthorizedDebitor",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Velocity state for a given issuer, token, and user tuple.\\n\\nTuple fields:\\n1. `issuer_id`\\n2. `token`\\n3. `user`",
+            "name": "UserVelocity",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "address",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

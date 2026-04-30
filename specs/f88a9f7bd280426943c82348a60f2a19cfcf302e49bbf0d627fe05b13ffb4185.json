@@ -1,0 +1,549 @@
+[
+  {
+    "function_v0": {
+      "doc": "Redeem (burn) a coupon token by its code.\\nThis is the core operation \\xe2\\x80\\x94 irreversible destruction of the token.\\nReturns a RedemptionReceipt as cryptographic proof.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "code",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "redeemer_name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "reference",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "RedemptionReceipt"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a coupon by its code. Anyone can call this.\\nNo auth required \\xe2\\x80\\x94 this is the public verification interface.",
+      "name": "verify",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "code",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "CouponToken"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "CampaignNotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "CouponNotFound",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRedeemed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "CampaignExpired",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SupplyExhausted",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidCode",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "DuplicateCode",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a coupon code is valid and available for redemption.",
+      "name": "is_valid",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "code",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Dynamic storage keys for campaigns, tokens, and code lookups.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Campaign",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Token",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CodeIndex",
+            "type_": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with an admin address.\\nThe admin can create campaigns and mint coupons.\\nVULN-06: Returns Result instead of panicking on re-init.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mint a batch of coupon tokens for a campaign.\\nEach code becomes a unique on-chain NFT-like token.\\nReturns the list of token IDs.",
+      "name": "mint_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "campaign_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "codes",
+          "type_": {
+            "vec": {
+              "element_type": "string"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "u64"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Campaign \\xe2\\x80\\x94 a collection of coupon tokens with shared terms.",
+      "lib": "",
+      "name": "Campaign",
+      "fields": [
+        {
+          "doc": "",
+          "name": "burned",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "discount_type",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "discount_value",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "minted",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_supply",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "valid_until",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get campaign details.",
+      "name": "get_campaign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "campaign_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Campaign"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Total coupons burned (redeemed) across all campaigns.",
+      "name": "total_burned",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Total coupons minted across all campaigns.",
+      "name": "total_minted",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "CouponToken \\xe2\\x80\\x94 individual NFT-like coupon.\\nEach coupon is unique, has its own code, and can only be burned once.",
+      "lib": "",
+      "name": "CouponToken",
+      "fields": [
+        {
+          "doc": "",
+          "name": "burned_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "burned_by",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "campaign_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "code",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "is_burned",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "minted_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reference",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get campaign statistics.",
+      "name": "campaign_stats",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "campaign_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "CampaignStats"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new coupon campaign. Only the admin can call this.\\nReturns the campaign ID.",
+      "name": "create_campaign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "discount_type",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "discount_value",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "total_supply",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "valid_until",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Total campaigns created.",
+      "name": "total_campaigns",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Campaign stats for dashboard queries.",
+      "lib": "",
+      "name": "CampaignStats",
+      "fields": [
+        {
+          "doc": "",
+          "name": "available",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "burned",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "is_expired",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "minted",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "total_supply",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "RedemptionReceipt \\xe2\\x80\\x94 returned after a successful burn/redeem.",
+      "lib": "",
+      "name": "RedemptionReceipt",
+      "fields": [
+        {
+          "doc": "",
+          "name": "burned_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "burned_by",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "campaign_name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "code",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "discount_type",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "discount_value",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reference",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "tx_sequence",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]

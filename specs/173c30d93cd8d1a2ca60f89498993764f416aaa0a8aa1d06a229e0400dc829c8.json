@@ -1,0 +1,427 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 proof with XDR serialization support.\\n\\nContains three elliptic curve points that constitute a Groth16 zero-knowledge proof:\\n\\nThis structure uses Soroban-compatible types and can be passed across contract boundaries.",
+      "lib": "",
+      "name": "Groth16Proof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Groth16Seal",
+      "fields": [
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Groth16Proof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "selector",
+          "type_": {
+            "bytes_n": {
+              "n": 4
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the verifier's selector",
+      "name": "selector",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the RISC Zero verifier version",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verifies a Groth16 proof with the given public signals.\\n\\nThis function implements the core Groth16 verification algorithm using the BN254\\npairing-friendly elliptic curve. The verification checks the pairing equation:\\n\\n`e(-A, B) * e(alpha, beta) * e(vk_x, gamma) * e(C, delta) == 1`\\n\\nwhere `vk_x` is computed as a linear combination of the verification key's IC points\\nweighted by the public signals.\\n\\n# Parameters\\n\\n- `proof`: The Groth16 proof containing points A, B, and C\\n- `pub_signals`: Vector of public input signals (scalar field elements)\\n",
+      "name": "verify_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Groth16Proof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pub_signals",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "VerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "verify",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seal",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "image_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "journal",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "VerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "verify_integrity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receipt",
+          "type_": {
+            "udt": {
+              "name": "Receipt"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "VerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur during Groth16 proof verification.",
+      "lib": "",
+      "name": "VerifierError",
+      "cases": [
+        {
+          "doc": "The proof verification failed (pairing check did not equal identity).",
+          "name": "InvalidProof",
+          "value": 0
+        },
+        {
+          "doc": "The number of public inputs does not match the verification key.",
+          "name": "MalformedPublicInputs",
+          "value": 1
+        },
+        {
+          "doc": "The seal data is malformed or has incorrect byte length.",
+          "name": "MalformedSeal",
+          "value": 2
+        },
+        {
+          "doc": "The selector in the seal does not match this verifier.",
+          "name": "InvalidSelector",
+          "value": 3
+        },
+        {
+          "doc": "The contract has already been initialized.",
+          "name": "AlreadyInitialized",
+          "value": 4
+        },
+        {
+          "doc": "The selector was removed and can no longer be assigned.",
+          "name": "SelectorRemoved",
+          "value": 5
+        },
+        {
+          "doc": "The selector is already assigned to a verifier.",
+          "name": "SelectorInUse",
+          "value": 6
+        },
+        {
+          "doc": "The selector is not registered.",
+          "name": "SelectorUnknown",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A receipt attesting to a claim using the RISC Zero proof system.\\n\\nA receipt is the complete proof package that can be verified on-chain. It combines\\na cryptographic proof (seal) with a claim about what was executed.\\n\\n# Structure\\n\\n- **[`seal`](Receipt::seal)**: A zero-knowledge proof attesting to knowledge of a witness for the claim\\n- **[`claim_digest`](Receipt::claim_digest)**: The SHA-256 hash of a [`ReceiptClaim`] struct containing\\nexecution details (program ID, journal, exit code, etc.)\\n\\n# Important: Claim Digest Validation\\n\\nThe `claim_digest` field **must** be correctly computed by the caller for verification to\\nhave meaningful security guarantees. This is similar to verifying an ECDSA signature where\\nthe message hash must be computed correctly.\\n\\nFor standard successful executions, use:\\n```ignore\\nlet claim = ReceiptClaim::new(&env, image_id, journal_digest);\\nlet claim_digest = claim.digest(&env);\\n```\\n\\n# Example\\n\\n```ignore\\nuse risc0_verifier_interface::{Receipt, ReceiptClaim, Seal};\\n\\nlet claim = ReceiptCla",
+      "lib": "",
+      "name": "Receipt",
+      "fields": [
+        {
+          "doc": "SHA-256 digest of the [`ReceiptClaim`] struct.",
+          "name": "claim_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "The zero-knowledge proof (SNARK) as raw bytes.",
+          "name": "seal",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A claim about the execution of a RISC Zero guest program.\\n\\nThis structure contains all the details about a program execution that the seal\\ncryptographically proves. It includes the program identifier, execution state,\\nexit status, and outputs.\\n\\n# Fields\\n\\nThe claim follows RISC Zero's standard structure for zkVM execution:\\n\\n- **pre_state_digest**: The image id of the guest program\\n- **post_state_digest**: Final state after execution (fixed constant for successful runs)\\n- **exit_code**: How the program terminated (system and user codes)\\n- **input**: Committed input digest (currently unused, set to zero)\\n- **output**: Digest of the [`Output`] containing journal and assumptions\\n\\n# Usage\\n\\nMost users should construct claims using [`ReceiptClaim::new()`] for standard\\nsuccessful executions, which automatically sets appropriate defaults.",
+      "lib": "",
+      "name": "ReceiptClaim",
+      "fields": [
+        {
+          "doc": "The exit code indicating how the execution terminated.\\n\\nContains both a system-level code (Halted, Paused, SystemSplit) and a\\nuser-defined exit code from the guest program.",
+          "name": "exit_code",
+          "type_": {
+            "udt": {
+              "name": "ExitCode"
+            }
+          }
+        },
+        {
+          "doc": "Digest of the input committed to the guest program.\\n\\n**Note**: This field is currently unused in the RISC Zero zkVM and must\\nalways be set to the zero digest (32 zero bytes).",
+          "name": "input",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Digest of the execution output.\\n\\nThis is the SHA-256 hash of an [`Output`] struct containing the journal\\ndigest and assumptions digest. See [`Output::digest()`] for the hashing scheme.",
+          "name": "output",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Digest of the system state after execution has completed.\\n\\nThis is a fixed constant value\\n(`0xa3acc27117418996340b84e5a90f3ef4c49d22c79e44aad822ec9c313e1eb8e2`)\\nrepresenting the halted state.",
+          "name": "post_state_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Digest of the system state before execution (the program [`ImageId`]).\\n\\nThis identifies which guest program was executed. It must match the expected\\nprogram for verification to be meaningful.",
+          "name": "pre_state_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Exit code indicating how a guest program execution terminated.\\n\\nThe exit code consists of two parts:\\n- **System code**: Indicates the execution mode (halted, paused, or split)\\n- **User code**: Application-specific exit code (8 bytes)\\n\\nFor standard successful executions, the system code is [`SystemExitCode::Halted`]\\nand the user code is zero.",
+      "lib": "",
+      "name": "ExitCode",
+      "fields": [
+        {
+          "doc": "System-level exit code indicating the execution termination mode.",
+          "name": "system",
+          "type_": {
+            "udt": {
+              "name": "SystemExitCode"
+            }
+          }
+        },
+        {
+          "doc": "User-defined exit code (8 bytes) set by the guest program.",
+          "name": "user",
+          "type_": {
+            "bytes_n": {
+              "n": 8
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "System-level exit codes for RISC Zero execution.\\n\\nThese codes indicate different execution termination modes.\\n\\n# Variants\\n\\n- **Halted**: Normal termination - the program completed successfully\\n- **Paused**: Execution paused (used for continuations and multi-segment proofs)\\n- **SystemSplit**: Execution split for parallel proving\\n\\n# Encoding\\n\\nThese values are encoded as `u32` in the receipt claim digest computation,\\nshifted left by 24 bits.",
+      "lib": "",
+      "name": "SystemExitCode",
+      "cases": [
+        {
+          "doc": "Program execution completed successfully.",
+          "name": "Halted",
+          "value": 0
+        },
+        {
+          "doc": "Program execution paused (for continuations).",
+          "name": "Paused",
+          "value": 1
+        },
+        {
+          "doc": "Execution split for parallel proving.",
+          "name": "SystemSplit",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Output of a RISC Zero guest program execution.\\n\\nThe output contains the public results of execution (journal) and any\\nassumptions (dependencies on other proofs). This structure is hashed\\nto produce the `output` field in [`ReceiptClaim`].\\n\\n# Fields\\n\\n- **journal_digest**: SHA-256 hash of the journal (public outputs)\\n- **assumptions_digest**: SHA-256 hash of assumptions (zero for unconditional proofs)",
+      "lib": "",
+      "name": "Output",
+      "fields": [
+        {
+          "doc": "SHA-256 digest of assumptions (dependencies on other receipts).\\n\\nFor unconditional receipts (the common case), this is the zero digest.",
+          "name": "assumptions_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "SHA-256 digest of the journal bytes (public outputs from the guest program).",
+          "name": "journal_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Router mapping entry for a verifier selector.\\n\\nThis enum represents the raw state stored in the router mapping:\\n- `Active(Address)` means the selector routes to that verifier contract.\\n- `Tombstone` means the selector was removed and can never be reused.\\n\\nThe router `verifiers` getter returns `None` when a selector has never been set,\\nallowing callers to distinguish \"unset\" vs \"removed\" without relying on errors.",
+      "lib": "",
+      "name": "VerifierEntry",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Active verifier for the selector.",
+            "name": "Active",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Selector is permanently removed.",
+            "name": "Tombstone"
+          }
+        }
+      ]
+    }
+  }
+]

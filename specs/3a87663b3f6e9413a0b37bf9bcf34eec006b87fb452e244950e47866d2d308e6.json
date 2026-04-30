@@ -1,0 +1,863 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MetadataEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "IdentityError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotOwnerOrApproved",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "UriNotSet",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletSet",
+      "prefix_topics": [
+        "wallet_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Registered",
+      "prefix_topics": [
+        "registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "agent_uri",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UriUpdated",
+      "prefix_topics": [
+        "uri_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "updated_by",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_uri",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MetadataSet",
+      "prefix_topics": [
+        "metadata_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletRemoved",
+      "prefix_topics": [
+        "wallet_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the token collection name.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the token collection symbol.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gives permission to `approved` to transfer the token with `token_id` to\\nanother account. The approval is cleared when the token is\\ntransferred.\\n\\nOnly a single account can be approved at a time for a `token_id`.\\nTo remove an approval, the approver can approve their own address,\\neffectively removing the previous approved address. Alternatively,\\nsetting the `live_until_ledger` to `0` will also revoke the approval.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `approver` - The address of the approver (should be `owner` or\\n`operator`).\\n* `approved` - The address receiving the approval.\\n* `token_id` - Token ID as a number.\\n* `live_until_ledger` - The ledger number at which the allowance\\nexpires. If `live_until_ledger` is `0`, the approval is revoked.\\n\\n# Errors\\n\\n* [`NonFungibleTokenError::NonExistentToken`] - If the token does not\\nexist.\\n* [`NonFungibleTokenError::InvalidApprover`] - If the owner address is\\nnot the actual owner of the token.\\n* [`NonFungibleTokenError::InvalidLiveUntilLedger`] - If the ledge",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "approver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of tokens owned by `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The address for which the balance is being queried.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the owner of the token with `token_id`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `token_id` - Token ID as a number.\\n\\n# Errors\\n\\n* [`NonFungibleTokenError::NonExistentToken`] - If the token does not\\nexist.",
+      "name": "owner_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers the token with `token_id` from `from` to `to`.\\n\\nWARNING: Confirmation that the recipient is capable of receiving the\\n`Non-Fungible` is the caller's responsibility; otherwise the NFT may be\\npermanently lost.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `from` - Account of the sender.\\n* `to` - Account of the recipient.\\n* `token_id` - Token ID as a number.\\n\\n# Errors\\n\\n* [`NonFungibleTokenError::IncorrectOwner`] - If the current owner\\n(before calling this function) is not `from`.\\n* [`NonFungibleTokenError::NonExistentToken`] - If the token does not\\nexist.\\n\\n# Events\\n\\n* topics - `[\"transfer\", from: Address, to: Address]`\\n* data - `[token_id: u32]`",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "agent_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "IdentityError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the Uniform Resource Identifier (URI) for the token with\\n`token_id`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `token_id` - Token ID as a number.\\n\\n# Notes\\n\\nIf the token does not exist, this function is expected to panic.",
+      "name": "token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "extend_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the account approved for the token with `token_id`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `token_id` - Token ID as a number.\\n\\n# Errors\\n\\n* [`NonFungibleTokenError::NonExistentToken`] - If the token does not\\nexist.",
+      "name": "get_approved",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_metadata",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "bytes"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_metadata",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "IdentityError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register_full",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_uri",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "metadata",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "MetadataEntry"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_agent_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "new_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "IdentityError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers the token with `token_id` from `from` to `to` by using\\n`spender`s approval.\\n\\nUnlike `transfer()`, which is used when the token owner initiates the\\ntransfer, `transfer_from()` allows an approved third party\\n(`spender`) to transfer the token on behalf of the owner. This\\nfunction verifies that `spender` has the necessary approval.\\n\\nWARNING: Confirmation that the recipient is capable of receiving the\\n`Non-Fungible` is the caller's responsibility; otherwise the NFT may be\\npermanently lost.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `spender` - The address authorizing the transfer.\\n* `from` - Account of the sender.\\n* `to` - Account of the recipient.\\n* `token_id` - Token ID as a number.\\n\\n# Errors\\n\\n* [`NonFungibleTokenError::IncorrectOwner`] - If the current owner\\n(before calling this function) is not `from`.\\n* [`NonFungibleTokenError::InsufficientApproval`] - If the spender does\\nnot have a valid approval.\\n* [`NonFungibleTokenError::NonExistentToken`] - If the token does not\\nexist.\\n\\n# Events",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approve or remove `operator` as an operator for the owner.\\n\\nOperators can call `transfer_from()` for any token held by `owner`,\\nand call `approve()` on behalf of `owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `operator` - Account to add to the set of authorized operators.\\n* `live_until_ledger` - The ledger number at which the allowance\\nexpires. If `live_until_ledger` is `0`, the approval is revoked.\\n\\n# Errors\\n\\n* [`NonFungibleTokenError::InvalidLiveUntilLedger`] - If the ledger\\nnumber is less than the current ledger number.\\n\\n# Events\\n\\n* topics - `[\"approve_for_all\", from: Address]`\\n* data - `[operator: Address, live_until_ledger: u32]`",
+      "name": "approve_for_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_agent_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_agent_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "new_wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "IdentityError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register_with_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unset_agent_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "IdentityError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether the `operator` is allowed to manage all the assets of\\n`owner`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `owner` - Account of the token's owner.\\n* `operator` - Account to be checked.",
+      "name": "is_approved_for_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is minted.",
+      "lib": "",
+      "name": "Mint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an approval is granted.",
+      "lib": "",
+      "name": "Approve",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "approver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is transferred.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when approval for all tokens is granted.",
+      "lib": "",
+      "name": "ApproveForAll",
+      "prefix_topics": [
+        "approve_for_all"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

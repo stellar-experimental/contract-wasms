@@ -1,0 +1,208 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Treasury admin \\xe2\\x80\\x94 only address that can settle / withdraw yield.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The Blend lending pool contract address.",
+            "name": "BlendPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "XLM Stellar Asset Contract address (network-specific, never hardcoded).",
+            "name": "XlmSac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "USDC token contract address (network-specific, never hardcoded).",
+            "name": "UsdcSac"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Running total deposited per token (Persistent, TTL-bumped).",
+            "name": "TotalDeposited",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle a completed sale: withdraw the sold amount from Blend and pay the\\nseller. Called by the ZmokeAgent after confirming on-chain payment.\\n\\n`seller_amount` is the principal the seller receives. Platform yield\\n(if any) remains in the Blend position; harvest it separately via\\n`withdraw_yield`.\\n\\nAuth: admin only.",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seller_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit USDC or XLM into the pool. Funds are immediately routed into\\nthe Blend yield pool so yield accrues from the moment of deposit.\\n\\nCalled by the ZmokeAgent after verifying the buyer's on-chain transaction.\\n\\nAuth: `caller.require_auth()` is required. The caller must also have\\nauthorized the token transfer in the same auth tree entry (handled by\\nthe wallet or the Worker's feebump transaction construction).",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the treasury admin to a new address.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accrued BLND token emissions from the Blend backstop.\\n\\n`reserve_token_ids`: Blend reserve IDs to claim for (e.g., [0] for XLM,\\n[1] for USDC, [0, 1] for both). The BLND tokens are sent to admin.\\n\\nAuth: admin only.",
+      "name": "claim_blnd",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reserve_token_ids",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract once. Addresses are runtime parameters so that\\ntestnet and mainnet deployments share identical WASM (no hardcoded values).\\n\\n# Arguments\\n- `admin`      \\xe2\\x80\\x94 Treasury address. Only this key can settle and harvest.\\n- `blend_pool` \\xe2\\x80\\x94 Blend lending pool contract address.\\n- `xlm_sac`    \\xe2\\x80\\x94 XLM Stellar Asset Contract address for this network.\\n- `usdc_sac`   \\xe2\\x80\\x94 USDC token contract address for this network.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_sac",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw accumulated yield from Blend directly to the treasury (admin).\\n\\nThe Worker calculates yield = (current Blend position) \\xe2\\x88\\x92 (total deposited).\\nOnly the yield-portion should be passed as `amount` to preserve principal.\\n\\nAuth: admin only.",
+      "name": "withdraw_yield",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "blend_pool_addr",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the total deposited principal for a token.\\nUsed by the Worker to compute: yield = blend_position \\xe2\\x88\\x92 total_deposited.",
+      "name": "get_total_deposited",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]

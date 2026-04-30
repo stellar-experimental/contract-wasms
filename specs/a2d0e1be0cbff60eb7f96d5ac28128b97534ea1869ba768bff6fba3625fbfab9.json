@@ -1,0 +1,522 @@
+[
+  {
+    "function_v0": {
+      "doc": "Verify a signed report and return the report data.\\nThe sender must be authenticated to prevent address spoofing in events.",
+      "name": "verify",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signed_report",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bytes",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM to a new version.\\nThe new WASM must be uploaded to the network before calling this function.\\nOnly callable by the owner.\\n\\nAll contract storage (owner, configs, etc.) is preserved after the upgrade\\nbecause `update_current_contract_wasm` only replaces the executable code\\nwhile leaving the contract address and ledger entries intact.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new DON configuration.\\nThe configDigest is provided by the DON (computed off-chain).\\nOnly callable by the owner.\\n\\nMatches EVM: setConfig(bytes32 configDigest, address[] signers, uint8 f, ...)",
+      "name": "set_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "f",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor called atomically at deployment time.\\nSets the initial owner and prevents the initialization window vulnerability.\\n\\nThis is the recommended Soroban pattern to prevent ownership takeover attacks.\\nThe constructor runs atomically during contract deployment, eliminating the\\nuninitialized window where an attacker could front-run initialization.\\n\\n# Arguments\\n* `owner` - The address that will own the contract\\n\\n# Usage\\nWhen deploying the contract, pass the owner address as a constructor argument.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update an existing configuration with new signers.\\nOnly callable by the owner.\\n\\nMatches EVM: updateConfig(bytes32 configDigest, address[] prevSigners, address[] newSigners, uint8 f)",
+      "name": "update_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "prev_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "f",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if the contract has been initialized.\\n\\nReturns true if the constructor has been called, false otherwise.\\nThis is useful for verifying that the contract is ready to use.",
+      "name": "is_initialized",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Activate a configuration.\\nOnly callable by the owner.\\n\\nMatches EVM: activateConfig(bytes32 configDigest)",
+      "name": "activate_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept ownership transfer.\\nOnly callable by the proposed owner.",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deactivate a configuration.\\nOnly callable by the owner.\\n\\nMatches EVM: deactivateConfig(bytes32 configDigest)",
+      "name": "deactivate_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer ownership to a new address.\\nThe new owner must call accept_ownership to complete the transfer.\\nOnly callable by the current owner.\\nCannot transfer to self (matches EVM ConfirmedOwner).",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposed_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend the TTL of contract instance storage.\\nThis function can be called by anyone to prevent the contract from being archived.\\nIt extends the TTL of instance storage (owner, initialized state) and should be\\ncalled regularly to maintain contract availability.\\n\\nThis addresses TOB-STELLAR-DSV-6: Missing TTL extension for verifier storage.",
+      "name": "extend_contract_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Role of an oracle in a configuration.",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Default role - oracle address is not a signer",
+            "name": "Unset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Oracle is allowed to sign reports",
+            "name": "Signer"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for persistent data.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Whether the contract has been initialized.",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The current owner address.",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The proposed owner for two-step transfer.",
+            "name": "ProposedOwner"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Verifier state for a specific config digest.\\nKey: ConfigDigest(BytesN<32>)",
+            "name": "Config",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Signer information stored in the config.",
+      "lib": "",
+      "name": "SignerInfo",
+      "fields": [
+        {
+          "doc": "Index of oracle in the configuration (0-30)",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "The oracle's role",
+          "name": "role",
+          "type_": {
+            "udt": {
+              "name": "Role"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Verifier state for a specific config digest.\\nMatches EVM VerifierState struct.",
+      "lib": "",
+      "name": "VerifierState",
+      "fields": [
+        {
+          "doc": "Fault tolerance (f)",
+          "name": "f",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether the config is active",
+          "name": "is_active",
+          "type_": "bool"
+        },
+        {
+          "doc": "Number of signers",
+          "name": "oracle_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Map of signer addresses to their info",
+          "name": "oracles",
+          "type_": {
+            "map": {
+              "key_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              },
+              "value_type": {
+                "udt": {
+                  "name": "SignerInfo"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract errors matching the EVM implementation.",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "Contract has not been initialized.",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Zero address provided where non-zero required.",
+          "name": "ZeroAddress",
+          "value": 3
+        },
+        {
+          "doc": "Fault tolerance must be a positive non-zero value.",
+          "name": "FaultToleranceMustBePositive",
+          "value": 4
+        },
+        {
+          "doc": "Too many signers provided.",
+          "name": "ExcessSigners",
+          "value": 5
+        },
+        {
+          "doc": "Insufficient number of signers provided (need > 3f).",
+          "name": "InsufficientSigners",
+          "value": 6
+        },
+        {
+          "doc": "Non-unique signatures provided (duplicate signers).",
+          "name": "NonUniqueSignatures",
+          "value": 7
+        },
+        {
+          "doc": "Config digest is empty (bytes32(0)).",
+          "name": "DigestEmpty",
+          "value": 8
+        },
+        {
+          "doc": "Config digest has not been set in this verifier.",
+          "name": "DigestNotSet",
+          "value": 9
+        },
+        {
+          "doc": "Config digest has been deactivated.",
+          "name": "DigestInactive",
+          "value": 10
+        },
+        {
+          "doc": "Config digest is already set.",
+          "name": "ConfigDigestAlreadySet",
+          "value": 11
+        },
+        {
+          "doc": "Bad verification - signature recovery failed or signer not registered.",
+          "name": "BadVerification",
+          "value": 12
+        },
+        {
+          "doc": "Mismatched signatures - rs and ss arrays have different lengths.",
+          "name": "MismatchedSignatures",
+          "value": 13
+        },
+        {
+          "doc": "Incorrect signature count (must be exactly f+1).",
+          "name": "IncorrectSignatureCount",
+          "value": 14
+        },
+        {
+          "doc": "No proposed owner set.",
+          "name": "NoProposedOwner",
+          "value": 15
+        },
+        {
+          "doc": "Invalid report format.",
+          "name": "InvalidReportFormat",
+          "value": 16
+        },
+        {
+          "doc": "Signature recovery failed.",
+          "name": "SignatureRecoveryFailed",
+          "value": 17
+        },
+        {
+          "doc": "Invalid proposed owner (cannot transfer to self).",
+          "name": "InvalidProposedOwner",
+          "value": 18
+        }
+      ]
+    }
+  }
+]

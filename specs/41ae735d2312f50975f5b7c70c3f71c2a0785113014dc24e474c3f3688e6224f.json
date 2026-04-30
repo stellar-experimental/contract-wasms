@@ -1,0 +1,3082 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Flash lock state for begin/end pattern\\nStores information about an active flash loan to verify repayment",
+      "lib": "",
+      "name": "FlashLock",
+      "fields": [
+        {
+          "doc": "",
+          "name": "balance_before_0",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "balance_before_1",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "expected_fee_0",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "expected_fee_1",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the Oracle",
+      "lib": "",
+      "name": "OracleDataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Most recent observation for quick access",
+            "name": "LatestOracleObservation"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Recent observations stored in a per-minute bucket (key: time slot)",
+            "name": "RecentOracleBucket",
+            "type_": [
+              "u128"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Historical checkpoints stored permanently (key: checkpoint index)",
+            "name": "HistoricalCheckpoint",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Oracle metadata",
+            "name": "Metadata"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Slot active during the last Oracle::write() call, used as deterministic\\nprefetch anchor. Note: updated even when the bucket write is skipped\\n(gap > MAX_SLOT_ADVANCE), so this tracks write-call recency, not\\nnecessarily the last slot that received bucket data.",
+            "name": "LastWrittenSlot"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "OracleObservation data structure",
+      "lib": "",
+      "name": "OracleObservation",
+      "fields": [
+        {
+          "doc": "Whether this observation has been initialized",
+          "name": "initialized",
+          "type_": "bool"
+        },
+        {
+          "doc": "Ledger sequence when observation was made",
+          "name": "ledger_sequence",
+          "type_": "u32"
+        },
+        {
+          "doc": "Cumulative seconds per liquidity (Q128)",
+          "name": "seconds_per_liq_cum_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "The tick at the time of this observation",
+          "name": "tick",
+          "type_": "i32"
+        },
+        {
+          "doc": "Cumulative tick * time elapsed",
+          "name": "tick_cumulative",
+          "type_": "i64"
+        },
+        {
+          "doc": "Unix timestamp from ledger",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Bucket of per-ledger observations within a fixed time window",
+      "lib": "",
+      "name": "SlotBucket",
+      "fields": [
+        {
+          "doc": "",
+          "name": "entries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "OracleObservation"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "start_ts",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle metadata for tracking state",
+      "lib": "",
+      "name": "OracleMetadata",
+      "fields": [
+        {
+          "doc": "Number of historical checkpoints",
+          "name": "checkpoint_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Last checkpoint index",
+          "name": "last_checkpoint_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "Last ledger sequence when observation was written",
+          "name": "last_observation_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PositionKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Position",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PositionData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_growth_inside_0_last_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_growth_inside_1_last_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "tokens_owed_0",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "tokens_owed_1",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TickKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Tick",
+            "type_": [
+              "i32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TickInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_growth_outside_0_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_growth_outside_1_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "initialized",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_gross",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_net",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sec_per_liquidity_outside_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "seconds_outside",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tick_cumulative_outside",
+          "type_": "i64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TickBitMapKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TickBitmap",
+            "type_": [
+              "i32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Hints for deterministic oracle reads.\\n\\nThese hints bound the storage access patterns to ensure the same keys are\\nread during simulation and execution, preventing footprint divergence.",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "Upper checkpoint hint for bounding historical checkpoint reads",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "Lower checkpoint hint for narrowing the prefetch window.",
+          "name": "checkpoint_min",
+          "type_": "u32"
+        },
+        {
+          "doc": "Slot hint for bounding recent bucket reads (from current_and_next_slot())",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InitializeEvent",
+      "prefix_topics": [
+        "init"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapEvent",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintEvent",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BurnEvent",
+      "prefix_topics": [
+        "burn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollectEvent",
+      "prefix_topics": [
+        "collect"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollectProtocolEvent",
+      "prefix_topics": [
+        "collect_p"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashBeginEvent",
+      "prefix_topics": [
+        "flash_begin"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashEndEvent",
+      "prefix_topics": [
+        "flash_end"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paid0",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "paid1",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradedEvent",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MigratedEvent",
+      "prefix_topics": [
+        "migrated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "schema_version",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferredEvent",
+      "prefix_topics": [
+        "admin_xfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeabilityRevokedEvent",
+      "prefix_topics": [
+        "upg_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PoolPausedEvent",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PoolUnpausedEvent",
+      "prefix_topics": [
+        "unpaused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Slot0",
+      "fields": [
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Batch query result for position fee calculations\\nContains all data needed to compute position fees in a single cross-contract call",
+      "lib": "",
+      "name": "PositionFeeData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_growth_global_0_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_growth_global_1_x128",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot0",
+          "type_": {
+            "udt": {
+              "name": "Slot0"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower_info",
+          "type_": {
+            "udt": {
+              "name": "TickInfo"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_upper_info",
+          "type_": {
+            "udt": {
+              "name": "TickInfo"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ImmutablePoolParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "flash_executor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_liq_per_tick",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProtocolFees",
+      "fields": [
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PoolStateBatch",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_growth_global_0",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_growth_global_1",
+          "type_": {
+            "udt": {
+              "name": "FixedPoint128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fees",
+          "type_": {
+            "udt": {
+              "name": "ProtocolFees"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot0",
+          "type_": {
+            "udt": {
+              "name": "Slot0"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Baseline balances accounted by the pool to validate prefunded inputs.\\nThe pool only allows prefunded swaps to consume balance deltas above this baseline.",
+      "lib": "",
+      "name": "BaselineBalances",
+      "fields": [
+        {
+          "doc": "",
+          "name": "balance0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "balance1",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Observation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "block_timestamp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "initialized",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "secs_per_liq_cumulative_x128",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick_cumulative",
+          "type_": "i64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ModifyPositionParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdatePositionParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liquidity_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_current",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapCache",
+      "fields": [
+        {
+          "doc": "",
+          "name": "block_timestamp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "computed_latest_observation",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "fee_protocol",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liquidity_start",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "secs_per_liq_cumulative_x128",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick_cumulative",
+          "type_": "i64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_calculated",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_specified_remaining",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_growth_global_x128",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StepComputations",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "initialized",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_next_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_start_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick_next",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PoolState",
+      "fields": [
+        {
+          "doc": "Fee tier in basis points (e.g., 3000 = 0.3%)",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total active liquidity at current tick",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Current sqrt price in Q64.96 format",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "Current tick",
+          "name": "tick",
+          "type_": "i32"
+        },
+        {
+          "doc": "Minimum tick spacing for positions",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "First token in the pair",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "Second token in the pair",
+          "name": "token1",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PoolStateWithBalances",
+      "fields": [
+        {
+          "doc": "Balance of token0 held by the pool (reserve0)",
+          "name": "reserve0",
+          "type_": "i128"
+        },
+        {
+          "doc": "Balance of token1 held by the pool (reserve1)",
+          "name": "reserve1",
+          "type_": "i128"
+        },
+        {
+          "doc": "Core pool state (tokens, fee, price, liquidity)",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "PoolState"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor called by the factory when deploying a new pool.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `factory` - Address of the factory contract that created this pool\\n* `token0` - Address of the first token in the pair\\n* `token1` - Address of the second token in the pair\\n* `fee` - Fee tier for this pool (in basis points)\\n* `tick_spacing` - Minimum tick spacing for this pool\\n* `flash_executor` - Address of the authorized FlashExecutor contract (immutable)\\n* `admin` - Address of the initial pool admin (upgrade authority)",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token1",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "flash_executor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrades this pool's wasm code in place.\\n\\nRequires pool admin authorization. The pool admin is expected to be a\\nmultisig in production. Fails if upgradeability has been revoked.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs post-upgrade migrations. Idempotent.\\n\\nRequires pool admin authorization. Fails if upgradeability has been revoked.",
+      "name": "migrate",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns contract code version.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns stored schema version.",
+      "name": "schema_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current pool admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers the pool admin role to a new address. Requires current admin auth.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permanently revokes upgradeability for this pool. One-way, irreversible.",
+      "name": "revoke_upgradeability",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether upgradeability has been permanently revoked.",
+      "name": "is_upgradeability_revoked",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pauses the pool. Blocks swaps, mints, and flash loans.\\nWithdrawals (burn, collect) remain available. Requires admin auth.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpauses the pool. Requires admin auth.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether the pool is currently paused.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Validates that tick range is properly ordered and within bounds.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `tick_lower` - Lower tick of the range\\n* `tick_upper` - Upper tick of the range\\n\\n# Returns\\n* `Ok(())` if ticks are valid\\n* `Err` if ticks are invalid (wrong order, out of bounds, or misaligned with tick_spacing)",
+      "name": "check_ticks",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current ledger timestamp.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nCurrent timestamp in seconds",
+      "name": "block_timestamp",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the pool with a starting price.\\n\\nMust be called before any liquidity operations. Can only be called once.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `sqrt_price_x96` - Initial sqrt price in Q64.96 format\\n\\n# Returns\\n* `Ok(())` on success\\n* `Err(AlreadyInitialized)` if pool is already initialized",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swaps tokens in the pool.\\n\\nTransfers tokens from sender and sends output tokens to recipient.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `sender` - Address providing input tokens (requires auth)\\n* `recipient` - Address receiving output tokens\\n* `zero_for_one` - True if swapping token0 for token1, false otherwise\\n* `amount_specified` - Amount to swap (positive for exact input, negative for exact output)\\n* `sqrt_price_limit_x96` - Price limit for the swap in Q64.96 format\\n\\n# Returns\\n* `Ok(SwapResult)` containing amounts swapped and final price\\n* `Err` if swap fails (locked, invalid price limit, etc.)",
+      "name": "swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "zero_for_one",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_specified",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SwapResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swaps tokens using prefunded input already held by the pool.\\n\\nAssumes input tokens have been transferred to the pool before calling.\\nOnly authorized routers can call this function. Verifies available delta\\nvia baseline accounting system before executing the swap.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `router` - Address of the authorized router (requires auth)\\n* `recipient` - Address receiving output tokens\\n* `zero_for_one` - True if swapping token0 for token1, false otherwise\\n* `amount_specified` - Amount to swap (positive for exact input, negative for exact output)\\n* `sqrt_price_limit_x96` - Price limit for the swap in Q64.96 format\\n\\n# Returns\\n* `Ok(SwapResult)` containing amounts swapped and final price\\n* `Err(Unauthorized)` if router is not authorized\\n* `Err` on other failures (locked, invalid price limit, insufficient balance)",
+      "name": "swap_prefunded",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "zero_for_one",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_specified",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SwapResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Manages authorization for routers allowed to call `swap_prefunded`.\\n\\nOnly the pool's factory can call this function.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `factory` - Address of the factory (requires auth, must match pool's factory)\\n* `router` - Address of the router to authorize/unauthorize\\n* `allowed` - True to authorize, false to remove authorization\\n\\n# Returns\\n* `Ok(())` on success\\n* `Err(Unauthorized)` if caller is not the pool's factory",
+      "name": "set_router_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burns liquidity from a position.\\n\\nRemoves liquidity from the specified tick range and credits the owed\\ntokens to the position. Tokens must be collected separately via `collect`.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `owner` - Address owning the position (requires auth)\\n* `tick_lower` - Lower tick of the position range\\n* `tick_upper` - Upper tick of the position range\\n* `amount` - Amount of liquidity to burn\\n\\n# Returns\\n* `Ok((amount0, amount1))` - Amounts of token0 and token1 owed to the position\\n* `Err(Locked)` if pool is currently locked\\n* `Err` on other failures (invalid ticks, position not found)",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u128",
+                  "u128"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects fees accumulated by a liquidity position.\\n\\nTransfers owed tokens to the recipient. Fees are computed when liquidity\\nis added or removed via mint/burn, not when collecting.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `recipient` - Address receiving the fees (requires auth, must be position owner)\\n* `tick_lower` - Lower tick of the position range\\n* `tick_upper` - Upper tick of the position range\\n* `amount0_requested` - Maximum amount of token0 to collect\\n* `amount1_requested` - Maximum amount of token1 to collect\\n\\n# Returns\\n* `Ok((amount0, amount1))` - Actual amounts collected (min of requested vs owed)\\n* `Err(Error)` if position fee update fails",
+      "name": "collect",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "amount0_requested",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_requested",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u128",
+                  "u128"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects protocol fees accumulated by the pool.\\n\\nOnly the factory owner can call this function. Keeps a minimum of 1 token\\nin the slot to save on storage gas costs.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `recipient` - Address receiving the protocol fees (requires factory owner auth)\\n* `amount0_requested` - Maximum amount of token0 to collect\\n* `amount1_requested` - Maximum amount of token1 to collect\\n\\n# Returns\\n* `Ok((amount0, amount1))` - Actual amounts collected\\n* `Err(Error)` if pool is not initialized or params are missing",
+      "name": "collect_protocol",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0_requested",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount1_requested",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u128",
+                  "u128"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin a flash loan\\n\\nOnly the authorized FlashExecutor can call this.\\nMust be followed by flash_end() in the same transaction.\\n\\n# Arguments\\n* `recipient` - Address to receive borrowed tokens\\n* `amount0` - Amount of token0 to borrow\\n* `amount1` - Amount of token1 to borrow\\n* `initiator` - Address of the flash loan initiator (must be FlashExecutor)\\n\\n# Returns\\n* `Ok((fee0, fee1, oracle_hints))` - Fees that must be repaid and oracle hints for swaps",
+      "name": "flash_begin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u128",
+                  "u128",
+                  {
+                    "udt": {
+                      "name": "OracleHints"
+                    }
+                  }
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "End a flash loan\\n\\nMust be called by the same initiator that called flash_begin().\\nVerifies repayment and clears the flash lock.\\n\\n# Returns\\n* `Ok(())` if repayment is sufficient\\n* `Err(InsufficientRepayment0/1)` if repayment is insufficient",
+      "name": "flash_end",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current pool state.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nSlot0 containing current sqrt price, tick, and lock status",
+      "name": "slot0",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Slot0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether the pool has been initialized.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\ntrue if initialized, false otherwise",
+      "name": "is_initialized",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the factory address that created this pool.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nAddress of the factory contract",
+      "name": "factory",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of token0 in the pair.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nAddress of token0",
+      "name": "token0",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of token1 in the pair.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nAddress of token1",
+      "name": "token1",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the pool's fee tier.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nFee in basis points (e.g., 3000 = 0.3%)",
+      "name": "fee",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the pool's tick spacing.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nTick spacing (e.g., 60 means positions must be on multiples of 60)",
+      "name": "tick_spacing",
+      "inputs": [],
+      "outputs": [
+        "i32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the flash executor address for this pool.\\n\\nThe flash executor is immutable and set once during pool deployment.\\nThis is the only authorized contract that can initiate flash loans on this pool.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nAddress of the FlashExecutor contract",
+      "name": "flash_executor",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the protocol fee for zero_for_one swaps from the factory.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nProtocol fee in basis points",
+      "name": "get_protocol_fee_0",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the protocol fee for one_for_zero swaps from the factory.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nProtocol fee in basis points",
+      "name": "get_protocol_fee_1",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns a tick bitmap word for off-chain quoters and lens contracts.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `word_pos` - The word position in the bitmap\\n\\n# Returns\\n256-bit word from the tick bitmap",
+      "name": "get_tick_bitmap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "word_pos",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current active liquidity.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nTotal liquidity currently active at the current tick",
+      "name": "liquidity",
+      "inputs": [],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the global fee growth for token0.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nFee growth in Q128.128 format",
+      "name": "fee_growth_global_0_x128",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "FixedPoint128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the global fee growth for token1.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nFee growth in Q128.128 format",
+      "name": "fee_growth_global_1_x128",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "FixedPoint128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the accumulated protocol fees.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\nProtocolFees struct containing amounts for both tokens",
+      "name": "protocol_fees",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ProtocolFees"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns information about a specific tick.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `tick` - The tick index to query\\n\\n# Returns\\nTickInfo struct, or default (uninitialized) if tick hasn't been used",
+      "name": "ticks",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TickInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns all data needed for position fee calculations in a single call.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `tick_lower` - The lower tick of the position\\n* `tick_upper` - The upper tick of the position\\n\\n# Returns\\nPositionFeeData struct containing slot0, global fee growth, and tick info",
+      "name": "get_position_fee_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PositionFeeData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns complete pool state in a single call for efficient batch queries.\\n\\nThis function is designed for the PoolLens contract to minimize cross-contract\\ncall overhead. Returns `None` if the pool is not initialized, eliminating the\\nneed for a separate `is_initialized` check.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\n* `Some(PoolState)` if pool is initialized with all config and trading state\\n* `None` if pool is not initialized",
+      "name": "get_full_pool_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PoolState"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns complete pool state with token balances (reserves) in a single call.\\n\\nSimilar to `get_full_pool_state` but also fetches the token balances held by\\nthe pool. This requires two additional cross-contract calls to the token\\ncontracts, adding ~1M CPU instructions per pool.\\n\\n# Arguments\\n* `env` - The contract environment\\n\\n# Returns\\n* `Some(PoolStateWithBalances)` if pool is initialized with state and reserves\\n* `None` if pool is not initialized\\n\\n# Note\\nUse this when you need TVL/reserve information. If you don't need balances,\\nprefer `get_full_pool_state`.",
+      "name": "get_pool_state_with_balances",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PoolStateWithBalances"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns cumulative values inside a tick range for a given position.\\n\\nUsed to compute time-weighted averages and liquidity-weighted time within\\na price range for liquidity mining and other analytics.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `tick_lower` - Lower tick of the range\\n* `tick_upper` - Upper tick of the range\\n\\n# Returns\\n* `Ok((tick_cumulative, seconds_per_liquidity_cumulative, seconds_inside))`\\n* `Err(TickNotInitialized)` if either tick hasn't been initialized",
+      "name": "snapshot_cumulatives_inside",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i64",
+                  {
+                    "udt": {
+                      "name": "FixedPoint128"
+                    }
+                  },
+                  "u32"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Observes oracle data for a single time point.\\n\\nReturns tick cumulative and seconds per liquidity cumulative values\\nfor computing time-weighted averages.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `seconds_ago` - How many seconds in the past to observe (0 = current)\\n\\n# Returns\\n* `Ok((tick_cumulative, seconds_per_liquidity_cumulative_x128))`\\n* `Err` if observation doesn't exist or is too old",
+      "name": "observe_single",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seconds_ago",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i64",
+                  {
+                    "udt": {
+                      "name": "FixedPoint128"
+                    }
+                  }
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Observes oracle data for multiple time points.\\n\\nReturns tick cumulative and seconds per liquidity cumulative values\\nfor each requested time point, for computing time-weighted averages.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `seconds_agos` - Vector of seconds in the past to observe (0 = current)\\n\\n# Returns\\n* `Ok((tick_cumulatives, seconds_per_liquidity_cumulatives_x128))`\\n* `Err` if any observation doesn't exist or is too old",
+      "name": "observe",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seconds_agos",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  {
+                    "vec": {
+                      "element_type": "i64"
+                    }
+                  },
+                  {
+                    "vec": {
+                      "element_type": {
+                        "udt": {
+                          "name": "FixedPoint128"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless oracle poke to record a fresh observation.\\n\\nWrites a new oracle observation using the current pool tick and liquidity.\\nIf called within `MIN_OBSERVATION_INTERVAL` of the last write, this is a no-op.\\n\\nReturns a tuple `(updated, last_timestamp)` where:\\n- `updated` is true if a new observation was recorded\\n- `last_timestamp` is the timestamp of the latest observation after this call\\n",
+      "name": "poke_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "bool",
+                  "u64"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns oracle hints for deterministic queries.\\n\\nConvenience function that returns both slot and checkpoint hints\\nin a single call, ready to pass to swap/mint/burn/observe functions.\\n\\nWorks both before and after pool initialization:\\n- Before init: returns `{ slot: computed, checkpoint: 0 }`\\n- After init: returns `{ slot: computed, checkpoint: actual_count }`",
+      "name": "get_oracle_hints",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "OracleHints"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a historical checkpoint observation by index.\\n\\nReturns `None` if the index exceeds `checkpoint_count` or the checkpoint\\nhas expired from persistent storage.\\n\\nIntended for off-chain use (RPC simulation / indexers) to binary search\\nfor the tight `min_checkpoint_hint` / `max_checkpoint_hint` to pass into\\n`observe` or `observe_single`, without paying transaction fees.",
+      "name": "get_checkpoint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "OracleObservation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get oracle status for UI decisions.\\n\\nReturns information about the oracle's current state to help the frontend\\ndecide when to show/enable the \"Refresh price\" button.\\n\\n# Returns\\nA tuple `(last_timestamp, age_seconds, can_poke)` where:\\n- `last_timestamp`: Unix timestamp of the most recent observation\\n- `age_seconds`: How many seconds have elapsed since the last observation\\n- `can_poke`: Whether calling `poke_oracle` would update the oracle\\n(respects MIN_OBSERVATION_INTERVAL - at least 1 ledger \\xe2\\x89\\x88 5 seconds)",
+      "name": "get_oracle_status",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u64",
+                  "u64",
+                  "bool"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mints liquidity to a position.\\n\\nCreates or adds to a liquidity position in the specified tick range.\\nTransfers the required amounts of both tokens from the sender.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `sender` - Address initiating the mint and providing tokens (requires auth)\\n* `recipient` - Address receiving the liquidity position (position owner)\\n* `tick_lower` - Lower tick of the position range\\n* `tick_upper` - Upper tick of the position range\\n* `amount` - Amount of liquidity to mint\\n\\n# Returns\\n* `Ok((amount0, amount1))` - Amounts of tokens deposited\\n* `Err(AmountShouldBeGreaterThanZero)` if amount is zero\\n* `Err(Locked)` if pool is currently locked\\n* `Err(InsufficientToken0/Token1)` if token transfer fails",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u128",
+                  "u128"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns a tick bitmap word (public variant).\\n\\n# Arguments\\n* `env` - The contract environment\\n* `word_pos` - The word position in the bitmap\\n\\n# Returns\\n256-bit word from the tick bitmap, or zero if uninitialized",
+      "name": "get_tick_bitmap_public",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "word_pos",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns a range of tick bitmap words for external callers.\\n\\nRetrieves multiple consecutive 256-bit bitmaps in a single call, reducing\\ncross-contract call overhead for operations that need to scan multiple words\\n(e.g., liquidity density charts, tick scanning).\\n\\n# Arguments\\n* `env` - The contract environment\\n* `start_word` - The first bitmap word position (can be negative)\\n* `count` - Number of consecutive words to fetch\\n\\n# Returns\\nVector of bitmap words in ascending order [start_word, start_word+1, ...]",
+      "name": "get_tick_bitmap_range_public",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "start_word",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u256"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns tick information for multiple ticks in a single call.\\n\\nBatch fetches tick data for the specified tick indices. Returns default\\nuninitialized TickInfo for ticks that don't exist (same behavior as `ticks()`).\\n\\n# Arguments\\n* `env` - The contract environment\\n* `tick_indices` - Vector of tick indices to query\\n\\n# Returns\\nVector of TickInfo in the same order as input indices",
+      "name": "get_ticks_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tick_indices",
+          "type_": {
+            "vec": {
+              "element_type": "i32"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "TickInfo"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quotes an exact input swap without executing it.\\n\\nSimulates a swap to determine output amount and final price without\\ntransferring tokens or modifying state.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `zero_for_one` - True if swapping token0 for token1, false otherwise\\n* `amount_in` - Exact amount of input tokens\\n* `sqrt_price_limit_x96` - Price limit for the swap in Q64.96 format\\n\\n# Returns\\n* `Ok(SwapResult)` containing output amount and final sqrt price\\n* `Err` if swap would fail (invalid price limit, etc.)",
+      "name": "quote_exact_input",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "zero_for_one",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SwapResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quotes an exact output swap without executing it.\\n\\nSimulates a swap to determine input amount required for a desired output\\nwithout transferring tokens or modifying state.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `zero_for_one` - True if swapping token0 for token1, false otherwise\\n* `amount_out` - Exact amount of output tokens desired\\n* `sqrt_price_limit_x96` - Price limit for the swap in Q64.96 format\\n\\n# Returns\\n* `Ok(SwapResult)` containing required input amount and final sqrt price\\n* `Err` if swap would fail (invalid price limit, insufficient liquidity)",
+      "name": "quote_exact_output",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "zero_for_one",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SwapResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns position data for a specific owner and tick range.\\n\\n# Arguments\\n* `env` - The contract environment\\n* `recipient` - Address of the position owner\\n* `tick_lower` - Lower tick of the position range\\n* `tick_upper` - Upper tick of the position range\\n\\n# Returns\\nPositionData containing liquidity, fee growth, and tokens owed\\n\\n# Panics\\nPanics if position doesn't exist",
+      "name": "positions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PositionData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidTickRange",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiquidity",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InvalidSqrtPrice",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidFee",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidTickSpacing",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "TickOutOfBounds",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "PriceOutOfBounds",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "LiquidityOverflow",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "LiquidityUnderflow",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "DivisionByZero",
+          "value": 24
+        },
+        {
+          "doc": "",
+          "name": "MulDivOverflow",
+          "value": 25
+        },
+        {
+          "doc": "",
+          "name": "U128Overflow",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "I128Overflow",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "U64Overflow",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "U32Overflow",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "PoolNotInitialized",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "PoolAlreadyInitialized",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "PositionNotFound",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLiquidity",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "TickNotInitialized",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "TickNotSpacedCorrectly",
+          "value": 52
+        },
+        {
+          "doc": "",
+          "name": "PoolPaused",
+          "value": 60
+        },
+        {
+          "doc": "",
+          "name": "ObservationTooOld",
+          "value": 62
+        },
+        {
+          "doc": "",
+          "name": "TickLowerNotLessThanUpper",
+          "value": 65
+        },
+        {
+          "doc": "",
+          "name": "TickLowerTooLow",
+          "value": 66
+        },
+        {
+          "doc": "",
+          "name": "TickUpperTooHigh",
+          "value": 67
+        },
+        {
+          "doc": "",
+          "name": "InvalidPriceLimit",
+          "value": 69
+        },
+        {
+          "doc": "",
+          "name": "AmountShouldBeGreaterThanZero",
+          "value": 70
+        },
+        {
+          "doc": "",
+          "name": "NegativeAmount",
+          "value": 71
+        },
+        {
+          "doc": "",
+          "name": "InsufficientToken0",
+          "value": 72
+        },
+        {
+          "doc": "",
+          "name": "InsufficientToken1",
+          "value": 73
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeProtocol",
+          "value": 74
+        },
+        {
+          "doc": "",
+          "name": "ZeroPriceNotAllowed",
+          "value": 75
+        },
+        {
+          "doc": "",
+          "name": "ZeroLiquidityNotAllowed",
+          "value": 76
+        },
+        {
+          "doc": "",
+          "name": "OverflowInSqrtPriceCalculation",
+          "value": 77
+        },
+        {
+          "doc": "",
+          "name": "UnderflowInSqrtPriceCalculation",
+          "value": 78
+        },
+        {
+          "doc": "",
+          "name": "InsufficientRepayment0",
+          "value": 80
+        },
+        {
+          "doc": "",
+          "name": "InsufficientRepayment1",
+          "value": 81
+        },
+        {
+          "doc": "",
+          "name": "MustUseFlashExecutor",
+          "value": 82
+        },
+        {
+          "doc": "",
+          "name": "FlashNotLocked",
+          "value": 83
+        },
+        {
+          "doc": "",
+          "name": "IdenticalTokens",
+          "value": 90
+        },
+        {
+          "doc": "",
+          "name": "PoolAlreadyExists",
+          "value": 91
+        },
+        {
+          "doc": "",
+          "name": "FeeAmountAlreadyEnabled",
+          "value": 92
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeAmount",
+          "value": 93
+        },
+        {
+          "doc": "",
+          "name": "WasmHashNotApproved",
+          "value": 100
+        },
+        {
+          "doc": "",
+          "name": "PoolNotRegistered",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "UpgradesFrozen",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "UpgradesPermanentlyDisabled",
+          "value": 103
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Q128.128 fixed-point number\\n\\nRepresents a number as: value / 2^128\\n\\nUsed exclusively for fee growth tracking in Uniswap V3 architecture.\\nFor price calculations, use FixedPoint96 instead.",
+      "lib": "",
+      "name": "FixedPoint128",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Q64.96 fixed-point number\\n\\nInternally stored as a U256 where the value represents:\\n`actual_value = stored_value / 2^96`",
+      "lib": "",
+      "name": "FixedPoint96",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapStepResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_ratio_next",
+          "type_": {
+            "udt": {
+              "name": "SqrtPriceX96"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "512-bit unsigned integer\\n\\nRepresented as two 256-bit components:\\n- `low`: bits 0-255\\n- `high`: bits 256-511\\n\\nThe actual value is: high * 2^256 + low",
+      "lib": "",
+      "name": "U512",
+      "fields": [
+        {
+          "doc": "",
+          "name": "high",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "low",
+          "type_": "u256"
+        }
+      ]
+    }
+  }
+]

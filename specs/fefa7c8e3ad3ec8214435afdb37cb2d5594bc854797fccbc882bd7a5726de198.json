@@ -1,0 +1,475 @@
+[
+  {
+    "function_v0": {
+      "doc": "Called by the Soroban runtime to authorize every invocation signed by\\nthis contract's key.",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "WalletSignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called once during deployment. Stores the owner's Ed25519 public key.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whitelist a (contract, function) pair so session keys may call it.",
+      "name": "allow_function",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a session key with its operating limits.",
+      "name": "add_session_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "udt": {
+              "name": "SessionKeyData"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletSignature",
+      "fields": [
+        {
+          "doc": "Ed25519 public key (32 bytes).",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ed25519 signature over the auth payload (64 bytes).",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permanently revoke a session key.",
+      "name": "revoke_session_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update rate-limit parameters for an existing session key.",
+      "name": "update_rate_limits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "max_calls_per_day",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "cool_down_ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a session key and whitelist all allowed (contract, function)\\npairs in a single call to reduce wallet signature prompts.",
+      "name": "configure_session_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "udt": {
+              "name": "SessionKeyData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "allowed_fn_contracts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "allowed_fn_names",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "SessionKeyRevoked",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ContractNotAllowed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "FunctionNotAllowed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "RateLimitExceeded",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "CoolDownActive",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "UnknownSigner",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "SelfCallNotAllowed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "CreateContractNotAllowed",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "SessionKeyExpired",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "GlobalRateLimitExceeded",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Owner account address (G...).",
+            "name": "OwnerAddress"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "BytesN<32> \\xe2\\x80\\x94 owner's Ed25519 public key used in __check_auth owner path.",
+            "name": "OwnerPubKey"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-session-key configuration, keyed by the key's public key.",
+            "name": "SessionKey",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Whitelist entry: (contract_address, function_name) \\xe2\\x86\\x92 bool.",
+            "name": "AllowedFn",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Rolling call count per session key for the current day window.",
+            "name": "DailyCallCount",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "The ledger sequence at which the current day window started, per key.",
+            "name": "DailyResetLedger",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Ledger sequence of the most recent call, per session key.",
+            "name": "LastCallLedger",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Rolling call count across all session keys for the current day window.",
+            "name": "GlobalDailyCallCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The ledger sequence at which the global day window started.",
+            "name": "GlobalDailyResetLedger"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SessionKeyData",
+      "fields": [
+        {
+          "doc": "Contracts this session key is permitted to invoke.",
+          "name": "allowed_contracts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Minimum number of ledgers that must elapse between calls.",
+          "name": "cool_down_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "Ledger sequence after which this session key is no longer valid.\\nA value of 0 means \"no expiry\".",
+          "name": "expires_at_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum number of calls allowed per day window.",
+          "name": "max_calls_per_day",
+          "type_": "u32"
+        },
+        {
+          "doc": "When true, the key has been administratively disabled.",
+          "name": "revoked",
+          "type_": "bool"
+        }
+      ]
+    }
+  }
+]

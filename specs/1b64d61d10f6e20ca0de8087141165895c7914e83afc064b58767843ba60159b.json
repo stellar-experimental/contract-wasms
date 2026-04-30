@@ -1,0 +1,304 @@
+[
+  {
+    "function_v0": {
+      "doc": "# Pause Contract Operations\\n\\n## Description:\\nEmergency function to pause all order creation and settlements.\\n\\n## Authorization:\\n- `admin`: Must authorize the pause\\n\\n## Events:\\n- `(\"Paused\",)` when contract is paused\\n\\n## Note:\\n- Prevents new order creation\\n- Existing orders can still be settled/refunded",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Unpause Contract Operations\\n\\n## Description:\\nResumes normal contract operations after a pause.\\n\\n## Authorization:\\n- `admin`: Must authorize the unpause\\n\\n## Events:\\n- `(\"Unpaused\",)` when contract is unpaused",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Check if Contract is Paused\\n\\n## Returns:\\n- `true` if contract operations are paused\\n- `false` if contract is operational",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Initialize Settings Contract\\n\\n## Description:\\nSets up initial protocol configuration with admin, treasury, and relayer addresses.\\n\\n## Default Configuration:\\n- Protocol fee: 1% (1000 basis points)\\n- Max BPS: 100,000 (100%)\\n- Paused: false\\n\\n## Authorization:\\n- `admin`: Must authorize initialization\\n\\n## Parameters:\\n- `treasury`: Address to receive protocol fees\\n- `relayer_address`: Authorized address for settlement operations",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "relayer_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Check if Token is Supported\\n\\n## Description:\\nCurrently hardcoded to only support USDC. Can be extended for multi-token support.\\n\\n## Returns:\\n- `true` if token is supported for orders\\n- `false` if token is not supported",
+      "name": "is_token_supported",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Upgrade Settings Manager WASM\\n\\n## Description:\\nUpdates the settings manager contract's WASM code.\\n\\n## Authorization:\\n- `admin`: Must authorize the upgrade\\n\\n## Note:\\n- Maintains all existing settings and state\\n- Only admin can perform upgrades",
+      "name": "upgrade_lp_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Get Relayer Address\\n\\n## Returns:\\n- Current relayer address authorized for settlements",
+      "name": "get_relayer_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Get Treasury Address\\n\\n## Returns:\\n- Current treasury address for fee collection",
+      "name": "get_treasury_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Update Protocol Addresses\\n\\n## Description:\\nUpdates treasury or relayer addresses with proper validation.\\n\\n## Authorization:\\n- `admin`: Must authorize the change\\n\\n## Parameters:\\n- `what`: Type of address to update (Treasury or Aggregator/Relayer)\\n- `value`: New address value",
+      "name": "update_protocol_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "what",
+          "type_": {
+            "udt": {
+              "name": "ProtocolAddressType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidFeePercent",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "ZeroAddress",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AddressAlreadySet",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidParameter",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Relayer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TokenSupported",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PaymentStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Completed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Failed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProtocolAddressType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Aggregator"
+          }
+        }
+      ]
+    }
+  }
+]

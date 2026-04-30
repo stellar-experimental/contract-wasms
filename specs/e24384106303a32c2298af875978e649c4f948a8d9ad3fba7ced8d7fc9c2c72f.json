@@ -1,0 +1,486 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Reserve",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "ReserveConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "scalar",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Positions",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liabilities",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "supply",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "b_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "b_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "backstop_credit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "d_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "d_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ir_mod",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_time",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "c_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "l_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_util",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_base",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_one",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_three",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_two",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reactivity",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "supply_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "util",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the underlying asset value of `from`'s shares.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit `amount` of underlying into Blend. Returns shares minted to `from`.\\n\\nShare math:\\n- First depositor (total_shares == 0): shares = amount (1:1 bootstrap).\\n- Subsequent: shares = delta_value * total_shares / value_before_deposit.\\nRounding DOWN \\xe2\\x80\\x94 protects existing depositors from dilution due to\\nrounding.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim BLND emissions, swap via Soroswap \\xe2\\x86\\x92 asset, then redeposit into\\nBlend. Share price rises for all holders; no per-user distribution.\\n\\nNo-op if total_shares == 0 (prevents a 1-wei first-depositor from\\nharvesting pre-accrued emissions for free).",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "registry",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `shares_to_burn` shares held by `from`, pay out proportional\\nunderlying to `to`.\\n\\n`amount` parameter is REUSED as `shares_to_burn` under the v4 share\\nmodel. Do not pass underlying amount.\\n\\nReverts if `shares_to_burn > Shares(from)` \\xe2\\x80\\x94 fixes the C2 drain.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Registry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Asset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BlendPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ReserveIndex"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RewardToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SoroswapRouter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SoroswapFirstPair"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SwapPath"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total shares outstanding (sum of all `Shares(*)`). Persistent.",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-keeper share balance. Persistent.",
+            "name": "Shares",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time initializer.\\n\\n- `registry` \\xe2\\x80\\x94 strategy-registry contract; gates authorized callers.\\n- `asset` \\xe2\\x80\\x94 base asset handled by this strategy (e.g. USDC SAC).\\n- `blend_pool` \\xe2\\x80\\x94 Blend V2 pool contract this strategy supplies to.\\n- `reserve_index` \\xe2\\x80\\x94 index of `asset` within the pool's reserve list.\\n- `reward_token` \\xe2\\x80\\x94 BLND emission token contract.\\n- `soroswap_router` \\xe2\\x80\\x94 Soroswap router contract (reward compound).\\n- `soroswap_first_pair` \\xe2\\x80\\x94 pair contract of (swap_path[0], swap_path[1]).\\n- `swap_path` \\xe2\\x80\\x94 must start with `reward_token`, end with `asset`, length \\xe2\\x89\\xa5 2.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reserve_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_first_pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Convenience: share price scaled by 10^7 (1.0 = 10_000_000).",
+      "name": "share_price",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Total shares outstanding across all depositors.",
+      "name": "total_shares",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Share balance for a specific keeper.",
+      "name": "share_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]

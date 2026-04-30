@@ -1,0 +1,213 @@
+[
+  {
+    "function_v0": {
+      "doc": "Blend V2 flash-loan callback. Blend has transferred `amount` of `token`\\n(USDC) to this contract. Run both swap legs, transfer total USDC back\\nto `caller` so Blend's subsequent Repay can pull it, clear params.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Trade params Receiver needs to service a flash-loan callback.\\nThe Starter passes these into `set_arb_params` before firing flash_loan.\\n\\nFields the Starter owns (blend_pool, amount) are NOT in this struct \\xe2\\x80\\x94 the\\nReceiver does not need them; Blend supplies the loan amount as exec_op's\\n`amount` arg.",
+      "lib": "",
+      "name": "ArbParams",
+      "fields": [
+        {
+          "doc": "true = Aquarius first (USDC\\xe2\\x86\\x92XLM on Aquarius, XLM\\xe2\\x86\\x92USDC on Sushi).\\nfalse = Sushi first (USDC\\xe2\\x86\\x92XLM on Sushi, XLM\\xe2\\x86\\x92USDC on Aquarius).",
+          "name": "aquarius_first",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "aquarius_pool_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "aquarius_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aquarius_sorted_tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Minimum USDC profit floor (= final USDC \\xe2\\x88\\x92 borrowed amount).",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sushi_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        },
+        {
+          "doc": "Sushi V3 direction: true if XLM is token0, i.e. XLM\\xe2\\x86\\x92USDC is zero_for_one.",
+          "name": "zero_for_one_sushi",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stash params + pre-fetch Sushi oracle hints for `user`. Called by the\\nStarter before Blend.flash_loan.\\n\\nNo require_auth: anyone could stash params for anyone, but consumption\\nin exec_op requires Blend to invoke us as `from=user`, which requires\\nuser's auth on the outer flash_loan. So unauthorized stashing is inert.",
+      "name": "set_arb_params",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "ArbParams"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "checkpoint_min",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ArbError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NoContext",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedCaller",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TokenMismatch",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SushiReturnedNothing",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "ProfitBelowMin",
+          "value": 6
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,1411 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Pool state data returned from the pool contract.\\nContains all core pool information.",
+      "lib": "",
+      "name": "PoolState",
+      "fields": [
+        {
+          "doc": "Fee tier in basis points (e.g., 3000 = 0.3%)",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total active liquidity at current tick",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "Current sqrt price in Q64.96 format",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "Current tick",
+          "name": "tick",
+          "type_": "i32"
+        },
+        {
+          "doc": "Minimum tick spacing for positions",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "First token in the pair (lower address)",
+          "name": "token0",
+          "type_": "address"
+        },
+        {
+          "doc": "Second token in the pair (higher address)",
+          "name": "token1",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool state with token balances (reserves).\\nComposes PoolState with reserve amounts for a single source of truth.",
+      "lib": "",
+      "name": "PoolStateWithBalances",
+      "fields": [
+        {
+          "doc": "Balance of token0 held by the pool",
+          "name": "reserve0",
+          "type_": "i128"
+        },
+        {
+          "doc": "Balance of token1 held by the pool",
+          "name": "reserve1",
+          "type_": "i128"
+        },
+        {
+          "doc": "Core pool state (tokens, fee, price, liquidity)",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "PoolState"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Result of querying a pool - either initialized with state or not.",
+      "lib": "",
+      "name": "PoolResult",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Pool is not initialized or doesn't exist",
+            "name": "NotFound"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pool exists and is initialized",
+            "name": "Found",
+            "type_": [
+              {
+                "udt": {
+                  "name": "PoolState"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Result of querying a pool with balances.",
+      "lib": "",
+      "name": "PoolResultWithBalances",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Pool is not initialized or doesn't exist",
+            "name": "NotFound"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pool exists and is initialized (includes reserves)",
+            "name": "Found",
+            "type_": [
+              {
+                "udt": {
+                  "name": "PoolStateWithBalances"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool data returned by the lens.\\n\\nContains the pool address and its state result.",
+      "lib": "",
+      "name": "PoolData",
+      "fields": [
+        {
+          "doc": "The pool contract address",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Pool state result - Found(state) if initialized, NotFound otherwise",
+          "name": "result",
+          "type_": {
+            "udt": {
+              "name": "PoolResult"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool data with balances returned by the lens.\\n\\nContains the pool address and its state with reserves.",
+      "lib": "",
+      "name": "PoolDataWithBalances",
+      "fields": [
+        {
+          "doc": "The pool contract address",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Pool state result with reserves",
+          "name": "result",
+          "type_": {
+            "udt": {
+              "name": "PoolResultWithBalances"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Query parameters for looking up a pool by token pair",
+      "lib": "",
+      "name": "TokenPairQuery",
+      "fields": [
+        {
+          "doc": "Fee tier in basis points",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "First token address (order doesn't matter)",
+          "name": "token_a",
+          "type_": "address"
+        },
+        {
+          "doc": "Second token address (order doesn't matter)",
+          "name": "token_b",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the PoolLens with the factory address\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `factory` - The DEX factory contract address",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the stored factory address\\n\\n# Returns\\nThe factory contract address",
+      "name": "get_factory",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fetch pool data for multiple pools by their addresses\\n\\nThis is the most efficient method when you already know the pool addresses.\\nUses a single cross-contract call per pool.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pools` - Vector of pool contract addresses to query\\n\\n# Returns\\nVector of PoolData structs in the same order as input.\\nEach PoolData contains `result: Found(state)` if initialized, `NotFound` otherwise.",
+      "name": "get_pools_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PoolData"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fetch pool data for multiple pools by token pairs\\n\\nLooks up pool addresses from the factory, then fetches their data.\\nUseful when you have token pairs but not pool addresses.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pairs` - Vector of token pair queries (token_a, token_b, fee)\\n\\n# Returns\\nVector of PoolData structs in the same order as input.\\nEach PoolData contains `result: Found(state)` if initialized, `NotFound` otherwise.\\nToken order in the query doesn't matter - tokens are sorted internally.",
+      "name": "get_pools_by_pairs",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pairs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "TokenPairQuery"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PoolData"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fetch data for a single pool\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pool` - The pool contract address\\n\\n# Returns\\nPoolData struct with all pool information",
+      "name": "get_pool_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PoolData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fetch pool data with balances for multiple pools by their addresses.\\n\\nSame as `get_pools_data` but includes token reserves (balances).\\nCosts ~1M extra CPU per pool due to balance lookups.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pools` - Vector of pool contract addresses to query\\n\\n# Returns\\nVector of PoolDataWithBalances structs in the same order as input.",
+      "name": "get_pools_data_with_bal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PoolDataWithBalances"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fetch data with balances for a single pool\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pool` - The pool contract address\\n\\n# Returns\\nPoolDataWithBalances struct with pool state and reserves",
+      "name": "get_pool_data_with_bal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PoolDataWithBalances"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirror the SwapResult structure from the pool contract",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for quoting a single-hop exact input swap",
+      "lib": "",
+      "name": "QuoteExactInputSingleParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for quoting a single-hop exact output swap",
+      "lib": "",
+      "name": "QuoteExactOutputSingleParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the quoter with factory and WETH9 addresses\\n@param factory The address of the pool factory contract\\n@param xlm The address of the wrapped XLM token\\n\\nNote: Panics on initialization failure (e.g., if already initialized).\\nThis is intentional - a contract that fails to initialize should not be usable.",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount out received for a given exact input swap without executing the swap\\n@param token_in The token being swapped in\\n@param token_out The token being swapped out\\n@param fee The fee tier of the pool\\n@param amount_in The amount of input tokens\\n@param sqrt_price_limit_x96 The price limit; 0 for no limit\\n@return amount_out The amount of output tokens that would be received",
+      "name": "quote_exact_input_single",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount out received for a given exact input swap without executing the swap\\n@param path The path of tokens to swap through, encoded as (token0, fee, token1, fee, token2, ...)\\n@param amount_in The amount of the first token to swap\\n@return amount_out The amount of the last token that would be received",
+      "name": "quote_exact_input",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "path",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount in required for a given exact output swap without executing the swap\\n@param token_in The token being swapped in\\n@param token_out The token being swapped out\\n@param fee The fee tier of the pool\\n@param amount_out The amount of output tokens desired\\n@param sqrt_price_limit_x96 The price limit; 0 for no limit\\n@return amount_in The amount of input tokens required",
+      "name": "quote_exact_output_single",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount in required to receive the given exact output amount but for a swap of multiple pools\\n@param path The path of tokens to swap through, encoded in REVERSE order (tokenOut, fee, tokenIn, ...)\\nNote: For exact output, the path must be reversed from exact input\\n@param amount_out The amount of the last token to receive\\n@return amount_in The amount of the first token required",
+      "name": "quote_exact_output",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "path",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Slot0",
+      "fields": [
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for quoting a single-hop exact input swap",
+      "lib": "",
+      "name": "QuoteExactInputSingleParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for quoting a single-hop exact output swap",
+      "lib": "",
+      "name": "QuoteExactOutputSingleParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result for a single-hop quote",
+      "lib": "",
+      "name": "QuoteSingleResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "initialized_ticks_crossed",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96_after",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick_after",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result for a multi-hop quote",
+      "lib": "",
+      "name": "QuoteResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "initialized_ticks_crossed_list",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96_after_list",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_after_list",
+          "type_": {
+            "vec": {
+              "element_type": "i32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the quoter with factory and XLM addresses\\n\\nNote: Panics on initialization failure (e.g., if already initialized).\\nThis is intentional - a contract that fails to initialize should not be usable.",
+      "name": "init_v2",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "quote_exact_input_v2",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "path",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "quote_exact_output_v2",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "path",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "quote_exact_input_single_v2",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "QuoteExactInputSingleParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteSingleResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "quote_exact_output_single_v2",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "QuoteExactOutputSingleParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteSingleResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a populated tick with liquidity information",
+      "lib": "",
+      "name": "PopulatedTick",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_gross",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_net",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of get_populated_ticks_in_range with truncation signal",
+      "lib": "",
+      "name": "PopulatedTicksResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "ticks",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "PopulatedTick"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "True if results were truncated due to MAX_TICKS_BATCH limit.",
+          "name": "truncated",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets all populated ticks in a specific word of the tick bitmap\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pool` - The address of the pool contract\\n* `tick_bitmap_index` - The index of the tick bitmap word to query (i32)\\n\\n# Returns\\nA vector of PopulatedTick structs containing tick index, liquidity_net, and liquidity_gross\\n\\n# Note\\nThis function mirrors the behavior of Uniswap V3's TickLens.getPopulatedTicksInWord:\\n1. Fetches the bitmap for the specified word (256 bits)\\n2. Counts populated ticks (bits set to 1)\\n3. For each populated bit, calculates the actual tick and fetches its data\\n4. Returns results in reverse order (matching Solidity's behavior)",
+      "name": "get_populated_ticks_in_word",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tick_bitmap_index",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PopulatedTick"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets all populated ticks across a range of bitmap words.\\n\\nThis function batches multiple bitmap word queries into a single call,\\nreducing cross-contract call overhead for operations like liquidity charts.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `pool` - The address of the pool contract\\n* `start_word` - The first bitmap word index (can be negative)\\n* `count` - Number of consecutive words to scan (capped at MAX_RANGE_COUNT)\\n\\n# Returns\\nA `PopulatedTicksResult` containing:\\n- `ticks`: Vector of PopulatedTick structs in **ascending order** by tick index\\n- `truncated`: True if results are incomplete for any reason\\n\\n# Ordering\\nNOTE: This function returns ticks in ASCENDING order (lowest tick first),\\nwhich differs from `get_populated_ticks_in_word` that returns REVERSE order\\n(matching Uniswap V3 Solidity behavior).\\n\\n# Limits & Truncation\\nThe `truncated` flag is set to true if:\\n- `count` exceeded MAX_RANGE_COUNT (256 words)\\n- `start_word` was near i32::MAX causing range reduction\\n- More than MAX_TICKS_BATCH (2",
+      "name": "get_populated_ticks_in_range",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "start_word",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PopulatedTicksResult"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the periphery libraries",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Hex string length is insufficient for the requested conversion",
+          "name": "HexLengthInsufficient",
+          "value": 2001
+        },
+        {
+          "doc": "mul_div operation failed in liquidity calculation",
+          "name": "MulDivFailed",
+          "value": 2002
+        },
+        {
+          "doc": "Invalid price range (division by zero)",
+          "name": "InvalidPriceRange",
+          "value": 2003
+        },
+        {
+          "doc": "U256 to u128 conversion failed (overflow)",
+          "name": "U256ToU128ConversionFailed",
+          "value": 2004
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters required to construct a token URI (see original Solidity code for semantics)",
+      "lib": "",
+      "name": "ConstructTokenURIParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "base_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base_token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "base_token_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "flip_ratio",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote_token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "quote_token_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "tick_current",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Data structure for weighted tick aggregation across multiple pools",
+      "lib": "",
+      "name": "WeightedTickData",
+      "fields": [
+        {
+          "doc": "Tick value from a pool",
+          "name": "tick",
+          "type_": "i32"
+        },
+        {
+          "doc": "Weight for this tick (typically liquidity or volume)",
+          "name": "weight",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle hints for deterministic footprint (must match pool's OracleHints)",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "checkpoint_min",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the periphery base contract",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Transaction has exceeded the deadline",
+          "name": "TransactionTooOld",
+          "value": 1001
+        },
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 1002
+        },
+        {
+          "doc": "Factory address has not been initialized",
+          "name": "FactoryNotInitialized",
+          "value": 1003
+        },
+        {
+          "doc": "XLM address has not been initialized",
+          "name": "XlmAddressNotInitialized",
+          "value": 1004
+        },
+        {
+          "doc": "Token does not exist",
+          "name": "TokenDoesNotExist",
+          "value": 1005
+        },
+        {
+          "doc": "Not the owner of the token",
+          "name": "NotTokenOwner",
+          "value": 1006
+        },
+        {
+          "doc": "Unauthorized operation",
+          "name": "Unauthorized",
+          "value": 1007
+        },
+        {
+          "doc": "Insufficient token balance for operation",
+          "name": "InsufficientBalance",
+          "value": 1008
+        },
+        {
+          "doc": "Tick range is invalid (lower >= upper)",
+          "name": "InvalidTickRange",
+          "value": 1009
+        },
+        {
+          "doc": "Tick values are not aligned to pool tick spacing",
+          "name": "TickNotAligned",
+          "value": 1010
+        },
+        {
+          "doc": "Tick is out of allowable bounds",
+          "name": "TickOutOfBounds",
+          "value": 1011
+        },
+        {
+          "doc": "Expected pool not found or inaccessible",
+          "name": "PoolNotFound",
+          "value": 1012
+        },
+        {
+          "doc": "Mathematical operation resulted in overflow",
+          "name": "MathOverflow",
+          "value": 1013
+        },
+        {
+          "doc": "Price slippage check failed (amount received below minimum)",
+          "name": "PriceSlippageCheck",
+          "value": 1014
+        },
+        {
+          "doc": "No tokens to collect (both amount0_max and amount1_max are zero)",
+          "name": "NothingToCollect",
+          "value": 1015
+        },
+        {
+          "doc": "Tokens Not Ordered",
+          "name": "TokensNotOrdered",
+          "value": 1016
+        },
+        {
+          "doc": "Liquidity calculation failed",
+          "name": "LiquidityCalculationFailed",
+          "value": 1017
+        },
+        {
+          "doc": "Pool key data is missing for the given pool ID",
+          "name": "PoolKeyMissing",
+          "value": 1018
+        },
+        {
+          "doc": "Token descriptor contract address is not set",
+          "name": "TokenDescriptorNotSet",
+          "value": 1019
+        },
+        {
+          "doc": "No approved address for the given token",
+          "name": "NoApprovedAddress",
+          "value": 1020
+        },
+        {
+          "doc": "Position must have zero liquidity and no owed tokens before burning",
+          "name": "PositionNotCleared",
+          "value": 1021
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Keys under which we'll store the immutable fields",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "XlmAddress"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Q128.128 fixed-point number\\n\\nRepresents a number as: value / 2^128\\n\\nUsed exclusively for fee growth tracking in Uniswap V3 architecture.\\nFor price calculations, use FixedPoint96 instead.",
+      "lib": "",
+      "name": "FixedPoint128",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Q64.96 fixed-point number\\n\\nInternally stored as a U256 where the value represents:\\n`actual_value = stored_value / 2^96`",
+      "lib": "",
+      "name": "FixedPoint96",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapStepResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_ratio_next",
+          "type_": {
+            "udt": {
+              "name": "SqrtPriceX96"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "512-bit unsigned integer\\n\\nRepresented as two 256-bit components:\\n- `low`: bits 0-255\\n- `high`: bits 256-511\\n\\nThe actual value is: high * 2^256 + low",
+      "lib": "",
+      "name": "U512",
+      "fields": [
+        {
+          "doc": "",
+          "name": "high",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "low",
+          "type_": "u256"
+        }
+      ]
+    }
+  }
+]

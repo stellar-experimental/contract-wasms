@@ -1,0 +1,418 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Epoch number \\xe2\\x86\\x92 EpochData",
+            "name": "Epoch",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "(Epoch, leaf_hash) \\xe2\\x86\\x92 bool (claimed flag)",
+            "name": "Claimed",
+            "type_": [
+              "u32",
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total epochs registered",
+            "name": "EpochCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Contract owner (admin)",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Asset to pay rewards in (XLM or USDC)",
+            "name": "RewardAsset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Treasury address that funds rewards",
+            "name": "Treasury"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Epoch metadata stored on-chain",
+      "lib": "",
+      "name": "EpochData",
+      "fields": [
+        {
+          "doc": "Ledger sequence when claims become available (vesting period)",
+          "name": "claimable_after",
+          "type_": "u32"
+        },
+        {
+          "doc": "Merkle root of all (wallet, amount) pairs for this epoch",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger sequence when epoch was registered",
+          "name": "registered_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total claimable in this epoch (for accounting verification)",
+          "name": "total_claimable",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total claimed so far",
+          "name": "total_claimed",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RewardsError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "EpochNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "AlreadyClaimed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidMerkleProof",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "VestingNotComplete",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AmountTooSmall",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InsufficientFunds",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofDepth",
+          "value": 11
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim rewards using merkle proof\\n\\nUser provides:\\n- epoch: Which epoch to claim from\\n- amount: Their reward amount (stroops)\\n- merkle_proof: Sibling hashes from leaf to root\\n- proof_directions: Direction at each level (0=left, 1=right)\\n\\nThe leaf is computed as: SHA256(wallet || amount_le_bytes)",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "claimer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "epoch",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "merkle_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof_directions",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get epoch data",
+      "name": "get_epoch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "epoch",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "EpochData"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get owner",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a leaf has been claimed for an epoch",
+      "name": "is_claimed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "epoch",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "leaf_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check contract is deployed",
+      "name": "is_deployed",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: Initialize with owner, reward asset, and treasury",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a new epoch's merkle root (admin only)\\nCalled weekly by settlement cron job\\n\\nThe merkle tree leaves are: SHA256(wallet_address || amount_le_bytes)\\nThis allows users to prove their reward amount\\n\\nParameters:\\n- epoch: Sequential epoch number (0, 1, 2, ...)\\n- merkle_root: Root of the merkle tree for this epoch\\n- total_claimable: Sum of all rewards in this epoch (for accounting)\\n- vesting_ledgers: Number of ledgers until claims are available (~1 week)",
+      "name": "register_epoch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "epoch",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_claimable",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vesting_ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get total epoch count",
+      "name": "get_epoch_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get reward asset",
+      "name": "get_reward_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute leaf hash: SHA256(wallet_address_bytes || amount_le_bytes)",
+      "name": "compute_leaf_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute merkle root from leaf and proof",
+      "name": "compute_merkle_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "directions",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,456 @@
+[
+  {
+    "event_v0": {
+      "doc": "Emitted when the channel is opened via the constructor.",
+      "lib": "",
+      "name": "Open",
+      "prefix_topics": [
+        "open"
+      ],
+      "params": [
+        {
+          "doc": "The funder who deposited tokens into the channel.",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "The ed25519 public key used to verify commitment signatures.",
+          "name": "commitment_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "The recipient who can settle or close the channel using a commitment.",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "The SEP-41 token used for payments.",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "The initial deposit amount.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "The number of ledgers the funder has to wait before refund after close_start.",
+          "name": "refund_waiting_period",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when channel close starts, either immediately via close or with\\na waiting period via close_start.\\n\\nThe effective_at_ledger field indicates when the close is effective. If the\\nfield indicates the current ledger then the close is immediate.",
+      "lib": "",
+      "name": "Close",
+      "prefix_topics": [
+        "close"
+      ],
+      "params": [
+        {
+          "doc": "The ledger sequence number at which the close becomes effective and\\nthe funder can call refund.",
+          "name": "effective_at_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the recipient receives funds via settle or close.",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "The recipient who received the funds.",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "The amount transferred to the recipient.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the funder reclaims remaining funds via refund.",
+      "lib": "",
+      "name": "Refund",
+      "prefix_topics": [
+        "refund"
+      ],
+      "params": [
+        {
+          "doc": "The funder who received the refund.",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "The amount transferred to the funder. This is the entire remaining\\nbalance of the channel at the time of the refund.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NegativeAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotClosed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "RefundWaitingPeriodNotElapsed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "AlreadyClosed",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "From"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CommitmentKey"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "To"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RefundWaitingPeriod"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "WithdrawnAmount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CloseEffectiveAtLedger"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Commitment",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "channel",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "domain",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "network",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a channel by depositing tokens from the funder to the contract.\\n\\n- `token`: The SEP-41 token used for payments.\\n- `from`: The funder who deposits tokens into the channel.\\n- `commitment_key`: The ed25519 public key used to verify commitment\\nsignatures. See `prepare_commitment` for details on\\ncommitments.\\n- `to`: The recipient who can settle or close the channel using\\nsigned commitments.\\n- `amount`: The initial deposit amount.\\n- `refund_waiting_period`: The number of ledgers the recipient has to\\nclose after `close_start` is called, before `refund`\\nbecomes available. This value should be large enough to give the\\nrecipient time to observe a close event and submit a close,\\notherwise the recipient may not accept the channel. However, it\\nshould not be so large that the funder cannot reclaim funds in a\\ntimely manner. Setting zero or a very low number results in\\nnear-immediate refunds, which is almost certainly not useful for\\neither participant.\\n\\nCallable by the deployer.\\n\\n# Auth\\n- `from`: required if amount > 0.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "refund_waiting_period",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Top up the channel by transferring the amount of the channels token from the funder (from\\naddress).\\n\\nNote: The funder can also top up the channel by transferring tokens\\ndirectly to the channel contract address outside of this function.\\n\\nCallable by funder (from).\\n\\n# Auth\\n- `from`: required.",
+      "name": "top_up",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the token address.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the funder address.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "from",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the recipient address.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "to",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the refund waiting period in ledgers.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "refund_waiting_period",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the balance of the channel. This is the deposited amount\\nminus any amount already withdrawn.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total amount deposited into the channel.\\n\\nThis is the balance plus the amount already withdrawn. Refunded\\namounts are considered no longer deposited.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "deposited",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total amount already withdrawn by the recipient via\\n`settle` or `close`.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "withdrawn",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the XDR serialized bytes of a commitment for the given amount.\\n\\nThe returned bytes must be signed by the ed25519 key corresponding to\\nthe `commitment_key` stored in the channel. The resulting signature,\\nalong with the amount, can be passed to `settle` or `close` by the\\nrecipient.\\n\\nCommitments are typically prepared off-chain. This function is provided\\nas a convenience.\\n\\nCallable by anyone.\\n\\n# Auth\\nNone.",
+      "name": "prepare_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "bytes"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle funds to the recipient using a signed commitment without closing\\nthe channel. The amount is the cumulative total the recipient is\\nentitled to. Only the difference between the amount and what has already\\nbeen withdrawn is transferred.\\n\\nThe recipient does not need to settle after every commitment. They can\\naccumulate multiple commitments and settle using only the latest\\n(highest amount) commitment.\\n\\nIf an older commitment with a lower amount is used after a higher amount\\nhas already been withdrawn, no funds are transferred.\\n\\nCan be called even after the channel is closed, up until the funder\\ncalls [`Contract::refund`] and the balance is drained.\\n\\nCallable by the recipient (to).\\n\\n# Auth\\n- `to`: required.\\n- Commitment signature serves as commitment_key authorization.",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close the channel using a signed commitment, withdrawing funds to the\\nrecipient. The amount is the cumulative total the recipient is entitled\\nto. Only the difference between the amount and what has already been\\nwithdrawn is transferred.\\n\\nAfter transferring, this function automatically attempts to refund the\\nremaining balance to the funder using `try_transfer`. This refund\\nattempt will silently succeed or fail without affecting the withdrawal.\\nIf the automatic refund fails, the funder can call [`Contract::refund`]\\nto reclaim the remaining balance.\\n\\nCan be called even after the channel is closed, up until the funder\\ncalls [`Contract::refund`] and the balance is drained.\\n\\nCallable by the recipient (to).\\n\\n# Auth\\n- `to`: required.\\n- Commitment signature serves as commitment_key authorization.",
+      "name": "close",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin closing the channel, effective after a waiting period. The\\nrecipient can still settle or close during and after the waiting\\nperiod. After the close is effective, the funder can call refund to\\nreclaim the remaining balance.\\n\\n**Important:** The recipient should settle or close whenever they see\\na [`event::Close`], before the funder calls `refund`.\\n\\nCallable by the funder (from).\\n\\n# Auth\\n- `from`: required.",
+      "name": "close_start",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refund the remaining balance to the funder after the close is effective.\\n\\nCan be called multiple times. This is useful if the funder accidentally\\ndeposits additional funds after closing \\xe2\\x80\\x94 they can call refund\\nagain to reclaim the additional balance.\\n\\nCallable by the funder (from), after the close effective_at_ledger has\\nbeen reached.\\n\\n# Auth\\n- `from`: required.",
+      "name": "refund",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,459 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BlendPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SoroswapRouter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AquaRouter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingArb"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ArbError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InsufficientProfit",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NoPendingArb",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidRoute",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "SegmentFailed",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "RepaymentFailed",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Full arb configuration (stored for exec_op callback)",
+      "lib": "",
+      "name": "ArbRoute",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "segments",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "RouteSegment"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_start",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "DEX protocol identifier",
+      "lib": "",
+      "name": "Protocol",
+      "cases": [
+        {
+          "doc": "Soroswap (Uni V2) \\xe2\\x80\\x94 uses Router.swap_exact_tokens_for_tokens",
+          "name": "Soroswap",
+          "value": 0
+        },
+        {
+          "doc": "Aquarius AMM \\xe2\\x80\\x94 uses Router.swap_chained",
+          "name": "Aqua",
+          "value": 1
+        },
+        {
+          "doc": "SushiV3 concentrated liquidity \\xe2\\x80\\x94 direct pool.swap (no router)",
+          "name": "SushiV3",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One segment of a circular route \\xe2\\x80\\x94 all hops on ONE DEX.\\nMultiple segments are executed sequentially to complete the circle.",
+      "lib": "",
+      "name": "RouteSegment",
+      "fields": [
+        {
+          "doc": "Soroswap only: address of the first pair in the path (for transfer auth)",
+          "name": "first_pair",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Minimum output for this segment (slippage protection)",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Token path for this segment: [tokenA, tokenB, tokenC, ...]\\nEach consecutive pair represents one hop on this DEX.",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Pre-computed pool index hashes for Aquarius swap_chained (SHA256 of sorted token pair).",
+          "name": "pool_hashes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Pool addresses for Aquarius (one per hop). Empty for Soroswap.",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Which DEX protocol to use",
+          "name": "protocol",
+          "type_": {
+            "udt": {
+              "name": "Protocol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "v3_hints_checkpoint",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "v3_hints_slot",
+          "type_": {
+            "option": {
+              "value_type": "u128"
+            }
+          }
+        },
+        {
+          "doc": "SushiV3 only: pool address, zero_for_one flag, oracle hints",
+          "name": "v3_pool",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "v3_sqrt_limit",
+          "type_": {
+            "option": {
+              "value_type": "u128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "v3_zero_for_one",
+          "type_": {
+            "option": {
+              "value_type": "bool"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "prepare_arb",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "route",
+          "type_": {
+            "udt": {
+              "name": "ArbRoute"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_routers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "self_funded_arb",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "route",
+          "type_": {
+            "udt": {
+              "name": "ArbRoute"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,479 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_position",
+          "type_": {
+            "udt": {
+              "name": "FeePosition"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "EmptyInstructions",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TotalFeeBpsTooHigh",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BpsOverflow",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgRef",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidIntermediateFee",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One step in a custodial route. Like an Instruction but with two extra knobs\\nthe custodial path needs:\\n- `auth_declarations`: what the router pre-authorizes for this step (see above)\\n- `output_token`: hint for downstream balance reads / fee bases (optional)",
+      "lib": "",
+      "name": "RouteStep",
+      "fields": [
+        {
+          "doc": "",
+          "name": "arg_refs",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_declarations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AuthDeclaration"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where in the flow the affiliate fee is collected.\\n\\n- `Input`:  fee charged from `input_token` *before* any instruction runs.\\n- `Output`: fee charged from `output_token` *after* all instructions run.",
+      "lib": "",
+      "name": "FeePosition",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Input"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Output"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Instruction",
+      "fields": [
+        {
+          "doc": "Maps `arg_index \\xe2\\x86\\x92 index of a prior instruction whose return value\\nshould replace that arg slot at runtime`. Empty map = no substitutions.\\n\\nAUTH NOTE: arg substitution is auth-safe under source-account auth\\n(the standard Freighter / EOA flow). For sponsored or address-credentials\\nauth flows where the auth entry is bound to specific args, callers MUST\\nkeep `arg_refs` empty and pass concrete values \\xe2\\x80\\x94 runtime drift will\\notherwise mismatch the signed auth entry and the tx will revert.",
+          "name": "arg_refs",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AffiliateFee",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "v2 \\xe2\\x80\\x94 CUSTODIAL routing. The router pulls `input_amount` of `input_token`\\nfrom `user`, runs each step on the held funds (using\\n`authorize_as_current_contract` to authorize what each target pulls from\\nthe router), optionally takes intermediate fees from any token the router\\nholds mid-route, and finally sends the residual `output_token` (and any\\nremaining `input_token`) to `user`.\\n\\nReturns: the user's final received amount of `output_token`, NET of any\\noutput-side fee.\\n\\nUse this entry point when:\\n- Another contract is calling the router (source-account auth doesn't\\napply; the calling contract authorizes only the initial pull).\\n- You need a fee from an intermediate token (e.g. swap A\\xe2\\x86\\x92B, fee in B,\\nbridge B).\\n- Sponsored / fee-bumped flows where `user` is not the tx source.",
+      "name": "route",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "RouteStep"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "affiliate_fees",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AffiliateFee"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_position",
+          "type_": {
+            "udt": {
+              "name": "FeePosition"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "intermediate_fees",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "IntermediateFee"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Aggregate multiple contract calls in a single tx, with affiliate fees\\ntaken either from the input token (before instructions) or from the\\noutput token (after instructions), per `fee_position`.\\n\\nReturns the user's actual output_token amount NET of any output-side fee.\\n\\nPermissionless: there is no allowlist of targets. The user signs a tx\\nthat contains the exact `instructions` vector being authorized; their\\nsignature *is* the authorization. The router does not custody funds and\\ncannot move tokens beyond what the user has signed for (directly or via\\nsource-account auth).",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "instructions",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Instruction"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "affiliate_fees",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AffiliateFee"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_position",
+          "type_": {
+            "udt": {
+              "name": "FeePosition"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One sub-invocation the router pre-authorizes via `authorize_as_current_contract`\\nbefore invoking a `RouteStep`. Use for transfers that the *target* will trigger\\nfrom the router as `from` (e.g. `token.transfer(router, pool, amount)` inside\\nAquarius). Top-level transfers the router does itself (e.g. paying out fees)\\ndon't need a declaration \\xe2\\x80\\x94 they're auto-authorized as the immediate caller.",
+      "lib": "",
+      "name": "AuthDeclaration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A fee taken from a token the router holds, mid-route.\\n`after_instruction = i` means \"right after `steps[i]` returns, take `bps`\\nof the router's current balance of `token` and split among `affiliates`.\"",
+      "lib": "",
+      "name": "IntermediateFee",
+      "fields": [
+        {
+          "doc": "",
+          "name": "affiliates",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AffiliateFee"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "after_instruction",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL keep-alive. Anyone can call to keep the contract's\\ninstance entry alive during cold periods.",
+      "name": "bump_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]

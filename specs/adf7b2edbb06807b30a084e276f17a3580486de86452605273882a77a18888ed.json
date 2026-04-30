@@ -1,0 +1,266 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_position",
+          "type_": {
+            "udt": {
+              "name": "FeePosition"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "EmptyInstructions",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TotalFeeBpsTooHigh",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BpsOverflow",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgRef",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where in the flow the affiliate fee is collected.\\n\\n- `Input`:  fee charged from `input_token` *before* any instruction runs.\\n- `Output`: fee charged from `output_token` *after* all instructions run.",
+      "lib": "",
+      "name": "FeePosition",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Input"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Output"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Instruction",
+      "fields": [
+        {
+          "doc": "Maps `arg_index \\xe2\\x86\\x92 index of a prior instruction whose return value\\nshould replace that arg slot at runtime`. Empty map = no substitutions.\\n\\nAUTH NOTE: arg substitution is auth-safe under source-account auth\\n(the standard Freighter / EOA flow). For sponsored or address-credentials\\nauth flows where the auth entry is bound to specific args, callers MUST\\nkeep `arg_refs` empty and pass concrete values \\xe2\\x80\\x94 runtime drift will\\notherwise mismatch the signed auth entry and the tx will revert.",
+          "name": "arg_refs",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AffiliateFee",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Aggregate multiple contract calls in a single tx, with affiliate fees\\ntaken either from the input token (before instructions) or from the\\noutput token (after instructions), per `fee_position`.\\n\\nReturns the user's actual output_token amount NET of any output-side fee.\\n\\nPermissionless: there is no allowlist of targets. The user signs a tx\\nthat contains the exact `instructions` vector being authorized; their\\nsignature *is* the authorization. The router does not custody funds and\\ncannot move tokens beyond what the user has signed for (directly or via\\nsource-account auth).",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "instructions",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Instruction"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "affiliate_fees",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AffiliateFee"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_position",
+          "type_": {
+            "udt": {
+              "name": "FeePosition"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL keep-alive. Anyone can call to keep the contract's\\ninstance entry alive during cold periods.",
+      "name": "bump_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]

@@ -1,0 +1,401 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Contract configuration set at initialization",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Contract administrator",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "CoreTX NFT contract address (for cross-contract minting)",
+          "name": "nft_contract",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the Nether Proof contract",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Contract configuration (Instance storage)",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total number of verified seals issued (Instance storage)",
+            "name": "SealCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Active commitment for a player (Temporary storage \\xe2\\x80\\x94 auto-expires)",
+            "name": "Commitment",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Verified seal by index for a player (Persistent storage)",
+            "name": "Seal",
+            "type_": [
+              "address",
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Total seals earned by a specific player (Persistent storage)",
+            "name": "PlayerSealCount",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A player's sealed commitment (Phase 1: commit)",
+      "lib": "",
+      "name": "Commitment",
+      "fields": [
+        {
+          "doc": "Whether the commitment has been revealed",
+          "name": "revealed",
+          "type_": "bool"
+        },
+        {
+          "doc": "SHA-256 hash of the game result data",
+          "name": "seal_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger timestamp when commitment was made",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A verified Nether Seal (Phase 2: reveal)",
+      "lib": "",
+      "name": "NetherSeal",
+      "fields": [
+        {
+          "doc": "Time elapsed in seconds",
+          "name": "elapsed",
+          "type_": "u32"
+        },
+        {
+          "doc": "Player who earned the seal",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "Rank title (ProofMaster, ShadowScholar, NetherWanderer, LostSoul)",
+          "name": "rank",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Final game score (0\\xe2\\x80\\x932000+)",
+          "name": "score",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether the seal has been verified on-chain",
+          "name": "verified",
+          "type_": "bool"
+        },
+        {
+          "doc": "ZK wisdom track (correct oracle choices, 0\\xe2\\x80\\x935)",
+          "name": "wisdom",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NetherError",
+      "cases": [
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not the contract admin",
+          "name": "NotAuthorized",
+          "value": 2
+        },
+        {
+          "doc": "Player already has an active (unrevealed) commitment",
+          "name": "CommitmentExists",
+          "value": 3
+        },
+        {
+          "doc": "No commitment found (expired or never created)",
+          "name": "NoCommitment",
+          "value": 4
+        },
+        {
+          "doc": "Commitment already revealed",
+          "name": "AlreadyRevealed",
+          "value": 5
+        },
+        {
+          "doc": "Hash of revealed data doesn't match commitment",
+          "name": "SealMismatch",
+          "value": 6
+        },
+        {
+          "doc": "Seal not found at the given index",
+          "name": "SealNotFound",
+          "value": 7
+        },
+        {
+          "doc": "Score value out of valid range",
+          "name": "InvalidScore",
+          "value": 8
+        },
+        {
+          "doc": "Wisdom value out of valid range (0\\xe2\\x80\\x935)",
+          "name": "InvalidWisdom",
+          "value": 9
+        },
+        {
+          "doc": "Arithmetic overflow",
+          "name": "MathOverflow",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Player commits their Nether Seal hash after completing the game.\\n\\nThe seal_hash is SHA-256(PIKO-NETHER|score:X|wisdom:Y|time:Z|ts:T)\\ncomputed client-side. The contract stores it in Temporary storage\\nwith a ~24h TTL \\xe2\\x80\\x94 if not revealed in time, the commitment expires.",
+      "name": "commit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seal_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Player reveals their game results. Contract verifies hash match.\\n\\nUses env.crypto().sha256() (host-optimized) to recompute the hash\\nfrom revealed values and compare against the stored commitment.",
+      "name": "reveal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "wisdom",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "elapsed",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "NetherSeal"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM (admin only).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Contract version for tracking upgrades.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a specific verified seal by player and index.",
+      "name": "get_seal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "NetherSeal"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract. Must be called once after deployment.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nft_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the total number of verified seals across all players.",
+      "name": "total_seals",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the number of seals a specific player has earned.",
+      "name": "player_seals",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a player has an active (unrevealed) commitment.",
+      "name": "has_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "player",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin to a new address (admin only).",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the NFT contract address (admin only).",
+      "name": "set_nft_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nft_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

@@ -1,0 +1,2514 @@
+[
+  {
+    "event_v0": {
+      "doc": "Emitted when a new message is dispatched.",
+      "lib": "",
+      "name": "MessageSent",
+      "prefix_topics": [
+        "message_sent"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "message",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a message is received.",
+      "lib": "",
+      "name": "MessageReceived",
+      "prefix_topics": [
+        "message_received"
+      ],
+      "params": [
+        {
+          "doc": "Caller on the destination domain",
+          "name": "caller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "The source domain this message originated from",
+          "name": "source_domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "The nonce unique to this message",
+          "name": "nonce",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "The sender of this message",
+          "name": "sender",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "The finality at which message was attested to",
+          "name": "finality_threshold_executed",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "The message body bytes",
+          "name": "message_body",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors for the Message Transmitter contract.",
+      "lib": "",
+      "name": "MessageTransmitterError",
+      "cases": [
+        {
+          "doc": "Cannot send a message to the local domain",
+          "name": "DestinationIsLocalDomain",
+          "value": 6900
+        },
+        {
+          "doc": "Message body exceeds max allowed size",
+          "name": "MessageBodyTooLarge",
+          "value": 6901
+        },
+        {
+          "doc": "Recipient cannot be zero address",
+          "name": "RecipientIsZero",
+          "value": 6902
+        },
+        {
+          "doc": "Address type not recognized (unable to convert to bytes32 with Address::to_payload)",
+          "name": "AddressTypeNotRecognized",
+          "value": 6903
+        },
+        {
+          "doc": "Message format is invalid (too short or malformed)",
+          "name": "InvalidMessageFormat",
+          "value": 6904
+        },
+        {
+          "doc": "Message destination domain does not match local domain",
+          "name": "InvalidDestinationDomain",
+          "value": 6905
+        },
+        {
+          "doc": "Caller is not the authorized destination caller for this message",
+          "name": "InvalidDestinationCaller",
+          "value": 6906
+        },
+        {
+          "doc": "Message version does not match expected version",
+          "name": "InvalidMessageVersion",
+          "value": 6907
+        },
+        {
+          "doc": "Nonce has already been used",
+          "name": "NonceAlreadyUsed",
+          "value": 6908
+        },
+        {
+          "doc": "Message handler on recipient contract returned false",
+          "name": "HandleReceiveMessageFailed",
+          "value": 6909
+        },
+        {
+          "doc": "The local domain has not been set",
+          "name": "LocalDomainNotSet",
+          "value": 6910
+        },
+        {
+          "doc": "The version has not been set",
+          "name": "VersionNotSet",
+          "value": 6911
+        },
+        {
+          "doc": "The max message body size has not been set",
+          "name": "MaxMessageBodySizeNotSet",
+          "value": 6912
+        },
+        {
+          "doc": "No attesters provided",
+          "name": "NoAttesters",
+          "value": 6913
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the maximum message body size is updated.",
+      "lib": "",
+      "name": "MaxMessageBodySizeUpdated",
+      "prefix_topics": [
+        "max_message_body_size_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_max_message_body_size",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the Message Transmitter contract.",
+      "lib": "",
+      "name": "MessageTransmitterStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The local domain identifier for this chain",
+            "name": "LocalDomain"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The message format version",
+            "name": "Version"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The maximum allowed message body size",
+            "name": "MaxMessageBodySize"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Storage for used nonces, keyed by the nonce BytesN<32>",
+            "name": "UsedNonce",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pauser",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_rescuer",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the message format version.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Returns\\n\\nThe message format version.",
+      "name": "get_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "rescue_sep41",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sends a message to the destination domain and recipient.\\n\\nFormats the message, and emits a `MessageSent` event with message information.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `caller` - The address of the caller (message sender).\\n* `destination_domain` - The destination domain identifier.\\n* `recipient` - The recipient address on destination chain as BytesN<32>.\\n* `destination_caller` - Caller on the destination domain as BytesN<32>.\\n* `min_finality_threshold` - The minimum finality threshold at which the message must be attested to.\\n* `message_body` - Contents of the message (bytes).\\n\\n# Errors\\n\\n* `HostError: Error(Contract, #1000)` \\xe2\\x80\\x93 Contract is paused (`EnforcedPaused`).\\n* `HostError: Error(Auth, InvalidAction)` \\xe2\\x80\\x93 `caller` authorization fails.\\n* [`MessageTransmitterError::DestinationIsLocalDomain`] \\xe2\\x80\\x93 Cannot send to local domain.\\n* [`MessageTransmitterError::MessageBodyTooLarge`] \\xe2\\x80\\x93 Message body exceeds max size.\\n* [`MessageTransmitterError::RecipientIsZero`] \\xe2\\x80\\x93 Recipient cannot b",
+      "name": "send_message",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "destination_caller",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_finality_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "message_body",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "MessageTransmitterV2ContractInitParams"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks if a nonce has been used.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `nonce` - The nonce to check.\\n\\n# Returns\\n\\n`true` if the nonce has been used, `false` otherwise.",
+      "name": "is_nonce_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_pauser",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_pauser",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "expires_in_ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_rescuer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_rescuer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "enable_attester",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "attester",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Receives a message. Messages can only be broadcast once for a given nonce.\\nThe message body of a valid message is passed to the specified recipient\\nfor further processing.\\n\\n# Attestation Format\\n\\nA valid attestation is the concatenated 65-byte signature(s) of exactly\\n`thresholdSignature` signatures, in increasing order of attester address.\\n***If the attester addresses recovered from signatures are not in\\nincreasing order, signature verification will fail.***\\nIf incorrect number of signatures or duplicate signatures are supplied,\\nsignature verification will fail.\\n\\n# Message Format\\n\\nField                        Bytes      Type       Index\\nversion                      4          uint32     0\\nsourceDomain                 4          uint32     4\\ndestinationDomain            4          uint32     8\\nnonce                        32         bytes32    12\\nsender                       32         bytes32    44\\nrecipient                    32         bytes32    76\\ndestinationCaller            32         bytes32    108\\nminF",
+      "name": "receive_message",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "message",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "attestation",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "disable_attester",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "attester",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the local domain identifier for this chain.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Returns\\n\\nThe local domain identifier.",
+      "name": "get_local_domain",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MessageTransmitterV2ContractInitParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "attester_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "attesters",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "local_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_message_body_size",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pauser",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rescuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "signature_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "version",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pending_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "expires_in_ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_enabled_attester",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "attester",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_attester_manager",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_enabled_attester",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_signature_threshold",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_signature_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_signature_threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_attester_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_attester_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the maximum allowed message body size.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Returns\\n\\nThe maximum allowed message body size.",
+      "name": "get_max_message_body_size",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_num_enabled_attesters",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the maximum allowed message body size.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `max_message_body_size` - The maximum allowed message body size.\\n\\n# Errors\\n\\n* `HostError: Error(Auth, InvalidAction)` \\xe2\\x80\\x93 Authorization from the\\ncontract owner fails.\\n\\n# Events\\n\\n* topics - `[\"max_message_body_size_updated\"]`\\n* data - `[new_max_message_body_size: u32]`",
+      "name": "set_max_message_body_size",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "max_message_body_size",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is completed.",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is initiated.",
+      "lib": "",
+      "name": "AdminChangeStarted",
+      "prefix_topics": [
+        "admin_change_started"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ManageableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AdminNotSet",
+          "value": 7200
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 7201
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for `Manageable` utility.",
+      "lib": "",
+      "name": "ManageableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors related to role management operations",
+      "lib": "",
+      "name": "RoleError",
+      "cases": [
+        {
+          "doc": "The specified role has not been set",
+          "name": "RoleNotSet",
+          "value": 7000
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the pauser is changed.",
+      "lib": "",
+      "name": "PauserChanged",
+      "prefix_topics": [
+        "pauser_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_address",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the rescuer address is changed.",
+      "lib": "",
+      "name": "RescuerChanged",
+      "prefix_topics": [
+        "rescuer_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_rescuer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableError",
+      "cases": [
+        {
+          "doc": "When migration is attempted but not allowed due to upgrade state.",
+          "name": "MigrationNotAllowed",
+          "value": 1100
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the merkle root is set.",
+      "lib": "",
+      "name": "SetRoot",
+      "prefix_topics": [
+        "set_root"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an index is claimed.",
+      "lib": "",
+      "name": "SetClaimed",
+      "prefix_topics": [
+        "set_claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "val",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MerkleDistributorError",
+      "cases": [
+        {
+          "doc": "The merkle root is not set.",
+          "name": "RootNotSet",
+          "value": 1300
+        },
+        {
+          "doc": "The provided index was already claimed.",
+          "name": "IndexAlreadyClaimed",
+          "value": 1301
+        },
+        {
+          "doc": "The proof is invalid.",
+          "name": "InvalidProof",
+          "value": 1302
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `MerkleDistributor`",
+      "lib": "",
+      "name": "MerkleDistributorStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The Merkle root of the distribution tree",
+            "name": "Root"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps an index to its claimed status",
+            "name": "Claimed",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Rounding",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Floor"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Ceil"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SorobanFixedPointError",
+      "cases": [
+        {
+          "doc": "The operation failed because the denominator is 0.",
+          "name": "ZeroDenominator",
+          "value": 1500
+        },
+        {
+          "doc": "The operation failed because a phantom overflow occurred.",
+          "name": "PhantomOverflow",
+          "value": 1501
+        },
+        {
+          "doc": "The operation failed because the result does not fit in Self.",
+          "name": "ResultOverflow",
+          "value": 1502
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CryptoError",
+      "cases": [
+        {
+          "doc": "The merkle proof length is out of bounds.",
+          "name": "MerkleProofOutOfBounds",
+          "value": 1400
+        },
+        {
+          "doc": "The index of the leaf is out of bounds.",
+          "name": "MerkleIndexOutOfBounds",
+          "value": 1401
+        },
+        {
+          "doc": "No data in hasher state.",
+          "name": "HasherEmptyState",
+          "value": 1402
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is paused.",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is unpaused.",
+      "lib": "",
+      "name": "Unpaused",
+      "prefix_topics": [
+        "unpaused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausableError",
+      "cases": [
+        {
+          "doc": "The operation failed because the contract is paused.",
+          "name": "EnforcedPause",
+          "value": 1000
+        },
+        {
+          "doc": "The operation failed because the contract is not paused.",
+          "name": "ExpectedPause",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for the pausable state",
+      "lib": "",
+      "name": "PausableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Indicates whether the contract is in paused state.",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AttesterEnabled",
+      "prefix_topics": [
+        "attester_enabled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "attester",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for attestation verification",
+      "lib": "",
+      "name": "AttestationError",
+      "cases": [
+        {
+          "doc": "The attestation length is invalid (must be SIGNATURE_LENGTH * threshold)",
+          "name": "InvalidAttestationLength",
+          "value": 6000
+        },
+        {
+          "doc": "Signatures are not in increasing order or a duplicate signature was found",
+          "name": "InvalidSignatureOrder",
+          "value": 6001
+        },
+        {
+          "doc": "The recovered signer is not an enabled attester",
+          "name": "SignerNotAttester",
+          "value": 6002
+        },
+        {
+          "doc": "Failed to recover public key from signature",
+          "name": "SignatureRecoveryFailed",
+          "value": 6003
+        },
+        {
+          "doc": "The signature threshold is invalid",
+          "name": "InvalidSignatureThreshold",
+          "value": 6004
+        },
+        {
+          "doc": "Attempted to enable an attester that is already enabled",
+          "name": "AttesterAlreadyEnabled",
+          "value": 6005
+        },
+        {
+          "doc": "Attempted to disable an attester that is already disabled",
+          "name": "AttesterAlreadyDisabled",
+          "value": 6006
+        },
+        {
+          "doc": "Attempted to get an enabled attester at an index that is out of bounds",
+          "name": "AttesterIndexOutOfBounds",
+          "value": 6007
+        },
+        {
+          "doc": "Public key is invalid (all zeros)",
+          "name": "InvalidAttesterAddress",
+          "value": 6008
+        },
+        {
+          "doc": "Disabling would leave too few enabled attesters",
+          "name": "TooFewEnabledAttesters",
+          "value": 6009
+        },
+        {
+          "doc": "The signature threshold exceeds the number of enabled attesters",
+          "name": "SignatureThresholdTooHigh",
+          "value": 6010
+        },
+        {
+          "doc": "The signature threshold is already set",
+          "name": "SignatureThresholdAlreadySet",
+          "value": 6011
+        },
+        {
+          "doc": "The signature threshold is not set",
+          "name": "SignatureThresholdNotSet",
+          "value": 6012
+        },
+        {
+          "doc": "The signature recovery ID is invalid (must be 0 or 1, or 27/28 in Ethereum encoding)",
+          "name": "InvalidRecoveryId",
+          "value": 6013
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AttesterDisabled",
+      "prefix_topics": [
+        "attester_disabled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "attester",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AttesterManagerUpdated",
+      "prefix_topics": [
+        "attester_manager_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous_attester_manager",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_attester_manager",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SignatureThresholdUpdated",
+      "prefix_topics": [
+        "signature_threshold_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_signature_threshold",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_signature_threshold",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AttestableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SignatureThreshold"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EnabledAttesters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when an address is added to the denylist.",
+      "lib": "",
+      "name": "Denylisted",
+      "prefix_topics": [
+        "denylisted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when an address is removed from the denylist.",
+      "lib": "",
+      "name": "UnDenylisted",
+      "prefix_topics": [
+        "un_denylisted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for denylist operations",
+      "lib": "",
+      "name": "DenylistError",
+      "cases": [
+        {
+          "doc": "The account is on the denylist",
+          "name": "AccountDenylisted",
+          "value": 6100
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the denylister is updated.",
+      "lib": "",
+      "name": "DenylisterChanged",
+      "prefix_topics": [
+        "denylister_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_denylister",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_denylister",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the fee recipient address is updated.",
+      "lib": "",
+      "name": "FeeRecipientSet",
+      "prefix_topics": [
+        "fee_recipient_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a token pair is linked between domains.",
+      "lib": "",
+      "name": "TokenPairLinked",
+      "prefix_topics": [
+        "token_pair_linked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "local_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "remote_domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "remote_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a configuration for a local token needed to perform a swap mint with a SwapMinter.",
+      "lib": "",
+      "name": "SwapMinterConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "allow_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_minter",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a token pair is unlinked between domains.",
+      "lib": "",
+      "name": "TokenPairUnlinked",
+      "prefix_topics": [
+        "token_pair_unlinked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "local_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "remote_domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "remote_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a pair of decimal configurations for local and canonical tokens.\\n\\nThis configuration is used to handle decimal precision differences between\\ntokens on different chains (e.g., Stellar USDC with 7 decimals vs CCTP with 6 decimals).",
+      "lib": "",
+      "name": "TokenDecimalConfig",
+      "fields": [
+        {
+          "doc": "Number of decimals for the canonical token (e.g., 6 for standard CCTP)",
+          "name": "canonical_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Number of decimals for the local token (e.g., 7 for Stellar USDC)",
+          "name": "local_decimals",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a new token controller is set.",
+      "lib": "",
+      "name": "SetTokenController",
+      "prefix_topics": [
+        "set_token_controller"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_controller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a swap minter config is set for a token.",
+      "lib": "",
+      "name": "SwapMinterConfigSet",
+      "prefix_topics": [
+        "swap_minter_config_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "local_token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "swap_minter_config",
+          "type_": {
+            "udt": {
+              "name": "SwapMinterConfig"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenControllerError",
+      "cases": [
+        {
+          "doc": "If a token pair is already linked.",
+          "name": "TokenPairAlreadyLinked",
+          "value": 6300
+        },
+        {
+          "doc": "If a token pair is not linked.",
+          "name": "TokenPairNotLinked",
+          "value": 6301
+        },
+        {
+          "doc": "If the token decimal config is not set.",
+          "name": "TokenDecimalConfigNotSet",
+          "value": 6302
+        },
+        {
+          "doc": "If the burn token is not supported (no burn limit set or limit is zero).",
+          "name": "BurnTokenNotSupported",
+          "value": 6303
+        },
+        {
+          "doc": "If the burn amount exceeds the configured limit per message.",
+          "name": "BurnAmountExceedsLimit",
+          "value": 6304
+        },
+        {
+          "doc": "If the swap minter config is not set for the token.",
+          "name": "SwapMinterConfigNotSet",
+          "value": 6305
+        },
+        {
+          "doc": "If the burn limit per message is invalid (negative).",
+          "name": "InvalidBurnLimit",
+          "value": 6306
+        },
+        {
+          "doc": "If local_decimals is less than canonical_decimals.",
+          "name": "InvalidDecimalScale",
+          "value": 6307
+        },
+        {
+          "doc": "If the token decimal config is already set.",
+          "name": "TokenDecimalConfigAlreadySet",
+          "value": 6308
+        },
+        {
+          "doc": "If the provided local token does not match the stored local token.",
+          "name": "InvalidLocalToken",
+          "value": 6309
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a burn limit per message is set for a local token.",
+      "lib": "",
+      "name": "SetBurnLimitPerMessage",
+      "prefix_topics": [
+        "set_burn_limit_per_message"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "local_token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "burn_limit_per_message",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a swap minter config is removed for a local token.",
+      "lib": "",
+      "name": "SwapMinterConfigRemoved",
+      "prefix_topics": [
+        "swap_minter_config_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "local_token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "swap_minter_config",
+          "type_": {
+            "udt": {
+              "name": "SwapMinterConfig"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a local token decimal config is added for a local token.",
+      "lib": "",
+      "name": "TokenDecimalConfigAdded",
+      "prefix_topics": [
+        "token_decimal_config_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "local_token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_decimal_config",
+          "type_": {
+            "udt": {
+              "name": "TokenDecimalConfig"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenControllerStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "BurnLimit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RemoteTokenToLocal",
+            "type_": [
+              {
+                "tuple": {
+                  "value_types": [
+                    "u32",
+                    {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TokenDecimalConfig",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SwapMinterConfig",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the minimum fee is updated for a specific burn token.",
+      "lib": "",
+      "name": "MinFeeSet",
+      "prefix_topics": [
+        "min_fee_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "burn_token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "min_fee",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the minimum fee controller role is updated.",
+      "lib": "",
+      "name": "MinFeeControllerSet",
+      "prefix_topics": [
+        "min_fee_controller_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_min_fee_controller",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors for the minimum fee controller module.",
+      "lib": "",
+      "name": "MinFeeControllerError",
+      "cases": [
+        {
+          "doc": "The minimum fee controller has not been set.",
+          "name": "MinFeeControllerNotSet",
+          "value": 6200
+        },
+        {
+          "doc": "The provided minimum fee is greater than or equal to MIN_FEE_MULTIPLIER.",
+          "name": "MinFeeTooHigh",
+          "value": 6201
+        },
+        {
+          "doc": "The provided amount is too low to compute a minimum fee (must be > 1).",
+          "name": "AmountTooLow",
+          "value": 6202
+        },
+        {
+          "doc": "The fee computation overflowed i128.",
+          "name": "MinFeeComputationOverflow",
+          "value": 6203
+        },
+        {
+          "doc": "The provided minimum fee is negative.",
+          "name": "MinFeeNegative",
+          "value": 6204
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MinFeeControllerStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "MinFeeByBurnToken",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoteTokenMessengerError",
+      "cases": [
+        {
+          "doc": "If a TokenMessenger is already set for the domain.",
+          "name": "TokenMessengerAlreadySet",
+          "value": 6400
+        },
+        {
+          "doc": "If no TokenMessenger is set for the domain.",
+          "name": "NoTokenMessengerSet",
+          "value": 6401
+        },
+        {
+          "doc": "If the provided TokenMessenger address is zero.",
+          "name": "ZeroAddress",
+          "value": 6402
+        },
+        {
+          "doc": "If the remote TokenMessenger is invalid",
+          "name": "RemoteTokenMessengerNotRegistered",
+          "value": 6403
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a remote TokenMessenger is added.",
+      "lib": "",
+      "name": "RemoteTokenMessengerAdded",
+      "prefix_topics": [
+        "remote_token_messenger_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_messenger",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a remote TokenMessenger is removed.",
+      "lib": "",
+      "name": "RemoteTokenMessengerRemoved",
+      "prefix_topics": [
+        "remote_token_messenger_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_messenger",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoteTokenMessengerStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RemoteTokenMessenger",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key for a simple role (single address per role).",
+      "lib": "",
+      "name": "RoleKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors for role operations.",
+      "lib": "",
+      "name": "RoleError",
+      "cases": [
+        {
+          "doc": "The role has not been set.",
+          "name": "RoleNotSet",
+          "value": 7000
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is granted.",
+      "lib": "",
+      "name": "RoleGranted",
+      "prefix_topics": [
+        "role_granted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is revoked.",
+      "lib": "",
+      "name": "RoleRevoked",
+      "prefix_topics": [
+        "role_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the admin role is renounced.",
+      "lib": "",
+      "name": "AdminRenounced",
+      "prefix_topics": [
+        "admin_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role admin is changed.",
+      "lib": "",
+      "name": "RoleAdminChanged",
+      "prefix_topics": [
+        "role_admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2000
+        },
+        {
+          "doc": "",
+          "name": "AdminNotSet",
+          "value": 2001
+        },
+        {
+          "doc": "",
+          "name": "IndexOutOfBounds",
+          "value": 2002
+        },
+        {
+          "doc": "",
+          "name": "AdminRoleNotFound",
+          "value": 2003
+        },
+        {
+          "doc": "",
+          "name": "RoleCountIsNotZero",
+          "value": 2004
+        },
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 2005
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 2006
+        },
+        {
+          "doc": "",
+          "name": "RoleNotHeld",
+          "value": 2007
+        },
+        {
+          "doc": "",
+          "name": "RoleIsEmpty",
+          "value": 2008
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is completed.",
+      "lib": "",
+      "name": "AdminTransferCompleted",
+      "prefix_topics": [
+        "admin_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is initiated.",
+      "lib": "",
+      "name": "AdminTransferInitiated",
+      "prefix_topics": [
+        "admin_transfer_initiated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key for enumeration of accounts per role.",
+      "lib": "",
+      "name": "RoleAccountKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the access control",
+      "lib": "",
+      "name": "AccessControlStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccounts",
+            "type_": [
+              {
+                "udt": {
+                  "name": "RoleAccountKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "HasRole",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountsCount",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAdmin",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for `Ownable` utility.",
+      "lib": "",
+      "name": "OwnableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingOwner"
+          }
+        }
+      ]
+    }
+  }
+]

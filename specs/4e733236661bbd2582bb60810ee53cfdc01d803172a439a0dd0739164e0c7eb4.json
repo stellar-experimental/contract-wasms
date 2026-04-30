@@ -1,0 +1,925 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the Steve's Stubs contract",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Collection configuration",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Collection metadata (name, symbol, base_uri)",
+            "name": "Metadata"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next token ID counter",
+            "name": "NextTokenId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total supply of minted (non-burned) tokens",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Contract paused flag",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Owner of a specific token",
+            "name": "Owner",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Approval for a specific token",
+            "name": "Approval",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-token URI override (when different from base_uri + id)",
+            "name": "TokenUri",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Balance of tokens held by an address",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Minter role flag",
+            "name": "Minter",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Operator approval (owner \\xe2\\x86\\x92 operator)",
+            "name": "OperatorApproval",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Whether this wallet has already minted (for 1-per-wallet enforcement)",
+            "name": "HasMinted",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "List of all token IDs (Vec<u32>)",
+            "name": "AllTokens"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "List of token IDs owned by an address (Vec<u32>)",
+            "name": "OwnedTokens",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether public (permissionless) minting is active",
+            "name": "PublicMintActive"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Collection metadata",
+      "lib": "",
+      "name": "Metadata",
+      "fields": [
+        {
+          "doc": "",
+          "name": "base_uri",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-token approval data",
+      "lib": "",
+      "name": "ApprovalData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Collection configuration \\xe2\\x80\\x94 set at deploy time",
+      "lib": "",
+      "name": "CollectionConfig",
+      "fields": [
+        {
+          "doc": "Collection admin address",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Whether ALL tokens are soulbound by default",
+          "name": "collection_soulbound",
+          "type_": "bool"
+        },
+        {
+          "doc": "Enable enumerable extension (track all token IDs + per-owner lists)",
+          "name": "enumerable",
+          "type_": "bool"
+        },
+        {
+          "doc": "Default royalty in basis points (0 for Steve's Stubs)",
+          "name": "royalty_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Default royalty receiver",
+          "name": "royalty_receiver",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StubError",
+      "cases": [
+        {
+          "doc": "Token does not exist",
+          "name": "NonExistentToken",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not the owner of the token",
+          "name": "IncorrectOwner",
+          "value": 2
+        },
+        {
+          "doc": "Caller is not approved to transfer this token",
+          "name": "InsufficientApproval",
+          "value": 3
+        },
+        {
+          "doc": "Approval ledger is in the past",
+          "name": "InvalidLiveUntilLedger",
+          "value": 4
+        },
+        {
+          "doc": "Caller is not authorized (not admin/minter)",
+          "name": "NotAuthorized",
+          "value": 5
+        },
+        {
+          "doc": "Contract is paused",
+          "name": "Paused",
+          "value": 6
+        },
+        {
+          "doc": "Max supply reached (unused \\xe2\\x80\\x94 supply is unlimited)",
+          "name": "MaxSupplyReached",
+          "value": 7
+        },
+        {
+          "doc": "Token is soulbound (non-transferable)",
+          "name": "Soulbound",
+          "value": 8
+        },
+        {
+          "doc": "Token is frozen",
+          "name": "TokenFrozen",
+          "value": 9
+        },
+        {
+          "doc": "Math overflow",
+          "name": "MathOverflow",
+          "value": 10
+        },
+        {
+          "doc": "Invalid argument",
+          "name": "InvalidArgument",
+          "value": 11
+        },
+        {
+          "doc": "Metadata not set",
+          "name": "MetadataNotSet",
+          "value": 12
+        },
+        {
+          "doc": "Batch size too large",
+          "name": "BatchTooLarge",
+          "value": 13
+        },
+        {
+          "doc": "Wallet has already minted (1-per-wallet limit)",
+          "name": "WalletLimitReached",
+          "value": 14
+        },
+        {
+          "doc": "Public mint is not active",
+          "name": "PublicMintNotActive",
+          "value": 15
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn a token. Caller must be the owner.",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin mint: mint a single token to any address.\\nBypasses 1-per-wallet limit (admin can airdrop multiple to same wallet).",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "minter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the collection name.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current admin address.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause the contract (admin only). Blocks minting.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true if `token_id` exists (has been minted and not burned).",
+      "name": "exists",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the collection symbol.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin batch airdrop: mint 1 token each to multiple addresses.\\nMaximum 50 recipients per call (gas safety).",
+      "name": "airdrop",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "minter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipients",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approve `approved` to transfer `token_id`.\\nNote: Approvals can be set but transfers will still revert while soulbound.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "approver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of tokens held by `owner`.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpause the contract (admin only).",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM. Admin only.\\n\\xe2\\x9a\\xa0\\xef\\xb8\\x8f NEVER REMOVE THIS FUNCTION \\xe2\\x80\\x94 doing so bricks the contract permanently.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Contract version, incremented on each upgrade.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the owner of `token_id`. Panics if token does not exist.",
+      "name": "owner_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer is permanently disabled \\xe2\\x80\\x94 Steve's Stubs are soulbound.\\nThis function exists for SEP-50 interface compliance but always panics.",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an address has the minter role.",
+      "name": "is_minter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the token URI for `token_id`.",
+      "name": "token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns all token IDs owned by `owner`.",
+      "name": "tokens_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns all token IDs in the collection.",
+      "name": "all_tokens",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin batch mint: mint `count` tokens to a single address.",
+      "name": "batch_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "minter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a wallet has already minted their free stub.",
+      "name": "has_minted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Free permissionless mint \\xe2\\x80\\x94 anyone can call when active.\\nEnforces: 1-per-wallet limit, auto-soulbound.\\nReturns the new token ID.",
+      "name": "public_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the approved address for `token_id`, or None.",
+      "name": "get_approved",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Grant minter role to an address (admin only).",
+      "name": "grant_minter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether the collection is soulbound.",
+      "name": "is_soulbound",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the collection base URI (admin only).",
+      "name": "set_base_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "base_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the next token ID (total minted including burned).\\nKept for compatibility with frontend indexer.",
+      "name": "total_minted",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns total number of minted (non-burned) tokens.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy and initialize Steve's Stubs.\\n\\n# Arguments\\n* `base_uri`   - Base URI for metadata (ICP canister URL)\\n* `name`       - Collection name (\"Steve's Stubs\")\\n* `symbol`     - Collection symbol (\"STUB\")\\n* `admin`      - Admin address",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "base_uri",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Revoke minter role from an address (admin only).",
+      "name": "revoke_minter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a custom URI for a specific token (admin only).",
+      "name": "set_token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer via approval \\xe2\\x80\\x94 also soulbound-blocked.",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin to a new address (admin only).",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approve/revoke `operator` for all of `owner`'s tokens.",
+      "name": "approve_for_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enable or disable public minting. Admin only.",
+      "name": "set_public_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether `operator` is approved to manage all of `owner`'s tokens.",
+      "name": "is_approved_for_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if public minting is currently active.",
+      "name": "is_public_mint_active",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Toggle collection-wide soulbound status (admin only).\\nEmergency escape hatch \\xe2\\x80\\x94 normally should stay true.",
+      "name": "set_collection_soulbound",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "soulbound",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

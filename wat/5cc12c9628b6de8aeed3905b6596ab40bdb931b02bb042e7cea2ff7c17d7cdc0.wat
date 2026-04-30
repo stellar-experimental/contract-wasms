@@ -1,0 +1,22 @@
+(module
+  (type (;0;) (func (result i64)))
+  (type (;1;) (func))
+  (table (;0;) 1 1 funcref)
+  (memory (;0;) 16)
+  (global (;0;) (mut i32) i32.const 1048576)
+  (global (;1;) i32 i32.const 1048576)
+  (global (;2;) i32 i32.const 1048576)
+  (export "memory" (memory 0))
+  (export "hello" (func 0))
+  (export "_" (func 1))
+  (export "__data_end" (global 1))
+  (export "__heap_base" (global 2))
+  (func (;0;) (type 0) (result i64)
+    call 1
+    i64.const 180388626437
+  )
+  (func (;1;) (type 1))
+  (@custom "contractspecv0" (after code) "\00\00\00\00\00\00\00\00\00\00\00\05hello\00\00\00\00\00\00\00\00\00\00\01\00\00\00\05")
+  (@custom "contractenvmetav0" (after code) "\00\00\00\00\00\00\00\16\00\00\00\00")
+  (@custom "contractmetav0" (after code) "\00\00\00\00\00\00\00\05rsver\00\00\00\00\00\00\061.92.0\00\00\00\00\00\00\00\00\00\08rssdkver\00\00\00022.0.11#34f7f53ae31e0fd02aab436a9872e79fa671ca02")
+)

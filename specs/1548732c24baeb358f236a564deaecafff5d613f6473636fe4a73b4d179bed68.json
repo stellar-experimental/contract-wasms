@@ -1,0 +1,656 @@
+[
+  {
+    "function_v0": {
+      "doc": "Pause all money-moving operations (admin only).\\n\\nWhen paused, `place_bet`, `claim_payout`, and `claim_refund` will all\\nreject with \"contract is paused\". Use in emergencies (suspected exploit,\\noracle compromise, etc.) to prevent further fund movement while the\\nsituation is assessed. Does not affect read-only queries.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One user's bet on a market",
+      "lib": "",
+      "name": "Bet",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "bettor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "claimed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume normal operations after a pause (admin only).",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true if the contract is currently paused.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Place an XLM bet on a market outcome.\\n\\nFlow:\\n1. Snapshot bettor's GMB balance \\xe2\\x86\\x92 determine fee tier (locked for this bet).\\n2. Transfer `amount` XLM stroops from `bettor` into the contract.\\n3. Record the bet.\\n4. Attempt to send GMB rakeback from the contract's reserve to the bettor.\\nIf the reserve is insufficient the bet still succeeds \\xe2\\x80\\x94 the reward is skipped.",
+      "name": "place_bet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bettor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "XlmToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "GmbToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeConfig"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RakebackRateBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextMarketId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Market",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "MarketBets",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserMarketBet",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend instance storage TTL (callable by anyone to keep contract alive)",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketState"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy and configure the contract.\\n\\n# Parameters\\n* `admin`     \\xe2\\x80\\x94 Oracle / admin keypair that creates/locks/settles markets\\n* `xlm_token` \\xe2\\x80\\x94 SEP-41 contract address for native XLM on this network\\n* `gmb_token` \\xe2\\x80\\x94 SEP-41 contract address for the GMB utility token\\n* `treasury`  \\xe2\\x80\\x94 Separate address that receives the platform rake on claims",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "gmb_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lock a market (admin only). No new bets accepted after this point.\\nTypically called when the chess game starts.",
+      "name": "lock_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Platform fee configuration (all values are admin-configurable)",
+      "lib": "",
+      "name": "FeeConfig",
+      "fields": [
+        {
+          "doc": "Fee for users holding < tier1_threshold GMB (e.g. 500 = 5%)",
+          "name": "default_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Fee for Tier 1 holders (e.g. 350 = 3.5%)",
+          "name": "tier1_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "GMB balance threshold for Tier 1 (in GMB stroops, 7 decimals)",
+          "name": "tier1_threshold",
+          "type_": "i128"
+        },
+        {
+          "doc": "Fee for Tier 2 holders (e.g. 200 = 2%)",
+          "name": "tier2_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "GMB balance threshold for Tier 2",
+          "name": "tier2_threshold",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept the pending admin role \\xe2\\x80\\x94 step 2 of a two-step key rotation.\\n\\nMust be called by the address previously nominated via `propose_admin`.\\nClears `PendingAdmin` and promotes the caller to `Admin`.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim XLM winnings for a settled market (pull model, winner-initiated).\\n\\nPayout formula (pari-mutuel with per-bettor fee tier):\\ngross_share = (bet.amount / winning_pool) \\xc3\\x97 total_pool\\nrake        = gross_share \\xc3\\x97 bet.fee_bps / 10000\\npayout      = gross_share \\xe2\\x88\\x92 rake\\n\\nThe rake is routed to the treasury; the net payout goes to the bettor.",
+      "name": "claim_payout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bettor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim a full XLM refund for a cancelled market (bettor-initiated).",
+      "name": "claim_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bettor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_user_bet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "bettor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Bet"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the treasury address (admin only)",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Category of market (informational \\xe2\\x80\\x94 affects nothing on-chain)",
+      "lib": "",
+      "name": "MarketType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Standard"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PropBet"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Tournament"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a market (admin only). Enables full XLM refunds for all bettors.",
+      "name": "cancel_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new market. Returns the market ID.\\nPermissionless \\xe2\\x80\\x94 anyone can open a market via their wallet.\\n\\n# Parameters\\n* `market_type_id` \\xe2\\x80\\x94 0 = Standard, 1 = PropBet, 2 = Tournament\\n* `outcomes`       \\xe2\\x80\\x94 Non-empty list of outcome labels, e.g. [\"White\", \"Black\", \"Draw\"]",
+      "name": "create_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "market_type_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "outcomes",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin address \\xe2\\x80\\x94 step 1 of a two-step key rotation (admin only).\\n\\nThe proposed address must call `accept_admin` to complete the transfer.\\nUntil accepted, the current admin retains full control. This prevents\\naccidentally locking the contract by proposing an unreachable address.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record the winning outcome (admin / oracle only).\\n\\nThis is STRICTLY a state update \\xe2\\x80\\x94 it does NOT push any payouts.\\nWinners must call `claim_payout` individually (pull model) to avoid\\nSoroban instruction-limit issues on markets with many bettors.",
+      "name": "settle_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "market_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "result",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable state for one prediction market",
+      "lib": "",
+      "name": "MarketState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "market_type",
+          "type_": {
+            "udt": {
+              "name": "MarketType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "outcomes",
+          "type_": {
+            "map": {
+              "key_type": "symbol",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "result",
+          "type_": {
+            "option": {
+              "value_type": "symbol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "MarketStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_pool",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_fee_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "FeeConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_initialized",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the fee tier thresholds and rates.\\nAll values must be non-zero and tiers must be ordered (tier1 < tier2).",
+      "name": "set_fee_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "default_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tier1_threshold",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tier1_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tier2_threshold",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tier2_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Lifecycle status of a market",
+      "lib": "",
+      "name": "MarketStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Locked"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Settled"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Cancelled"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_market_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_rakeback_rate_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the GMB rakeback rate.\\n`rate_bps` is expressed in basis points of the XLM bet amount:\\n1000 bps = 10% \\xe2\\x86\\x92 for a 10 XLM bet the bettor receives 1 GMB.\\nSet to 0 to disable rakeback entirely.",
+      "name": "set_rakeback_rate_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "rate_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

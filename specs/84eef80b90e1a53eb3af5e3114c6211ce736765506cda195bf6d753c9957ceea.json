@@ -1,0 +1,676 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "XQBUSD Zero-Knowledge Verifier Contract\\nProtocol 25 X-Ray Implementation - On-Chain ZK Verification\\n\\nUses native BN254 elliptic curve and Poseidon hash functions\\nfor efficient ZK-SNARK proof verification on Stellar mainnet.\\n\\nKey Features:\\n- Reserve attestation without revealing exact amounts\\n- KYC verification without exposing PII\\n- OFAC compliance proofs via Association Sets\\n- T-bill backing verification with Plaid integration",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ProofRegistry",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CommitmentRegistry",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "NullifierRegistry",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ReserveAttestation"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ASPRegistry",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VerificationCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastVerificationTimestamp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ZKProof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof_type",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "public_inputs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "verified",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveAttestation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "attestation_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "circulating_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "is_fully_backed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "poseidon_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AssociationSetProvider",
+      "fields": [
+        {
+          "doc": "",
+          "name": "compliance_standard",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "last_update",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "member_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KYCProof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asp_membership",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "is_verified",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "tier_level",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "user_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the ZK verifier contract",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Generate a commitment hash from two inputs (SHA-256 based)\\nCombines two 32-byte inputs and hashes them together on-chain",
+      "name": "poseidon_commit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "input_a",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "input_b",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a reserve attestation proof\\nProves: reserves >= circulating supply without revealing exact amounts",
+      "name": "verify_reserve_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reserve_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "circulating_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof_data",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify KYC completion without exposing personal data\\nUses Association Set membership proof",
+      "name": "verify_kyc_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "asp_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "merkle_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "KYCProof"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify OFAC/sanctions clearance without revealing identity\\nProves: address is NOT on sanctions list",
+      "name": "verify_ofac_clearance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "cleared_pool_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "membership_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify T-bill backing for XQBUSD mint\\nProves: user's TreasuryDirect holdings >= requested mint amount",
+      "name": "verify_tbill_backing",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "mint_amount_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "holdings_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "plaid_attestation_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a nullifier to prevent double-spending",
+      "name": "register_nullifier",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register an Association Set Provider (ASP)",
+      "name": "register_asp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "member_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "compliance_standard",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current reserve attestation",
+      "name": "get_reserve_attestation",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ReserveAttestation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get verification statistics",
+      "name": "get_verification_stats",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u64",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a complete privacy-preserving mint request\\nCombines: KYC + OFAC + T-bill backing in one call",
+      "name": "verify_compliant_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "mint_amount_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "kyc_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "kyc_asp_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ofac_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ofac_cleared_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tbill_proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "plaid_attestation",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  }
+]

@@ -1,0 +1,297 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One hop in a circular route. Each hop uses one protocol.\\nFor multi-hop paths on the same protocol, use a longer path vector.\\n\\nExamples:\\nSoroswap single: { protocol: 0, path: [XLM, USDC], pool_hashes: [], pools: [] }\\nSoroswap multi:  { protocol: 0, path: [XLM, USDC, AQUA], pool_hashes: [], pools: [] }\\nAqua single:     { protocol: 1, path: [USDC, XLM], pool_hashes: [hash], pools: [] }\\nAqua multi:      { protocol: 1, path: [A, B, C], pool_hashes: [h1, h2], pools: [] }\\nPhoenix single:  { protocol: 2, path: [XLM, PHO], pool_hashes: [], pools: [pool_addr] }\\nSushiV3 single:  { protocol: 3, path: [XLM, USDC], pools: [pool], v3_checkpoint: N, v3_slot: M }",
+      "lib": "",
+      "name": "Hop",
+      "fields": [
+        {
+          "doc": "Token path for this hop. First = input, last = output.",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Aqua: pool hash per pair (len = path.len - 1). Empty for other protocols.",
+          "name": "pool_hashes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Phoenix/SushiV3: pool address per pair. Empty for Soroswap/Aqua.",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Protocol: 0=Soroswap, 1=Aqua, 2=Phoenix, 3=SushiV3",
+          "name": "protocol",
+          "type_": "u32"
+        },
+        {
+          "doc": "SushiV3: oracle hint checkpoint (0 for non-V3 hops)",
+          "name": "v3_checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "SushiV3: oracle hint slot (0 for non-V3 hops)",
+          "name": "v3_slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SoroswapRouter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AquaRouter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PhoenixMultihop"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ArbError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InsufficientProfit",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidRoute",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidProtocol",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "HopFailed",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "exec_arb",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Hop"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "phoenix_multihop",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_routers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "phoenix_multihop",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

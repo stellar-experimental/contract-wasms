@@ -1,0 +1,6003 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "VaultPaused",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "SubaccountNotWhitelisted",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SubaccountAlreadyRegistered",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AumChangeExceedsLimit",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "MaxSubaccountsReached",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidAumLimits",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "SubaccountReturnedNothing",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "DeployedAssetsUnderflow",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidAdminProposal",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "AdminProposalExpired",
+          "value": 16
+        },
+        {
+          "doc": "Strategy's configured asset does not match the vault's asset.",
+          "name": "AssetMismatch",
+          "value": 17
+        },
+        {
+          "doc": "decimals_offset must be >= 3 to mitigate first-depositor inflation attacks.",
+          "name": "InvalidDecimalsOffset",
+          "value": 18
+        },
+        {
+          "doc": "A strategy's `get_balance()` returned a negative value.",
+          "name": "NegativeStrategyBalance",
+          "value": 19
+        },
+        {
+          "doc": "Cumulative AUM change within the current time window exceeds the limit.",
+          "name": "AumCumulativeChangeExceedsLimit",
+          "value": 20
+        },
+        {
+          "doc": "A strategy's `get_balance()` call failed (panicked, returned a non-i128,\\nor otherwise could not be invoked). The vault freezes total-assets-dependent\\noperations until the admin removes the failing subaccount via\\n`remove_subaccount` (which does not make cross-contract calls).",
+          "name": "StrategyUnreachable",
+          "value": 21
+        },
+        {
+          "doc": "An operation specific to `Wallet` subaccounts was invoked against a\\n`Strategy` subaccount (or vice versa). Distinct from `InvalidAmount`\\nso monitoring can tell a type-mismatch apart from a bad numeric input.",
+          "name": "InvalidSubaccountType",
+          "value": 22
+        },
+        {
+          "doc": "`withdraw_from_subaccount` attempted to pull more from a Wallet than\\nthe per-wallet tracker records. Forces the operator to first reconcile\\nthe wallet's attributed value via `update_wallet_deployed` (dust /\\ngain recognition) \\xe2\\x80\\x94 otherwise an over-pull would silently consume\\nanother wallet's share of `deployed_assets`, corrupting NAV.",
+          "name": "WalletOverWithdraw",
+          "value": 23
+        },
+        {
+          "doc": "`remove_subaccount` was called on a subaccount whose\\n`WalletNetDeployed` tracker is non-zero. Primary case (Wallet):\\nremoving without reconciliation would either strand value in\\n`deployed_assets` (if removed first) or open a pricing window\\nbetween write-down and removal (if reconciled separately).\\nOperators must either drain the wallet to zero via\\n`withdraw_from_subaccount` or use `remove_wallet_and_reconcile`,\\nwhich closes the window atomically under dual auth.\\n\\n**Defense-in-depth case (Strategy)**: the post-R2 guard is\\nstate-based, not type-based \\xe2\\x80\\x94 it trips on any subaccount with a\\nnon-zero tracker regardless of `SubaccountType`. A Strategy\\nsubaccount never legitimately has a non-zero\\n`WalletNetDeployed`, so hitting this error on a Strategy\\nindicates storage corruption (stray tracker entry, wrong type\\nstored). The fix in that case is to investigate the\\ncorruption, not to drain-then-remove.",
+          "name": "WalletTrackerNotZero",
+          "value": 24
+        },
+        {
+          "doc": "`seed_wallet_net_deployed` was called with `amount < current_tracker`.\\nSeeding is an admin-only path that does not touch the aggregate\\n`deployed_assets`; allowing downward seeds would let an admin zero\\na tracker to bypass `WalletTrackerNotZero` (#24) and then remove\\nthe wallet, stranding value in the aggregate. Downward reconciliation\\nmust go through `update_wallet_deployed` or\\n`remove_wallet_and_reconcile` (both move the aggregate in lockstep).",
+          "name": "WalletSeedBelowTracker",
+          "value": 25
+        },
+        {
+          "doc": "`update_wallet_deployed_batch` was called with an empty `updates`\\nvector. Rejected for explicitness \\xe2\\x80\\x94 a no-op batch call is almost\\nalways a client-side bug (e.g. filtered list collapsed to empty)\\nthat would otherwise silently succeed.",
+          "name": "EmptyBatch",
+          "value": 26
+        },
+        {
+          "doc": "`update_wallet_deployed_batch` was called with the same subaccount\\naddress appearing more than once in `updates`. Rejected because\\nthe net-delta computation would otherwise depend on iteration\\norder (later pair overwrites earlier tracker value but the delta\\napplied to the aggregate sums all pairs), breaking the atomic\\nlockstep between per-wallet tracker and aggregate.",
+          "name": "DuplicateSubaccountInBatch",
+          "value": 27
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminSet",
+      "prefix_topics": [
+        "admin_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OperatorSet",
+      "prefix_topics": [
+        "operator_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_operator",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_operator",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultPaused",
+      "prefix_topics": [
+        "vault_paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultUnpaused",
+      "prefix_topics": [
+        "vault_unpaused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SubaccountAdded",
+      "prefix_topics": [
+        "subaccount_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount_type",
+          "type_": {
+            "udt": {
+              "name": "SubaccountType"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AumLimitsChanged",
+      "prefix_topics": [
+        "aum_limits_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_increase_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_decrease_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_increase_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_decrease_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SubaccountRemoved",
+      "prefix_topics": [
+        "subaccount_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "The vault-wide `deployed_assets` counter at the time of removal.\\nThis value is only meaningful for `Wallet`-type subaccounts;\\n`Strategy` balances are tracked live via `get_balance()`.",
+          "name": "total_deployed_assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "For `Strategy` subaccounts, the result of `try_get_balance()` at\\nremoval time: `Some(balance)` if the strategy responded with a\\nvalid i128, `None` if the call trapped or returned an undecodable\\nvalue (the vault still proceeds with removal to recover from a\\nbroken strategy). Always `None` for `Wallet` subaccounts.\\n\\nThis is the on-chain record linking the share-price drop caused\\nby removing a funded strategy to the removal transaction itself \\xe2\\x80\\x94\\nwithout it, off-chain auditors had no way to attribute the NAV\\nchange to the removal event.",
+          "name": "strategy_balance",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "subaccount_type",
+          "type_": {
+            "udt": {
+              "name": "SubaccountType"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositToSubaccount",
+      "prefix_topics": [
+        "deposit_to_subaccount"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Amount the operator originally requested to transfer.",
+          "name": "requested_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Amount actually moved out of the vault, measured by balance-differencing.\\nMay differ from `requested_amount` for fee-on-transfer or non-standard tokens.",
+          "name": "actual_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Reason a strategy's `get_balance` probe failed at removal time. Split\\nfrom the unified `strategy_balance: None` encoding so off-chain\\nmonitoring can distinguish \"strategy panicked\" (InvokeError \\xe2\\x80\\x94 code\\nbug or missing entry point) from \"strategy returned a non-i128\"\\n(ConvertError \\xe2\\x80\\x94 type-mismatch regression).",
+      "lib": "",
+      "name": "StrategyProbeFailure",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The contract call itself failed (trap, missing function, host\\nerror, TTL expiry, etc.).",
+            "name": "InvokeError"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The call succeeded but the returned value could not be decoded\\nas `i128`.",
+            "name": "ConvertError"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferAccepted",
+      "prefix_topics": [
+        "admin_transfer_accepted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferProposed",
+      "prefix_topics": [
+        "admin_transfer_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pending_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeployedAssetsChanged",
+      "prefix_topics": [
+        "deployed_assets_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a wallet's tracked net-deployed amount diverges from its\\non-chain token balance at removal time. Informational only \\xe2\\x80\\x94 the vault\\ndoes NOT use the tracker or the observed balance to adjust\\n`deployed_assets` on removal (that write-down is the admin's explicit\\nresponsibility via `update_deployed_assets`). Indicates either external\\ndust sent to the wallet (tracked < balance) or an off-chain spend the\\nvault did not drive (tracked > balance).",
+      "lib": "",
+      "name": "WalletBalanceDiverged",
+      "prefix_topics": [
+        "wallet_balance_diverged"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tracked_net_deployed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wallet_balance",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the operator reconciles a wallet's attributed value via\\n`update_wallet_deployed` \\xe2\\x80\\x94 atomically moves both the per-wallet tracker\\nand the aggregate `deployed_assets` counter. `delta` is the signed\\nchange applied to each (positive for recognised gains / dust recovery,\\nnegative for losses). Distinct from `DeployedAssetsChanged`, which\\nsignals an aggregate-only reconciliation (e.g. off-chain strategy AUM\\nnot tied to a specific wallet).",
+      "lib": "",
+      "name": "WalletDeployedUpdated",
+      "prefix_topics": [
+        "wallet_deployed_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_tracked",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_tracked",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "delta",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferCancelled",
+      "prefix_topics": [
+        "admin_transfer_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AumWindowLimitsChanged",
+      "prefix_topics": [
+        "aum_window_limits_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_window_duration",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_cumulative_increase_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_cumulative_decrease_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_window_duration",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_cumulative_increase_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_cumulative_decrease_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawFromSubaccount",
+      "prefix_topics": [
+        "withdraw_from_subaccount"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "requested_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "actual_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the admin seeds the per-wallet net-deployed tracker for a\\nWallet subaccount. Used as a one-time migration step after an upgrade\\nthat introduced the per-wallet tracker, to backfill accounting for\\nwallets that existed before the upgrade.",
+      "lib": "",
+      "name": "WalletNetDeployedSeeded",
+      "prefix_topics": [
+        "wallet_net_deployed_seeded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted at wallet-removal time when the diagnostic `token.balance(wallet)`\\nprobe fails (host-level invocation error or undecodable return value). The\\nremoval itself succeeds \\xe2\\x80\\x94 this event distinguishes \"probe failed\" from\\n\"no divergence\" for off-chain monitoring, so a silent skip of the\\n`WalletBalanceDiverged` diagnostic is still visible.",
+      "lib": "",
+      "name": "WalletBalanceProbeFailed",
+      "prefix_topics": [
+        "wallet_balance_probe_failed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tracked_net_deployed",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted from `do_remove_subaccount` when `try_get_balance` cannot\\nproduce an i128. Paired with `SubaccountRemoved`'s `strategy_balance:\\nNone` but carries the distinguishing reason code so auditors can\\ndifferentiate the broken-strategy failure modes.\\n\\n**Off-chain correlation**: the two events are emitted in the same\\ntransaction and share the `subaccount` topic. Indexers rebuilding\\nthe full picture should correlate by `(tx_hash, subaccount)`:\\n- `SubaccountRemoved` alone with `strategy_balance = Some(n)` \\xe2\\x86\\x92\\nclean strategy removal, balance `n` exited NAV.\\n- `SubaccountRemoved` + `StrategyBalanceProbeFailed(InvokeError)` \\xe2\\x86\\x92\\nstrategy was unreachable (trap, missing method, TTL expiry).\\n- `SubaccountRemoved` + `StrategyBalanceProbeFailed(ConvertError)` \\xe2\\x86\\x92\\nstrategy responded but returned a non-i128; ABI regression.\\n- `SubaccountRemoved` alone with `strategy_balance = None` and\\n`subaccount_type = Wallet` \\xe2\\x86\\x92 wallet removal, not a strategy\\nprobe failure (the event is always `None` for wallets).",
+      "lib": "",
+      "name": "StrategyBalanceProbeFailed",
+      "prefix_topics": [
+        "strategy_balance_probe_failed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": {
+            "udt": {
+              "name": "StrategyProbeFailure"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted once per `update_wallet_deployed_batch` call to record that a\\ngroup of per-wallet updates was applied as a single atomic unit.\\nIndexers use this as the transaction-level anchor for the N\\n`WalletDeployedUpdated` events that share the same transaction.\\n\\n`count` is the number of entries in the batch. `net_delta` is the net\\nmove applied to `deployed_assets` \\xe2\\x80\\x94 equal to the sum of per-wallet\\ndeltas. A zero `net_delta` is possible (e.g. one wallet gains 100k and\\nanother loses 100k in the same batch) and still emits this event as\\nan audit trail.\\n\\n**Emission order within the transaction** (indexers: scan backward\\nfrom this event to collect the batch members):\\n\\n1. `DeployedAssetsChanged` \\xe2\\x80\\x94 once, from `apply_deployed_assets_change`.\\n2. `WalletDeployedUpdated` \\xe2\\x80\\x94 once per batch entry, in input order.\\n3. `WalletDeployedBatchApplied` \\xe2\\x80\\x94 this event, emitted last.\\n\\nThe anchor fires last rather than first so that all per-wallet events\\nit summarises have already been emitted when an indexer sees it; the\\ncost is t",
+      "lib": "",
+      "name": "WalletDeployedBatchApplied",
+      "prefix_topics": [
+        "wallet_deployed_batch_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "net_delta",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Operator"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DeployedAssets"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Subaccounts"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumIncreaseLimit"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumDecreaseLimit"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SubaccountTypes"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AdminProposalExpiry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumWindowDuration"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumCumulativeIncreaseLimit"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumCumulativeDecreaseLimit"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumWindowStart"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumCumulativeIncrease"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumCumulativeDecrease"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AumWindowBaseDeployed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Map<Address, i128> \\xe2\\x80\\x94 per-wallet net-deployed tracker.\\nAuthoritative cap on wallet pulls: `withdraw_from_subaccount`\\nrejects any pull exceeding this value with `WalletOverWithdraw`.\\nMoved in lockstep with `deployed_assets` by\\n`update_wallet_deployed` when the operator recognises gains,\\nlosses, or external dust. Also used by removal diagnostics\\n(emits `WalletBalanceDiverged` when tracked \\xe2\\x89\\xa0 observed at\\nremoval time).",
+            "name": "WalletNetDeployed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Variant names must match the TypeScript `SubaccountType` union in\\n`frontend/lib/subaccount-type.ts` \\xe2\\x80\\x94 the frontend encodes these as\\nSoroban symbols for `add_subaccount` calls.",
+      "lib": "",
+      "name": "SubaccountType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Strategy"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Wallet"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the name for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the symbol for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens held by `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The address for which the balance is being queried.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "muxed_address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens a `spender` is allowed to spend on behalf\\nof an `owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the underlying asset that the vault manages.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Errors\\n\\n* [`crate::vault::VaultTokenError::VaultAssetAddressNotSet`] - When the\\nvault's underlying asset address has not been initialized.",
+      "name": "query_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept admin role. Must be called by the address previously proposed\\nvia `propose_admin` before the deadline expires. Clears the pending\\nproposal.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_operator",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Note: setting admin == operator concentrates governance and AUM\\nreporting under a single key. Prefer separate keys in production.",
+      "name": "set_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_assets",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total amount of tokens in circulation.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "decimals_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin. The pending admin must call `accept_admin`\\nbefore `deadline` (ledger timestamp) to complete the transfer.\\nRevokes any previous pending proposal.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a new subaccount with the vault.\\n\\nRequires admin authorization and a non-paused vault. For `Strategy`\\nsubaccounts, performs interface validation: zero-amount smoke-tests\\n(`deposit`, `withdraw`), calls `get_balance()` (rejecting negative\\nvalues), and verifies the strategy's asset matches the vault's via\\n`get_asset()`. `Wallet` subaccounts skip all checks. Capped at\\n`MAX_SUBACCOUNTS` entries.",
+      "name": "add_subaccount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount_type",
+          "type_": {
+            "udt": {
+              "name": "SubaccountType"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_aum_limits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "increase_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "decrease_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the list of currently whitelisted subaccount addresses.",
+      "name": "get_subaccounts",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "convert_to_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "convert_to_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes a subaccount from the vault's whitelist. Whitelist-and-\\ntracker cleanup only \\xe2\\x80\\x94 does NOT adjust `deployed_assets`.\\n\\nFor Wallet subaccounts with non-zero attributed value, use\\n`remove_wallet_and_reconcile`: it does the aggregate write-down and\\nthe removal atomically under dual auth, closing the pricing window\\nof the two-step sequence (`update_deployed_assets` +\\n`remove_subaccount`) where NAV is wrong between transactions.\\n`remove_subaccount` rejects Wallet subaccounts whose\\n`WalletNetDeployed` tracker is non-zero (`WalletTrackerNotZero`) to\\nprevent that exact window being opened by mistake.\\n\\nRemaining use cases for `remove_subaccount`:\\n- Strategy removal (balances tracked live via `get_balance()`).\\n- Wallet cleanup after a full pull via `withdraw_from_subaccount`\\nhas zeroed the tracker.\\n- Emergency decommissioning where the operator key is unavailable:\\nthe admin must first rotate the operator (via\\n`set_operator`) and then go through `remove_wallet_and_reconcile`\\nor `update_wallet_deployed` to zero the",
+      "name": "remove_subaccount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_deployed_assets",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the type of a registered subaccount (`Strategy` or `Wallet`).\\n\\nPanics with `SubaccountNotWhitelisted` if the address is not in the\\ncurrent whitelist. Defaults to `Strategy` for subaccounts registered\\nbefore this field was introduced (backward compatibility).",
+      "name": "get_subaccount_type",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SubaccountType"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending admin transfer proposal. Only the current admin\\ncan cancel.",
+      "name": "cancel_admin_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer `amount` of the underlying token from the vault to `subaccount`.\\n\\nFor `Strategy` subaccounts, notifies the strategy via `IStrategy::deposit`\\nafter the transfer. The strategy's balance is captured live by\\n`IStrategy::get_balance()` in `total_assets`, so `deployed_assets` is NOT\\nincremented. `Wallet` subaccounts receive the tokens directly with no\\nfurther notification; their balance is not queried on-chain, so\\n`deployed_assets` IS incremented. No AUM rate limit is applied \\xe2\\x80\\x94\\nsubaccount transfers don't change total_assets.\\n\\nRequires operator authorization, a non-paused vault, and a whitelisted\\nsubaccount.",
+      "name": "deposit_to_subaccount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sum of `IStrategy::get_balance()` across all Strategy-type subaccounts.\\nUseful for operators to see how much capital is visible on-chain in\\nstrategies vs. the wallet-attributed `deployed_assets`.",
+      "name": "get_strategy_balances",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure the cumulative AUM rate-limit window.\\n\\n`window_duration` \\xe2\\x80\\x94 length of the fixed window in seconds\\n(min 3,600 = 1 hour, max 604,800 = 7 days). The window resets\\nentirely on expiry (tumbling window, not sliding).\\n\\n`cumulative_increase_bps` / `cumulative_decrease_bps` \\xe2\\x80\\x94 maximum\\ncumulative change (in basis points of the `base_deployed` snapshot\\ntaken when the window resets) allowed within a single window.\\n\\nChanging limits resets the active window so the new configuration\\ntakes effect immediately with a clean cumulative state.",
+      "name": "set_aum_window_limits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "window_duration",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "cumulative_increase_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "cumulative_decrease_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_aum_decrease_limit",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_aum_increase_limit",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Aggregate-only emergency escape hatch for `deployed_assets`.\\n\\n**Deprecated for routine use** after F4: strategies self-report\\ntheir full position (idle + deployed) via `IStrategy::get_balance()`,\\nso `deployed_assets` no longer has a legitimate \"strategy off-chain\\nAUM\" component. The standard operator path for wallet-attributed\\nreconciliation is `update_wallet_deployed` (single wallet) or\\n`update_wallet_deployed_batch` (multiple wallets atomically) \\xe2\\x80\\x94 both\\nmove the per-wallet tracker and the aggregate in lockstep, so the\\ninvariant `\\xce\\xa3 WalletNetDeployed == deployed_assets` is preserved.\\n\\nRemaining legitimate uses:\\n- Recovery from a storage anomaly where the invariant has already\\nbroken and the aggregate needs a correction that cannot be\\nattributed to specific wallets.\\n- Temporary aggregate correction during a multi-step migration that\\nwill restore the invariant in a follow-up transaction.\\n\\n**Warning**: this function can break the wallet-tracker sum\\ninvariant by design. Off-chain monitoring should compare\\n`get_",
+      "name": "update_deployed_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reconcile a single Wallet subaccount's attributed value. Atomically\\nmoves both the per-wallet tracker (to `new_tracked`) and the\\naggregate `deployed_assets` counter (by the same delta), so\\nsubsequent `withdraw_from_subaccount` calls can pull the full value\\nwithout tripping the per-wallet over-pull check.\\n\\nUse cases:\\n- Recognising a gain (wallet appreciated): `new_tracked > current`.\\n- Recognising a loss (wallet depreciated): `new_tracked < current`.\\n- Recognising external dust the operator wants to recover:\\n`new_tracked = current + dust_amount`, then pull.\\n\\nSubject to the same AUM rate limits and pause semantics as\\n`update_deployed_assets`: increases are rejected while paused;\\ndecreases remain allowed for loss recovery.\\n\\nFor aggregate-only reconciliation (e.g. strategy external AUM not\\nattributable to a specific wallet) use `update_deployed_assets`\\ninstead.",
+      "name": "update_wallet_deployed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_tracked",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Length of the cumulative AUM rate-limit window in seconds\\n(default: 86,400 = 24 hours).",
+      "name": "get_aum_window_duration",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the per-wallet net-deployed tracker for a subaccount.\\n\\nReturns 0 for unregistered addresses, for Strategy subaccounts, and\\nfor Wallet subaccounts that have never been deposited to. Useful for\\nadmins verifying the result of `seed_wallet_net_deployed` and for\\nmonitoring dashboards.",
+      "name": "get_wallet_net_deployed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Maximum cumulative AUM decrease within a window, in basis points\\n(default: 500 = 5%).",
+      "name": "get_aum_window_dec_limit",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Maximum cumulative AUM increase within a window, in basis points\\n(default: 1,000 = 10%).",
+      "name": "get_aum_window_inc_limit",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Per-wallet emergency escape hatch for the `WalletNetDeployed`\\ntracker. **Restricted to emergency storage corrections** after F4:\\nthe standard operator path for gain/loss recognition and dust\\nattribution is `update_wallet_deployed` (single wallet) or\\n`update_wallet_deployed_batch` (multiple wallets atomically),\\nwhich move the per-wallet tracker and the aggregate\\n`deployed_assets` in lockstep and preserve the invariant\\n`\\xce\\xa3 WalletNetDeployed == deployed_assets`.\\n\\nRemaining legitimate uses:\\n- Backfilling the tracker for a wallet registered before per-wallet\\naccounting was introduced (one-shot upgrade migration).\\n- Correcting a divergence between `get_deployed_assets()` and\\n`get_wallet_deployed_assets()` after a storage anomaly or a prior\\n`update_deployed_assets` correction that left wallet attribution\\nout of sync.\\n\\n**Warning**: this function can break the wallet-tracker sum\\ninvariant by design. It does NOT touch the aggregate\\n`deployed_assets` \\xe2\\x80\\x94 use it only when the value being attributed is\\nalready recorded in",
+      "name": "seed_wallet_net_deployed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Request `amount` of the underlying token back from `subaccount`.\\n\\nFor `Strategy` subaccounts, calls `IStrategy::withdraw` (push model).\\nStrategy balances are queried live via `get_balance()`, so\\n`deployed_assets` is NOT decremented.\\n\\nFor `Wallet` subaccounts, pulls tokens via `transfer_from` using a\\npre-approved SEP-41 allowance. The wallet owner (EOA or contract) must\\nhave called `token.approve(wallet, vault, amount, ledger)` beforehand.\\n`deployed_assets` IS decremented for wallets.\\n\\nMeasures actual tokens received via balance-differencing. No AUM rate\\nlimit is applied \\xe2\\x80\\x94 subaccount transfers don't change total_assets.\\n\\nRequires operator authorization, a non-paused vault, and a whitelisted\\nsubaccount.",
+      "name": "withdraw_from_subaccount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sum of `WalletNetDeployed` across all Wallet-type subaccounts\\ncurrently in the whitelist.\\n\\nExposes the \\xce\\xa3 side of the F4 invariant\\n`\\xce\\xa3 WalletNetDeployed == deployed_assets` for off-chain monitoring.\\nUnder normal operation this returns the same value as\\n`get_deployed_assets()`. Divergence indicates one of the\\ndocumented escape hatches (`update_deployed_assets` or\\n`seed_wallet_net_deployed`) has been used; the gap represents\\naggregate value not currently attributed to any wallet.\\n\\nBounded cost: the subaccount list is capped at `MAX_SUBACCOUNTS`\\n(= 10), so this iterates at most ten map lookups.",
+      "name": "get_wallet_deployed_assets",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically reconcile the aggregate `deployed_assets` counter AND\\nremove a Wallet subaccount in a single transaction.\\n\\nCloses the pricing window between the two-step sequence:\\n1. `update_deployed_assets(operator, new_total)`\\n2. `remove_subaccount(admin, wallet)`\\n\\nBetween those transactions NAV is wrong in one direction or the\\nother (write-down first: NAV under-reports while tokens still sit\\nat the wallet \\xe2\\x86\\x92 deposits mint too many shares; remove first: NAV\\nover-reports against stranded value \\xe2\\x86\\x92 redeems overpay). Combining\\nboth into one call eliminates the window.\\n\\nRequires both `admin` (whitelist authority) and `operator` (AUM\\nauthority) to authorise \\xe2\\x80\\x94 the combined function unions their\\npermissions without granting either role unilateral access to the\\nother's powers. When a single entity holds both keys (documented\\nsupported configuration on `set_operator`), the operator's\\n`require_auth` is skipped to avoid Soroban's `Auth, ExistingValue`\\nerror that otherwise fires on a repeated auth of the same address.\\nSu",
+      "name": "remove_wallet_and_reconcile",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subaccount",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_deployed_total",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reconcile multiple Wallet subaccounts atomically in a single call.\\nIntroduced as the F4 primary operator path for wallet-attributed\\nreconciliation: replaces ad-hoc sequences of `update_wallet_deployed`\\ncalls with one transaction that moves the aggregate exactly once\\n(so the AUM rate limit is applied to the net delta rather than to\\neach intermediate step).\\n\\nEach `(subaccount, new_tracked)` entry is validated independently\\n(whitelisted, Wallet type, non-negative tracker). The net delta\\n`\\xce\\xa3(new_tracked - old_tracked)` is applied to `deployed_assets` via\\nthe shared `apply_deployed_assets_change` helper, so the AUM rate\\nlimit is measured against the net (a batch with +100k on wallet A\\nand -100k on wallet B passes even when each individual step would\\nexceed the limit). Pause is enforced **per entry**: while paused,\\nany positive entry delta panics with `VaultPaused` regardless of\\nthe batch's net \\xe2\\x80\\x94 this matches `update_wallet_deployed` (where\\nper-entry and net deltas coincide) and prevents a paused vault\\nfrom accep",
+      "name": "update_wallet_deployed_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "updates",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "address",
+                    "i128"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableError",
+      "cases": [
+        {
+          "doc": "When migration is attempted but not allowed due to upgrade state.",
+          "name": "MigrationNotAllowed",
+          "value": 1100
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Migrating"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the merkle root is set.",
+      "lib": "",
+      "name": "SetRoot",
+      "prefix_topics": [
+        "set_root"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an index is claimed.",
+      "lib": "",
+      "name": "SetClaimed",
+      "prefix_topics": [
+        "set_claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "val",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MerkleDistributorError",
+      "cases": [
+        {
+          "doc": "The merkle root is not set.",
+          "name": "RootNotSet",
+          "value": 1300
+        },
+        {
+          "doc": "The provided index was already claimed.",
+          "name": "IndexAlreadyClaimed",
+          "value": 1301
+        },
+        {
+          "doc": "The proof is invalid.",
+          "name": "InvalidProof",
+          "value": 1302
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `MerkleDistributor`",
+      "lib": "",
+      "name": "MerkleDistributorStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The Merkle root of the distribution tree",
+            "name": "Root"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps an index to its claimed status",
+            "name": "Claimed",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Rounding direction for division operations",
+      "lib": "",
+      "name": "Rounding",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Round toward negative infinity (down)",
+            "name": "Floor"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Round toward positive infinity (up)",
+            "name": "Ceil"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Round toward zero (truncation)",
+            "name": "Truncate"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SorobanFixedPointError",
+      "cases": [
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "Overflow",
+          "value": 1500
+        },
+        {
+          "doc": "Division by zero",
+          "name": "DivisionByZero",
+          "value": 1501
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CryptoError",
+      "cases": [
+        {
+          "doc": "The merkle proof length is out of bounds.",
+          "name": "MerkleProofOutOfBounds",
+          "value": 1400
+        },
+        {
+          "doc": "The index of the leaf is out of bounds.",
+          "name": "MerkleIndexOutOfBounds",
+          "value": 1401
+        },
+        {
+          "doc": "No data in hasher state.",
+          "name": "HasherEmptyState",
+          "value": 1402
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is paused.",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is unpaused.",
+      "lib": "",
+      "name": "Unpaused",
+      "prefix_topics": [
+        "unpaused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausableError",
+      "cases": [
+        {
+          "doc": "The operation failed because the contract is paused.",
+          "name": "EnforcedPause",
+          "value": 1000
+        },
+        {
+          "doc": "The operation failed because the contract is not paused.",
+          "name": "ExpectedPause",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for the pausable state",
+      "lib": "",
+      "name": "PausableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Indicates whether the contract is in paused state.",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur in votes operations.",
+      "lib": "",
+      "name": "VotesError",
+      "cases": [
+        {
+          "doc": "The timepoint is in the future",
+          "name": "FutureLookup",
+          "value": 4100
+        },
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "MathOverflow",
+          "value": 4101
+        },
+        {
+          "doc": "Attempting to transfer more voting units than available",
+          "name": "InsufficientVotingUnits",
+          "value": 4102
+        },
+        {
+          "doc": "Attempting to delegate to the same delegate that is already set",
+          "name": "SameDelegate",
+          "value": 4103
+        },
+        {
+          "doc": "A checkpoint that was expected to exist was not found in storage",
+          "name": "CheckpointNotFound",
+          "value": 4104
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an account changes its delegate.",
+      "lib": "",
+      "name": "DelegateChanged",
+      "prefix_topics": [
+        "delegate_changed"
+      ],
+      "params": [
+        {
+          "doc": "The account that changed its delegate",
+          "name": "delegator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "The previous delegate (if any)",
+          "name": "from_delegate",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "The new delegate",
+          "name": "to_delegate",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a delegate's voting power changes.",
+      "lib": "",
+      "name": "DelegateVotesChanged",
+      "prefix_topics": [
+        "delegate_votes_changed"
+      ],
+      "params": [
+        {
+          "doc": "The delegate whose voting power changed",
+          "name": "delegate",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "The previous voting power",
+          "name": "previous_votes",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "The new voting power",
+          "name": "new_votes",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A checkpoint recording voting power at a specific timepoint.",
+      "lib": "",
+      "name": "Checkpoint",
+      "fields": [
+        {
+          "doc": "The timepoint when this checkpoint was created",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "The voting power at this timepoint",
+          "name": "votes",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Selects the checkpoint timeline to operate on.\\n\\nEach variant maps to a different set of storage keys so that\\nper-account voting-power history and aggregate total supply history\\nare kept separate.",
+      "lib": "",
+      "name": "CheckpointType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The global total supply checkpoint.",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A per-account (delegate) voting-power checkpoint.",
+            "name": "Account",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the votes module.\\n\\nOnly delegated voting power counts as votes (i.e., only delegatees can\\nvote), so the storage design tracks delegates and their checkpointed\\nvoting power separately from the raw voting units held by each account.",
+      "lib": "",
+      "name": "VotesStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps account to its delegate",
+            "name": "Delegatee",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Number of checkpoints for a delegate",
+            "name": "NumCheckpoints",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Individual checkpoint for a delegate at index",
+            "name": "DelegateCheckpoint",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of total supply checkpoints",
+            "name": "NumTotalSupplyCheckpoints"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Individual total supply checkpoint at index",
+            "name": "TotalSupplyCheckpoint",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Voting units held by an account (tracked separately from delegation)",
+            "name": "VotingUnits",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur in timelock operations.",
+      "lib": "",
+      "name": "TimelockError",
+      "cases": [
+        {
+          "doc": "The operation is already scheduled",
+          "name": "OperationAlreadyScheduled",
+          "value": 4000
+        },
+        {
+          "doc": "The delay is less than the minimum required delay",
+          "name": "InsufficientDelay",
+          "value": 4001
+        },
+        {
+          "doc": "The operation is not in the expected state",
+          "name": "InvalidOperationState",
+          "value": 4002
+        },
+        {
+          "doc": "A predecessor operation has not been executed yet",
+          "name": "UnexecutedPredecessor",
+          "value": 4003
+        },
+        {
+          "doc": "The caller is not authorized to perform this action",
+          "name": "Unauthorized",
+          "value": 4004
+        },
+        {
+          "doc": "The minimum delay has not been set",
+          "name": "MinDelayNotSet",
+          "value": 4005
+        },
+        {
+          "doc": "The operation has not been scheduled",
+          "name": "OperationNotScheduled",
+          "value": 4006
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the minimum delay is changed.",
+      "lib": "",
+      "name": "MinDelayChanged",
+      "prefix_topics": [
+        "min_delay_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_delay",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_delay",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an operation is executed.",
+      "lib": "",
+      "name": "OperationExecuted",
+      "prefix_topics": [
+        "operation_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "predecessor",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an operation is cancelled.",
+      "lib": "",
+      "name": "OperationCancelled",
+      "prefix_topics": [
+        "operation_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an operation is scheduled.",
+      "lib": "",
+      "name": "OperationScheduled",
+      "prefix_topics": [
+        "operation_scheduled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "predecessor",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a operation to be executed by the timelock.\\n\\nAn operation encapsulates all the information needed to invoke a function\\non a target contract after the timelock delay has passed.",
+      "lib": "",
+      "name": "Operation",
+      "fields": [
+        {
+          "doc": "The serialized arguments to pass to the function",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "The function name to invoke on the target contract",
+          "name": "function",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Hash of a predecessor operation that must be executed first.\\nUse BytesN::<32>::from_array(&[0u8; 32]) for no predecessor.",
+          "name": "predecessor",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "A salt value for operation uniqueness.\\nAllows scheduling the same operation multiple times with different IDs.",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "The contract address to call",
+          "name": "target",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "The state of an operation in the timelock system.",
+      "lib": "",
+      "name": "OperationState",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Operation has not been scheduled",
+            "name": "Unset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Operation is scheduled but the delay period has not passed",
+            "name": "Waiting"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Operation is ready to be executed (delay has passed)",
+            "name": "Ready"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Operation has been executed",
+            "name": "Done"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the timelock module.",
+      "lib": "",
+      "name": "TimelockStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Minimum delay in seconds for operations",
+            "name": "MinDelay"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps operation ID to the timestamp when it will be in a\\n[`OperationState::Ready`] state (Note: value is 0 for\\n[`OperationState::Unset`], 1 for [`OperationState:Done`]).",
+            "name": "Timestamp",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnerTokensKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the enumerable extension of\\n`NonFungibleToken`",
+      "lib": "",
+      "name": "NFTEnumerableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "OwnerTokens",
+            "type_": [
+              {
+                "udt": {
+                  "name": "OwnerTokensKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "OwnerTokensIndex",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "GlobalTokens",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "GlobalTokensIndex",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when consecutive tokens are minted.",
+      "lib": "",
+      "name": "ConsecutiveMint",
+      "prefix_topics": [
+        "consecutive_mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from_token_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to_token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the consecutive extension of\\n`NonFungibleToken`",
+      "lib": "",
+      "name": "NFTConsecutiveStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Approval",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Owner",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "OwnershipBucket",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "BurnedToken",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is burned.",
+      "lib": "",
+      "name": "Burn",
+      "prefix_topics": [
+        "burn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when token royalty is set.",
+      "lib": "",
+      "name": "SetTokenRoyalty",
+      "prefix_topics": [
+        "set_token_royalty"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "basis_points",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when default royalty is set.",
+      "lib": "",
+      "name": "SetDefaultRoyalty",
+      "prefix_topics": [
+        "set_default_royalty"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "basis_points",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when token royalty is removed.",
+      "lib": "",
+      "name": "RemoveTokenRoyalty",
+      "prefix_topics": [
+        "remove_token_royalty"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage container for royalty information",
+      "lib": "",
+      "name": "RoyaltyInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "basis_points",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for royalty data",
+      "lib": "",
+      "name": "NFTRoyaltiesStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DefaultRoyalty"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TokenRoyalty",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is minted.",
+      "lib": "",
+      "name": "Mint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an approval is granted.",
+      "lib": "",
+      "name": "Approve",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "approver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is transferred.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when approval for all tokens is granted.",
+      "lib": "",
+      "name": "ApproveForAll",
+      "prefix_topics": [
+        "approve_for_all"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NonFungibleTokenError",
+      "cases": [
+        {
+          "doc": "Indicates a non-existent `token_id`.",
+          "name": "NonExistentToken",
+          "value": 200
+        },
+        {
+          "doc": "Indicates an error related to the ownership over a particular token.\\nUsed in transfers.",
+          "name": "IncorrectOwner",
+          "value": 201
+        },
+        {
+          "doc": "Indicates a failure with the `operator`s approval. Used in transfers.",
+          "name": "InsufficientApproval",
+          "value": 202
+        },
+        {
+          "doc": "Indicates a failure with the `approver` of a token to be approved. Used\\nin approvals.",
+          "name": "InvalidApprover",
+          "value": 203
+        },
+        {
+          "doc": "Indicates an invalid value for `live_until_ledger` when setting\\napprovals.",
+          "name": "InvalidLiveUntilLedger",
+          "value": 204
+        },
+        {
+          "doc": "Indicates overflow when adding two values",
+          "name": "MathOverflow",
+          "value": 205
+        },
+        {
+          "doc": "Indicates all possible `token_id`s are already in use.",
+          "name": "TokenIDsAreDepleted",
+          "value": 206
+        },
+        {
+          "doc": "Indicates an invalid amount to batch mint in `consecutive` extension.",
+          "name": "InvalidAmount",
+          "value": 207
+        },
+        {
+          "doc": "Indicates the token does not exist in owner's list.",
+          "name": "TokenNotFoundInOwnerList",
+          "value": 208
+        },
+        {
+          "doc": "Indicates the token does not exist in global list.",
+          "name": "TokenNotFoundInGlobalList",
+          "value": 209
+        },
+        {
+          "doc": "Indicates access to unset metadata.",
+          "name": "UnsetMetadata",
+          "value": 210
+        },
+        {
+          "doc": "Indicates the length of the base URI exceeds the maximum allowed.",
+          "name": "BaseUriMaxLenExceeded",
+          "value": 211
+        },
+        {
+          "doc": "Indicates the royalty amount is higher than 10_000 (100%) basis points.",
+          "name": "InvalidRoyaltyAmount",
+          "value": 212
+        },
+        {
+          "doc": "Indicates the length of the name exceeds the maximum allowed.",
+          "name": "NameMaxLenExceeded",
+          "value": 213
+        },
+        {
+          "doc": "Indicates the length of the symbol exceeds the maximum allowed.",
+          "name": "SymbolMaxLenExceeded",
+          "value": 214
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NFTSequentialStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TokenIdCounter"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage container for token metadata",
+      "lib": "",
+      "name": "Metadata",
+      "fields": [
+        {
+          "doc": "",
+          "name": "base_uri",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage container for the token for which an approval is granted\\nand the ledger number at which this approval expires.",
+      "lib": "",
+      "name": "ApprovalData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `NonFungibleToken`",
+      "lib": "",
+      "name": "NFTStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Owner",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Approval",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ApprovalForAll",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Metadata"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a module is added to compliance.",
+      "lib": "",
+      "name": "ModuleAdded",
+      "prefix_topics": [
+        "module_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hook",
+          "type_": {
+            "udt": {
+              "name": "ComplianceHook"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "module",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a module is removed from compliance.",
+      "lib": "",
+      "name": "ModuleRemoved",
+      "prefix_topics": [
+        "module_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hook",
+          "type_": {
+            "udt": {
+              "name": "ComplianceHook"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "module",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Hook types for modular compliance system.\\n\\nEach hook type represents a specific event or validation point\\nwhere compliance modules can be executed.",
+      "lib": "",
+      "name": "ComplianceHook",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Called after tokens are successfully transferred from one wallet to\\nanother. Modules registered for this hook can update their state\\nbased on transfer events.",
+            "name": "Transferred"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Called after tokens are successfully created/minted to a wallet.\\nModules registered for this hook can update their state based on minting\\nevents.",
+            "name": "Created"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Called after tokens are successfully destroyed/burned from a wallet.\\nModules registered for this hook can update their state based on burning\\nevents.",
+            "name": "Destroyed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Called during transfer validation to check if a transfer should be\\nallowed. Modules registered for this hook can implement transfer\\nrestrictions. This is a READ-only operation and should not modify\\nstate.",
+            "name": "CanTransfer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Called during mint validation to check if a mint operation should be\\nallowed. Modules registered for this hook can implement transfer\\nrestrictions. This is a READ-only operation and should not modify\\nstate.",
+            "name": "CanCreate"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ComplianceError",
+      "cases": [
+        {
+          "doc": "Indicates a module is already registered for this hook.",
+          "name": "ModuleAlreadyRegistered",
+          "value": 360
+        },
+        {
+          "doc": "Indicates a module is not registered for this hook.",
+          "name": "ModuleNotRegistered",
+          "value": 361
+        },
+        {
+          "doc": "Indicates a module bound is exceeded.",
+          "name": "ModuleBoundExceeded",
+          "value": 362
+        },
+        {
+          "doc": "Indicates a token is not bound to this compliance contract.",
+          "name": "TokenNotBound",
+          "value": 363
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the modular compliance contract.",
+      "lib": "",
+      "name": "ComplianceDataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps ComplianceHook -> `Vec<Address>` for registered modules",
+            "name": "HookModules",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ComplianceHook"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for document management operations.",
+      "lib": "",
+      "name": "DocumentError",
+      "cases": [
+        {
+          "doc": "The specified document was not found.",
+          "name": "DocumentNotFound",
+          "value": 380
+        },
+        {
+          "doc": "Maximum number of documents has been reached.",
+          "name": "MaxDocumentsReached",
+          "value": 381
+        },
+        {
+          "doc": "The URI exceeds the maximum allowed length.",
+          "name": "UriTooLong",
+          "value": 382
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a document is removed.",
+      "lib": "",
+      "name": "DocumentRemoved",
+      "prefix_topics": [
+        "document_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a document is updated (added or modified).",
+      "lib": "",
+      "name": "DocumentUpdated",
+      "prefix_topics": [
+        "document_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "document_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a document with its metadata.",
+      "lib": "",
+      "name": "Document",
+      "fields": [
+        {
+          "doc": "The hash of the document contents.",
+          "name": "document_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Timestamp when the document was last modified.",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "The URI where the document can be accessed.",
+          "name": "uri",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for document management.",
+      "lib": "",
+      "name": "DocumentStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps document name to its global index.",
+            "name": "Index",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps bucket index to a vector of (name, document) tuples.",
+            "name": "Bucket",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total count of documents.",
+            "name": "Count"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a key is allowed for a scheme and claim topic.",
+      "lib": "",
+      "name": "KeyAllowed",
+      "prefix_topics": [
+        "key_allowed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": "bytes",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "scheme",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "claim_topic",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a key is removed from a scheme and claim topic.",
+      "lib": "",
+      "name": "KeyRemoved",
+      "prefix_topics": [
+        "key_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": "bytes",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "scheme",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "claim_topic",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a claim is revoked.",
+      "lib": "",
+      "name": "ClaimRevoked",
+      "prefix_topics": [
+        "claim_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "identity",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "claim_topic",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "revoked",
+          "type_": "bool",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "claim_data",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ClaimIssuerError",
+      "cases": [
+        {
+          "doc": "Signature data length does not match the expected scheme.",
+          "name": "SigDataMismatch",
+          "value": 350
+        },
+        {
+          "doc": "The provided key is empty.",
+          "name": "KeyIsEmpty",
+          "value": 351
+        },
+        {
+          "doc": "The key is already allowed for the specified topic.",
+          "name": "KeyAlreadyAllowed",
+          "value": 352
+        },
+        {
+          "doc": "The specified key was not found in the allowed keys.",
+          "name": "KeyNotFound",
+          "value": 353
+        },
+        {
+          "doc": "The claim issuer is not allowed to sign claims about the specified\\nclaim topic.",
+          "name": "NotAllowed",
+          "value": 354
+        },
+        {
+          "doc": "Maximum limit exceeded (keys per topic or registries per key).",
+          "name": "LimitExceeded",
+          "value": 355
+        },
+        {
+          "doc": "No signing keys found for the specified claim topic.",
+          "name": "NoKeysForTopic",
+          "value": 356
+        },
+        {
+          "doc": "Invalid claim data encoding.",
+          "name": "InvalidClaimDataExpiration",
+          "value": 357
+        },
+        {
+          "doc": "Recovery of the Secp256k1 public key failed.",
+          "name": "Secp256k1RecoveryFailed",
+          "value": 358
+        },
+        {
+          "doc": "Indicates overflow when adding two values.",
+          "name": "MathOverflow",
+          "value": 359
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when claim signatures are invalidated by incrementing the\\nnonce.",
+      "lib": "",
+      "name": "SignaturesInvalidated",
+      "prefix_topics": [
+        "signatures_invalidated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "identity",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "claim_topic",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SigningKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "scheme",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Signature data for Ed25519 scheme.",
+      "lib": "",
+      "name": "Ed25519SignatureData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for claim issuer key management.",
+      "lib": "",
+      "name": "ClaimIssuerStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps Topic -> `Vec<SigningKey>`",
+            "name": "Topics",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps SigningKey -> Vec<(Topic, Registry)>",
+            "name": "Pairs",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SigningKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Tracks explicitly revoked claims by claim digest",
+            "name": "RevokedClaim",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Tracks current nonce for a specific identity and claim topics",
+            "name": "ClaimNonce",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Signature data for Secp256k1 scheme.",
+      "lib": "",
+      "name": "Secp256k1SignatureData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recovery_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Signature data for Secp256r1 scheme.",
+      "lib": "",
+      "name": "Secp256r1SignatureData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a claim is added.",
+      "lib": "",
+      "name": "ClaimAdded",
+      "prefix_topics": [
+        "claim_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claim",
+          "type_": {
+            "udt": {
+              "name": "Claim"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ClaimsError",
+      "cases": [
+        {
+          "doc": "Claim  ID does not exist.",
+          "name": "ClaimNotFound",
+          "value": 340
+        },
+        {
+          "doc": "Claim Issuer cannot validate the claim (revocation, signature mismatch,\\nunauthorized signing key, etc.)",
+          "name": "ClaimNotValid",
+          "value": 341
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a claim is changed.",
+      "lib": "",
+      "name": "ClaimChanged",
+      "prefix_topics": [
+        "claim_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claim",
+          "type_": {
+            "udt": {
+              "name": "Claim"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a claim is removed.",
+      "lib": "",
+      "name": "ClaimRemoved",
+      "prefix_topics": [
+        "claim_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claim",
+          "type_": {
+            "udt": {
+              "name": "Claim"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a claim stored on-chain.",
+      "lib": "",
+      "name": "Claim",
+      "fields": [
+        {
+          "doc": "The claim data",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "The address of the claim issuer",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "The signature scheme used",
+          "name": "scheme",
+          "type_": "u32"
+        },
+        {
+          "doc": "The cryptographic signature",
+          "name": "signature",
+          "type_": "bytes"
+        },
+        {
+          "doc": "The claim topic (numeric identifier)",
+          "name": "topic",
+          "type_": "u32"
+        },
+        {
+          "doc": "Optional URI for additional information",
+          "name": "uri",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with Identity Claims.",
+      "lib": "",
+      "name": "ClaimsStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps claim ID to claim data",
+            "name": "Claim",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps topic to vector of claim IDs",
+            "name": "ClaimsByTopic",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `RWA` token",
+      "lib": "",
+      "name": "IdentityVerifierStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Claim Topics and Issuers contract address",
+            "name": "ClaimTopicsAndIssuers"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Identity Registry Storage contract address",
+            "name": "IdentityRegistryStorage"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are burned.",
+      "lib": "",
+      "name": "Burn",
+      "prefix_topics": [
+        "burn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are minted.",
+      "lib": "",
+      "name": "Mint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RWAError",
+      "cases": [
+        {
+          "doc": "Indicates an error related to insufficient balance for the operation.",
+          "name": "InsufficientBalance",
+          "value": 300
+        },
+        {
+          "doc": "Indicates an error when an input must be >= 0.",
+          "name": "LessThanZero",
+          "value": 301
+        },
+        {
+          "doc": "Indicates the address is frozen and cannot perform operations.",
+          "name": "AddressFrozen",
+          "value": 302
+        },
+        {
+          "doc": "Indicates insufficient free tokens (due to partial freezing).",
+          "name": "InsufficientFreeTokens",
+          "value": 303
+        },
+        {
+          "doc": "Indicates an identity cannot be verified.",
+          "name": "IdentityVerificationFailed",
+          "value": 304
+        },
+        {
+          "doc": "Indicates the transfer does not comply with the compliance rules.",
+          "name": "TransferNotCompliant",
+          "value": 305
+        },
+        {
+          "doc": "Indicates the mint operation does not comply with the compliance rules.",
+          "name": "MintNotCompliant",
+          "value": 306
+        },
+        {
+          "doc": "Indicates the compliance contract is not set.",
+          "name": "ComplianceNotSet",
+          "value": 307
+        },
+        {
+          "doc": "Indicates the onchain ID is not set.",
+          "name": "OnchainIdNotSet",
+          "value": 308
+        },
+        {
+          "doc": "Indicates the version is not set.",
+          "name": "VersionNotSet",
+          "value": 309
+        },
+        {
+          "doc": "Indicates the claim topics and issuers contract is not set.",
+          "name": "ClaimTopicsAndIssuersNotSet",
+          "value": 310
+        },
+        {
+          "doc": "Indicates the identity registry storage contract is not set.",
+          "name": "IdentityRegistryStorageNotSet",
+          "value": 311
+        },
+        {
+          "doc": "Indicates the identity verifier contract is not set.",
+          "name": "IdentityVerifierNotSet",
+          "value": 312
+        },
+        {
+          "doc": "Indicates the old account and new account have different identities.",
+          "name": "IdentityMismatch",
+          "value": 313
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a claim topic is added.",
+      "lib": "",
+      "name": "ClaimTopicAdded",
+      "prefix_topics": [
+        "claim_topic_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claim_topic",
+          "type_": "u32",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a claim topic is removed.",
+      "lib": "",
+      "name": "ClaimTopicRemoved",
+      "prefix_topics": [
+        "claim_topic_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claim_topic",
+          "type_": "u32",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a trusted issuer is added.",
+      "lib": "",
+      "name": "TrustedIssuerAdded",
+      "prefix_topics": [
+        "trusted_issuer_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "trusted_issuer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "claim_topics",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when issuer topics are updated.",
+      "lib": "",
+      "name": "IssuerTopicsUpdated",
+      "prefix_topics": [
+        "issuer_topics_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "trusted_issuer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "claim_topics",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a trusted issuer is removed.",
+      "lib": "",
+      "name": "TrustedIssuerRemoved",
+      "prefix_topics": [
+        "trusted_issuer_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "trusted_issuer",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ClaimTopicsAndIssuersError",
+      "cases": [
+        {
+          "doc": "Indicates a non-existent claim topic.",
+          "name": "ClaimTopicDoesNotExist",
+          "value": 370
+        },
+        {
+          "doc": "Indicates a non-existent trusted issuer.",
+          "name": "IssuerDoesNotExist",
+          "value": 371
+        },
+        {
+          "doc": "Indicates a claim topic already exists.",
+          "name": "ClaimTopicAlreadyExists",
+          "value": 372
+        },
+        {
+          "doc": "Indicates a trusted issuer already exists.",
+          "name": "IssuerAlreadyExists",
+          "value": 373
+        },
+        {
+          "doc": "Indicates max claim topics limit is reached.",
+          "name": "MaxClaimTopicsLimitReached",
+          "value": 374
+        },
+        {
+          "doc": "Indicates max trusted issuers limit is reached.",
+          "name": "MaxIssuersLimitReached",
+          "value": 375
+        },
+        {
+          "doc": "Indicates claim topics set provided for the issuer cannot be empty.",
+          "name": "ClaimTopicsSetCannotBeEmpty",
+          "value": 376
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the claim topics and issuers\\nextension",
+      "lib": "",
+      "name": "ClaimTopicsAndIssuersStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Stores the claim topics registry",
+            "name": "ClaimTopics"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Stores the trusted issuers registry",
+            "name": "TrustedIssuers"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stores the claim topics allowed for a specific trusted issuer",
+            "name": "IssuerClaimTopics",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stores the trusted issuers allowed for a specific claim topic",
+            "name": "ClaimTopicIssuers",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the Identity Registry Storage system.",
+      "lib": "",
+      "name": "IRSError",
+      "cases": [
+        {
+          "doc": "An identity already exists for the given account.",
+          "name": "IdentityOverwrite",
+          "value": 320
+        },
+        {
+          "doc": "No identity found for the given account.",
+          "name": "IdentityNotFound",
+          "value": 321
+        },
+        {
+          "doc": "Country data not found at the specified index.",
+          "name": "CountryDataNotFound",
+          "value": 322
+        },
+        {
+          "doc": "Identity can't be with empty country data list.",
+          "name": "EmptyCountryList",
+          "value": 323
+        },
+        {
+          "doc": "The maximum number of country entries has been reached.",
+          "name": "MaxCountryEntriesReached",
+          "value": 324
+        },
+        {
+          "doc": "Account has been recovered and cannot be used.",
+          "name": "AccountRecovered",
+          "value": 325
+        },
+        {
+          "doc": "Metadata has too many entries (exceeds MAX_METADATA_ENTRIES).",
+          "name": "MetadataTooManyEntries",
+          "value": 326
+        },
+        {
+          "doc": "Metadata string value is too long (exceeds MAX_METADATA_STRING_LEN).",
+          "name": "MetadataStringTooLong",
+          "value": 327
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an identity is stored for an account.",
+      "lib": "",
+      "name": "IdentityStored",
+      "prefix_topics": [
+        "identity_stored"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "identity",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted for country data operations.",
+      "lib": "",
+      "name": "CountryDataAdded",
+      "prefix_topics": [
+        "country_data_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "country_data",
+          "type_": {
+            "udt": {
+              "name": "CountryData"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an identity is modified for an account.",
+      "lib": "",
+      "name": "IdentityModified",
+      "prefix_topics": [
+        "identity_modified"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_identity",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_identity",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an identity is removed from an account.",
+      "lib": "",
+      "name": "IdentityUnstored",
+      "prefix_topics": [
+        "identity_unstored"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "identity",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an identity is recovered for a new account.",
+      "lib": "",
+      "name": "IdentityRecovered",
+      "prefix_topics": [
+        "identity_recovered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CountryDataRemoved",
+      "prefix_topics": [
+        "country_data_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "country_data",
+          "type_": {
+            "udt": {
+              "name": "CountryData"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CountryDataModified",
+      "prefix_topics": [
+        "country_data_modified"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "country_data",
+          "type_": {
+            "udt": {
+              "name": "CountryData"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A country data containing the country relationship and optional metadata",
+      "lib": "",
+      "name": "CountryData",
+      "fields": [
+        {
+          "doc": "Type of country relationship",
+          "name": "country",
+          "type_": {
+            "udt": {
+              "name": "CountryRelation"
+            }
+          }
+        },
+        {
+          "doc": "Optional metadata (e.g., visa type, validity period)",
+          "name": "metadata",
+          "type_": {
+            "option": {
+              "value_type": {
+                "map": {
+                  "key_type": "symbol",
+                  "value_type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents the type of identity holder",
+      "lib": "",
+      "name": "IdentityType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Individual"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Organization"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with Identity Storage Registry.",
+      "lib": "",
+      "name": "IRSStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps account address to identity address",
+            "name": "Identity",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps an account to its complete identity profile",
+            "name": "IdentityProfile",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps old account to new account after recovery",
+            "name": "RecoveredTo",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Unified country relationship that can be either individual or organizational",
+      "lib": "",
+      "name": "CountryRelation",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Individual",
+            "type_": [
+              {
+                "udt": {
+                  "name": "IndividualCountryRelation"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Organization",
+            "type_": [
+              {
+                "udt": {
+                  "name": "OrganizationCountryRelation"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Complete identity profile containing identity type and country data",
+      "lib": "",
+      "name": "IdentityProfile",
+      "fields": [
+        {
+          "doc": "",
+          "name": "countries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "CountryData"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "identity_type",
+          "type_": {
+            "udt": {
+              "name": "IdentityType"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents different types of country relationships for individuals\\nISO 3166-1 numeric country code",
+      "lib": "",
+      "name": "IndividualCountryRelation",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Country of residence",
+            "name": "Residence",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Country of citizenship",
+            "name": "Citizenship",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Country where funds originate",
+            "name": "SourceOfFunds",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Tax residency (can differ from residence)",
+            "name": "TaxResidency",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Custom country type for future extensions",
+            "name": "Custom",
+            "type_": [
+              "symbol",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents different types of country relationships for organizations",
+      "lib": "",
+      "name": "OrganizationCountryRelation",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Country of incorporation/registration",
+            "name": "Incorporation",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Countries where organization operates",
+            "name": "OperatingJurisdiction",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Tax jurisdiction",
+            "name": "TaxJurisdiction",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Country where funds originate",
+            "name": "SourceOfFunds",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Custom country type for future extensions",
+            "name": "Custom",
+            "type_": [
+              "symbol",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are frozen.",
+      "lib": "",
+      "name": "TokensFrozen",
+      "prefix_topics": [
+        "tokens_frozen"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user_address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an address is frozen or unfrozen.",
+      "lib": "",
+      "name": "AddressFrozen",
+      "prefix_topics": [
+        "address_frozen"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user_address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "is_frozen",
+          "type_": "bool",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when compliance contract is set.",
+      "lib": "",
+      "name": "ComplianceSet",
+      "prefix_topics": [
+        "compliance_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "compliance",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are unfrozen.",
+      "lib": "",
+      "name": "TokensUnfrozen",
+      "prefix_topics": [
+        "tokens_unfrozen"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user_address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a recovery is successful.",
+      "lib": "",
+      "name": "RecoverySuccess",
+      "prefix_topics": [
+        "recovery_success"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when identity verifier contract is set.",
+      "lib": "",
+      "name": "IdentityVerifierSet",
+      "prefix_topics": [
+        "identity_verifier_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "identity_verifier",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when token onchain ID is updated.",
+      "lib": "",
+      "name": "TokenOnchainIdUpdated",
+      "prefix_topics": [
+        "token_onchain_id_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "onchain_id",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when claim topics and issuers contract is set.",
+      "lib": "",
+      "name": "ClaimTopicsAndIssuersSet",
+      "prefix_topics": [
+        "claim_topics_and_issuers_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claim_topics_and_issuers",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is bound to the contract.",
+      "lib": "",
+      "name": "TokenBound",
+      "prefix_topics": [
+        "token_bound"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is unbound from the contract.",
+      "lib": "",
+      "name": "TokenUnbound",
+      "prefix_topics": [
+        "token_unbound"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the Token Binder system.",
+      "lib": "",
+      "name": "TokenBinderError",
+      "cases": [
+        {
+          "doc": "The specified token was not found in the bound tokens list.",
+          "name": "TokenNotFound",
+          "value": 330
+        },
+        {
+          "doc": "Attempted to bind a token that is already bound.",
+          "name": "TokenAlreadyBound",
+          "value": 331
+        },
+        {
+          "doc": "Total token capacity (MAX_TOKENS) has been reached.",
+          "name": "MaxTokensReached",
+          "value": 332
+        },
+        {
+          "doc": "Batch bind size exceeded.",
+          "name": "BindBatchTooLarge",
+          "value": 333
+        },
+        {
+          "doc": "The batch contains duplicates.",
+          "name": "BindBatchDuplicates",
+          "value": 334
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the token binder system.\\n\\n- Tokens are stored in buckets of 100 addresses each\\n- Each bucket is a `Vec<Address>` stored under its bucket index\\n- Total count is tracked separately\\n- When a token is unbound, the last token is moved to fill the gap\\n(swap-remove pattern)",
+      "lib": "",
+      "name": "TokenBinderStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps bucket index to a vector of token addresses (max 100 per bucket)",
+            "name": "TokenBucket",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total count of bound tokens",
+            "name": "TotalCount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `RWA` token",
+      "lib": "",
+      "name": "RWAStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Frozen status of an address (true = frozen, false = not frozen)",
+            "name": "AddressFrozen",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Amount of tokens frozen for a specific address",
+            "name": "FrozenTokens",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Compliance contract address",
+            "name": "Compliance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "OnchainID contract address",
+            "name": "OnchainId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Version of the token",
+            "name": "Version"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Identity Verifier contract address",
+            "name": "IdentityVerifier"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when underlying assets are deposited into the vault.",
+      "lib": "",
+      "name": "Deposit",
+      "prefix_topics": [
+        "deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when shares are exchanged back for underlying assets.",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultTokenError",
+      "cases": [
+        {
+          "doc": "Indicates access to uninitialized vault asset address.",
+          "name": "VaultAssetAddressNotSet",
+          "value": 400
+        },
+        {
+          "doc": "Indicates that vault asset address is already set.",
+          "name": "VaultAssetAddressAlreadySet",
+          "value": 401
+        },
+        {
+          "doc": "Indicates that vault virtual decimals offset is already set.",
+          "name": "VaultVirtualDecimalsOffsetAlreadySet",
+          "value": 402
+        },
+        {
+          "doc": "Indicates the amount is not a valid vault assets value.",
+          "name": "VaultInvalidAssetsAmount",
+          "value": 403
+        },
+        {
+          "doc": "Indicates the amount is not a valid vault shares value.",
+          "name": "VaultInvalidSharesAmount",
+          "value": 404
+        },
+        {
+          "doc": "Attempted to deposit more assets than the max amount for address.",
+          "name": "VaultExceededMaxDeposit",
+          "value": 405
+        },
+        {
+          "doc": "Attempted to mint more shares than the max amount for address.",
+          "name": "VaultExceededMaxMint",
+          "value": 406
+        },
+        {
+          "doc": "Attempted to withdraw more assets than the max amount for address.",
+          "name": "VaultExceededMaxWithdraw",
+          "value": 407
+        },
+        {
+          "doc": "Attempted to redeem more shares than the max amount for address.",
+          "name": "VaultExceededMaxRedeem",
+          "value": 408
+        },
+        {
+          "doc": "Maximum number of decimals offset exceeded",
+          "name": "VaultMaxDecimalsOffsetExceeded",
+          "value": 409
+        },
+        {
+          "doc": "Indicates overflow due to mathematical operations",
+          "name": "MathOverflow",
+          "value": 410
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the vault extension",
+      "lib": "",
+      "name": "VaultStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Stores the address of the vault's underlying asset",
+            "name": "AssetAddress"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Stores the virtual decimals offset of the vault",
+            "name": "VirtualDecimalsOffset"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for the cap value",
+      "lib": "",
+      "name": "CapStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Cap"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a user is allowed to transfer tokens.",
+      "lib": "",
+      "name": "UserAllowed",
+      "prefix_topics": [
+        "user_allowed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a user is disallowed from transferring tokens.",
+      "lib": "",
+      "name": "UserDisallowed",
+      "prefix_topics": [
+        "user_disallowed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the allowlist extension",
+      "lib": "",
+      "name": "AllowListStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Stores the allowed status of an account",
+            "name": "Allowed",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a user is blocked from transferring tokens.",
+      "lib": "",
+      "name": "UserBlocked",
+      "prefix_topics": [
+        "user_blocked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a user is unblocked and allowed to transfer tokens.",
+      "lib": "",
+      "name": "UserUnblocked",
+      "prefix_topics": [
+        "user_unblocked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the blocklist extension",
+      "lib": "",
+      "name": "BlockListStorageKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Stores the blocked status of an account",
+            "name": "Blocked",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an allowance is approved.",
+      "lib": "",
+      "name": "Approve",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred between addresses.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FungibleTokenError",
+      "cases": [
+        {
+          "doc": "Indicates an error related to the current balance of account from which\\ntokens are expected to be transferred.",
+          "name": "InsufficientBalance",
+          "value": 100
+        },
+        {
+          "doc": "Indicates a failure with the allowance mechanism when a given spender\\ndoesn't have enough allowance.",
+          "name": "InsufficientAllowance",
+          "value": 101
+        },
+        {
+          "doc": "Indicates an invalid value for `live_until_ledger` when setting an\\nallowance.",
+          "name": "InvalidLiveUntilLedger",
+          "value": 102
+        },
+        {
+          "doc": "Indicates an error when an input that must be >= 0",
+          "name": "LessThanZero",
+          "value": 103
+        },
+        {
+          "doc": "Indicates overflow when adding two values",
+          "name": "MathOverflow",
+          "value": 104
+        },
+        {
+          "doc": "Indicates access to uninitialized metadata",
+          "name": "UnsetMetadata",
+          "value": 105
+        },
+        {
+          "doc": "Indicates that the operation would have caused `total_supply` to exceed\\nthe `cap`.",
+          "name": "ExceededCap",
+          "value": 106
+        },
+        {
+          "doc": "Indicates the supplied `cap` is not a valid cap value.",
+          "name": "InvalidCap",
+          "value": 107
+        },
+        {
+          "doc": "Indicates the Cap was not set.",
+          "name": "CapNotSet",
+          "value": 108
+        },
+        {
+          "doc": "Indicates the SAC address was not set.",
+          "name": "SACNotSet",
+          "value": 109
+        },
+        {
+          "doc": "Indicates a SAC address different than expected.",
+          "name": "SACAddressMismatch",
+          "value": 110
+        },
+        {
+          "doc": "Indicates a missing function parameter in the SAC contract context.",
+          "name": "SACMissingFnParam",
+          "value": 111
+        },
+        {
+          "doc": "Indicates an invalid function parameter in the SAC contract context.",
+          "name": "SACInvalidFnParam",
+          "value": 112
+        },
+        {
+          "doc": "The user is not allowed to perform this operation",
+          "name": "UserNotAllowed",
+          "value": 113
+        },
+        {
+          "doc": "The user is blocked and cannot perform this operation",
+          "name": "UserBlocked",
+          "value": 114
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for accessing the SAC address",
+      "lib": "",
+      "name": "SACAdminGenericDataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sac"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for accessing the SAC address",
+      "lib": "",
+      "name": "SACAdminWrapperDataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sac"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage container for token metadata",
+      "lib": "",
+      "name": "Metadata",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key that maps to [`AllowanceData`]",
+      "lib": "",
+      "name": "AllowanceKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage container for the amount of tokens for which an allowance is granted\\nand the ledger number at which this allowance expires.",
+      "lib": "",
+      "name": "AllowanceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `FungibleToken`",
+      "lib": "",
+      "name": "FungibleStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Meta"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Allowance",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AllowanceKey"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

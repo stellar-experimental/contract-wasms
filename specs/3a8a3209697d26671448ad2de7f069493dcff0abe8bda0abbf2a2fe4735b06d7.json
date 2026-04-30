@@ -1,0 +1,837 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur in the PartsRegistry contract.\\n\\n- `AlreadyInitialized`: The contract has already been initialized.\\n- `PartAlreadyExists`: A part with the given UUID already exists.\\n- `PartNotFound`: No part with the given UUID was found.\\n- `NotAuthorized`: The caller is not authorized to perform the action.\\n- `InvalidMerkleProof`: The provided Merkle proof is invalid.\\n- `BadPrevRoot`: The previous Merkle root does not match the current root.\\n- `NotActiveOrg`: The organization is not active.\\n- `WrongOrgType`: The organization does not have the required type.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "PartAlreadyExists",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "PartNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidMerkleProof",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "BadPrevRoot",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "NotActiveOrg",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "WrongOrgType",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "NotSameEvent",
+          "value": 40
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Status of an aeronautic part.\\n\\n# Fields :\\n- `Manufactured`: The part has been manufactured but not yet put into service.\\n- `InService`: The part is currently in service.\\n- `UnderMaintenance`: The part is currently under maintenance.\\n- `Retired`: The part has been retired from service.",
+      "lib": "",
+      "name": "PartStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Manufactured"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "InService"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UnderMaintenance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Retired"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An aeronautic part with its associated metadata.\\n\\n# Fields :\\n- `uuid`: The unique identifier for the part.\\n- `status`: The current status of the part.\\n- `manufacturer`: The address of the manufacturer organization.\\n- `current_owner`: The address of the current owner organization.\\n- `current_user`: The address of the current user organization.\\n- `merkle_root`: The Merkle root of the part's manifest.\\n- `isAircraft`: A boolean indicating if the part is an aircraft (true) or a component (false).",
+      "lib": "",
+      "name": "AeronauticPart",
+      "fields": [
+        {
+          "doc": "",
+          "name": "current_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "current_user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "is_aircraft",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "manufacturer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "udt": {
+              "name": "Hash32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "PartStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "udt": {
+              "name": "Uuid"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with the address of the OrganizationRegistry.\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `contract_org`: The address of the OrganizationRegistry contract.\\n# Returns\\n- `Result<(), Error>`: Ok if successful, Err if already initialized.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "contract_org",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "ping",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_part_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "part_uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "event_leaf_hash_view",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf",
+          "type_": {
+            "udt": {
+              "name": "EventLeaf"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "recompute_root_from_leaf_view",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf_hash",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "bytes",
+                    "bool"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new aeronautic part.\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `caller`: The address of the caller (must be an OEM).\\n- `uuid`: The unique identifier for the part.\\n- `manufacturer`: The address of the manufacturer.\\n- `owner`: The address of the initial owner.\\n- `user`: The address of the initial user.\\n- `merkle_root`: The initial Merkle root of the part's manifest.\\n- `isAircraft`: Boolean indicating if the part is an aircraft.\\n# Returns\\n- `Result<(), Error>`: Ok if successful, Err if part already exists or caller is not authorized.",
+      "name": "create_part",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "manufacturer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "is_aircraft",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get part details if caller is authorized via Merkle proof.\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `caller`: The address of the caller.\\n- `uuid`: The unique identifier for the part.\\n- `proof`: The Merkle proof to verify caller's authorization.\\n# Returns\\n- `Result<AeronauticPart, Error>`: The part details if authorized, Err otherwise.",
+      "name": "get_part",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "bytes",
+                    "bool"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "AeronauticPart"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the Merkle root of the part's manifest.\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `caller`: The address of the caller (must be the part owner).\\n- `uuid`: The unique identifier for the part.\\n- `merkle_root`: The new Merkle root to set.\\n# Returns\\n- `Result<(), Error>`: Ok if successful, Err if part not found or caller is not authorized.",
+      "name": "change_merkle_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update a single event leaf with authorization controlled by the event owner (or delegated writers).\\n\\nThis endpoint allows the event **owner** (or a writer proven to belong to `writers_root`) to update exactly\\none event leaf. The contract verifies:\\n1) the previous root matches the on-chain root,\\n2) the caller is the event owner, or is a delegated writer proven by a membership proof in `writers_root`,\\n3) only this leaf changes (swap with the provided branch).\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `caller`: The address of the caller (must be the event owner or a delegated writer).\\n- `part_uuid`: The unique identifier for the part.\\n- `prev_root`: The previous Merkle root of the part's manifest.\\n- `branch`: The Merkle proof branch as a vector of (sibling hash, is_left) tuples for the event leaf.\\n- `old_leaf`: The previous compact event leaf (owner, data_hash, writers_root).\\n- `new_leaf`: The new compact event leaf (same event_id; owner unchanged).\\n- `writer_branch`: Optional Merkle proof branch for `c",
+      "name": "update_event_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "part_uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "prev_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "branch",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    },
+                    "bool"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "old_leaf",
+          "type_": {
+            "udt": {
+              "name": "EventLeaf"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_leaf",
+          "type_": {
+            "udt": {
+              "name": "EventLeaf"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "_writer_branch",
+          "type_": {
+            "option": {
+              "value_type": {
+                "vec": {
+                  "element_type": {
+                    "tuple": {
+                      "value_types": [
+                        "bytes",
+                        "bool"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a new event leaf to the part's manifest.\\nThis function allows the part owner (or a delegated writer) to append a new event.\\nIt verifies:\\n1. The previous root matches the on-chain root.\\n2. The caller is authorized (owner or delegated writer proven via writer_branch).\\n3. Updates the part's Merkle root to the new one provided.\\n\\n# Parameters\\n- `env`: The Soroban environment.\\n- `caller`: Address of the caller (must be owner or writer).\\n- `part_uuid`: UUID of the part.\\n- `prev_root`: Previous Merkle root on-chain.\\n- `new_root`: New Merkle root after adding the event.\\n- `new_leaf`: The new `EventLeaf` being added.\\n- `writer_branch`: Optional proof that caller \\xe2\\x88\\x88 writers_root (if not owner).\\n\\n# Returns\\n`Ok(())` on success, `Error` otherwise.",
+      "name": "add_event_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "part_uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "prev_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_leaf",
+          "type_": {
+            "udt": {
+              "name": "EventLeaf"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "_writer_branch",
+          "type_": {
+            "option": {
+              "value_type": {
+                "vec": {
+                  "element_type": {
+                    "tuple": {
+                      "value_types": [
+                        "bytes",
+                        "bool"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer ownership of the part to a new owner.\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `caller`: The address of the caller (must be the part owner).\\n- `uuid`: The unique identifier for the part.\\n- `new_owner`: The address of the new owner.\\n# Returns\\n- `Result<(), Error>`: Ok if successful, Err if part not found or caller is not authorized.",
+      "name": "transfer_part",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the status of the part.\\n\\n# Parameters\\n- `env`: The contract environment.\\n- `caller`: The address of the caller (must be the part owner).\\n- `uuid`: The unique identifier for the part.\\n- `new_status`: The new status to set for the part.\\n# Returns\\n- `Result<(), Error>`: Ok if successful, Err if part not found or caller is not authorized.",
+      "name": "change_status",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uuid",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_status",
+          "type_": {
+            "udt": {
+              "name": "PartStatus"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Uuid",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Hash32",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "PartLeaf type engaged individually (by UUID) in the Merkle root.\\nUsed to update ACL (writers/readers) and version.\\n# Fields :\\n- `owner`: Address (immutable for ACL update)\\n- `writers_root`: Hash32 (hash of a sorted set, optional)\\n- `readers_root`: Hash32 (idem if used, else zero)\\n- `version`: u32",
+      "lib": "",
+      "name": "PartLeaf",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "readers_root",
+          "type_": {
+            "udt": {
+              "name": "Hash32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "version",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "writers_root",
+          "type_": {
+            "udt": {
+              "name": "Hash32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "EventLeaf type engaged individually (by UUID) in the Merkle root.\\nUsed to update ACL (writers/readers).\\n# Fields :\\n- `event_id`: Uuid\\n- `owner`: Address (only this owner or its delegates can modify)\\n- `data_hash`: Hash32 (SHA-256 of the off-chain document, e.g. IPFS JSON of the event)\\n- `writers_root`: Hash32 (Merkle root of a set of delegated writers, or 0x00. if none)",
+      "lib": "",
+      "name": "EventLeaf",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "writers_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Enum representing the type of organization\\n\\n- `OEM`: Original Equipment Manufacturer\\n- `MRO`: Maintenance, Repair, and Overhaul\\n- `Airline`: Airline operator\\n- `Marketplace`: Platform for buying/selling parts\\n- `Lessor`: Entity that leases aircraft or parts",
+      "lib": "",
+      "name": "OrgType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OEM",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "MRO",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Airline",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Marketplace",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Lessor",
+          "value": 4
+        }
+      ]
+    }
+  }
+]

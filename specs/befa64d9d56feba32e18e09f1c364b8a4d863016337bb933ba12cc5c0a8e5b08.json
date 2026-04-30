@@ -1,0 +1,887 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Name"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Symbol"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Decimals"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Sum of balances held by approved pools \\xe2\\x80\\x94 drives L.",
+            "name": "TotalMass"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Sum of ALL outstanding balances \\xe2\\x80\\x94 enforces MAX_SUPPLY.\\nDistinct from TotalMass: `TotalSupply` includes user\\nbalances and never double-counts a mint.",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Vaulted",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Allowance",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AllowanceExpiry",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ApprovedPools",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ApprovedRouters",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PoolList"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RouterList"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn tokens from caller's own balance.\\nVaulted accounts CANNOT burn (no exit route).\\n\\nLazy evaluation applies here too: if the protocol grew past\\nthe caller's balance between when they were vaulted and now,\\nthe first read re-syncs the flag and the burn proceeds. If\\nthey remain genuinely over L, the burn is blocked \\xe2\\x80\\x94 burning\\nwould be a sneaky exit path (destroy HITZ to avoid sacrifice).",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mint new HITZ tokens. Only callable by admin.\\n\\nTWO HARD GUARDS:\\n1. Supply cap \\xe2\\x80\\x94 refuses any mint that would push\\n`TotalSupply` past `MAX_SUPPLY` (100,000,000 HITZ).\\nThis closes the historical \"blank check\" where mint\\nhad no upper bound.\\n2. Integrity \\xe2\\x80\\x94 if the recipient is a registered pool /\\nrouter, its on-chain WASM must still match what was\\napproved; a bytecode swap aborts the mint before any\\nbalance write.\\n\\n\"Roach Motel\" semantics: within those guards, mint never\\nfails due to vault logic. If the recipient breaches L they\\nare silently vaulted.",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BurnEvent",
+      "prefix_topics": [
+        "burn_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintEvent",
+      "prefix_topics": [
+        "mint_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SEP-41 approve: set allowance for a spender with expiration.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an address is registered as an approved pool.\\n\\nThis is a pure read \\xe2\\x80\\x94 it does NOT run the WASM integrity check.\\nUse `pool_wasm_hash` to fetch the bound hash, or call any\\nstate-changing transfer / burn to trigger the enforced check.",
+      "name": "is_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM in-place. Admin-only.\\n\\nTEMPORARY \\xe2\\x80\\x94 to be removed before mainnet immutable deployment.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ApproveEvent",
+      "prefix_topics": [
+        "approve_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultedEvent",
+      "prefix_topics": [
+        "vaulted_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vaulted",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TransferEvent",
+      "prefix_topics": [
+        "transfer_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SEP-41 allowance: returns current allowance (0 if expired).",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn tokens from another account via allowance.\\nVaulted accounts CANNOT be burned from (no exit route).",
+      "name": "burn_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an address is registered as an approved router.\\nPure read \\xe2\\x80\\x94 see `is_pool` for the integrity-check semantics.",
+      "name": "is_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin role to a new address.\\nRequires auth from BOTH current admin and new admin.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Gravity HITZ token with admin, name, symbol.\\nDecimals are fixed at 7 (Stellar standard).",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enumerate every currently-registered pool.\\n\\nAuthoritative, O(n) in the list size. Clients should prefer this\\nover event-log scraping + localStorage heuristics \\xe2\\x80\\x94 the list is\\nupdated in lockstep with every `register_pool_address` /\\n`remove_pool_address` call, so it always reflects the current\\non-chain state regardless of RPC event retention windows.",
+      "name": "list_pools",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The hard-coded supply cap in raw units (7 decimals).\\nEqual to 100,000,000 HITZ.",
+      "name": "max_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the raw TotalMass accumulator (sum of approved pool balances).",
+      "name": "total_mass",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted exactly once per contract instance, on `initialize`. Lets\\nindexers mark the deployment cleanly without polling for the first\\nadmin / metadata write.",
+      "lib": "",
+      "name": "InitializedEvent",
+      "prefix_topics": [
+        "initialized_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enumerate every currently-registered router. See `list_pools`.",
+      "name": "list_routers",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current Safety Limit L = sqrt(TotalMass \\xc3\\x97 10^decimals).\\nO(1) \\xe2\\x80\\x94 reads the pre-computed accumulator.",
+      "name": "safety_limit",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Circulating supply \\xe2\\x80\\x94 sum of all outstanding balances.\\nAlways \\xe2\\x89\\xa4 `max_supply()`.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted on every successful `set_admin`. The `previous` topic lets\\nmonitors filter on outgoing-from-current-admin to alert on any\\ntransfer of the most powerful role in the contract; the `new` topic\\nlets the incoming admin's tooling pick up the role transition\\nwithout scraping storage diffs.",
+      "lib": "",
+      "name": "AdminChangedEvent",
+      "prefix_topics": [
+        "admin_changed_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SEP-41 transfer_from: delegated transfer via allowance.\\nSame Roach Motel rules + lazy evaluation \\xe2\\x80\\x94 vault check on\\n`from`, not `spender`.",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the WASM hash the admin bound to `pool` at registration,\\nor `None` if not registered. Off-chain observers can compare this\\nto the pool's current on-chain executable to audit integrity\\nwithout submitting a fee-bearing transaction.\\nA returned value of all zeros means \"classic account, no\\nintegrity binding\".",
+      "name": "pool_wasm_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Registration events include the approved WASM hash so off-chain\\nindexers can snapshot the exact bytecode bound to each address.\\nOn removal the hash emitted is the hash that WAS registered (so\\nthe event log preserves what got unbound), or the zero hash when\\nthe address was never registered (spurious removes), or the zero\\nhash when the registered address is a non-Wasm (classic) account.",
+      "lib": "",
+      "name": "PoolRegisteredEvent",
+      "prefix_topics": [
+        "pool_registered_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "registered",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the WASM hash bound to `router` at registration, or None.",
+      "name": "router_wasm_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RouterRegisteredEvent",
+      "prefix_topics": [
+        "router_registered_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "registered",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether an account is currently vaulted.\\n\\nNOTE: This is a passive read \\xe2\\x80\\x94 it reflects the LAST WRITTEN\\nflag. If the protocol has grown since the user was trapped,\\ntheir real (\"lazy-evaluated\") status may be \"safe\" even\\nthough this returns true. The flag will be corrected the\\nmoment they transact. For a canonical realtime answer see\\n`would_be_vaulted_if(balance)`.",
+      "name": "is_account_vaulted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Canonical \"is this account actually stuck right now?\" query \\xe2\\x80\\x94\\nevaluates the physics against their CURRENT balance and the\\nCURRENT L. Independent of the stored flag.\\n\\nReturns true iff the account is non-infrastructure and holds\\nmore than L. UIs can call this to decide whether to show the\\n\"vaulted\" banner without relying on stale flags.",
+      "name": "is_actually_vaulted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an address from the approved pools list. Admin-gated.\\nThe pool's current balance is subtracted from TotalMass.",
+      "name": "remove_pool_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register an address as an approved pool. Admin-gated.\\nPools affect TotalMass and are the ONLY destination vaulted\\nusers can send to (sacrifice mass to widen the road).\\n\\nThe current on-chain WASM hash of `address` is captured at\\nregistration and bound as the approved bytecode \\xe2\\x80\\x94 any later\\nin-place upgrade of the pool will trip the integrity check.\\nFor classic accounts (no WASM) a zero-hash sentinel is stored\\nand the integrity check is skipped on subsequent state moves.\\nRe-registering an existing pool rebinds the current hash \\xe2\\x80\\x94\\nintended path after a deliberate, reviewed pool upgrade.",
+      "name": "register_pool_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an address from the approved routers list. Admin-gated.",
+      "name": "remove_router_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register an address as an approved router. Admin-gated.\\nRouters are pass-through entities (DEX aggregators, swap\\ncontracts). They NEVER affect TotalMass and vaulted users\\nCANNOT send to them.\\n\\nThe current on-chain WASM hash of `address` is captured at\\nregistration \\xe2\\x80\\x94 see `register_pool_address` for the integrity\\nsemantics and the non-Wasm fallback.",
+      "name": "register_router_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

@@ -1,0 +1,367 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Custom account signature type for ZK pool operations.\\nWhen the pool contract calls `sender.require_auth()` and sender is this contract,\\nSoroban invokes `__check_auth` with this credential type.",
+      "lib": "",
+      "name": "ZkAuthSignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "authenticator_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "UPGRADE: Upgrade the contract WASM to a new version.\\nRequires passkey signature. Challenge: SHA256(\"upgrade\" | new_wasm_hash | nonce)",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read current nonce (kept for backwards compatibility with immediate transfers).",
+      "name": "get_nonce",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a transaction ID has been used.\\nReturns true if the tx_id has already been executed.",
+      "name": "is_tx_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tx_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "STREAM PAY: Transfer USDC with name, comment metadata and 0.03% fee.\\nSame passkey verification as transfer_usdc. Emits an event with all details.\\nFee (0.03% of amount) goes to FEE_RECIPIENT, remainder goes to recipient.",
+      "name": "stream_pay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "comment",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the stored passkey pubkey (for debugging/verification).",
+      "name": "get_passkey",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 65
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "udt": {
+              "name": "ZkAuthSignature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_context",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: Initialize the contract with the passkey secp256r1 public key (65-byte uncompressed).\\nThis is called automatically when the contract is deployed via factory with constructor_args.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "IMMEDIATE TRANSFER: Transfer USDC using sequential nonce (for backwards compatibility).\\nOnly the registered passkey can authorize.",
+      "name": "transfer_usdc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "CANCEL SCHEDULED TRANSFER: Cancel a pending scheduled payment.\\n\\nThe user must sign to prove ownership. Once cancelled, the tx_id\\nis marked as used and can never be executed.\\n\\nThe challenge format: SHA256(\"cancel_scheduled\" | tx_id)\\n\\n`tx_id`: The transaction ID to cancel",
+      "name": "cancel_scheduled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tx_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get USDC balance of this smart account.",
+      "name": "get_usdc_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SCHEDULED TRANSFER: Transfer USDC using a unique tx_id (for scheduled/auto-pay).\\n\\nThis version uses a unique transaction ID instead of sequential nonce,\\nallowing transactions to be executed in ANY order.\\n\\nEach tx_id can only be used once. Perfect for:\\n- Scheduled payments (execute at specific time)\\n- Recurring payments (pre-sign multiple with different tx_ids)\\n- Out-of-order execution\\n\\nThe challenge format: SHA256(\"scheduled_transfer\" | recipient | amount | tx_id | deadline)\\n\\n`tx_id`: A unique 32-byte identifier (e.g., random bytes or hash of tx details)\\n`deadline`: Unix timestamp after which this tx is invalid (0 = no deadline)",
+      "name": "scheduled_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tx_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

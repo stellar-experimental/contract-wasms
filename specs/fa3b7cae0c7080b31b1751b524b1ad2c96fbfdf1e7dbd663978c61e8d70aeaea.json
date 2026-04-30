@@ -1,0 +1,317 @@
+[
+  {
+    "function_v0": {
+      "doc": "Notification called by the vault after it has already transferred\\ntokens in. This function validates the caller is the vault but\\nperforms no token transfers or internal bookkeeping (the vault\\ntracks balances via balance-differencing).\\n\\nZero-amount calls are no-ops (used for interface validation).\\nNegative amounts are rejected with `InvalidAmount`.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "Caller is not the vault.",
+          "name": "NotVault",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not the controller.",
+          "name": "NotController",
+          "value": 2
+        },
+        {
+          "doc": "Amount must be positive.",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "Insufficient balance for the requested operation.",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "Target address is invalid for this operation (e.g. self or vault).",
+          "name": "InvalidTarget",
+          "value": 5
+        },
+        {
+          "doc": "New controller address is invalid (e.g. vault or this contract).",
+          "name": "InvalidController",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer up to `amount` of the asset back to the vault.\\nReturns the actual amount transferred (capped by available balance).\\nReturns 0 immediately for non-positive amounts (no auth required).",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The token this strategy manages.",
+      "name": "get_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault address that may call `deposit` / `withdraw`.",
+      "name": "get_vault",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL extension.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Idle token balance held by this contract (excludes deployed capital).",
+      "name": "get_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ControllerChanged",
+      "prefix_topics": [
+        "controller_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_controller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_controller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the strategy.\\n\\n* `asset`      \\xe2\\x80\\x93 the token this strategy manages (e.g. XLM wrapper).\\n* `vault`      \\xe2\\x80\\x93 the August vault address; only address that may\\ncall `deposit` / `withdraw`.\\n* `controller` \\xe2\\x80\\x93 the EOA (e.g. Utila wallet) that may call\\n`deploy_to_protocol` / `recall_from_protocol`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "controller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeployedToProtocol",
+      "prefix_topics": [
+        "deployed_to_protocol"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "controller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The controller address that may call `deploy_to_protocol` / `recall_from_protocol`.",
+      "name": "get_controller",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the controller address. Only the current controller may call.",
+      "name": "set_controller",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_controller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RecalledFromProtocol",
+      "prefix_topics": [
+        "recalled_from_protocol"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "controller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Move funds from this strategy into an external protocol address.\\nOnly the controller (e.g. Utila wallet) may call this.",
+      "name": "deploy_to_protocol",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "controller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bookkeeping estimate of funds currently deployed to external protocols.\\nSaturates at zero; may not reflect yield accrued in protocols.",
+      "name": "get_deployed_total",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pull funds back from an external protocol into this strategy.\\nOnly the controller (e.g. Utila wallet) may call this.\\n\\nThis performs a simple SEP-41 token transfer from `protocol` to this\\ncontract. The `protocol` address must authorize this transfer via\\nSoroban auth. For protocols requiring a custom withdrawal call,\\nreplace the transfer with the protocol's client interface.\\n\\nNote: `deployed_total` is a bookkeeping estimate that saturates at\\nzero. If the recalled amount exceeds `deployed_total` (e.g. due to\\nprotocol yield), the counter floors at zero rather than going negative.",
+      "name": "recall_from_protocol",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "controller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

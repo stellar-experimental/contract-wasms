@@ -1,0 +1,408 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Sertifikat digital yang melekat pada identitas developer (Soulbound Badge)\\nTidak dapat dipindahtangankan \\xe2\\x80\\x94 menjadi bukti reputasi permanen",
+      "lib": "",
+      "name": "Badge",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bounty_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "category",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "issued_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Data sebuah Bounty (tugas yang diposting Issuer)",
+      "lib": "",
+      "name": "Bounty",
+      "fields": [
+        {
+          "doc": "",
+          "name": "category",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "BountyStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Kunci-kunci penyimpanan data di storage kontrak",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BountyCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BadgeCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Bounty",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BountyList"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Submission",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Badges",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Data pengajuan hasil kerja oleh Solver",
+      "lib": "",
+      "name": "Submission",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bounty_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof_url",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "solver",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Status sebuah Bounty",
+      "lib": "",
+      "name": "BountyStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Completed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Kode error kontrak yang dapat diprogram secara programatik oleh klien",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "Bounty dengan ID yang diminta tidak ditemukan",
+          "name": "BountyNotFound",
+          "value": 1
+        },
+        {
+          "doc": "Pemanggil bukan Issuer dari bounty ini",
+          "name": "NotIssuer",
+          "value": 2
+        },
+        {
+          "doc": "Bounty sudah berstatus Completed, tidak bisa dimodifikasi",
+          "name": "AlreadyCompleted",
+          "value": 3
+        },
+        {
+          "doc": "Belum ada submission untuk bounty ini",
+          "name": "NoSubmission",
+          "value": 4
+        },
+        {
+          "doc": "Bounty tidak dalam status Open",
+          "name": "BountyNotOpen",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mengambil semua Soulbound Badge milik seorang developer\\n\\n# Arguments\\n* `owner` - Alamat developer yang ingin dilihat badge-nya\\n\\n# Returns\\nDaftar semua badge yang dimiliki developer tersebut",
+      "name": "get_badges",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Badge"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mengambil detail satu bounty berdasarkan ID\\n\\n# Returns\\n`Some(Bounty)` jika ditemukan, `None` jika tidak ada",
+      "name": "get_bounty",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Bounty"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Solver mengirimkan bukti hasil kerja untuk sebuah bounty\\n\\n# Arguments\\n* `solver`     - Alamat developer yang mengerjakan tugas\\n* `bounty_id`  - ID bounty yang dikerjakan\\n* `proof_url`  - Tautan bukti kerja (repository, dokumentasi, demo, dll)\\n\\n# Errors\\n* `ContractError::BountyNotFound` - Bounty dengan ID ini tidak ada\\n* `ContractError::BountyNotOpen`  - Bounty sudah Completed",
+      "name": "submit_work",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "solver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bounty_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof_url",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mengambil semua bounty yang terdaftar di platform",
+      "name": "get_bounties",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Bounty"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Issuer membuat bounty baru. Dana reward dikunci dalam kontrak (escrow).\\n\\n# Arguments\\n* `issuer`      - Alamat pemberi tugas (harus menandatangani transaksi)\\n* `title`       - Judul singkat tugas\\n* `description` - Deskripsi lengkap tugas\\n* `category`    - Kategori keahlian (mis. \"Frontend\", \"Backend\", \"DevOps\")\\n* `reward`      - Jumlah imbalan yang dikunci (dalam stroops/unit terkecil)\\n\\n# Returns\\nID bounty yang baru dibuat",
+      "name": "create_bounty",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "category",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mengambil data submission dari sebuah bounty\\n\\n# Returns\\n`Some(Submission)` jika ada, `None` jika belum ada submission",
+      "name": "get_submission",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bounty_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Submission"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Issuer menyetujui submission: reward dicairkan ke Solver & Soulbound Badge diterbitkan\\n\\n# Arguments\\n* `issuer`    - Alamat pemberi tugas (harus menandatangani & harus pemilik bounty)\\n* `bounty_id` - ID bounty yang akan disetujui\\n\\n# Errors\\n* `ContractError::BountyNotFound`  - Bounty tidak ditemukan\\n* `ContractError::NotIssuer`       - Pemanggil bukan pemilik bounty\\n* `ContractError::AlreadyCompleted`- Bounty sudah selesai\\n* `ContractError::NoSubmission`    - Belum ada submission",
+      "name": "approve_submission",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bounty_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

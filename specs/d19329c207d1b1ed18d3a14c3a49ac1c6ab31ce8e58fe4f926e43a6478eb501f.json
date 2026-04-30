@@ -1,0 +1,1106 @@
+[
+  {
+    "function_v0": {
+      "doc": "Get current nonce for a user\\nUsed to get the current nonce before calling functions that require it",
+      "name": "get_nonce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "EscrowData"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize contract configuration\\nCan only be called once on deploy (or when empty).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collect_on_create",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create escrow with guarantee period",
+      "name": "create_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "guarantee_days",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "product_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "allow_early_release",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update configuration (only current admin)",
+      "name": "update_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collect_on_create",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw funds from the contract (admin only)",
+      "name": "admin_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initiate a dispute on an active escrow",
+      "name": "dispute_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refund (only buyer and within guarantee period)\\nIncludes nonce for replay attack protection and traceability",
+      "name": "request_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Release payment to seller (after guarantee period or by seller)\\nIncludes nonce for replay attack protection and traceability",
+      "name": "release_payment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolve a disputed escrow when both parties agree",
+      "name": "resolve_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a token is allowed (public helper function)",
+      "name": "is_token_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a token to the allowed list (admin only)\\nThis ensures only trusted tokens can be used in escrows",
+      "name": "add_allowed_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the list of allowed tokens (public)",
+      "name": "get_allowed_tokens",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a resolution for a disputed escrow",
+      "name": "propose_resolution",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "favor_buyer",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a token from the allowed list (admin only)\\nNote: Existing escrows with this token will still function",
+      "name": "remove_allowed_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin resolves dispute when parties can't agree",
+      "name": "admin_resolve_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "favor_buyer",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Custom error types for the escrow contract",
+      "lib": "",
+      "name": "EscrowError",
+      "cases": [
+        {
+          "doc": "Contract is already initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract configuration not found",
+          "name": "ConfigNotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Unauthorized access",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "Escrow not found",
+          "name": "EscrowNotFound",
+          "value": 4
+        },
+        {
+          "doc": "Invalid amount (must be greater than 0)",
+          "name": "InvalidAmount",
+          "value": 5
+        },
+        {
+          "doc": "Invalid fee basis points (must be 0-10000)",
+          "name": "InvalidFeeBps",
+          "value": 6
+        },
+        {
+          "doc": "Invalid guarantee days (must be 1-36500)",
+          "name": "InvalidGuaranteeDays",
+          "value": 7
+        },
+        {
+          "doc": "Invalid product ID (cannot be empty)",
+          "name": "InvalidProductId",
+          "value": 8
+        },
+        {
+          "doc": "Escrow is not in active status",
+          "name": "EscrowNotActive",
+          "value": 9
+        },
+        {
+          "doc": "Guarantee period not expired",
+          "name": "GuaranteePeriodNotExpired",
+          "value": 10
+        },
+        {
+          "doc": "Guarantee period already expired",
+          "name": "GuaranteePeriodExpired",
+          "value": 11
+        },
+        {
+          "doc": "Fee amount exceeds escrow amount",
+          "name": "FeeExceedsAmount",
+          "value": 12
+        },
+        {
+          "doc": "Invalid signature for meta-transaction",
+          "name": "InvalidSignature",
+          "value": 13
+        },
+        {
+          "doc": "Nonce mismatch - replay attack detected",
+          "name": "InvalidNonce",
+          "value": 14
+        },
+        {
+          "doc": "Signature expired",
+          "name": "SignatureExpired",
+          "value": 15
+        },
+        {
+          "doc": "Invalid function selector for meta-transaction",
+          "name": "InvalidFunctionSelector",
+          "value": 16
+        },
+        {
+          "doc": "Counter overflow (too many escrows)",
+          "name": "CounterOverflow",
+          "value": 17
+        },
+        {
+          "doc": "Token not in allowed list",
+          "name": "TokenNotAllowed",
+          "value": 18
+        },
+        {
+          "doc": "Escrow is not in disputed status",
+          "name": "NotDisputed",
+          "value": 19
+        },
+        {
+          "doc": "Escrow is already disputed",
+          "name": "AlreadyDisputed",
+          "value": 20
+        },
+        {
+          "doc": "No dispute to resolve (no proposals exist)",
+          "name": "NoDisputeToResolve",
+          "value": 21
+        },
+        {
+          "doc": "Dispute already resolved",
+          "name": "DisputeAlreadyResolved",
+          "value": 22
+        },
+        {
+          "doc": "Both parties must agree on resolution",
+          "name": "BothPartiesMustAgree",
+          "value": 23
+        },
+        {
+          "doc": "Party has already proposed resolution",
+          "name": "AlreadyProposed",
+          "value": 24
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is added to the allowed list",
+      "lib": "",
+      "name": "TokenAddedEvent",
+      "prefix_topics": [
+        "token_added_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a new escrow is created",
+      "lib": "",
+      "name": "CreateEscrowEvent",
+      "prefix_topics": [
+        "create_escrow_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "guarantee_days",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "product_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allow_early_release",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a token is removed from the allowed list",
+      "lib": "",
+      "name": "TokenRemovedEvent",
+      "prefix_topics": [
+        "token_removed_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when admin withdraws funds",
+      "lib": "",
+      "name": "AdminWithdrawEvent",
+      "prefix_topics": [
+        "admin_withdraw_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a dispute is initiated",
+      "lib": "",
+      "name": "DisputeEscrowEvent",
+      "prefix_topics": [
+        "dispute_escrow_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when refund is issued to buyer",
+      "lib": "",
+      "name": "RequestRefundEvent",
+      "prefix_topics": [
+        "request_refund_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when payment is released to seller",
+      "lib": "",
+      "name": "ReleasePaymentEvent",
+      "prefix_topics": [
+        "release_payment_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to_seller",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when dispute is resolved",
+      "lib": "",
+      "name": "ResolveDisputeEvent",
+      "prefix_topics": [
+        "resolve_dispute_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "favor_buyer",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "resolved_by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a party proposes a resolution",
+      "lib": "",
+      "name": "ProposeResolutionEvent",
+      "prefix_topics": [
+        "propose_resolution_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "proposer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "favor_buyer",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Contract configuration",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collect_on_create",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the escrow contract",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Escrow",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Counter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Nonce",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AllowedTokens"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Escrow data record",
+      "lib": "",
+      "name": "EscrowData",
+      "fields": [
+        {
+          "doc": "Whether seller can release payment before guarantee period expires",
+          "name": "allow_early_release",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "Buyer's proposal for dispute resolution (Some(true) = favor buyer, Some(false) = favor seller)",
+          "name": "buyer_proposal",
+          "type_": {
+            "option": {
+              "value_type": "bool"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Fee snapshot used at creation (comes as parameter from backend)",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "guarantee_days",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "product_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "release_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "Seller's proposal for dispute resolution",
+          "name": "seller_proposal",
+          "type_": {
+            "option": {
+              "value_type": "bool"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "EscrowStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Status of an escrow",
+      "lib": "",
+      "name": "EscrowStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Active"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Released"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Refunded"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Disputed"
+          }
+        }
+      ]
+    }
+  }
+]

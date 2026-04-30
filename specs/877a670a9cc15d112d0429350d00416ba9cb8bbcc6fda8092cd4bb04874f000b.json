@@ -1,0 +1,271 @@
+[
+  {
+    "function_v0": {
+      "doc": "Blend V2 callback. Called after Blend transfers `amount` of `token`\\n(USDC) to this contract. We execute both swap legs, transfer enough\\nUSDC back to `caller` (the user) so Blend's subsequent Repay request\\nhas tokens to pull, and keep any profit sent alongside.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Entry point. Off-chain executor builds a tx that invokes this once.\\n\\nArgs chosen so the off-chain executor sizes the trade against the\\ncurrent signal, and passes the Aquarius pool hash it already knows\\nfrom `scripts/stellar-executor/probe-aquarius-swap.ts`.\\n\\n`amount` is the USDC notional we flash-borrow from Blend. `min_profit`\\nis the floor: if Sushi returns fewer USDC than `amount + min_profit`,\\nthe tx reverts and only fees are paid.",
+      "name": "execute_arb",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "ArbParams"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters bundle for `execute_arb`. Soroban caps public contract fns at\\n10 args; bundling lets us stay well under while keeping the ABI readable.",
+      "lib": "",
+      "name": "ArbParams",
+      "fields": [
+        {
+          "doc": "USDC to flash-borrow from Blend.",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Direction: true = Aquarius first (USDC\\xe2\\x86\\x92XLM on Aquarius, XLM\\xe2\\x86\\x92USDC on Sushi).\\nfalse = Sushi first (USDC\\xe2\\x86\\x92XLM on Sushi, XLM\\xe2\\x86\\x92USDC on Aquarius).",
+          "name": "aquarius_first",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "aquarius_pool_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "aquarius_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aquarius_sorted_tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Minimum USDC profit (= final USDC - borrowed amount). Enforced in exec_op.",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sushi_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        },
+        {
+          "doc": "Sushi V3 direction: true if XLM is token0, i.e. XLM\\xe2\\x86\\x92USDC is zero_for_one.\\nOff-chain caller sets this based on SAC ordering.",
+          "name": "zero_for_one_sushi",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FlashLoan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount0",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount1",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_x96",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "tick",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "checkpoint_min",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ArbError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NoContext",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedCaller",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TokenMismatch",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SushiReturnedNothing",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "ProfitBelowMin",
+          "value": 6
+        }
+      ]
+    }
+  }
+]

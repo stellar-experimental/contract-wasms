@@ -1,0 +1,302 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "output_amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "Where the fee was taken in route():\\n0          \\xe2\\x86\\x92 from input_token before any step\\ni in 1..=n \\xe2\\x86\\x92 from steps[i-1].output_token after that step\\nFor execute(), this is 0 for Input and 1 for Output.",
+          "name": "fee_position",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "EmptySteps",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TotalFeeBpsTooHigh",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BpsOverflow",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgRef",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeePosition",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One step in a custodial route. Like an Instruction but with two extra knobs\\nthe custodial path needs:\\n- `auth_declarations`: what the router pre-authorizes for this step (see above)\\n- `output_token`: hint for downstream balance reads / fee bases (optional)",
+      "lib": "",
+      "name": "RouteStep",
+      "fields": [
+        {
+          "doc": "",
+          "name": "arg_refs",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_declarations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AuthDeclaration"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AffiliateFee",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Custodial routing. The router pulls `input_amount` of `input_token`\\nfrom `user`, runs each step on the held funds (using\\n`authorize_as_current_contract` to authorize what each target pulls\\nfrom the router), takes a single affiliate fee at `fee_position`, and\\nfinally transfers the router's `output_token` balance to `user`.\\n\\n`fee_position` semantics:\\n- `0`        \\xe2\\x80\\x94 fee is taken from `input_token` *before* any step\\nruns (basis: `input_amount`).\\n- `i` \\xe2\\x88\\x88 1..=n \\xe2\\x80\\x94 fee is taken from `steps[i-1].output_token` *after*\\nthat step returns (basis: router's balance of that\\ntoken at that moment). `steps[i-1].output_token` MUST\\nbe `Some`.\\n- Any value >  n is an `InvalidFeePosition` error.\\n\\nWhen the fee is taken on a step's `output_token`, `returns[i-1]` is\\nrefreshed to the post-fee router balance so any later step's\\n`arg_refs` thread the *actually available* amount.\\n\\nReturns: the user's final received amount of `output_token`.",
+      "name": "route",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_id",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "input_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "RouteStep"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "affiliate_fees",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "AffiliateFee"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_position",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One sub-invocation the router pre-authorizes via `authorize_as_current_contract`\\nbefore invoking a `RouteStep`. Use for transfers that the *target* will trigger\\nfrom the router as `from` (e.g. `token.transfer(router, pool, amount)` inside\\nAquarius). Top-level transfers the router does itself (e.g. paying out fees)\\ndon't need a declaration \\xe2\\x80\\x94 they're auto-authorized as the immediate caller.\\n\\n`arg_refs` maps `auth_arg_idx \\xe2\\x86\\x92 step_arg_idx` (in the *resolved* step args,\\ni.e. after `RouteStep.arg_refs` substitution). Use this to thread runtime\\nvalues from prior step returns through both the call args AND the auth\\ndeclaration in lock-step, so the byte-exact auth-args check inside the SAC\\nnever sees a mismatch.",
+      "lib": "",
+      "name": "AuthDeclaration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "arg_refs",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL keep-alive. Anyone can call to keep the contract's\\ninstance entry alive during cold periods.",
+      "name": "bump_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]

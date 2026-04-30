@@ -1,0 +1,499 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "ModERC3156 callback (used by Blend Protocol v2).\\nCalled with: exec_op(caller=from/G-address, token, amount, fee=0)\\n\\nBlend has already transferred `amount` tokens to this contract.\\nAfter exec_op returns, Blend pulls repayment from `caller` (from)\\nvia transfer_from. So we must transfer the borrowed amount back\\nto `caller` before returning.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Blend pool contract address (for reference/validation)",
+            "name": "BlendPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pending arb params \\xe2\\x80\\x94 set by prepare_arb, consumed by exec_op",
+            "name": "PendingArb"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A nested call that needs authorization (e.g., token.transfer).\\nUsed when a DEX swap internally calls require_auth on our contract\\nfor sub-operations like token transfers.",
+      "lib": "",
+      "name": "SubAuth",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One leg of an arbitrage swap (generic \\xe2\\x80\\x94 works with any DEX).\\n\\n`sub_auths` enables auth for DEXes that call require_auth(sender) and\\nthen transfer tokens via token.transfer(sender, pool, amount). For DEXes\\nthat don't need nested auth (e.g., Soroswap pair.swap), leave empty.\\n\\nExample: SushiV3 pool.swap(sender, recipient, ...) internally calls\\ntoken.transfer(sender, pool, amount_in). We pre-authorize that transfer\\nby adding it to sub_auths:\\nsub_auths: [SubAuth { contract: XLM_SAC, fn_name: \"transfer\",\\nargs: [contract_addr, pool, amount] }]",
+      "lib": "",
+      "name": "SwapLeg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "dex",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Nested calls to pre-authorize. Empty for DEXes with no sender auth.",
+          "name": "sub_auths",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SubAuth"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "blend_pool",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ArbError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientProfit",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SwapFailed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NoPendingArb",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "RepaymentFailed",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Store arb parameters for the next exec_op call.\\nCall this THEN call blend_pool.flash_loan(from, flash_loan, requests)\\nin a follow-up tx. Params expire after ~100 ledgers (~8 min) if unused.",
+      "name": "prepare_arb",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "ArbParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Full arb params stored for exec_op callback.\\n`legs` is a Vec of SwapLegs \\xe2\\x80\\x94 supports 1-hop, 2-hop, or multi-hop routes.\\nEach leg is one contract invocation (as returned by Lumenbro build API).\\nExample: Lumenbro routes XLM\\xe2\\x86\\x92AQUA\\xe2\\x86\\x92USDC\\xe2\\x86\\x92XLM = 3 legs.",
+      "lib": "",
+      "name": "ArbParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrow_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ordered swap operations \\xe2\\x80\\x94 executed sequentially.\\nBuilt off-chain by Lumenbro build API or manually.",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token_borrow",
+          "type_": "address"
+        },
+        {
+          "doc": "Intermediate token (e.g., USDC for XLM\\xe2\\x86\\x94USDC arb).\\nContract approves each DEX for both token_borrow and token_mid\\nbefore executing swap legs.",
+          "name": "token_mid",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_blend_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_pending_arb",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "self_funded_arb",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ArbError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
