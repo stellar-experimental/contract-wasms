@@ -1,0 +1,124 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Hop",
+      "fields": [
+        {
+          "doc": "Per-hop minimum output (slippage floor for this individual hop).",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Asset coming OUT of this hop (used for forward token tracking).",
+          "name": "out_token",
+          "type_": "address"
+        },
+        {
+          "doc": "For Aqua: pool hash (32-byte BytesN). For others: empty (32 zero bytes).",
+          "name": "pool_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Venue's router contract address.",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "Sorted token pair for the venue (Aqua sorts addresses byte-wise).",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Which venue's router to call.",
+          "name": "venue",
+          "type_": {
+            "udt": {
+              "name": "VenueKind"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomic arb cycle. Caller specifies the route; contract just orchestrates.\\n\\nUser's tx signature authorizes:\\n- This cycle_swap call\\n- All nested venue swap calls (the Soroban auth tree off-chain SDK\\nauto-builds via simulateTransaction)\\n- All token transfers the venues do internally (also via auth tree)\\n\\nReturns the principal_token balance delta (must be >= min_amount_out\\nor the transaction reverts).",
+      "name": "cycle_swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "principal_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Hop"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VenueKind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Aqua"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Soroswap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Phoenix"
+          }
+        }
+      ]
+    }
+  }
+]
