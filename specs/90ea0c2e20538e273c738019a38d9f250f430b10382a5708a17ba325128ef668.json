@@ -1,0 +1,326 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidVkLength",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidRequestType",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofLength",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "MissingLbxToken",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "MissingFeeAmount",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "MissingAdmin",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "MissingVk",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofOrVkLength",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofEncoding",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidVkEncoding",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "MissingIdentityVk",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidIdentityActionType",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidIdentityPayloadLength",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "IdentitySignalExpired",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "IdentityReplayDetected",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "MissingStealthVk",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeAmount",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "InvalidHostnameLength",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "IdentitySignalExpiryTooFar",
+          "value": 21
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the contract with required dependencies.\\n\\nCan only be called once. Subsequent calls panic.\\n\\n# Arguments\\n* `admin`       - Administrator address (must authorize this call).\\n* `lbx_token`   - Address of the LBX token contract for fee transfers.\\n* `distributor` - Legacy distributor address retained for compatibility.\\n* `fee_amount`  - Per-request tracking fee in LBX base units (i128).\\n* `vk`          - BN254 Groth16 verification key (must be 512 bytes).\\n\\n# Examples\\n\\n```rust\\n// The verifier key length invariant used by init.\\nlet expected_vk_len = 512usize;\\nassert_eq!(expected_vk_len, 512);\\n```",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lbx_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "distributor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vk",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only function to update the VK if the circuit changes.\\n\\nThe stored admin address must authorize this call.\\n\\n# Arguments\\n* `new_vk` - Replacement verification key (must be exactly 512 bytes).",
+      "name": "update_vk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_vk",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only function to set the stealth_signal verification key.\\n\\nThis is additive \\xe2\\x80\\x94 it does not modify the existing tracking VK.\\nWhen set, request_type 3 (Store/stealth) verifies proofs against this VK\\ninstead of the default tracking VK.\\n\\n# Arguments\\n* `stealth_vk` - The BN254 verification key for the stealth_signal circuit (512 bytes).",
+      "name": "set_stealth_vk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "stealth_vk",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submits a tracking request.\\n\\nTransfers the LBX fee from `caller` split as: 1/3 to `satellite`,\\n1/3 to `primary`, remainder to admin. Verifies the ZK proof then\\nemits the tracking event.\\n\\n# Arguments\\n* `caller`          - Address of the Satellite Operator (must authorize).\\n* `zk_proof`        - Groth16 proof bytes (A, B, C) \\xe2\\x80\\x94 exactly 256 bytes.\\n* `ephemeral_pubkey`- BN254 G1 point (uncompressed X, Y) generated by satellite.\\n* `ciphertext`      - Poseidon-encrypted target account (C_low \\xe2\\x80\\x96 C_high).\\n* `satellite`       - Satellite reward address for fee split.\\n* `request_type`    - Request enum (1=Register, 2=Track, 3=Store, 4=InitProfile, 5=AddContact, 6=AcceptContact, 7=PaymentSignal).\\n* `hostname`        - Satellite hostname for downstream validation.\\n* `primary`         - Primary Lockb0x Node recipient for fee split.\\n\\n# Examples\\n\\n```rust\\nlet valid_request_types = [1u32, 2u32, 3u32, 4u32, 5u32, 6u32, 7u32];\\nassert!(valid_request_types.contains(&1));\\nassert!(!valid_request_types.contains(&0));\\n\\nlet proof_le",
+      "name": "request_tracking",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "zk_proof",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ciphertext",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "satellite",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "hostname",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "primary",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only identity signaling configuration.\\n\\nThis is additive and does not change the existing request_tracking ABI.",
+      "name": "set_identity_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "identity_vk",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "identity_fee_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit an opaque identity signal with replay protection.\\n\\nThe encrypted payload is intentionally opaque on-chain. Identities should not be\\nemitted directly; downstream ingestion resolves private metadata off-chain.\\n\\nCanonical action map:\\n- 1: invite\\n- 2: accept\\n- 3: reject\\n- 4: profile_tag",
+      "name": "request_identity_signal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "relayer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "identity_proof",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "encrypted_payload",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "action_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "expires_at_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "satellite",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hostname",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "primary",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_verify_diag_enabled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
