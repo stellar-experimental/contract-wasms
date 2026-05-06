@@ -1,0 +1,2103 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Claim tracking structure for each user-token pair",
+      "lib": "",
+      "name": "Claim",
+      "fields": [
+        {
+          "doc": "Cumulative amount claimed by the user for this token",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Merkle root that was active when the last claim occurred",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger sequence when the last claim occurred",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotTrusted",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "UnresolvedDispute",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidDispute",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NoDispute",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotGovernor",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotGovernorOrGuardian",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotUpgradeable",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ZeroAddress",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidLengths",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "NotWhitelisted",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidUninitializedRoot",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InvalidReturnMessage",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NoPendingRefund",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "PendingRefundTransferFailed",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvalidAccessControlManager",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "InvalidMigration",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Tree"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastTree"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AccessControlManager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EpochDuration"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgradeabilityDeactivated"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DisputeToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Disputer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EndOfDisputePeriod"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DisputePeriod"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DisputeAmount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Notice: Tracks cumulative claimed amounts for each user and token\\nDev: Maps user => token => Claim details (amount, timestamp, merkleRoot)",
+            "name": "Claimed",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Notice: Trusted addresses authorized to update the Merkle root\\nDev: Maps address => trusted status (1 = trusted, 0 = not trusted)",
+            "name": "CanUpdateMerkleRoot",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Note: Authorization for operators to claim on behalf of users\\nDev: Maps user => operator => authorization status (1 = authorized, 0 = not authorized)\\nDev: When operator is None, it enables any address to claim for the user",
+            "name": "Operators",
+            "type_": [
+              "address",
+              {
+                "option": {
+                  "value_type": "address"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Note: Custom recipient addresses for user claims per token\\nDev: Maps user => token => recipient (None = default for all tokens)\\nDev: Setting recipient for None token sets the default recipient for all tokens",
+            "name": "ClaimRecipient",
+            "type_": [
+              "address",
+              {
+                "option": {
+                  "value_type": "address"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Note: Global operators authorized to claim specific tokens on behalf of any user\\nDev: Maps operator => token => authorization (1 = authorized, 0 = not authorized)\\nDev: Authorization for None token allows claiming any token for any user",
+            "name": "MainOperators",
+            "type_": [
+              "address",
+              {
+                "option": {
+                  "value_type": "address"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Note: Pending collateral refunds when dispute transfer could not be delivered\\nDev: Maps recipient => token => amount",
+            "name": "PendingRefund",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Storage schema version for upgrade migrations (see `migration::MigrationData`).",
+            "name": "ContractVersion"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Claimed",
+      "prefix_topics": [
+        "claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Revoked",
+      "prefix_topics": [
+        "revoked"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Disputed",
+      "prefix_topics": [
+        "disputed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claims rewards for a set of users based on Merkle proofs\\n# Arguments\\n* `caller` - Address initiating the claim (must be user or authorized operator)\\n* `users` - Addresses claiming rewards (or being claimed for)\\n* `tokens` - ERC20 tokens being claimed\\n* `amounts` - Cumulative amounts earned (not incremental amounts)\\n* `proofs` - Merkle proofs validating each claim\\n# Notes\\n* Users can only claim for themselves unless they've authorized an operator\\n* Arrays must all have the same length",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "users",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proofs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "vec": {
+                  "element_type": {
+                    "bytes_n": {
+                      "n": 32
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Recovered",
+      "prefix_topics": [
+        "recovered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount_to_recover",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Merkle tree structure containing the root hash and optional IPFS reference",
+      "lib": "",
+      "name": "MerkleTree",
+      "fields": [
+        {
+          "doc": "Optional IPFS hash of the complete tree data (deprecated but kept for compatibility)",
+          "name": "ipfs_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Root of a Merkle tree whose leaves are (address user, address token, i128 amount)\\nrepresenting the cumulative amount of tokens earned by each user",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "migrate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "migration_data",
+          "type_": {
+            "udt": {
+              "name": "MigrationData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreeUpdated",
+      "prefix_topics": [
+        "tree_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ipfs_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "end_of_dispute_period",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current active Merkle tree\\n# Returns\\n* `Option<MerkleTree>` - The current tree with merkle root and IPFS hash, or None if not set",
+      "name": "get_tree",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "MerkleTree"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extends the TTL of the contract instance, code, and key persistent entries\\n# Notes\\n* Callable by anyone \\xe2\\x80\\x94 keeping the contract alive is a public good\\n* Extends instance storage (which includes all Instance entries and the contract code)\\n* User-specific persistent entries have their TTL extended individually when accessed",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TrustedToggled",
+      "prefix_topics": [
+        "trusted_toggled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "trust_address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "is_trusted",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the claim details for a specific user and token\\n# Arguments\\n* `user` - The user address to query\\n* `token` - The token address to query\\n# Returns\\n* `Option<Claim>` - Claim details including amount, timestamp, and merkle root, or None if no claim exists",
+      "name": "get_claimed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Claim"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reverts to the previous Merkle tree immediately\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n# Notes\\n* Only callable by governor\\n* Cannot be called if there's an active dispute (must resolve dispute first)",
+      "name": "revoke_tree",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the active Merkle tree with new reward data\\n# Arguments\\n* `caller` - Address calling the function (must be trusted address or governor)\\n* `merkle_root` - New Merkle root containing updated reward information\\n* `ipfs_hash` - IPFS hash of the complete tree data\\n# Notes\\n* Can only be called by trusted addresses or governor\\n* Trusted addresses cannot update during an active dispute period to prevent circumventing disputes\\n* Saves the current tree to lastTree before updating",
+      "name": "update_tree",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ipfs_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DisputeResolved",
+      "prefix_topics": [
+        "dispute_resolved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "valid",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OperatorToggled",
+      "prefix_topics": [
+        "operator_toggled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "is_whitelisted",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Creates a dispute to freeze the current Merkle tree update\\n# Arguments\\n* `caller` - Address creating the dispute\\n* `reason` - Explanation for why the tree update is being disputed\\n# Notes\\n* Requires depositing `dispute_amount` of `dispute_token` as collateral\\n* Can only be called within the dispute period after a tree update\\n* Deposit is slashed if dispute is rejected, returned if valid",
+      "name": "dispute_tree",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address of the current disputer, or None if no active dispute",
+      "name": "get_disputer",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether an operator is authorized to claim on behalf of a user\\n# Arguments\\n* `user` - The user address to query\\n* `operator` - The operator address to query (None = any operator)\\n# Returns\\n* `bool` - True if operator is authorized, false otherwise",
+      "name": "get_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the contract with access control manager\\n# Arguments\\n* `access_control_manager` - Address of the access control manager contract\\n# Notes\\n* Sets up the contract for reward distribution operations",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "access_control_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the previous Merkle tree (for rollback purposes)\\n# Returns\\n* `Option<MerkleTree>` - The last tree before the most recent update, or None if not set",
+      "name": "get_last_tree",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "MerkleTree"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Recovers SEP-41 tokens accidentally sent to the contract\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `token_address` - Address of the token to recover\\n* `to` - Address that will receive the recovered tokens\\n* `amount_to_recover` - Amount of tokens to recover\\n# Notes\\n* Only callable by governor",
+      "name": "recover_sep41",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_to_recover",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether an address is trusted to update the Merkle root\\n# Arguments\\n* `address` - The address to query\\n# Returns\\n* `bool` - True if address is trusted, false otherwise",
+      "name": "get_is_trusted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Toggles an address's authorization to update the Merkle tree\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `trust_address` - Address whose trusted status is being toggled\\n# Notes\\n* Only callable by governor\\n* Trusted addresses can update trees",
+      "name": "toggle_trusted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "trust_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the currently active Merkle root for claim verification\\n# Returns\\n* `BytesN<32>` - The Merkle root that is currently valid for claims\\n# Notes\\n* Returns lastTree.merkle_root if within the dispute period or if there's an active dispute\\n* Returns tree.merkle_root if dispute period has passed and there's no active dispute",
+      "name": "get_merkle_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolves an ongoing dispute\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `valid` - True if the dispute is valid (tree reverted, deposit returned to disputer)\\nFalse if invalid (deposit sent to governor, dispute period extended)\\n# Notes\\n* Only callable by governor",
+      "name": "resolve_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "valid",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Toggles an operator's authorization to claim rewards on behalf of a user\\n# Arguments\\n* `caller` - Address toggling the authorization (must be user or governance)\\n* `user` - User granting or revoking the authorization\\n* `operator` - Operator address being authorized or deauthorized (None = any address)\\n# Notes\\n* If operator is None, allows any address to claim for the user\\n* If operator is Some, authorizes that specific operator\\n* Only the user themselves or governance can toggle operator status",
+      "name": "toggle_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DisputeTokenUpdated",
+      "prefix_topics": [
+        "dispute_token_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "dispute_token",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DisputeAmountUpdated",
+      "prefix_topics": [
+        "dispute_amount_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "dispute_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DisputePeriodUpdated",
+      "prefix_topics": [
+        "dispute_period_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "dispute_period",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EpochDurationUpdated",
+      "prefix_topics": [
+        "epoch_duration_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "epoch_duration",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingRefundClaimed",
+      "prefix_topics": [
+        "pending_refund_claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the dispute token address",
+      "name": "get_dispute_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether an operator is a main operator for a token\\n# Arguments\\n* `operator` - The operator address to query\\n* `token` - The token address to query (None = all tokens)\\n# Returns\\n* `bool` - True if operator is authorized as main operator, false otherwise",
+      "name": "get_main_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the token required as collateral for disputes\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `dispute_token` - New dispute token address\\n# Notes\\n* Only callable by governor\\n* Cannot be changed while there is an active dispute",
+      "name": "set_dispute_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "dispute_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ClaimRecipientUpdated",
+      "prefix_topics": [
+        "claim_recipient_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingRefundRecorded",
+      "prefix_topics": [
+        "pending_refund_recorded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeabilityRevoked",
+      "prefix_topics": [
+        "upgradeability_revoked"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the dispute amount required to create a dispute",
+      "name": "get_dispute_amount",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the dispute period in epoch units",
+      "name": "get_dispute_period",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the epoch duration used for timing calculations\\n# Returns\\n* `u32` - The current epoch duration in seconds\\n# Notes\\n* Returns custom epoch duration if set, otherwise returns default EPOCH_DURATION (3600 seconds)",
+      "name": "get_epoch_duration",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns any pending refund amount for a recipient-token pair",
+      "name": "get_pending_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the amount of tokens required to create a dispute\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `dispute_amount` - New dispute amount\\n# Notes\\n* Only callable by governor\\n* Cannot be changed while there is an active dispute",
+      "name": "set_dispute_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "dispute_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the dispute period duration\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `dispute_period` - Number of epochs to wait before a tree update becomes effective\\n# Notes\\n* Only callable by governor",
+      "name": "set_dispute_period",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "dispute_period",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the epoch duration used for timing calculations\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n* `epoch_duration` - New epoch duration in seconds\\n# Notes\\n* Only callable by governor",
+      "name": "set_epoch_duration",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "epoch_duration",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the custom claim recipient for a user and token\\n# Arguments\\n* `user` - The user address to query\\n* `token` - The token address to query (None = default for all tokens)\\n# Returns\\n* `Option<Address>` - The recipient address, or None if no custom recipient is set",
+      "name": "get_claim_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets a custom recipient address for a user's token claims\\n# Arguments\\n* `caller` - User setting their claim recipient\\n* `recipient` - Address that will receive claimed tokens (None = default to user)\\n* `token` - Token for which to set the recipient (None = all tokens)\\n# Notes\\n* Users can override this recipient when calling claim_with_recipient\\n* If token is None, sets the default recipient for all tokens\\n* If token is Some, sets the recipient for that specific token\\n* If recipient is None, removes the custom recipient setting",
+      "name": "set_claim_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claims a previously undeliverable dispute refund for the caller\\n# Arguments\\n* `caller` - Address claiming the pending refund\\n* `token` - Token for which the pending refund was recorded\\n# Notes\\n* If token transfer still fails, pending refund remains claimable for a later retry",
+      "name": "claim_pending_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claims rewards with custom recipient addresses and callback data\\n# Arguments\\n* `caller` - Address initiating the claim\\n* `users` - Addresses claiming rewards (or being claimed for)\\n* `tokens` - ERC20 tokens being claimed\\n* `amounts` - Cumulative amounts earned (not incremental amounts)\\n* `proofs` - Merkle proofs validating each claim\\n* `recipients` - Custom recipient addresses for each claim (None = use default)\\n* `datas` - Arbitrary data passed to recipient's onClaim callback (if recipient is a contract)\\n# Notes\\n* Only caller claiming for themselves can override the recipient address\\n* Non-None recipient addresses override any previously set default recipients",
+      "name": "claim_with_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "users",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proofs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "vec": {
+                  "element_type": {
+                    "bytes_n": {
+                      "n": 32
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recipients",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "option": {
+                  "value_type": "address"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "datas",
+          "type_": {
+            "vec": {
+              "element_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permanently disables contract upgradeability\\n# Arguments\\n* `caller` - Address calling the function (must be governor)\\n# Notes\\n* Only callable by governor\\n* This action is irreversible - use with extreme caution",
+      "name": "revoke_upgradeability",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MainOperatorStatusUpdated",
+      "prefix_topics": [
+        "main_operator_status_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "is_whitelisted",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the persisted storage schema version (`0` if unversioned legacy state).",
+      "name": "contract_schema_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the timestamp at which the current dispute period ends",
+      "name": "get_end_of_dispute_period",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the AccessControlManager contract address\\n# Returns\\n* `Address` - The AccessControlManager contract address",
+      "name": "get_access_control_manager",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Points this contract at a new AccessControlManager (ACM).\\n# Arguments\\n* `caller` - Address calling the function (must be a governor in both ACMs)\\n* `new_access_control_manager` - Address of the ACM to trust going forward\\n# Notes\\n* The caller must be governor according to the current ACM stored on this contract.\\n* The caller must also be governor in `new_access_control_manager`.\\n* Governor-set parity (all old ACM governors exist in the new ACM) is enforced on-chain.\\n* Migration flow: call old ACM `set_access_control_manager(...)` first, then call this setter.",
+      "name": "set_access_control_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_access_control_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Toggles a main operator's authorization to claim tokens on behalf of any user\\n# Arguments\\n* `caller` - Address calling the function (must be guardian or governor)\\n* `operator` - Operator whose status is being toggled\\n* `token` - Token for which authorization applies (None = all tokens)\\n# Notes\\n* Only callable by guardian for an individual token or governor if it's for all tokens\\n* Main operators can claim for any user without individual user authorization\\n* If token is None, the operator can claim any token for any user (requires governor)\\n* If token is Some, the operator can claim that specific token (requires guardian)",
+      "name": "toggle_main_operator_status",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether upgradeability is deactivated\\n# Returns\\n* `bool` - True if upgradeability is deactivated, false otherwise",
+      "name": "get_upgradeability_deactivated",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MigrationData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "target_version",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlManagerError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ZeroAddress",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "IncompatibleGovernorAndGuardian",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotEnoughGovernorsLeft",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidAccessControlManager",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotGovernor",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlManagerUpdated",
+      "prefix_topics": [
+        "access_control_manager_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "access_control_manager",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableError",
+      "cases": [
+        {
+          "doc": "When migration is attempted but not allowed due to upgrade state.",
+          "name": "MigrationNotAllowed",
+          "value": 1100
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the merkle root is set.",
+      "lib": "",
+      "name": "SetRoot",
+      "prefix_topics": [
+        "set_root"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an index is claimed.",
+      "lib": "",
+      "name": "SetClaimed",
+      "prefix_topics": [
+        "set_claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "val",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MerkleDistributorError",
+      "cases": [
+        {
+          "doc": "The merkle root is not set.",
+          "name": "RootNotSet",
+          "value": 1300
+        },
+        {
+          "doc": "The provided index was already claimed.",
+          "name": "IndexAlreadyClaimed",
+          "value": 1301
+        },
+        {
+          "doc": "The proof is invalid.",
+          "name": "InvalidProof",
+          "value": 1302
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `MerkleDistributor`",
+      "lib": "",
+      "name": "MerkleDistributorStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The Merkle root of the distribution tree",
+            "name": "Root"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps an index to its claimed status",
+            "name": "Claimed",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Rounding direction for division operations",
+      "lib": "",
+      "name": "Rounding",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Round toward negative infinity (down)",
+            "name": "Floor"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Round toward positive infinity (up)",
+            "name": "Ceil"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Round toward zero (truncation)",
+            "name": "Truncate"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SorobanFixedPointError",
+      "cases": [
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "Overflow",
+          "value": 1500
+        },
+        {
+          "doc": "Division by zero",
+          "name": "DivisionByZero",
+          "value": 1501
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CryptoError",
+      "cases": [
+        {
+          "doc": "The merkle proof length is out of bounds.",
+          "name": "MerkleProofOutOfBounds",
+          "value": 1400
+        },
+        {
+          "doc": "The index of the leaf is out of bounds.",
+          "name": "MerkleIndexOutOfBounds",
+          "value": 1401
+        },
+        {
+          "doc": "No data in hasher state.",
+          "name": "HasherEmptyState",
+          "value": 1402
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is paused.",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is unpaused.",
+      "lib": "",
+      "name": "Unpaused",
+      "prefix_topics": [
+        "unpaused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausableError",
+      "cases": [
+        {
+          "doc": "The operation failed because the contract is paused.",
+          "name": "EnforcedPause",
+          "value": 1000
+        },
+        {
+          "doc": "The operation failed because the contract is not paused.",
+          "name": "ExpectedPause",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for the pausable state",
+      "lib": "",
+      "name": "PausableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Indicates whether the contract is in paused state.",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  }
+]
