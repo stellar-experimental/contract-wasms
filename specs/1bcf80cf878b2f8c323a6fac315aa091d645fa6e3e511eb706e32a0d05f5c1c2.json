@@ -1,0 +1,391 @@
+[
+  {
+    "udt_enum_v0": {
+      "doc": "Tier identifiers matching the frontend: flex=0, core=1, prime=2",
+      "lib": "",
+      "name": "TierId",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Flex",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Core",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Prime",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Global pool info.",
+      "lib": "",
+      "name": "PoolInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "reward_pool",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_staked",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin getter.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accrued rewards without unstaking.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StakeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stake `amount` BFAB into a tier (0=flex, 1=core, 2=prime).\\nUser must have approved the BFAB token transfer to this contract beforehand.",
+      "name": "stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tier_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StakeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "BFAB token address getter.",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidTier",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyStaked",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NoStake",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "LockNotExpired",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InsufficientRewardPool",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NoRewardsToClaim",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Configuration for a staking tier.",
+      "lib": "",
+      "name": "TierConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "apr_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "lock_seconds",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unstake: return the user's staked BFAB after the lock period.\\nAny unclaimed rewards are also sent.",
+      "name": "unstake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StakeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get tier configuration.",
+      "name": "get_tier",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tier_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TierConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A user's staking position.",
+      "lib": "",
+      "name": "StakePosition",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_claim_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "staked_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "TierId"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the staking vault.\\n`admin` \\xe2\\x80\\x94 the address that can deposit rewards and manage the contract.\\n`bfab_token` \\xe2\\x80\\x94 the contract address of the BFAB SAC (Stellar Asset Contract).",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bfab_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StakeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a user's staking position. Returns None-equivalent if not staked.",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "StakePosition"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get global pool stats.",
+      "name": "get_pool_info",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PoolInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin: deposit BFAB into the reward pool.",
+      "name": "deposit_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StakeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get pending rewards for a user (without claiming).",
+      "name": "pending_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
