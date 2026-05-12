@@ -1,0 +1,687 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "NAVResult type \\xe2\\x80\\x94 mirrors PositionRegistry's return value.\\nRedeclared here since cross-contract calls in Soroban pass data as XDR,\\nand both sides must have matching layouts.",
+      "lib": "",
+      "name": "NAVResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "is_underwater",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "positions_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "total_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_liabilities",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_nav",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current nonce (number of reports sent).",
+      "name": "get_nonce",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if the contract is paused.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the spoke configuration.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SpokeConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a specific report by nonce.",
+      "name": "get_report",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ReportRecord"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the SpokeReporter contract.\\n\\n# Arguments\\n- `admin` \\xe2\\x80\\x94 Admin address (controls configuration)\\n- `spoke_id` \\xe2\\x80\\x94 Unique spoke identifier (e.g., \"stellar-main\")\\n- `chain_id` \\xe2\\x80\\x94 Chain identifier (e.g., \"stellar\")\\n- `position_registry` \\xe2\\x80\\x94 Address of the PositionRegistry contract (WS2)\\n- `gateway` \\xe2\\x80\\x94 Address of the Axelar Gateway contract\\n- `hub_chain` \\xe2\\x80\\x94 Destination chain name for Axelar (e.g., \"near\")\\n- `hub_address` \\xe2\\x80\\x94 Destination contract address on NEAR hub\\n- `account` \\xe2\\x80\\x94 The vault account whose NAV is computed",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spoke_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "position_registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "gateway",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hub_chain",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "hub_address",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause or unpause the contract. Admin only.",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute NAV via PositionRegistry and send it to the NEAR Hub via Axelar GMP.\\n\\nAnyone can call this (permissionless \\xe2\\x80\\x94 heartbeat keeper script calls it).\\nEnforces minimum interval between reports. Returns the nonce.\\n\\n# Flow\\n1. Check not paused\\n2. Check minimum interval since last report\\n3. Call PositionRegistry.compute_nav(account)\\n4. Increment nonce\\n5. Build JSON payload matching CrossChainMessage format (WS4/WS5)\\n6. Send via Axelar gateway.call_contract(hub_chain, hub_address, payload)\\n7. Store ReportRecord in history\\n8. Return nonce",
+      "name": "send_report",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the Axelar gateway address. Admin only.",
+      "name": "set_gateway",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_gateway",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin proposal (step 2 of two-step transfer).\\n\\nMust be called by the `pending_admin` address. Overwrites the current admin\\nwith `pending_admin` and clears the pending slot.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin (step 1 of two-step transfer). Admin only. (MEDIUM-01)\\n\\nWrites the `PendingAdmin` storage key without overwriting the current admin.\\nThe new admin must call `accept_admin()` to complete the transfer.\\nThis prevents permanent lock-out from a typo or misrouted address.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend the persistent storage TTL for a specific report record. Admin only.\\n\\n# Arguments\\n- `nonce` \\xe2\\x80\\x94 The report nonce identifying the record\\n- `min_ttl` \\xe2\\x80\\x94 Minimum TTL in ledgers; only extends if current TTL is at or below this\\n- `max_ttl` \\xe2\\x80\\x94 Target TTL in ledgers to set when extension triggers",
+      "name": "extend_report_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "min_ttl",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_ttl",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the latest report.",
+      "name": "get_latest_report",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ReportRecord"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get NAV staleness \\xe2\\x80\\x94 seconds since the last NAV was reported.\\n\\nReturns u64::MAX if no NAV has ever been reported (always stale).",
+      "name": "get_nav_staleness",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the report configuration (min interval, accounting token).",
+      "name": "get_report_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ReportConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the report configuration. Admin only.",
+      "name": "set_report_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "min_interval_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "accounting_token",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get report history (up to `limit` most recent reports).",
+      "name": "get_report_history",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "ReportRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend the instance storage TTL. Admin only.\\n\\n# Arguments\\n- `min_ttl` \\xe2\\x80\\x94 Minimum TTL in ledgers; only extends if current TTL is at or below this\\n- `max_ttl` \\xe2\\x80\\x94 Target TTL in ledgers to set when extension triggers",
+      "name": "extend_instance_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "min_ttl",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_ttl",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the hub destination (chain + address). Admin only.",
+      "name": "set_hub_destination",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hub_chain",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "hub_address",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the timestamp of the last report sent.\\nReturns 0 if no report has been sent yet.",
+      "name": "get_last_report_time",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the PositionRegistry address. Admin only. (B6)\\n\\nAllows replacing PositionRegistry without redeploying SpokeReporter.\\nEmits a RegistryChanged event with old and new addresses for on-chain auditability.",
+      "name": "set_position_registry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_position_registry",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "NAVReport \\xe2\\x80\\x94 the cross-chain message payload.\\nFields match the CrossChainMessage struct on the NEAR side (WS4/WS5).",
+      "lib": "",
+      "name": "NAVReport",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accounting_token",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "block_height",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "is_underwater",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "nav_value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "position_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "report_nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "spoke_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "total_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_liabilities",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Configuration for the spoke reporter \\xe2\\x80\\x94 where to send reports.",
+      "lib": "",
+      "name": "SpokeConfig",
+      "fields": [
+        {
+          "doc": "The vault account whose NAV is computed",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "Chain identifier (e.g., \"stellar\")",
+          "name": "chain_id",
+          "type_": "string"
+        },
+        {
+          "doc": "Address of the Axelar Gateway contract on this chain",
+          "name": "gateway",
+          "type_": "address"
+        },
+        {
+          "doc": "Destination contract address on the hub chain",
+          "name": "hub_address",
+          "type_": "string"
+        },
+        {
+          "doc": "Destination chain name for Axelar (e.g., \"near\")",
+          "name": "hub_chain",
+          "type_": "string"
+        },
+        {
+          "doc": "Address of the PositionRegistry contract on this chain",
+          "name": "position_registry",
+          "type_": "address"
+        },
+        {
+          "doc": "Unique spoke identifier (e.g., \"stellar-main\")",
+          "name": "spoke_id",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Configuration for report timing and format.",
+      "lib": "",
+      "name": "ReportConfig",
+      "fields": [
+        {
+          "doc": "Accounting token symbol (e.g., \"USDC\")",
+          "name": "accounting_token",
+          "type_": "string"
+        },
+        {
+          "doc": "Minimum seconds between reports (heartbeat interval)",
+          "name": "min_interval_secs",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Record of a sent report \\xe2\\x80\\x94 stored in contract history.",
+      "lib": "",
+      "name": "ReportRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "is_underwater",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "ledger_sequence",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ledger_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "nav_value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "positions_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "total_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_liabilities",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors for the SpokeReporter contract.",
+      "lib": "",
+      "name": "SpokeError",
+      "cases": [
+        {
+          "doc": "Contract has already been initialized.",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not the admin.",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "Contract is paused.",
+          "name": "ContractPaused",
+          "value": 3
+        },
+        {
+          "doc": "Reports are being sent too frequently (min interval not met).",
+          "name": "TooFrequent",
+          "value": 4
+        },
+        {
+          "doc": "No reports have been sent yet.",
+          "name": "NoReportsYet",
+          "value": 5
+        },
+        {
+          "doc": "PositionRegistry call failed.",
+          "name": "NavComputeFailed",
+          "value": 6
+        },
+        {
+          "doc": "Axelar gateway call failed.",
+          "name": "GatewaySendFailed",
+          "value": 7
+        },
+        {
+          "doc": "Report not found for the given nonce.",
+          "name": "ReportNotFound",
+          "value": 8
+        },
+        {
+          "doc": "min_ttl is greater than max_ttl in TTL extension calls.",
+          "name": "InvalidTtlArgs",
+          "value": 9
+        },
+        {
+          "doc": "Invalid configuration parameter (e.g., min_interval_secs == 0).",
+          "name": "InvalidConfig",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the SpokeReporter contract.",
+      "lib": "",
+      "name": "StorageKeys",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pending admin address (two-step transfer, MEDIUM-01)",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SpokeConfig struct",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "ReportConfig struct",
+            "name": "ReportConfig"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Current nonce (u64)",
+            "name": "Nonce"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether the contract is paused (bool)",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Timestamp of the last report (u64)",
+            "name": "LastReportTime"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Timestamp of the last NAV computation/report (u64)",
+            "name": "LastNavTimestamp"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Report record by nonce (stored in persistent storage)",
+            "name": "Report",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,788 @@
+[
+  {
+    "function_v0": {
+      "doc": "Get a single feed's configuration.",
+      "name": "get_feed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "FeedConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get TWAP price from Reflector.\\n\\nHIGH-02 fix: uses the real `lastprice()` timestamp from the oracle instead of\\nforging `env.ledger().timestamp()`, and applies the same staleness validation\\nas `get_price` / `get_price_pair` to ensure the TWAP is not stale.",
+      "name": "get_twap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "records",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PriceResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the price of a token (single-hop via Reflector).\\nFalls back to TWAP if spot price is stale or unavailable.",
+      "name": "get_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PriceResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend the contract's TTL. Anyone can call this.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the oracle address.",
+      "name": "get_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract. Can only be called once.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_staleness",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the oracle (Reflector) address. Admin only.",
+      "name": "set_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a feed. Swaps with the last index entry to keep the index compact.",
+      "name": "remove_feed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update an existing feed's asset mapping.",
+      "name": "update_feed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin proposal (step 2 of two-step transfer).\\n\\nMust be called by the `pending_admin` address. Overwrites the current admin\\nwith `pending_admin` and clears the pending slot.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get decimals from the oracle.",
+      "name": "get_decimals",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all feeds (returns Vec of (token, FeedConfig) pairs).",
+      "name": "get_all_feeds",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  {
+                    "udt": {
+                      "name": "FeedConfig"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin (step 1 of two-step transfer). Admin only. (MEDIUM-01)\\n\\nWrites the `pend_admin` storage key without overwriting the current admin.\\nThe new admin must call `accept_admin()` to complete the transfer.\\nThis prevents permanent lock-out from a typo or misrouted address.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a new price feed mapping: token address -> Reflector asset.",
+      "name": "register_feed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the cross-rate price of token_a denominated in token_b (2-hop).\\nFormula: pair_price = (price_a * 10^decimals) / price_b\\nUses checked arithmetic to prevent overflow/division-by-zero.",
+      "name": "get_price_pair",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_a",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_b",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PriceResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the global max staleness threshold (seconds). Admin only.",
+      "name": "set_max_staleness",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "max_staleness",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set per-feed staleness override. 0 means use global default.",
+      "name": "set_feed_staleness",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_staleness",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get feeds with pagination.",
+      "name": "get_feeds_paginated",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  {
+                    "udt": {
+                      "name": "FeedConfig"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_feed_twap_preference",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "prefer_twap",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the number of TWAP records to use as fallback when spot price is stale or unavailable.\\nAdmin only.",
+      "name": "set_twap_fallback_records",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "records",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "SEP-40 Asset type used by Reflector oracle.\\nMust match the Asset enum used by Reflector/mock-reflector.",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "SEP-40 PriceData returned by Reflector.",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-feed configuration stored in the registry.",
+      "lib": "",
+      "name": "FeedConfig",
+      "fields": [
+        {
+          "doc": "SEP-40 asset identifier used to query Reflector",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        },
+        {
+          "doc": "Whether this feed is enabled",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Per-feed staleness override in seconds. 0 means use global default.",
+          "name": "max_staleness",
+          "type_": "u64"
+        },
+        {
+          "doc": "If true, prefer TWAP over spot price (falls back to spot if TWAP unavailable)",
+          "name": "prefer_twap",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of a price query.",
+      "lib": "",
+      "name": "PriceResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": {
+            "udt": {
+              "name": "PriceSource"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Source of the price data.",
+      "lib": "",
+      "name": "PriceSource",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Spot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TWAP"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "All error codes for OracleRegistry (12 error codes per PLAN.md).",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "Contract not yet initialized",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract already initialized \\xe2\\x80\\x94 cannot re-initialize",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Caller is not the admin",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "No feed registered for this token",
+          "name": "FeedNotFound",
+          "value": 4
+        },
+        {
+          "doc": "Feed already registered for this token",
+          "name": "FeedAlreadyExists",
+          "value": 5
+        },
+        {
+          "doc": "Oracle returned no price for this asset",
+          "name": "PriceUnavailable",
+          "value": 6
+        },
+        {
+          "doc": "Oracle price is too old (exceeds staleness threshold)",
+          "name": "PriceStale",
+          "value": 7
+        },
+        {
+          "doc": "Oracle returned a zero or negative price",
+          "name": "ZeroPrice",
+          "value": 8
+        },
+        {
+          "doc": "Invalid asset or argument",
+          "name": "InvalidAsset",
+          "value": 9
+        },
+        {
+          "doc": "Cross-contract call to oracle failed",
+          "name": "OracleCallFailed",
+          "value": 10
+        },
+        {
+          "doc": "Integer overflow in price math (checked_mul failed)",
+          "name": "PriceMathOverflow",
+          "value": 11
+        },
+        {
+          "doc": "Price B is zero in a 2-hop pair calculation (division by zero)",
+          "name": "ZeroPriceInPair",
+          "value": 12
+        },
+        {
+          "doc": "accept_admin called but no pending admin proposal exists",
+          "name": "NoPendingAdmin",
+          "value": 13
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,835 @@
+[
+  {
+    "function_v0": {
+      "doc": "Get admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend contract TTL. Public.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract. Can only be called once.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "accounting_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute the NAV for an account.\\n\\nNOTE: This function is designed for off-chain simulation (simulateTransaction) only.\\nCalling it as a real on-chain transaction will exceed the 100M instruction budget for\\nrealistic adapter \\xc3\\x97 pool configurations. This is acceptable for NAV reporting use cases.\\n\\nAccount-agnostic: any address can be queried without prior registration.\\nReturns zero NAV for accounts with no positions \\xe2\\x80\\x94 NOT an error.\\n\\nPer-adapter error isolation: if one adapter panics or returns an error, the remaining\\nadapters are still queried and their results are included in the NAV.",
+      "name": "compute_nav",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "NAVResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the adapter address for a protocol.",
+      "name": "get_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin proposal (step 2 of two-step transfer).\\n\\nMust be called by the `pending_admin` address.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a specific position by index.",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PositionRecord"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all positions for an account.",
+      "name": "get_positions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PositionRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin (step 1 of two-step transfer). Admin only. (MEDIUM-01)\\n\\nWrites `pending_admin` without overwriting the current admin.\\nThe new admin must call `accept_admin()` to complete the transfer.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "remove_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a position by index. Admin only. Uses swap-with-last.",
+      "name": "remove_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all registered adapter protocol IDs.",
+      "name": "get_all_adapters",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "symbol"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register an adapter for a protocol. Admin only.",
+      "name": "register_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a position for an account. Admin only.\\n`position_id` is protocol-specific (e.g., pool address for Blend).",
+      "name": "register_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the number of positions for an account.",
+      "name": "get_position_count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute NAV for a single specific adapter, identified by protocol_id.\\n\\nThis is the budget-safe alternative to `compute_nav()` when an adapter contains\\nmany pools. Instead of looping all adapters in one transaction, call this function\\nonce per adapter \\xe2\\x80\\x94 each call stays within the CPU budget.\\n\\nReturns the same NAVResult structure as `compute_nav()` but scoped to only the\\nspecified adapter's positions.\\n\\nErrors:\\n- NotInitialized if contract is not initialized\\n- AdapterNotFound if protocol_id is not registered\\n- AdapterError if the adapter call fails (propagated)",
+      "name": "compute_nav_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "NAVResult"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get oracle registry address.",
+      "name": "get_oracle_registry",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set oracle registry. Admin only.",
+      "name": "set_oracle_registry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle_registry",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Batch-register multiple token positions for DirectHoldings.",
+      "name": "register_tokens_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "position_ids",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_adapter_update",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "propose_adapter_update",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "new_addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PositionError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "NAV computation result.",
+      "lib": "",
+      "name": "NAVResult",
+      "fields": [
+        {
+          "doc": "True when total_liabilities > total_assets (position is underwater)",
+          "name": "is_underwater",
+          "type_": "bool"
+        },
+        {
+          "doc": "Number of positions evaluated",
+          "name": "positions_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Timestamp of computation (ledger timestamp)",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Total assets (positive positions) in USDC",
+          "name": "total_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total liabilities (debt positions, as positive number) in USDC",
+          "name": "total_liabilities",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total NAV in USDC (6 decimals) = total_assets - total_liabilities",
+          "name": "total_nav",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Adapter metadata returned by get_adapter_info().",
+      "lib": "",
+      "name": "AdapterInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "protocol_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "version",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "OracleRegistry PriceResult (from WS1, used for cross-contract calls).",
+      "lib": "",
+      "name": "PriceResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of a single position valuation by an adapter.",
+      "lib": "",
+      "name": "PositionValue",
+      "fields": [
+        {
+          "doc": "Raw amount of underlying token (before pricing)",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Is this a debt position?",
+          "name": "is_debt",
+          "type_": "bool"
+        },
+        {
+          "doc": "Underlying token address",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Token decimals",
+          "name": "token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Value in USDC (6 decimals). Positive for assets, positive for debt too\\n(use `is_debt` flag to distinguish).",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Registered position in the registry (stored per-account).",
+      "lib": "",
+      "name": "PositionRecord",
+      "fields": [
+        {
+          "doc": "Protocol adapter contract address \\xe2\\x80\\x94 **write-time snapshot**.\\nThis field captures the adapter address at the time `register_position` was called.\\nIt is NOT updated by `update_adapter`. After an atomic adapter replacement,\\n`get_positions` / `get_position` will return the old address here; off-chain tooling\\nshould resolve the current adapter via `get_adapter(protocol_id)` instead.\\nPhase 3 `compute_nav` is unaffected \\xe2\\x80\\x94 it always resolves via the live registry.",
+          "name": "adapter",
+          "type_": "address"
+        },
+        {
+          "doc": "Whether this position is active",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Position identifier within the protocol",
+          "name": "position_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Protocol identifier (e.g., \"blend\", \"direct\")",
+          "name": "protocol_id",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "All error codes for PositionRegistry (16 error codes).",
+      "lib": "",
+      "name": "PositionError",
+      "cases": [
+        {
+          "doc": "Contract not yet initialized",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract already initialized \\xe2\\x80\\x94 cannot re-initialize",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Caller is not the admin",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "No adapter registered for this protocol_id",
+          "name": "AdapterNotFound",
+          "value": 4
+        },
+        {
+          "doc": "Adapter already registered for this protocol_id",
+          "name": "AdapterAlreadyExists",
+          "value": 5
+        },
+        {
+          "doc": "Position not found for the given account/index",
+          "name": "PositionNotFound",
+          "value": 6
+        },
+        {
+          "doc": "Position already exists for the given account + protocol + position_id",
+          "name": "PositionAlreadyExists",
+          "value": 7
+        },
+        {
+          "doc": "OracleRegistry cross-contract call failed",
+          "name": "OracleError",
+          "value": 8
+        },
+        {
+          "doc": "Adapter cross-contract call failed",
+          "name": "AdapterCallFailed",
+          "value": 9
+        },
+        {
+          "doc": "Arithmetic overflow in NAV computation",
+          "name": "MathOverflow",
+          "value": 10
+        },
+        {
+          "doc": "Invalid position_id or protocol_id argument",
+          "name": "InvalidArgument",
+          "value": 11
+        },
+        {
+          "doc": "Maximum adapter limit reached",
+          "name": "TooManyAdapters",
+          "value": 13
+        },
+        {
+          "doc": "Maximum positions per account limit reached",
+          "name": "TooManyPositions",
+          "value": 14
+        },
+        {
+          "doc": "Cannot remove adapter \\xe2\\x80\\x94 positions still exist for this protocol",
+          "name": "PositionsExistForAdapter",
+          "value": 15
+        },
+        {
+          "doc": "Contract does not exist at the given address",
+          "name": "ContractNotFound",
+          "value": 16
+        },
+        {
+          "doc": "Adapter update not proposed or does not match pending update",
+          "name": "AdapterUpdateNotPending",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingAdapterUpdate",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_addr",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "propose_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol_id",
+          "type_": "symbol"
+        }
+      ]
+    }
+  }
+]

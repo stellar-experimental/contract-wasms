@@ -1,0 +1,374 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "SEP-40 Asset type used by Reflector oracle.\\nField names and variant order must match oracle-registry/src/types.rs.",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-feed configuration stored in the OracleRegistry.\\nField names and order must match oracle-registry/src/types.rs.",
+      "lib": "",
+      "name": "FeedConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "max_staleness",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "prefer_twap",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": {
+            "udt": {
+              "name": "PriceSource"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Source of the price data. Field names and order must match oracle-registry/src/types.rs.",
+      "lib": "",
+      "name": "PriceSource",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Spot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TWAP"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors for arithmetic operations in this adapter.",
+      "lib": "",
+      "name": "AdapterError",
+      "cases": [
+        {
+          "doc": "Arithmetic overflow in position value calculation",
+          "name": "MathOverflow",
+          "value": 1
+        },
+        {
+          "doc": "Token decimals too large \\xe2\\x80\\x94 `10^decimals` overflows i128",
+          "name": "InvalidDecimals",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PositionValue",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "is_debt",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all registered tokens as a Vec.",
+      "name": "get_tokens",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the adapter. Admin only.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the entire token list. Admin only.\\nClears existing list and sets new tokens. Skips duplicates silently.",
+      "name": "set_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all position values for an account's direct token holdings.\\n\\nPhase 1 \\xe2\\x80\\x94 Oracle-driven discovery:\\nCalls `oracle_registry.get_feeds_paginated(0, MAX_TRACKED_FEEDS)` and iterates over\\nthe returned feed list.  Disabled feeds and non-Stellar assets are skipped.\\nALL cross-contract calls use `try_invoke_contract` \\xe2\\x80\\x94 any error causes that token to be\\nsilently skipped rather than panicking the entire call (B-3 fix).\\n\\nPhase 2 \\xe2\\x80\\x94 Manual list union:\\nAlso iterates the manually-registered `tok_cnt`/`(tok, i)` tokens.  Tokens already\\ndiscovered in Phase 1 are deduplicated by address.  Same `try_invoke` / skip-on-error\\nlogic applies.\\n\\n`enabled_position_ids` \\xe2\\x80\\x94 HIGH-03 fix: used to filter which manual-list token indices are\\nincluded.  Each token registered at adapter index `i` corresponds to position_id Symbol\\n`INDEX_STRS[i]`.  If the list is empty all manual tokens are returned (backward-compatible).\\n\\n# Panics\\nPanics only if arithmetic overflows in `process_token_position` (checked_mul failure).",
+      "name": "get_all_pos",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "accounting_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled_position_ids",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PositionValue"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin proposal (step 2 of two-step transfer).\\n\\nMust be called by the `pending_admin` address. Overwrites the current admin\\nwith `pending_admin` and clears the pending slot.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a token from the tracked list. Admin only.\\nDoes NOT preserve order \\xe2\\x80\\x94 swaps last token into the removed slot.",
+      "name": "remove_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin (step 1 of two-step transfer). Admin only. (MEDIUM-01)\\n\\nWrites the `pend_admin` storage key but does NOT overwrite the current admin.\\nThe new admin must call `accept_admin()` to complete the transfer.\\nThis prevents permanent lock-out from a typo or misrouted address.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a token to track. Admin only.",
+      "name": "register_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get number of registered tokens.",
+      "name": "get_token_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return adapter info.",
+      "name": "get_adapter_info",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "symbol",
+              "symbol",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get token at a specific index.",
+      "name": "get_token_at_index",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register multiple tokens at once. Admin only. Skips duplicates silently.",
+      "name": "register_tokens_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
