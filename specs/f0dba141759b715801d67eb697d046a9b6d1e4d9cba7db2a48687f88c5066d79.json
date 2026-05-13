@@ -1,0 +1,281 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": {
+            "udt": {
+              "name": "PriceSource"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Source of the price data. Field names and order must match oracle-registry/src/types.rs.",
+      "lib": "",
+      "name": "PriceSource",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Spot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TWAP"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdapterError",
+      "cases": [
+        {
+          "doc": "Arithmetic overflow in position value calculation",
+          "name": "MathOverflow",
+          "value": 1
+        },
+        {
+          "doc": "Token decimals too large \\xe2\\x80\\x94 `10^decimals` overflows i128",
+          "name": "InvalidDecimals",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PositionValue",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "is_debt",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialise the adapter. Admin only, one-time.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all LP position values for `account` across all registered Aquarius pools.\\n\\nFor each registered pool (filtered by `enabled_position_ids` when non-empty):\\n1. `pool.share_id()` \\xe2\\x86\\x92 LP token address; `lp_token.balance(account)` \\xe2\\x86\\x92 user LP shares (i128)\\n2. Skip pool if user_shares == 0 or total_shares == 0\\n3. `pool.get_reserves()` \\xe2\\x86\\x92 [reserve_a, reserve_b]\\n4. `pool.get_tokens()` \\xe2\\x86\\x92 [token_a, token_b]\\n5. For each non-zero reserve leg:\\na. `token.decimals()` (SEP-41)\\nb. `oracle_registry.get_price_pair(token, accounting_token)`\\nc. Compute user's pro-rata token amount and USDC value\\nd. Append a `PositionValue` entry\\n\\nEach pool contributes up to two `PositionValue` entries (one per token leg).\\n\\n# Panics\\nPanics if any arithmetic operation overflows or token decimals are too large.",
+      "name": "get_all_pos",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "accounting_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled_position_ids",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PositionValue"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a pool by index using swap-with-last removal. Admin only.",
+      "name": "remove_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin proposal (step 2). Pending admin only.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin (step 1). Current admin only.\\n\\nThe new admin must call `accept_admin()` to complete the transfer.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a single Aquarius pool address. Admin only.",
+      "name": "register_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the number of registered pools.",
+      "name": "get_pool_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return adapter info: (protocol_id, name, version).",
+      "name": "get_adapter_info",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "symbol",
+              "symbol",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enable or disable a specific pool (circuit-breaker). Admin only.",
+      "name": "set_pool_enabled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register multiple pools at once. Skips duplicates silently. Admin only.",
+      "name": "register_pools_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
