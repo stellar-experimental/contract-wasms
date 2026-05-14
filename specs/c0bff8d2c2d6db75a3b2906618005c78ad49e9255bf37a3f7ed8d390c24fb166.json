@@ -1,0 +1,335 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Bot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get admin address.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer all accumulated `token` balance to the Revenue Processor.\\nCallable by admin or authorized bot.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get bot address.",
+      "name": "get_bot",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set authorized bot (admin-only). Bot can call sweep only.",
+      "name": "set_bot",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bot",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update operating fee (admin-only). Capped by max_fee_bps.",
+      "name": "set_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade contract WASM (admin-only).\\nAdmin stored as standalone Address \\xe2\\x80\\x94 immune to struct evolution.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get paused status.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin role (requires both old + new admin auth).",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend instance TTL (callable by anyone \\xe2\\x80\\x94 permissionless).",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current configuration.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "FeeCollectorConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency pause (admin-only).",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a swap through the Aquarius Router, skimming a fee from output.\\n\\nFlow:\\n1. User transfers `in_amount` of `token_in` to this contract\\n2. This contract calls router.swap_chained (full amount)\\n3. Fee = output * fee_bps / 10000\\n4. Net output transferred to user\\n5. Fee retained in contract balance (swept later)\\n\\nSingle TX, single signature \\xe2\\x80\\x94 user signs for this contract.\\n\\n`token_out` must be passed explicitly for auth pre-computation.",
+      "name": "swap_chained",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swaps_chain",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    {
+                      "vec": {
+                        "element_type": "address"
+                      }
+                    },
+                    {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    },
+                    "address"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "in_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "out_min",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeCollectorConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "aquarius_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "revenue_processor",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Protocol 22+ constructor \\xe2\\x80\\x94 flat args for Admin Bridge compatibility.\\n\\n- `max_fee_bps`: Immutable hard cap (recommended: 200 = 2%)\\n- `fee_bps`:     Operating fee (recommended: 100 = 1%)",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aquarius_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "revenue_processor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
