@@ -1,0 +1,217 @@
+[
+  {
+    "function_v0": {
+      "doc": "Return the current admin address.\\n\\n# Errors\\n* [`OracleError::NotInitialized`] if the contract has not been set up.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the [`PRICE_PRECISION`]-scaled price of `asset`.\\n\\n# Arguments\\n* `asset` \\xe2\\x80\\x93 The SEP-41 token address to query.\\n\\n# Errors\\n* [`OracleError::NotInitialized`] if the contract has not been set up.\\n* [`OracleError::PriceNotFound`]  if no price has been set for `asset`.",
+      "name": "get_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin rights to `new_admin`.\\n\\n# Auth\\nCurrent admin must authorize this call.\\n\\n# Errors\\n* [`OracleError::NotInitialized`] if the contract has not been set up.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set (or update) the price of `asset`.\\n\\nThe price must be expressed in [`PRICE_PRECISION`]-scaled units.\\nTo set \"1 USDC = 1.0 base unit\" pass `price = 10_000_000`.\\n\\n# Arguments\\n* `asset` \\xe2\\x80\\x93 The SEP-41 token address whose price is being set.\\n* `price` \\xe2\\x80\\x93 PRECISION-scaled price. Must be > 0.\\n\\n# Auth\\nAdmin must authorize this call.\\n\\n# Errors\\n* [`OracleError::NotInitialized`]   if the contract has not been set up.\\n* [`OracleError::NotAuthorized`]    if caller is not the admin.\\n* [`OracleError::NonPositivePrice`] if `price <= 0`.",
+      "name": "set_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return a map of prices for all requested assets in a single call.\\n\\nThis is a convenience batch-read that avoids multiple round-trips.\\n\\n# Arguments\\n* `assets` \\xe2\\x80\\x93 List of SEP-41 token addresses to query.\\n\\n# Errors\\n* [`OracleError::PriceNotFound`] if any asset in the list has no price.",
+      "name": "get_prices",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "map": {
+            "key_type": "address",
+            "value_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor \\xe2\\x80\\x94 runs atomically with `CreateContract`, cannot be front-run.\\n\\nThe deployer supplies the initial `admin` address. Because this executes\\nin the same transaction as contract creation, no attacker can race ahead\\nand claim admin rights.\\n\\n# Arguments\\n* `admin` \\xe2\\x80\\x93 The address that will be permitted to call [`set_price`].",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured maximum allowed price age in ledgers.",
+      "name": "get_max_age_ledgers",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the maximum allowed age of stored prices in ledgers.\\n\\n`max_age_ledgers` must be \\xe2\\x89\\xa5 1; zero would permanently disable the\\nstaleness guard, accepting arbitrarily old prices.\\n\\n# Errors\\n* [`OracleError::InvalidMaxAge`] if `max_age_ledgers == 0`.",
+      "name": "set_max_age_ledgers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "max_age_ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors emitted by the Oracle contract.",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "Contract has not been initialized.",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract has already been initialized.",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Caller is not the admin.",
+          "name": "NotAuthorized",
+          "value": 3
+        },
+        {
+          "doc": "No price has been set for the requested asset.",
+          "name": "PriceNotFound",
+          "value": 4
+        },
+        {
+          "doc": "Prices must be strictly positive.",
+          "name": "NonPositivePrice",
+          "value": 5
+        },
+        {
+          "doc": "Price exists but is older than the allowed freshness threshold.",
+          "name": "StalePrice",
+          "value": 6
+        },
+        {
+          "doc": "`max_age_ledgers` must be at least 1; zero would disable the staleness\\ncheck entirely, meaning any arbitrarily old price would be accepted.",
+          "name": "InvalidMaxAge",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address \\xe2\\x80\\x94 instance storage.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Maximum acceptable age for price data in ledgers.",
+            "name": "MaxAgeLedgers"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Price of an asset, PRICE_PRECISION-scaled \\xe2\\x80\\x94 persistent storage.",
+            "name": "Price",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "updated_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]
