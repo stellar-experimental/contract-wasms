@@ -1,0 +1,400 @@
+[
+  {
+    "function_v0": {
+      "doc": "Register an asset. Pricing comes from the per-asset oracle (if set via\\n`set_asset_oracle`) or the global primary/fallback oracles.\\n\\n# Errors\\n* [`AssetHandlerError::NotAdmin`]\\n* [`AssetHandlerError::AssetAlreadyRegistered`]",
+      "name": "add_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the `PRICE_PRECISION`-scaled price of `asset`.\\n\\nResolution: per-asset oracle \\xe2\\x86\\x92 primary (Reflector) \\xe2\\x86\\x92 fallback (DIA).\\n\\n# Errors\\n* [`AssetHandlerError::AssetNotRegistered`]\\n* [`AssetHandlerError::NoPrimaryOracle`] \\xe2\\x80\\x94 primary not configured and no per-asset oracle\\n* [`AssetHandlerError::PriceNotAvailable`] \\xe2\\x80\\x94 all oracles failed or returned 0",
+      "name": "get_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Batch price lookup \\xe2\\x80\\x94 returns a `Map<asset, price>` for every requested asset.\\n\\nEach asset goes through the same three-tier resolution as `get_price`.\\nPanics if any asset is unregistered or has no available price.",
+      "name": "get_prices",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "map": {
+            "key_type": "address",
+            "value_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an asset from the registry. Also clears its per-asset oracle if set.\\n\\n# Errors\\n* [`AssetHandlerError::NotAdmin`]\\n* [`AssetHandlerError::AssetNotRegistered`]",
+      "name": "remove_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_all_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the per-asset oracle address, or `None` if not set.",
+      "name": "get_asset_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assign a dedicated oracle to `asset`.\\n\\nThe oracle contract must implement `get_price(asset: Address) -> i128`.\\nUse this for assets not covered by the global oracles or that need a\\nspecialised price feed.\\n\\n# Errors\\n* [`AssetHandlerError::NotAdmin`]\\n* [`AssetHandlerError::AssetNotRegistered`]",
+      "name": "set_asset_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_pending_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_primary_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the primary global oracle (e.g. a Reflector adapter).\\nMust implement `get_price(asset: Address) -> i128`.",
+      "name": "set_primary_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_fallback_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove the per-asset oracle for `asset` so it falls back to global oracles.\\n\\n# Errors\\n* [`AssetHandlerError::NotAdmin`]",
+      "name": "remove_asset_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the fallback global oracle (e.g. a DIA adapter).\\nUsed when the primary oracle reverts or returns 0.",
+      "name": "set_fallback_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AssetHandlerError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AssetAlreadyRegistered",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AssetNotRegistered",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NoPrimaryOracle",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "PriceNotAvailable",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Protocol admin (persistent \\xe2\\x80\\x94 survives instance TTL expiry).",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pending admin for two-step transfer.",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent initialization flag.",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ordered list of all registered asset addresses.",
+            "name": "RegisteredAssets"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Optional per-asset oracle. When set, takes priority over the global\\nprimary/fallback oracles. Must implement `get_price(asset) -> i128`.",
+            "name": "AssetOracle",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Primary global oracle (e.g. Reflector adapter).\\nUsed for all assets that have no per-asset oracle.",
+            "name": "PrimaryOracle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Fallback global oracle (e.g. DIA adapter).\\nUsed when the primary oracle reverts or returns 0.",
+            "name": "FallbackOracle"
+          }
+        }
+      ]
+    }
+  }
+]

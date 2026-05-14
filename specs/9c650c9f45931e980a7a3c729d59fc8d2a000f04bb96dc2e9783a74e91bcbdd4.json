@@ -1,0 +1,609 @@
+[
+  {
+    "function_v0": {
+      "doc": "Return the admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return a page of registered vault addresses.\\n\\n# Arguments\\n* `offset` \\xe2\\x80\\x93 Starting index (0-based).\\n* `limit`  \\xe2\\x80\\x93 Maximum number of entries to return (capped at 50).",
+      "name": "get_vaults",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Complete a two-step admin transfer. Pending admin only.\\n\\nThe address previously set via [`set_pending_admin`] must authorize\\nthis call. On success, that address becomes the new admin.\\n\\n# Errors\\n* [`FactoryError::NoPendingAdmin`] if no transfer is in progress.",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register an already-deployed vault and perform the anti-inflation seed deposit.\\n\\nThe admin must:\\n1. Deploy and initialize the vault externally (via `__constructor`).\\n2. Approve `seed_amount` of `base_asset` from their account to this factory.\\n3. Call this function.\\n\\nThe factory will:\\n1. Verify the vault is not already registered.\\n2. Pull `seed_amount` of `base_asset` from `caller` into the vault directly.\\n3. Call `vault.seed_deposit(seed_amount)` to mint seed shares to the burn address.\\n4. Register the vault and record its manager.\\n\\nAfter this call, `total_supply > 0` which eliminates the first-depositor\\ninflation attack.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::VaultAlreadyRegistered`]\\n* [`FactoryError::InvalidSeedAmount`]",
+      "name": "create_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seed_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a vault from the registry. Admin only.\\n\\nThe vault contract itself is not destroyed; it is only de-listed.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::VaultNotFound`]",
+      "name": "remove_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bump the persistent TTL for vault registry entries in index range `[start, end)`.\\n\\nThis function is **permissionless**: any account may call it to pay for\\nTTL renewal, preventing registry entries from expiring silently.\\n\\n# Arguments\\n* `start` \\xe2\\x80\\x93 First index to touch (inclusive).\\n* `end`   \\xe2\\x80\\x93 One-past-last index to touch (exclusive).\\n\\nIf `start >= end` or `start >= vault_count` the call is a no-op.\\n`end` is clamped to `vault_count` so callers can safely pass `u32::MAX`.",
+      "name": "touch_vaults",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "start",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "end",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return true if `vault` is registered.",
+      "name": "is_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the factory. Runs atomically at deployment via `CreateContract`.\\n\\n# Arguments\\n* `admin`         \\xe2\\x80\\x93 Registry admin address.\\n* `asset_handler` \\xe2\\x80\\x93 The AssetHandler contract that holds per-asset oracles.\\nPass `None` to initialize without a handler (can be set later).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_handler",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a newly deployed vault. Admin only.\\n\\nThe vault must already be initialized before registration.\\nThis function verifies `vault.get_manager()` and ensures the provided\\n`manager` matches on-chain state.\\n\\n# Arguments\\n* `caller`  \\xe2\\x80\\x93 Must equal the admin.\\n* `vault`   \\xe2\\x80\\x93 Address of the initialized vault contract.\\n* `manager` \\xe2\\x80\\x93 Manager address (informational; stored in the event only).\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::VaultAlreadyRegistered`]\\n* [`FactoryError::ManagerMismatch`]",
+      "name": "register_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the total number of registered vaults.",
+      "name": "get_vault_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the AssetHandler contract address.",
+      "name": "get_asset_handler",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the admin-assigned manager for a registered vault.\\n\\n# Errors\\n* [`FactoryError::VaultManagerNotFound`] if the vault is not tracked.",
+      "name": "get_vault_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or update the AssetHandler reference. Admin only.",
+      "name": "set_asset_handler",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_handler",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin a two-step admin transfer. Current admin only.\\n\\nRecords `new_admin` as the pending admin; the transfer is not complete\\nuntil `new_admin` calls [`accept_admin`].  This prevents accidental\\nlock-out if a wrong address is supplied.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]",
+      "name": "set_pending_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assign or reassign the manager for a registered vault.\\n\\nThe admin is the only party that can change vault managers.  This\\nfunction updates the factory's `VaultManager` record and also calls\\n`vault.set_manager(new_manager)` so the vault's own state stays in sync.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::VaultNotFound`]",
+      "name": "set_vault_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return `true` if `asset` is in the protocol-authorized asset list.",
+      "name": "is_authorized_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return `true` if `guard` is in the protocol-authorized guard list.",
+      "name": "is_authorized_guard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add an asset to the protocol-wide authorized asset list.\\n\\nThe asset must already be registered in the AssetHandler (with its price\\noracle) before it can be authorized here. The AssetHandler is the single\\nsource of truth for per-asset oracles.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::AssetAlreadyAuthorized`]\\n* [`FactoryError::AssetHandlerNotSet`] if no AssetHandler is configured\\n* Panics if asset is not registered in AssetHandler",
+      "name": "add_authorized_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a strategy guard contract to the protocol-wide authorized guard list.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::GuardAlreadyAuthorized`]",
+      "name": "add_authorized_guard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the full list of protocol-authorized assets.",
+      "name": "get_authorized_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the full list of protocol-authorized guard contracts.",
+      "name": "get_authorized_guards",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an asset from the protocol-wide authorized asset list.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::AssetNotAuthorized`]",
+      "name": "remove_authorized_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a strategy guard contract from the authorized guard list.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::GuardNotAuthorized`]",
+      "name": "remove_authorized_guard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a vault is initialized and register it. Admin only.\\n\\nUnlike [`register_vault`], this function calls `vault.get_manager()` to\\nconfirm the vault contract exists **and** is properly initialized before\\nadding it to the registry.  The manager address from the vault itself is\\nused in the registration event, removing the need for the caller to supply\\nit separately and preventing spoofed manager information.\\n\\n# Errors\\n* [`FactoryError::NotAdmin`]\\n* [`FactoryError::VaultAlreadyRegistered`]\\n* Panics (propagated) if `vault.get_manager()` fails \\xe2\\x80\\x94 i.e. the vault is\\nnot initialized or the address is not a vault contract.",
+      "name": "verify_and_register_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "All errors that the Factory contract can raise.",
+      "lib": "",
+      "name": "FactoryError",
+      "cases": [
+        {
+          "doc": "`initialize` was already called on this contract instance.",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "An entry-point that requires prior initialization was called before\\n`initialize`.",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "The caller is not the registered admin address.",
+          "name": "NotAdmin",
+          "value": 3
+        },
+        {
+          "doc": "The vault address passed to `remove_vault` is not present in the\\nregistry.",
+          "name": "VaultNotFound",
+          "value": 4
+        },
+        {
+          "doc": "The vault is already present in the registry.",
+          "name": "VaultAlreadyRegistered",
+          "value": 5
+        },
+        {
+          "doc": "The manager supplied to `register_vault` does not match\\n`vault.get_manager()`.",
+          "name": "ManagerMismatch",
+          "value": 6
+        },
+        {
+          "doc": "`accept_admin` was called but no pending admin transfer is in progress.",
+          "name": "NoPendingAdmin",
+          "value": 7
+        },
+        {
+          "doc": "The asset is not in the factory's authorized asset list.",
+          "name": "AssetNotAuthorized",
+          "value": 8
+        },
+        {
+          "doc": "The asset is already in the factory's authorized asset list.",
+          "name": "AssetAlreadyAuthorized",
+          "value": 9
+        },
+        {
+          "doc": "The guard contract is not in the factory's authorized guard list.",
+          "name": "GuardNotAuthorized",
+          "value": 10
+        },
+        {
+          "doc": "The guard contract is already in the factory's authorized guard list.",
+          "name": "GuardAlreadyAuthorized",
+          "value": 11
+        },
+        {
+          "doc": "The vault manager lookup failed \\xe2\\x80\\x94 vault is not tracked by this factory.",
+          "name": "VaultManagerNotFound",
+          "value": 12
+        },
+        {
+          "doc": "Seed deposit amount must be greater than zero.",
+          "name": "InvalidSeedAmount",
+          "value": 13
+        },
+        {
+          "doc": "Asset is not registered in the AssetHandler contract \\xe2\\x80\\x94 cannot authorize it.",
+          "name": "AssetNotInAssetHandler",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "All storage keys used by the Factory contract.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Factory admin address.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pending admin address awaiting acceptance (two-step transfer).",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total number of registered vaults.",
+            "name": "VaultCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Vault address at index *i* (0-based).",
+            "name": "VaultByIndex",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "The index in the vault list at which `address` is stored.",
+            "name": "VaultPosition",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Membership flag for quick duplicate detection.",
+            "name": "IsRegistered",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent initialization flag.\\n\\nStored in **persistent** storage so it survives instance TTL expiry.\\nIf only the instance-storage `Admin` key were used as the guard,\\nan attacker could wait for the instance to expire and re-call\\n`__constructor` with their own admin address, effectively taking over\\nthe factory registry.",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Global whitelist of assets that any vault in this protocol may hold.\\nA vault manager may only add assets present in this list to a vault's\\nPortfolioAssets.  Stored in persistent storage.",
+            "name": "AuthorizedAssets"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Global whitelist of strategy guard contracts that vaults may activate.\\nA vault manager may only register guards present in this list.\\nStored in persistent storage.",
+            "name": "AuthorizedGuards"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Admin-assigned manager for a registered vault.\\nUpdated by `set_vault_manager`; read by vaults to resolve their manager.",
+            "name": "VaultManager",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "AssetHandler contract \\xe2\\x80\\x94 single source of truth for per-asset oracles.",
+            "name": "AssetHandler"
+          }
+        }
+      ]
+    }
+  }
+]

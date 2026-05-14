@@ -1,0 +1,522 @@
+[
+  {
+    "function_v0": {
+      "doc": "Burn (destroy) `amount` tokens from `from`.\\n\\nReduces `total_supply` accordingly.\\n\\nOnly the admin vault can burn shares. This keeps redemption, cooldown, fee,\\nand PnL accounting routed through the vault withdrawal path even when\\noptional share transfers are enabled.\\n\\n# Arguments\\n* `from`   \\xe2\\x80\\x93 Token holder whose tokens are destroyed (must sign).\\n* `amount` \\xe2\\x80\\x93 Number of tokens to burn. Must be > 0.\\n\\n# Auth\\nAdmin must authorize.\\n\\n# Errors\\n* [`ShareTokenError::NegativeAmount`]      if `amount < 0`.\\n* [`ShareTokenError::ZeroAmount`]           if `amount == 0`.\\n* [`ShareTokenError::InsufficientBalance`] if `from` holds fewer tokens.\\n* [`ShareTokenError::Overflow`]            on arithmetic underflow.",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mint `amount` new tokens and credit them to `to`.\\n\\nOnly the admin (vault contract) may call this function.\\nIncreases `total_supply` accordingly.\\n\\n# Arguments\\n* `to`     \\xe2\\x80\\x93 Recipient of the newly created tokens.\\n* `amount` \\xe2\\x80\\x93 Number of tokens to mint. Must be > 0.\\n\\n# Auth\\nThe stored admin address must authorize this call.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`]  if the contract has not been set up.\\n* [`ShareTokenError::NegativeAmount`]  if `amount < 0`.\\n* [`ShareTokenError::ZeroAmount`]       if `amount == 0`.\\n* [`ShareTokenError::Overflow`]        on arithmetic overflow.",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the token name.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`] if the contract has not been initialized.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the token symbol.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`] if the contract has not been initialized.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approve `spender` to transfer up to `amount` tokens on behalf of the\\ncaller (`from`).\\n\\nSetting `amount` to `0` effectively revokes the allowance.\\n\\n**Zero-first rule:** To prevent the well-known allowance race condition,\\nchanging a live non-zero allowance directly to another non-zero value is\\nrejected.  Callers must first set the allowance to `0`, then set the new\\nvalue \\xe2\\x80\\x94 or use [`increase_allowance`] / [`decrease_allowance`] for atomic\\nadjustments.\\n\\n# Arguments\\n* `from`              \\xe2\\x80\\x93 Token holder (must sign this transaction).\\n* `spender`           \\xe2\\x80\\x93 Address being authorized.\\n* `amount`            \\xe2\\x80\\x93 Maximum tokens the spender may move. Must be \\xe2\\x89\\xa5 0.\\n* `expiration_ledger` \\xe2\\x80\\x93 Last ledger where the allowance is valid\\n(inclusive). After this ledger, allowance reads\\nas zero and delegated spending reverts.\\n\\n# Auth\\n`from` must authorize this call.\\n\\n# Errors\\n* [`ShareTokenError::NegativeAmount`]  if `amount < 0`.\\n* [`ShareTokenError::NonZeroAllowance`] if a live non-zero allowance\\nalready exists and `amount",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the token balance of `id`.\\n\\nReturns `0` for addresses that have never received tokens.\\n\\n# Arguments\\n* `id` \\xe2\\x80\\x93 The address to query.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the number of decimal places.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`] if the contract has not been initialized.",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer `amount` tokens from the caller to `to`.\\n\\n# Arguments\\n* `from`   \\xe2\\x80\\x93 Sender (must sign).\\n* `to`     \\xe2\\x80\\x93 Recipient.\\n* `amount` \\xe2\\x80\\x93 Number of tokens to send. Must be > 0.\\n\\n# Auth\\n`from` must authorize this call.\\n\\n# Errors\\n* [`ShareTokenError::NegativeAmount`]      if `amount < 0`.\\n* [`ShareTokenError::ZeroAmount`]           if `amount == 0`.\\n* [`ShareTokenError::InsufficientBalance`] if `from` has fewer tokens\\nthan `amount`.\\n* [`ShareTokenError::Overflow`]            on arithmetic overflow (should\\nnever happen with valid i128 balances).",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current spending allowance granted by `from` to `spender`.\\n\\nReturns `0` if no allowance has been granted or if it has been revoked.\\n\\n# Arguments\\n* `from`    \\xe2\\x80\\x93 The token holder.\\n* `spender` \\xe2\\x80\\x93 The approved spender.",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Disabled delegated burn entrypoint.\\n\\nDisabled for vault shares. Delegated out-of-vault burning can desynchronize\\nredemption, fee, PnL, and cooldown assumptions; shares should be redeemed\\nthrough the vault withdrawal path.\\n\\n# Arguments\\n* `spender` \\xe2\\x80\\x93 Authorized burner (must sign).\\n* `from`    \\xe2\\x80\\x93 Token holder whose tokens are destroyed.\\n* `amount`  \\xe2\\x80\\x93 Number of tokens to burn. Must be > 0.\\n\\n# Auth\\nNo delegated burn authorization is accepted.\\n\\n# Errors\\n* [`ShareTokenError::NegativeAmount`]          if `amount < 0`.\\n* [`ShareTokenError::ZeroAmount`]               if `amount == 0`.\\n* [`ShareTokenError::TransfersDisabled`] always, after amount validation.",
+      "name": "burn_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current admin address.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`] if the contract has not been initialized.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin rights to `new_admin`.\\n\\nAfter this call, only `new_admin` can mint tokens and call `set_admin`\\nagain. The old admin loses all privileged access.\\n\\n# Arguments\\n* `new_admin` \\xe2\\x80\\x93 The address that will become the new admin.\\n\\n# Auth\\nThe current admin must authorize this call.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`] if the contract has not been set up.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current total supply of outstanding tokens.\\n\\n# Errors\\n* [`ShareTokenError::NotInitialized`] if the contract has not been initialized.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer `amount` tokens from `from` to `to` using a pre-approved\\nallowance.\\n\\nThe spender's allowance is decremented by `amount`.\\n\\n# Arguments\\n* `spender` \\xe2\\x80\\x93 Account authorized to move tokens (must sign).\\n* `from`    \\xe2\\x80\\x93 Token holder whose balance is debited.\\n* `to`      \\xe2\\x80\\x93 Recipient.\\n* `amount`  \\xe2\\x80\\x93 Number of tokens to send. Must be > 0.\\n\\n# Auth\\n`spender` must authorize this call.\\n\\n# Errors\\n* [`ShareTokenError::NegativeAmount`]          if `amount < 0`.\\n* [`ShareTokenError::ZeroAmount`]               if `amount == 0`.\\n* [`ShareTokenError::InsufficientAllowance`]   if allowance < amount.\\n* [`ShareTokenError::InsufficientBalance`]     if `from` balance < amount.\\n* [`ShareTokenError::Overflow`]                on arithmetic overflow.",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the ShareToken contract.\\n\\nRuns atomically at `CreateContract` time, preventing front-running\\nattacks where an attacker could otherwise call `initialize` first and\\nclaim the admin role.\\n\\n# Arguments\\n* `admin`    \\xe2\\x80\\x93 The vault contract address that will be allowed to mint\\nand burn tokens (typically the deploying manager, later\\ntransferred to the vault via `set_admin`).\\n* `name`     \\xe2\\x80\\x93 Human-readable token name (e.g. `\"Vault Share Token\"`).\\n* `symbol`   \\xe2\\x80\\x93 Short ticker symbol (e.g. `\"VST\"`).\\n* `decimals` \\xe2\\x80\\x93 Number of decimal places (typically `7` to match Stellar\\nnative asset precision).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return true when user share transfers are enabled.",
+      "name": "transfers_enabled",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically decrease the allowance granted to `spender` by `delta`.\\n\\nSafe alternative to `approve` for lowering an existing allowance without\\nthe approval race condition.  If `delta` exceeds the current allowance\\nthe allowance is set to `0` (floors, does not panic).\\n\\n# Arguments\\n* `from`              \\xe2\\x80\\x93 Token holder (must sign).\\n* `spender`           \\xe2\\x80\\x93 Approved spender.\\n* `delta`             \\xe2\\x80\\x93 Amount to subtract. Must be > 0.\\n* `expiration_ledger` \\xe2\\x80\\x93 New expiry applied to the updated allowance.\\n\\n# Errors\\n* [`ShareTokenError::ZeroAmount`] / [`ShareTokenError::NegativeAmount`]",
+      "name": "decrease_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically increase the allowance granted to `spender` by `delta`.\\n\\nSafe alternative to `approve` for raising an existing allowance without\\nthe approval race condition.\\n\\n# Arguments\\n* `from`              \\xe2\\x80\\x93 Token holder (must sign).\\n* `spender`           \\xe2\\x80\\x93 Approved spender.\\n* `delta`             \\xe2\\x80\\x93 Amount to add. Must be > 0.\\n* `expiration_ledger` \\xe2\\x80\\x93 New expiry applied to the updated allowance.\\n\\n# Errors\\n* [`ShareTokenError::ZeroAmount`]  / [`ShareTokenError::NegativeAmount`]\\n* [`ShareTokenError::Overflow`] if the resulting allowance exceeds i128::MAX.",
+      "name": "increase_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enable or disable user share transfers. Admin only.\\n\\nVault deployments keep transfers disabled by default so cooldown and\\nper-user PnL accounting remain address-accurate. Enabling transfers is\\nan explicit vault/governance decision that makes those per-user controls\\ninformational unless the vault implements transfer-aware accounting.",
+      "name": "set_transfers_enabled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can be returned by the ShareToken contract.\\n\\nEach variant maps to a unique u32 discriminant so that the Soroban host\\ncan surface them as typed contract errors to callers.",
+      "lib": "",
+      "name": "ShareTokenError",
+      "cases": [
+        {
+          "doc": "The contract has not yet been initialized via `initialize`.",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "`initialize` was called on a contract that is already initialized.",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "The caller does not have the required authority (e.g. non-admin tried\\nto mint).",
+          "name": "NotAuthorized",
+          "value": 3
+        },
+        {
+          "doc": "The source account does not hold enough tokens for the requested\\ntransfer or burn.",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "The spender's allowance is smaller than the requested `transfer_from`\\nor `burn_from` amount.",
+          "name": "InsufficientAllowance",
+          "value": 5
+        },
+        {
+          "doc": "A negative amount was supplied where only non-negative values are\\naccepted.",
+          "name": "NegativeAmount",
+          "value": 6
+        },
+        {
+          "doc": "A zero amount was supplied where a strictly-positive value is required.",
+          "name": "ZeroAmount",
+          "value": 7
+        },
+        {
+          "doc": "An arithmetic operation would overflow i128.",
+          "name": "Overflow",
+          "value": 8
+        },
+        {
+          "doc": "`approve` was called with a non-zero amount while a non-zero, non-expired\\nallowance already exists for that (owner, spender) pair.  Set the\\nallowance to 0 first, or use `increase_allowance`/`decrease_allowance`.",
+          "name": "NonZeroAllowance",
+          "value": 9
+        },
+        {
+          "doc": "Share transfers are disabled for this vault share token.",
+          "name": "TransfersDisabled",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "All storage keys used by the ShareToken contract.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Address of the vault (admin) \\xe2\\x80\\x94 stored in INSTANCE storage.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Human-readable token name \\xe2\\x80\\x94 stored in INSTANCE storage.",
+            "name": "Name"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Short token ticker symbol \\xe2\\x80\\x94 stored in INSTANCE storage.",
+            "name": "Symbol"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of decimal places \\xe2\\x80\\x94 stored in INSTANCE storage.",
+            "name": "Decimals"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Running total of minted tokens \\xe2\\x80\\x94 stored in INSTANCE storage.",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether user share transfers are enabled. Defaults to false.",
+            "name": "TransfersEnabled"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-account token balance \\xe2\\x80\\x94 stored in PERSISTENT storage.",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-(from, spender) allowance \\xe2\\x80\\x94 stored in PERSISTENT storage.",
+            "name": "Allowance",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AllowanceKey"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The map key used for per-account allowance entries.\\nBoth fields are included so that (from, spender) pairs are unique.",
+      "lib": "",
+      "name": "AllowanceKey",
+      "fields": [
+        {
+          "doc": "The token-holder who granted the allowance.",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "The account permitted to spend on behalf of `from`.",
+          "name": "spender",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Stored allowance value including amount and expiry ledger.",
+      "lib": "",
+      "name": "AllowanceValue",
+      "fields": [
+        {
+          "doc": "Remaining spendable amount.",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last ledger sequence where this allowance is valid (inclusive).",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]

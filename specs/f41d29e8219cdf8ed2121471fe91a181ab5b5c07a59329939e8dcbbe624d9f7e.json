@@ -1,0 +1,1820 @@
+[
+  {
+    "function_v0": {
+      "doc": "Deposit `amount` of any whitelisted deposit asset and receive share tokens.\\n\\nMulti-asset v2: if `deposit_assets` list is configured, any asset in that\\nlist is accepted.  Non-base assets are oracle-priced to compute the\\nbase-asset-denominated deposit value used for share minting.\\n\\nLegacy mode (no `portfolio_assets` configured): only `base_asset` accepted.\\n\\nFlow (dHedge V2 model):\\n1. Collect streaming management and performance fees.\\n2. Snapshot NAV before transfer (oracle pricing).\\n3. Pull `amount` of `asset` from `from` into vault.\\n4. `deposit_value` = oracle.price(asset) \\xc3\\x97 amount  (base-asset terms).\\n5. `total_shares` = deposit_value \\xc3\\x97 total_supply / nav_before.\\n6. Split entry fee as shares minted to manager.\\n7. Update user's cost_basis for PnL tracking.\\n\\n# Returns\\nNumber of share tokens minted to `from`.\\n\\n# Errors\\n* [`VaultError::Paused`]\\n* [`VaultError::InvalidAmount`]\\n* [`VaultError::AssetNotInPortfolio`] \\xe2\\x80\\x94 not in deposit asset list\\n* [`VaultError::DepositCapExceeded`]",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_shares_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current NAV (vault base-asset balance + strategy values).",
+      "name": "get_nav",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `share_amount` of share tokens and receive a proportional fraction\\nof every asset in the vault (multi-asset dHedge V2 withdrawal model).\\n\\nFlow:\\n1. Collect streaming management and performance fees.\\n2. Validate share balance and cooldown.\\n3. **BURN SHARES FIRST** (reentrancy protection).\\n4. Update user's realized PnL.\\n5. For each portfolio asset: transfer `fraction \\xc3\\x97 balance` to `to`.\\n6. For each active guard: call `withdraw_fraction(vault, num, den, to)`.\\nGuards send their underlying tokens directly to `to`.\\n\\nLegacy mode (no portfolio_assets configured): same proportional logic\\napplied to base_asset only, plus legacy single-asset strategies.\\n\\nExit fee fraction stays in the vault \\xe2\\x80\\x94 not transferred to manager.\\n\\n# Returns\\nTotal value withdrawn in base-asset terms (for events / slippage check).\\n\\n# Errors\\n* [`VaultError::Paused`]\\n* [`VaultError::InvalidAmount`]\\n* [`VaultError::InsufficientShares`]\\n* [`VaultError::CooldownActive`]",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "share_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_base_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the vault admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add an allowlisted member for private-pool deposits. Admin only.",
+      "name": "add_member",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute any authorised operation through a whitelisted guard contract.\\n\\nThis is the single unified dispatch entry-point replacing the old\\n`invest` / `unwind` / `invest_lp` / `unwind_lp` / `execute_trade`\\nfamily of functions.\\n\\n# Flow\\n1. `caller` must be the registered manager **or** trader \\xe2\\x80\\x94 both may call.\\n2. `guard` must appear in `ActiveGuards`.\\n3. `fn_name` must appear in `AuthorizedOps(guard)`.\\n4. NAV is snapshotted before dispatch.\\n5. The vault **injects its own address** as the first argument, then\\nappends the caller-supplied `args`.  This ensures the guard can only\\nact on behalf of the vault \\xe2\\x80\\x94 the caller cannot substitute a different\\nsource address.\\n6. `guard.<fn_name>(vault, args\\xe2\\x80\\xa6)` is called directly by name.\\n7. NAV is re-measured.  If the drop exceeds `max_loss_bps` the\\ntransaction reverts (TVL guard).\\n\\n# Arguments\\n* `caller`  \\xe2\\x80\\x94 Manager or trader address (must `require_auth()`).\\n* `guard`   \\xe2\\x80\\x94 Active guard contract address.\\n* `fn_name` \\xe2\\x80\\x94 Guard function name to call (e.g. `\"supply\"`, `\"swap",
+      "name": "execute_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "val"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_trader",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register the oracle contract used to price strategy positions. Manager only.\\n\\nOnce set, `nav()` will call `oracle.get_price(price_token)` for each\\nstrategy that has a price token registered via [`set_strategy_oracle_token`].\\n\\n# Errors\\n* [`VaultError::NotAdmin`]",
+      "name": "set_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer the trader role to a new address. Manager only.\\n\\nAfter this call only `new_trader` can call `execute_trade`.\\n\\n# Errors\\n* [`VaultError::NotManager`]",
+      "name": "set_trader",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the vault's factory reference address.",
+      "name": "get_factory",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_manager",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer the manager role to a new address.\\n\\nThe vault admin or the current manager may authorise this call.\\n\\n# Errors\\n* [`VaultError::NotManager`]",
+      "name": "set_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the fee-recipient treasury address.",
+      "name": "get_treasury",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the PnL breakdown for a user.\\n\\nAll values are in base-asset terms (PRICE_PRECISION-scaled where noted).",
+      "name": "get_user_pnl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UserPnLReport"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Perform the one-time anti-inflation seed deposit. Factory only.\\n\\nThe factory calls this after transferring `seed_amount` of base_asset\\ndirectly into the vault.  This function mints `seed_amount` shares to\\na burn address (all-zeros), ensuring `total_supply > 0` from day one\\nand eliminating the first-depositor inflation attack.\\n\\nCan only be called once per vault (enforced via `SeedDeposited` flag).\\n\\n# Errors\\n* [`VaultError::SeedAlreadyDeposited`]",
+      "name": "seed_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seed_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or update the treasury address. Admin only.",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_ops_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an allowlisted member for private-pool deposits. Admin only.",
+      "name": "remove_member",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the vault. Runs atomically at deployment via `CreateContract`.\\n\\n# Errors\\n* [`VaultError::InvalidAmount`] \\xe2\\x80\\x94 if any fee exceeds its cap.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "VaultParams"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters passed to [`Vault::initialize`].",
+      "lib": "",
+      "name": "VaultParams",
+      "fields": [
+        {
+          "doc": "Vault admin \\xe2\\x80\\x94 can change manager and treasury.  Separate from manager.",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "The single deposit/withdrawal asset (e.g. USDC).",
+          "name": "base_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Entry fee in basis points (0\\xe2\\x80\\x93500).",
+          "name": "entry_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Exit fee in basis points (0\\xe2\\x80\\x93500).",
+          "name": "exit_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Optional factory address. When provided, the vault records it atomically\\nat construction time so `add_portfolio_asset` / `add_active_guard` can\\nvalidate against the factory's global whitelist.\\n\\nPass `None` for standalone vaults that do not use the factory registry.",
+          "name": "factory",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Whether the vault starts in private-pool mode (member-only deposits).\\nCan be changed later via `set_private_pool` (admin only).",
+          "name": "is_private",
+          "type_": "bool"
+        },
+        {
+          "doc": "Account that manages strategies, fees, and pausing.",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "Optional human-readable name of the manager (for display).",
+          "name": "manager_name",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "Annual management fee in basis points (0\\xe2\\x80\\x93300).",
+          "name": "mgmt_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Performance fee in basis points (0\\xe2\\x80\\x933000).",
+          "name": "perf_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Deployed SEP-41 share token contract.",
+          "name": "share_token",
+          "type_": "address"
+        },
+        {
+          "doc": "Expected share-token admin.\\n\\nThe share token must be deployed with the deterministic future vault\\naddress as admin before the vault is deployed. The vault constructor\\nverifies that value and does not attempt a nested admin transfer.",
+          "name": "share_token_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Account that can execute spot trades (may equal `manager`).",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "Address that receives all fee payments (entry, mgmt, perf).",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_base_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause deposits and withdrawals. Admin only.",
+      "name": "pause_deposits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current share price (NAV / total_supply) in PRICE_PRECISION units.",
+      "name": "get_share_price",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_share_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_private_pool",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the vault's maximum deposit cap (in base-asset units). Manager only.\\n\\nA cap of `0` means **uncapped** (no limit).  Set to a positive value to\\nprevent the vault from accepting deposits beyond that NAV ceiling.\\n\\n# Errors\\n* [`VaultError::NotManager`]",
+      "name": "set_deposit_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pending announced fee schedule that can be committed after timelock.",
+      "lib": "",
+      "name": "AnnouncedFees",
+      "fields": [
+        {
+          "doc": "",
+          "name": "activation_ts",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "entry_fee_bps",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "exit_fee_bps",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "mgmt_fee_bps",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "perf_fee_bps",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "PnL report returned by `get_user_pnl`.  All values in base-asset units.",
+      "lib": "",
+      "name": "UserPnLReport",
+      "fields": [
+        {
+          "doc": "Base-asset value paid for currently held shares.",
+          "name": "cost_basis",
+          "type_": "i128"
+        },
+        {
+          "doc": "Current market value of held shares (shares \\xc3\\x97 share_price / PRICE_PRECISION).",
+          "name": "current_value",
+          "type_": "i128"
+        },
+        {
+          "doc": "Accumulated realized gain/loss from past withdrawals.",
+          "name": "realized_pnl",
+          "type_": "i128"
+        },
+        {
+          "doc": "unrealized_pnl + realized_pnl.",
+          "name": "total_pnl",
+          "type_": "i128"
+        },
+        {
+          "doc": "current_value \\xe2\\x88\\x92 cost_basis.",
+          "name": "unrealized_pnl",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a strategy guard contract as active for this vault.\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::GuardNotAuthorized`] \\xe2\\x80\\x94 not in factory whitelist\\n* [`VaultError::GuardAlreadyActive`]\\n* [`VaultError::TooManyGuards`]",
+      "name": "add_active_guard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the manager's display name, or `None` if not set.",
+      "name": "get_manager_name",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause manager operations (execute_op). Admin only.",
+      "name": "pause_operations",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the exit fee. Manager only. Capped at [`MAX_ENTRY_EXIT_FEE_BPS`].\\n\\n# Errors\\n* [`VaultError::NotManager`] / [`VaultError::InvalidAmount`]",
+      "name": "set_exit_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or update the manager's display name. Admin or manager only.",
+      "name": "set_manager_name",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the maximum NAV loss allowed per manager operation. Manager only.\\n\\nAfter every `invest`, `unwind`, `invest_lp`, `unwind_lp`, and\\n`execute_trade` the vault checks:\\n```text\\nnav_after \\xe2\\x89\\xa5 nav_before \\xc3\\x97 (1 \\xe2\\x88\\x92 max_loss_bps / 10_000)\\n```\\nIf the check fails the transaction reverts with\\n[`VaultError::TvlGuardTripped`], preventing the manager from silently\\ndraining TVL through repeated high-slippage operations.\\n\\nA typical production value is `100` (1 % per transaction).\\n\\nSetting `0` is rejected because a zero tolerance disables the NAV-loss\\nguard entirely, which would allow a manager to execute a damaging\\noperation without any on-chain slippage protection.  Use the default\\nof [`DEFAULT_MAX_LOSS_BPS`] (1 000 bps = 10 %) or another non-zero value.\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::InvalidAmount`] \\xe2\\x80\\x94 if `bps == 0` or `bps > FEE_DENOMINATOR`",
+      "name": "set_max_loss_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the annual management fee. Manager only. Capped at [`MAX_MGMT_FEE_BPS`].\\n\\nThe timestamp is NOT reset; accrued-since-last-collection will use the\\nold rate for the elapsed period and the new rate going forward (standard\\nfund accounting).\\n\\n# Errors\\n* [`VaultError::NotManager`] / [`VaultError::InvalidAmount`]",
+      "name": "set_mgmt_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the performance fee. Manager only. Capped at [`MAX_PERF_FEE_BPS`].\\n\\n# Errors\\n* [`VaultError::NotManager`] / [`VaultError::InvalidAmount`]",
+      "name": "set_perf_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enable or disable private-pool mode. Admin only.",
+      "name": "set_private_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "is_private",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpause deposits and withdrawals. Admin only.",
+      "name": "unpause_deposits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add an asset to the deposit-allowed list. Must be in portfolio assets.\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::AssetNotInPortfolio`]\\n* [`VaultError::AssetAlreadyPresent`]",
+      "name": "add_deposit_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the list of active guard contracts for this vault.",
+      "name": "get_active_guards",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_member_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the entry fee. Manager only. Capped at [`MAX_ENTRY_EXIT_FEE_BPS`].\\n\\n# Errors\\n* [`VaultError::NotManager`] / [`VaultError::InvalidAmount`]",
+      "name": "set_entry_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_announced_fees",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AnnouncedFees"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the authorized function names for a guard.",
+      "name": "get_authorized_ops",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "symbol"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the vault's current deposit asset list.",
+      "name": "get_deposit_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return portfolio assets currently included in bounded NAV scans.",
+      "name": "get_tracked_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the authorized function names for a guard contract. Manager only.\\n\\nOnly the listed function names may be dispatched by the trader through\\n`execute_op` for the given guard.",
+      "name": "set_authorized_ops",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ops",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Synchronize a portfolio asset into or out of the bounded NAV index.\\n\\nThis is permissionless so unsolicited token transfers to the vault can\\nbe included in NAV without requiring a manager action. The asset must\\nalready be configured as a portfolio asset.",
+      "name": "sync_asset_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpause manager operations (execute_op). Admin only.",
+      "name": "unpause_operations",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add an asset to the vault's portfolio asset list.\\n\\nThe asset must be in the factory's global authorized asset list.\\nThe oracle must be set before adding non-base assets (needed for NAV).\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::AssetNotAuthorized`] \\xe2\\x80\\x94 not in factory whitelist\\n* [`VaultError::AssetAlreadyPresent`] \\xe2\\x80\\x94 already in portfolio\\n* [`VaultError::TooManyAssets`] \\xe2\\x80\\x94 MAX_PORTFOLIO_ASSETS reached",
+      "name": "add_portfolio_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Commit the latest announced fee-increase schedule once delay elapsed.",
+      "name": "commit_fee_increase",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return active guards that currently contribute non-zero strategy value\\nto NAV and withdrawals.",
+      "name": "get_position_guards",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a strategy guard contract from the active list.\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::StrategyNotWhitelisted`] \\xe2\\x80\\x94 not in active list\\n* [`VaultError::GuardHasActivePosition`] \\xe2\\x80\\x94 guard still holds positions",
+      "name": "remove_active_guard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Synchronize an active guard into or out of the bounded position index.\\n\\nThis is permissionless so strategy value changes caused by external\\nyield, rewards, or testnet repair scripts can be reflected without\\nforcing a full active-guard scan in every user action.",
+      "name": "sync_guard_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionlessly settle pending management and performance fees.\\n\\nFees are deterministic from vault state: the caller cannot choose the\\nfee amount, recipient, NAV, or timestamp. This lets keepers, users, UIs,\\nor the manager sync fee accounting even when no deposit/withdraw occurs.\\n\\nReturns the number of fee shares minted to the treasury.",
+      "name": "collect_pending_fees",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the vault's current portfolio asset list.",
+      "name": "get_portfolio_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an asset from the deposit-allowed list.\\n\\nDoes not remove from portfolio assets. No constraint on balance.\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::AssetNotInPortfolio`] \\xe2\\x80\\x94 not in deposit list",
+      "name": "remove_deposit_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Announce a fee-increase schedule that can be committed after timelock.",
+      "name": "announce_fee_increase",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "entry_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "exit_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mgmt_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "perf_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel any previously announced fee-increase schedule.",
+      "name": "renounce_fee_increase",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_exit_cooldown_secs",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_value_guard_enabled",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an asset from the vault's portfolio asset list.\\n\\n# Errors\\n* [`VaultError::NotManager`]\\n* [`VaultError::AssetNotInPortfolio`]\\n* [`VaultError::AssetHasBalance`] \\xe2\\x80\\x94 vault still holds this token\\n* [`VaultError::AssetInUseByGuard`] \\xe2\\x80\\x94 a guard has an active position using this asset",
+      "name": "remove_portfolio_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set per-user exit cooldown in seconds. Manager only.",
+      "name": "set_exit_cooldown_secs",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "secs",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Toggle same-ledger value-manipulation guard. Manager only.",
+      "name": "set_value_guard_enabled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "share_transfers_enabled",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pnl_tracking_is_accurate",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_exit_remaining_cooldown",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Enable or disable transferable vault shares. Admin only.\\n\\nShares are non-transferable by default so exit cooldown and per-user PnL\\naccounting remain accurate. If transfers are enabled, cooldown becomes a\\nsame-address friction control and PnL becomes informational unless a\\nfuture transfer-aware accounting design is added.",
+      "name": "set_share_transfers_enabled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "exit_cooldown_is_hard_control",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "All errors that the Vault contract can raise.",
+      "lib": "",
+      "name": "VaultError",
+      "cases": [
+        {
+          "doc": "`initialize` was already called on this contract instance.",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "An entry-point that requires prior initialization was called before\\n`initialize`.",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "The caller is not the registered manager address.",
+          "name": "NotManager",
+          "value": 3
+        },
+        {
+          "doc": "The caller is not the registered trader address.",
+          "name": "NotTrader",
+          "value": 4
+        },
+        {
+          "doc": "The vault is currently paused; deposits and withdrawals are blocked.",
+          "name": "Paused",
+          "value": 5
+        },
+        {
+          "doc": "A zero or negative amount was supplied where a strictly-positive value\\nis required (e.g. deposit or withdrawal amount).",
+          "name": "InvalidAmount",
+          "value": 6
+        },
+        {
+          "doc": "The caller does not hold enough share tokens to satisfy the withdrawal.",
+          "name": "InsufficientShares",
+          "value": 7
+        },
+        {
+          "doc": "The requested strategy address is not in the vault's whitelist.",
+          "name": "StrategyNotWhitelisted",
+          "value": 8
+        },
+        {
+          "doc": "The trade guard rejected the proposed trade parameters.",
+          "name": "TradeGuardRejected",
+          "value": 9
+        },
+        {
+          "doc": "An arithmetic operation overflowed `i128`.",
+          "name": "Overflow",
+          "value": 10
+        },
+        {
+          "doc": "The share total supply is zero when a non-zero value is required\\n(e.g. computing share price before any deposits).",
+          "name": "ZeroTotalSupply",
+          "value": 11
+        },
+        {
+          "doc": "A strategy asset does not match the vault's configured base asset.",
+          "name": "AssetMismatch",
+          "value": 12
+        },
+        {
+          "doc": "An operation requires a trade guard but none has been configured for the\\nspecified strategy.",
+          "name": "GuardNotSet",
+          "value": 13
+        },
+        {
+          "doc": "Attempt to remove a strategy that still holds an active (non-zero)\\nposition.  Unwind the position before removing the strategy.",
+          "name": "StrategyHasActivePosition",
+          "value": 14
+        },
+        {
+          "doc": "The deposit would push the vault's total NAV above the configured\\ndeposit cap.  Set `deposit_cap` to 0 to disable the cap.",
+          "name": "DepositCapExceeded",
+          "value": 15
+        },
+        {
+          "doc": "The proposed invest would push a single strategy's NAV share above the\\nconfigured `max_concentration_bps` limit.",
+          "name": "ConcentrationLimitExceeded",
+          "value": 16
+        },
+        {
+          "doc": "A manager operation (invest / unwind / execute_trade) caused the vault's\\nNAV to fall below `nav_before \\xc3\\x97 (1 \\xe2\\x88\\x92 max_loss_bps / 10_000)`.\\nIndicates potential exploitation via slippage or an oracle attack.",
+          "name": "TvlGuardTripped",
+          "value": 17
+        },
+        {
+          "doc": "Oracle token pricing is not supported for LP strategies; LP valuation\\nmust be handled inside the strategy contract.",
+          "name": "LpStrategyOracleUnsupported",
+          "value": 18
+        },
+        {
+          "doc": "An LP strategy has a non-zero position but no internal oracle\\nconfigured, so its value cannot be safely used for NAV.",
+          "name": "LpStrategyOracleRequired",
+          "value": 19
+        },
+        {
+          "doc": "Requested withdrawal cannot be funded from vault cash plus auto-unwound\\nsingle-asset strategies.",
+          "name": "InsufficientLiquidity",
+          "value": 20
+        },
+        {
+          "doc": "Once a strategy is marked LP, the LP flag cannot be cleared.",
+          "name": "LpStrategyFlagImmutable",
+          "value": 21
+        },
+        {
+          "doc": "The provided `share_token_admin` does not match the share token's\\ncurrent admin during vault initialization.",
+          "name": "ShareTokenAdminMismatch",
+          "value": 22
+        },
+        {
+          "doc": "A withdrawal was attempted before cooldown elapsed since last deposit.",
+          "name": "CooldownActive",
+          "value": 23
+        },
+        {
+          "doc": "Deposit attempted into a private pool by a non-allowlisted address.",
+          "name": "NotMember",
+          "value": 24
+        },
+        {
+          "doc": "Attempted to commit an announced fee increase before delay elapsed.",
+          "name": "FeeIncreaseDelayActive",
+          "value": 25
+        },
+        {
+          "doc": "No pending announced fee increase exists to commit.",
+          "name": "NoFeeIncreaseAnnounced",
+          "value": 26
+        },
+        {
+          "doc": "Same-ledger operation-type mismatch detected for value-manipulation guard.",
+          "name": "OperationTypeMismatch",
+          "value": 27
+        },
+        {
+          "doc": "Same-ledger NAV checkpoint mismatch detected for value-manipulation guard.",
+          "name": "ValueManipulationDetected",
+          "value": 28
+        },
+        {
+          "doc": "The deposit returned fewer shares than `min_shares_out`, or the\\nwithdrawal returned fewer base tokens than `min_base_out`.",
+          "name": "SlippageTooHigh",
+          "value": 29
+        },
+        {
+          "doc": "The asset is not in the factory's global authorized asset list.",
+          "name": "AssetNotAuthorized",
+          "value": 30
+        },
+        {
+          "doc": "The asset is not in the vault's PortfolioAssets list.",
+          "name": "AssetNotInPortfolio",
+          "value": 31
+        },
+        {
+          "doc": "The asset already exists in the portfolio or deposit asset list.",
+          "name": "AssetAlreadyPresent",
+          "value": 32
+        },
+        {
+          "doc": "Cannot remove an asset from PortfolioAssets while its token balance > 0.",
+          "name": "AssetHasBalance",
+          "value": 33
+        },
+        {
+          "doc": "Cannot remove an asset from PortfolioAssets while a guard has an active\\nposition involving this asset.",
+          "name": "AssetInUseByGuard",
+          "value": 34
+        },
+        {
+          "doc": "Cannot remove a guard from ActiveGuards while it has a non-zero total\\nposition value for this vault.",
+          "name": "GuardHasActivePosition",
+          "value": 35
+        },
+        {
+          "doc": "The guard is not in the factory's authorized guard list.",
+          "name": "GuardNotAuthorized",
+          "value": 36
+        },
+        {
+          "doc": "The guard is already registered as an active guard for this vault.",
+          "name": "GuardAlreadyActive",
+          "value": 37
+        },
+        {
+          "doc": "The seed deposit has already been executed; it can only run once.",
+          "name": "SeedAlreadyDeposited",
+          "value": 38
+        },
+        {
+          "doc": "The vault has no factory reference set; required for asset validation.",
+          "name": "FactoryNotSet",
+          "value": 39
+        },
+        {
+          "doc": "An oracle is required to price a non-base deposit or portfolio asset.",
+          "name": "OracleRequired",
+          "value": 40
+        },
+        {
+          "doc": "The maximum number of active guards (MAX_GUARDS) has been reached.",
+          "name": "TooManyGuards",
+          "value": 41
+        },
+        {
+          "doc": "The maximum number of portfolio assets (MAX_PORTFOLIO_ASSETS) has been reached.",
+          "name": "TooManyAssets",
+          "value": 42
+        },
+        {
+          "doc": "Manager operations (execute_op) are currently paused by admin.",
+          "name": "OperationsPaused",
+          "value": 43
+        },
+        {
+          "doc": "The caller is not the registered admin address.",
+          "name": "NotAdmin",
+          "value": 44
+        },
+        {
+          "doc": "The caller is not the configured factory contract.",
+          "name": "NotFactory",
+          "value": 45
+        },
+        {
+          "doc": "A price source returned a zero or negative price.",
+          "name": "InvalidOraclePrice",
+          "value": 46
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "All keys stored in instance storage by the Vault contract.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Vault admin \\xe2\\x80\\x94 can change manager and treasury; separate from manager role.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Fund manager \\xe2\\x80\\x94 sole address allowed to call `execute_op`,\\nfee-configuration methods, guard/portfolio management, etc.",
+            "name": "Manager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Trader \\xe2\\x80\\x94 address allowed to call `execute_op` alongside the manager.",
+            "name": "Trader"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Denomination token (e.g. USDC) that the vault accepts for deposits and\\nreturns on withdrawals.  All NAV figures are expressed in base-asset units.",
+            "name": "BaseAsset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SEP-41 share token contract.  The vault is its admin and calls\\n`mint` / `burn` to manage share supply.",
+            "name": "ShareToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Deposit/withdrawal pause flag. When `true`, `deposit` and `withdraw` revert.",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Operations pause flag. When `true`, `execute_op` reverts.",
+            "name": "OpsPaused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Entry fee in basis points charged on deposit.  Fee is taken as share\\ntokens minted to the manager (dHedge V2 \\xc2\\xa71 Step 6).",
+            "name": "EntryFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Exit fee in basis points charged on withdrawal.  Fee fraction remains\\nin the vault, benefiting remaining shareholders (dHedge V2 \\xc2\\xa72 Step 4).",
+            "name": "ExitFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Annual management fee in basis points.  Accrued continuously since\\n`LastMgmtFeeTs` and settled as shares minted to the manager.",
+            "name": "MgmtFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Performance fee in basis points.  Charged when NAV-per-share exceeds\\nthe stored `HighWaterMark`.",
+            "name": "PerfFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "UNIX timestamp (seconds) of the last management-fee collection.",
+            "name": "LastMgmtFeeTs"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "NAV-per-share high-water mark used for performance fee eligibility\\n(PRICE_PRECISION-scaled, same unit as `get_share_price()`).",
+            "name": "HighWaterMark"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Maximum total NAV the vault will accept in deposits.\\n`0` means uncapped.",
+            "name": "DepositCap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Optional price oracle contract.  When set, `nav()` calls\\n`oracle.get_price(price_token)` to convert strategy values to base-asset\\nterms before summing.",
+            "name": "Oracle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Maximum allowed NAV loss per manager operation, in basis points.\\n\\nAfter every `invest` / `unwind` / `invest_lp` / `unwind_lp` /\\n`execute_trade` the vault asserts:\\n```text\\nnav_after \\xe2\\x89\\xa5 nav_before \\xc3\\x97 (1 \\xe2\\x88\\x92 max_loss_bps / 10_000)\\n```\\nReverts with [`VaultError::TvlGuardTripped`] if violated.\\n`0` disables the guard entirely.",
+            "name": "MaxLossBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether the vault is private-pool mode (member-only deposits).",
+            "name": "PrivatePool"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Member-allowlist flag for private-pool deposits.",
+            "name": "Member",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Minimum cooldown (seconds) between a user's latest deposit and withdraw.",
+            "name": "ExitCooldownSecs"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Last deposit timestamp per user (UNIX seconds).",
+            "name": "LastDepositTs",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Announced next entry-fee bps for delayed fee-increase commits.",
+            "name": "AnnouncedEntryFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Announced next exit-fee bps for delayed fee-increase commits.",
+            "name": "AnnouncedExitFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Announced next management-fee bps for delayed fee-increase commits.",
+            "name": "AnnouncedMgmtFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Announced next performance-fee bps for delayed fee-increase commits.",
+            "name": "AnnouncedPerfFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "UNIX timestamp when announced fee updates become committable.",
+            "name": "AnnouncedFeeActivationTs"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Enable same-ledger operation-type/value manipulation checks.",
+            "name": "ValueManipulationGuardEnabled"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-caller operation state for same-ledger manipulation checks.",
+            "name": "OpState",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ordered list of all assets tracked in NAV (base_asset + USDT + XLM \\xe2\\x80\\xa6).\\nEvery asset in this list is priced via the oracle and included in NAV.\\nVault managers may only add assets that appear in factory.AuthorizedAssets.",
+            "name": "PortfolioAssets"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Subset of PortfolioAssets that users may deposit.\\nMust always be a subset of PortfolioAssets.",
+            "name": "DepositAssets"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ordered list of active strategy guard contract addresses.\\nEach guard exposes get_total_value / withdraw_fraction / asset_in_use.\\nReplaces the old flat Strategies list for multi-asset vaults.",
+            "name": "ActiveGuards"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ordered list of portfolio assets that currently have a non-zero idle\\nvault balance. NAV uses this bounded index instead of scanning every\\nconfigured portfolio asset on every user operation.",
+            "name": "TrackedAssets"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ordered list of active guards that currently have a non-zero strategy\\nposition. NAV/withdrawal use this bounded index instead of calling every\\nactive guard, including zero-position guards.",
+            "name": "PositionGuards"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Permitted operation types for a given guard contract.\\nE.g., a DEX guard may be restricted to [Swap] only, disallowing\\nAddLiquidity and RemoveLiquidity for this vault.",
+            "name": "AuthorizedOps",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Factory contract address. Used to validate that portfolio assets are\\nin the factory's global AuthorizedAssets whitelist.",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Treasury address \\xe2\\x80\\x94 receives all fee payments (entry, mgmt, perf).",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Optional human-readable name of the manager for display purposes.",
+            "name": "ManagerName"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether the anti-inflation seed deposit has already been executed.\\nSet to true by seed_deposit(); prevents a second call.",
+            "name": "SeedDeposited"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-user PnL tracking stored in **persistent** storage so it survives\\nindependent of the vault instance TTL.",
+            "name": "UserPosition",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-user PnL tracking record.\\n\\n`cost_basis` tracks the base-asset-denominated value paid for currently\\nheld shares (updated on deposit and withdrawal).  `realized_pnl` accumulates\\ngain or loss each time shares are burned.",
+      "lib": "",
+      "name": "UserPosition",
+      "fields": [
+        {
+          "doc": "Total cost in base_asset units for the user's current share holdings.",
+          "name": "cost_basis",
+          "type_": "i128"
+        },
+        {
+          "doc": "Accumulated realized gain/loss from all past withdrawals.",
+          "name": "realized_pnl",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-user same-ledger operation checkpoint.",
+      "lib": "",
+      "name": "OperationState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "expected_nav_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "op_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]
