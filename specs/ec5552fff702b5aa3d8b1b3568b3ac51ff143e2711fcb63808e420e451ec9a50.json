@@ -1,0 +1,647 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalDeposited"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RewardPerTokenStored",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserDeposit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserRewardPerTokenPaid",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserPendingReward",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserPosCount",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UserPos",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PosRewardPaid",
+            "type_": [
+              "address",
+              "u32",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PosPendingReward",
+            "type_": [
+              "address",
+              "u32",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "V2 per-deposit position",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deposit_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "lock_until",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "V1 legacy single-position struct (kept for migration reading)",
+      "lib": "",
+      "name": "UserInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "lock_until",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "LockNotExpired",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidToken",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NoDeposit",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "MaxPositions",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "PositionNotFound",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "NoClaimable",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause deposits and distributions. Withdraw + claim are NEVER pausable.",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "aqua_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lock_duration_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reward_tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume deposits and distributions.",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade contract WASM",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw a specific position after its lock expires.\\nAuto-claims that position's accrued rewards on exit.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pos_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get whether the vault is paused.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend contract instance TTL.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a user's V1-style deposit info (backward compat for frontend transition).",
+      "name": "get_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UserInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a specific position.",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pos_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Position"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Protocol 22+ constructor \\xe2\\x80\\x94 flat args for Admin Bridge compatibility.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_0",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_1",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_2",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_3",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lock_duration_secs",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accumulated rewards from positions whose lock term has expired.\\nPositions still locked accrue rewards but cannot claim.",
+      "name": "claim_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all active positions for a user.",
+      "name": "get_positions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "u32",
+                  {
+                    "udt": {
+                      "name": "Position"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accumulated rewards from a SINGLE unlocked position.\\nUse this for granular, O(1) claims when a user has many positions.\\nGuaranteed to succeed regardless of total position count.",
+      "name": "claim_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pos_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public: extend all position TTLs for a user.",
+      "name": "extend_user_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the earliest lock expiry across all positions.\\nFrontend uses this to show \"\\xf0\\x9f\\x94\\x92 CLAIM UNLOCKS May 13, 2027\".",
+      "name": "get_next_unlock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a new reward token (admin only). Idempotent.",
+      "name": "add_reward_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get vault config.",
+      "name": "get_vault_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VaultConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit reward tokens and update the global rewardPerToken.",
+      "name": "distribute_revenue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get pending rewards across ALL positions (locked + unlocked).",
+      "name": "get_pending_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "i128"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get total AQUA deposited in the vault.",
+      "name": "get_total_deposited",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
