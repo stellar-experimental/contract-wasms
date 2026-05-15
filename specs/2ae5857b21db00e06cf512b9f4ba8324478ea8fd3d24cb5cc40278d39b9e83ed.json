@@ -1,0 +1,655 @@
+[
+  {
+    "function_v0": {
+      "doc": "Update the fee in basis points (admin only).  Max 10 000 (= 100%).",
+      "name": "set_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single escrow order.",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "expiry",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ops/relayer wallet that funded the escrow.",
+          "name": "funder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Crypto payout address (customer wallet).",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "OrderStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the full `Order` struct for the given id (or error).\\n\\n**TTL note:** Read-only queries intentionally do not bump the\\npersistent entry's TTL.  If the order is near expiry in ledger\\nstorage, a write operation (release / refund / cancel) will bump it.\\nFrontends that need guaranteed availability should call a write path\\nor use `extend_ttl` via a separate admin utility.",
+      "name": "get_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer admin role to a new address.  Only the current admin can call\\nthis.  Critical for key rotation if the admin key is compromised.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Relayer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeBps"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Order",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AccumFees",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup.  Sets admin, relayer and fee (in basis points).\\nMust be called before any other function.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "relayer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current fee in basis points.",
+      "name": "get_fee_bps",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the current relayer address.",
+      "name": "get_relayer",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the relayer address (admin only).",
+      "name": "set_relayer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_relayer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Whether the user is buying crypto with fiat (OnRamp) or selling crypto for\\nfiat (OffRamp).",
+      "lib": "",
+      "name": "Direction",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OnRamp"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OffRamp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending order before expiry. Relayer only; funds return to funder.",
+      "name": "cancel_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw accumulated platform fees for a given token to the admin\\naddress.",
+      "name": "collect_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lock tokens from the relayer into escrow and create a pending order.\\n`order_id` must be unique; use it as the off-chain Rampit order key.\\n`recipient` receives crypto on `release_order` (no recipient signature).",
+      "name": "create_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiry",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether an order id is already registered on-chain.",
+      "name": "order_exists",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the full escrowed amount to the funder (relayer). Relayer only.",
+      "name": "refund_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by the relayer once fiat payment is confirmed.\\nDeducts the platform fee, sends the net amount to `recipient`, and marks\\nthe order `Released`.",
+      "name": "release_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RampitError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Lifecycle status of an escrow order.",
+      "lib": "",
+      "name": "OrderStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Released"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Refunded"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Cancelled"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RampitError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "OrderNotFound",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "OrderAlreadyExists",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidExpiry",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "OrderNotPending",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "OrderExpired",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "OrderNotExpired",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NoFeesToCollect",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeBps",
+          "value": 12
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the accumulated (uncollected) fee balance for a token.",
+      "name": "get_accumulated_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
