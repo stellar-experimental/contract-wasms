@@ -1,0 +1,773 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalMinted"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "XldToken"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "OwnerOf",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Soulbound",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TokenUri",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Approval",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "OperatorApproval",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "OwnerBalance",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PfpError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TokenNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TokenSoulbound",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "UriTooLong",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "SoulboundUriImmutable",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotApproved",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ApprovalExpired",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "SEP-0050 approval info stored per token",
+      "lib": "",
+      "name": "ApprovalInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-0050: Mint event\\nTopics: [\"mint\", to: Address]\\nData: [token_id: u32]",
+      "lib": "",
+      "name": "NftMintEvent",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-0050: Approve event\\nTopics: [\"approve\", owner: Address, token_id: u32]\\nData: [approved: Address, live_until_ledger: u32]",
+      "lib": "",
+      "name": "NftApproveEvent",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collection name.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-0050: Transfer event\\nTopics: [\"transfer\", from: Address, to: Address]\\nData: [token_id: u32]",
+      "lib": "",
+      "name": "NftTransferEvent",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collection symbol.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Grants `approved` permission to transfer `token_id`.\\nOnly owner or operator can approve. Soulbound tokens cannot be approved.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "approver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "PfpError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of tokens owned by `owner`.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrades the contract WASM (admin only).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the owner of `token_id`. Panics if token does not exist (per spec).",
+      "name": "owner_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `token_id` from `from` to `to` (owner-initiated).",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "PfpError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the URI for `token_id`. Panics if token does not exist (per spec).",
+      "name": "token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns all token IDs owned by `owner` (SEP-0050 enumeration extension).\\nSingle-call replacement for the O(n) owner_of() loop in the frontend.",
+      "name": "tokens_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-0050: Approve-for-all event\\nTopics: [\"approve_for_all\", owner: Address]\\nData: [operator: Address, live_until_ledger: u32]",
+      "lib": "",
+      "name": "NftApproveForAllEvent",
+      "prefix_topics": [
+        "approve_for_all"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend TTL for instance storage (public, anyone can call).",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the contract with admin, treasury, and XLD token address.\\nLegacy fallback \\xe2\\x80\\x94 guarded for single-call use.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xld_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mints a transferable Stellar PFP NFT.\\nCharges 1 XLD (10,000,000 stroops). URI stored on-chain.",
+      "name": "public_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the approved address for `token_id`, if not expired.\\nPanics if token does not exist (per spec).",
+      "name": "get_approved",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether `token_id` is soulbound.",
+      "name": "is_soulbound",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total number of minted tokens.",
+      "name": "total_minted",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor (Protocol 22+): Called atomically during CreateContractV2.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xld_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the URI for `token_id`. Owner-only. Blocked for soulbound tokens.",
+      "name": "set_token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "PfpError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `token_id` from `from` to `to` via approved `spender`.",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "PfpError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Grants or revokes `operator` as operator for all tokens of `owner`.\\nSet `live_until_ledger = 0` to revoke.",
+      "name": "approve_for_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "PfpError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: Set token URI for any token. Bypasses owner check.\\nUsed for metadata format migrations and compliance actions.",
+      "name": "admin_set_token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "PfpError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether `operator` is approved for all tokens of `owner`.",
+      "name": "is_approved_for_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mints a soulbound (non-transferable) Stellar PFP NFT.\\nCharges 2 XLD (20,000,000 stroops). URI is immutable forever.",
+      "name": "public_mint_soulbound",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  }
+]
