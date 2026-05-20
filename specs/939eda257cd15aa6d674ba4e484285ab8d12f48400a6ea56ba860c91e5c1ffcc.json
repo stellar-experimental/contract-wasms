@@ -1,0 +1,256 @@
+[
+  {
+    "function_v0": {
+      "doc": "Execute a single-path multi-hop swap atomically.\\n\\nDelegates to `split_swap` internally \\xe2\\x80\\x94 wraps the steps as a single sub-route.",
+      "name": "swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapStep"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin address.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM code. Only admin can call.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Supported DEX protocol types",
+      "lib": "",
+      "name": "DexType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Aquarius"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SoroswapPair"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Phoenix"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sushi"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CometDex"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with an admin address.\\nMust be called once after deployment.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a split-order swap atomically.\\n\\nSplits the input across multiple paths for better execution:\\ne.g., 30% via Soroswap (A\\xe2\\x86\\x92B), 70% via Aquarius (A\\xe2\\x86\\x92C\\xe2\\x86\\x92B)\\n\\nFlow:\\n1. Pull total `amount_in` of `token_in` from user\\n2. For each sub-route: execute its path with its allocated amount\\n3. Sum all outputs (must all produce the same `token_out`)\\n4. Verify total output >= `min_amount_out`\\n5. Transfer total output to user\\n\\nAll sub-routes MUST produce the same output token.",
+      "name": "split_swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sub_routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SubRoute"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A sub-route in a split order.\\nEach sub-route has its own amount and path (sequence of swap steps).",
+      "lib": "",
+      "name": "SubRoute",
+      "fields": [
+        {
+          "doc": "Amount of input token allocated to this sub-route",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "Swap steps for this sub-route (multi-hop path)",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapStep"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single swap step in the aggregation path",
+      "lib": "",
+      "name": "SwapStep",
+      "fields": [
+        {
+          "doc": "DEX pool contract address",
+          "name": "dex_id",
+          "type_": "address"
+        },
+        {
+          "doc": "Which DEX protocol",
+          "name": "dex_type",
+          "type_": {
+            "udt": {
+              "name": "DexType"
+            }
+          }
+        },
+        {
+          "doc": "Input token index in the pool's token list (0-based)",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Output token index in the pool's token list (0-based)",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Input token for this step",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "Output token for this step",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
