@@ -1,0 +1,763 @@
+[
+  {
+    "function_v0": {
+      "doc": "One-time setup.  Fails with AlreadyExists if called more than once.",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the contract's WASM with a new version.\\nOnly callable by the admin set in `init`.\\nStorage (escrows, milestones, counter, admin, usdc token) is preserved.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidStatus",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "DeadlinePassed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AlreadyExists",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Escrow",
+      "fields": [
+        {
+          "doc": "7-decimal fixed-point (like XLM stroops)",
+          "name": "amount_usdc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "client",
+          "type_": "address"
+        },
+        {
+          "doc": "ledger timestamp",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "delivery_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "10\\xe2\\x80\\x9350 \\xe2\\x80\\x94 minimum guarantee percentage to freelancer on dispute",
+          "name": "min_guarantee_pct",
+          "type_": "u32"
+        },
+        {
+          "doc": "hardcoded 250 = 2.5%",
+          "name": "platform_fee_pct",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "EscrowStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UsdcToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Counter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Escrow",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "EscrowMilestones",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Escrow"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Client transfers USDC into the contract.",
+      "name": "fund_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Milestone",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_usdc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "delivery_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "MilestoneStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone can call this after the deadline has passed to release funds to the\\nfreelancer (client was silent).  Full release minus platform fee.",
+      "name": "auto_release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Client cancels before work begins.  Refunds USDC if already funded.",
+      "name": "cancel_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new escrow.  Returns the escrow ID.",
+      "name": "create_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "client",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_usdc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_guarantee_pct",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the milestone list, or an empty Vec if none were set\\n(legacy single-payment escrows).",
+      "name": "get_milestones",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Milestone"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Define the milestone schedule for an escrow.\\n\\nRules:\\n* Only the client may call this.\\n* Must be called while the escrow is still Created (before funding).\\n* The sum of milestone amounts must equal the escrow's amount_usdc.\\n* 1\\xe2\\x80\\x9310 milestones per escrow.\\n\\nCalling this a second time replaces the previous schedule entirely.",
+      "name": "set_milestones",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "titles",
+          "type_": {
+            "vec": {
+              "element_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EscrowStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Created",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Funded",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Delivered",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Completed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Disputed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Cancelled",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Client approves delivery; funds are released to freelancer (minus platform fee).",
+      "name": "approve_release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin resolves a dispute by specifying how to split the *remaining* funds\\n(after the minimum guarantee was already paid in `trigger_dispute`).\\n`freelancer_pct` is 0\\xe2\\x80\\x93100 representing the freelancer's share of the remainder.",
+      "name": "resolve_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "freelancer_pct",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Freelancer submits deliverable hash.",
+      "name": "submit_delivery",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "delivery_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Client or freelancer raises a dispute after delivery.\\n`caller` must be either the client or the freelancer.",
+      "name": "trigger_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_escrow_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Client approves a delivered milestone and releases its payment slice.\\nPer-milestone fee = milestone.amount_usdc * platform_fee_pct / 10_000.\\nFinal milestone approval marks the escrow Completed.\\nReturns true when this was the final milestone.",
+      "name": "approve_milestone",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "milestone_index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Lifecycle of a single milestone.\\nPending \\xe2\\x86\\x92 Active (next in queue) \\xe2\\x86\\x92 Delivered (freelancer submitted)\\n\\xe2\\x86\\x92 Approved (client approved, funds released)",
+      "lib": "",
+      "name": "MilestoneStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Delivered",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Approved",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Freelancer acknowledges and starts work.",
+      "name": "confirm_freelancer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Freelancer submits proof-of-work for the currently Active milestone.\\nEscrow status stays Active so the client can approve milestone-by-milestone.",
+      "name": "submit_milestone_delivery",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "delivery_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
