@@ -1,0 +1,312 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CreditCreated",
+      "prefix_topics": [
+        "credit_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "credit_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "store_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "customer_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "due_date",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fetch a single credit entry by its ID.",
+      "name": "get_credit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "credit_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "CreditEntry"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PaymentRecorded",
+      "prefix_topics": [
+        "payment_recorded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "credit_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "customer_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fully_paid",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a new credit (utang) extended by a store to a customer.\\n\\nThe `store_owner` must sign the transaction. Returns the auto-generated\\ncredit_id for this entry.\\n\\nTODO: add customer wallet support in future version (needed for USDC settlement)",
+      "name": "create_credit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "store_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "store_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "customer_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "due_date",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a payment proof against an existing credit.\\n\\nThe original `store_owner` who created the credit must sign.\\nThis is a ledger-only operation \\xe2\\x80\\x94 it tracks the payment on-chain\\nwithout moving any tokens.\\n\\nReturns `true` when the credit is fully settled, `false` otherwise.\\n\\nTODO: add USDC transfer_from once customer wallet approval flow exists",
+      "name": "record_payment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "credit_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the total outstanding balance for a customer across all their credits.\\n\\nReturns 0 if the customer has no credits on record.",
+      "name": "get_customer_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "customer_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key enum \\xe2\\x80\\x94 each variant maps to a distinct slot in contract storage.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Maps credit_id -> CreditEntry.",
+            "name": "Credit",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Tracks how many credits have been created (used to generate IDs).",
+            "name": "CreditCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps customer_id -> total outstanding balance across all their credits.",
+            "name": "CustomerBalance",
+            "type_": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single credit (utang) record stored on-chain.",
+      "lib": "",
+      "name": "CreditEntry",
+      "fields": [
+        {
+          "doc": "Original amount owed (in PHP centavos or agreed unit).",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "How much has been paid back so far.",
+          "name": "amount_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "credit_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "The customer who owes the amount (off-chain DB ID, for indexing).",
+          "name": "customer_id",
+          "type_": "string"
+        },
+        {
+          "doc": "Unix timestamp (seconds) when this credit is due.",
+          "name": "due_date",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "CreditStatus"
+            }
+          }
+        },
+        {
+          "doc": "The sari-sari store that extended the credit.",
+          "name": "store_id",
+          "type_": "string"
+        },
+        {
+          "doc": "The Stellar address of the store owner who created this credit.",
+          "name": "store_owner",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Status of a credit entry.",
+      "lib": "",
+      "name": "CreditStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Active"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PartiallyPaid"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FullyPaid"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "No credit entry found for the given credit_id.",
+          "name": "CreditNotFound",
+          "value": 1
+        },
+        {
+          "doc": "Payment amount must be greater than zero.",
+          "name": "InvalidAmount",
+          "value": 2
+        },
+        {
+          "doc": "Payment would exceed the remaining balance owed.",
+          "name": "Overpayment",
+          "value": 3
+        }
+      ]
+    }
+  }
+]

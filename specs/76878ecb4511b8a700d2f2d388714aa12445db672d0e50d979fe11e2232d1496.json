@@ -1,0 +1,512 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AlreadyExists",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidScore",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfidence",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Issuer"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "credential_id \\xe2\\x86\\x92 Credential",
+            "name": "Credential",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "credential_id \\xe2\\x86\\x92 Vec<Milestone>",
+            "name": "Milestones",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "credential_id \\xe2\\x86\\x92 borrower's Stellar address (set after wallet bind).",
+            "name": "BorrowerAddress",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Milestone",
+      "fields": [
+        {
+          "doc": "\"repaid\" | \"default\" | \"renewed\" | \\xe2\\x80\\xa6",
+          "name": "kind",
+          "type_": "symbol"
+        },
+        {
+          "doc": "sha256 of an off-chain note describing the event.",
+          "name": "note_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recorded_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "recorder",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Credential",
+      "fields": [
+        {
+          "doc": "sha256(borrower_id) \\xe2\\x80\\x94 opaque pointer back to the BE record.",
+          "name": "borrower_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "\"approve\" | \"review\" | \"reject\".",
+          "name": "bucket",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Confidence \\xc3\\x97 10_000, 0..=10_000.",
+          "name": "confidence_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "sha256 of the canonical evaluation JSON (off-chain).",
+          "name": "evaluation_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "sha256(intake_id) \\xe2\\x80\\x94 distinguishes credentials for the same borrower.",
+          "name": "intake_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger timestamp at issuance.",
+          "name": "issued_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Address that signed the issue tx (must equal contract `issuer`).",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "Model identifier (e.g. \"gpt-4o\", \"mock-v1\"). String so non-symbol chars\\n(dashes, dots) are allowed without normalization.",
+          "name": "model",
+          "type_": "string"
+        },
+        {
+          "doc": "Score, 0..=100.",
+          "name": "score",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public read \\xe2\\x80\\x94 lenders verify here. Errors `NotFound` if the credential\\nhas never been issued.",
+      "name": "get",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Credential"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Issue a new credential. Write-once: a second call with the same\\n`credential_id` errors `AlreadyExists`.",
+      "name": "issue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "borrower_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "intake_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "bucket",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "confidence_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "evaluation_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "model",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cheap probe \\xe2\\x80\\x94 returns true if the credential exists.",
+      "name": "exists",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "issuer",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "List all milestones attached to a credential.",
+      "name": "milestones",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Milestone"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the issuer key. Admin-only.",
+      "name": "set_issuer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_issuer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with an admin (key-rotation) and the issuer\\naddress (sole signer permitted to call `issue` / `append_milestone`).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Append a repayment / outcome milestone to an existing credential.\\nIssuer-only. Future-ready: not called by the BE in MVP.",
+      "name": "append_milestone",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "note_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Look up the bound borrower wallet address for a credential, or `None`\\nif the credential has not been bound to a wallet yet.",
+      "name": "borrower_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind a borrower's Stellar wallet address to an existing credential.\\nIssuer-only. The BE writes this after the borrower confirms ownership\\nof their wallet from the FE. Idempotent: calling again with the same\\naddress is a no-op; calling with a different address overwrites\\n(acceptable for MVP \\xe2\\x80\\x94 borrowers can re-bind if they lose their seed).",
+      "name": "set_borrower_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "credential_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "borrower_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

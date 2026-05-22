@@ -1,0 +1,796 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin swaps the contract's executable WASM. Preserves storage.\\nMainnet escape hatch for bug fixes \\xe2\\x80\\x94 no redeploy = no new contract ID = no state migration.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Utang",
+      "fields": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "installment_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "installments_paid",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "installments_total",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "interval_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "next_due",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "UtangStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_utang",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Utang"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin swaps the settlement token. BLOCKED while any utang is Active \\xe2\\x80\\x94\\notherwise in-flight utangs would have stranded reserve funds in the old token.\\nAdmin must coordinate: freeze new utang creation off-chain, let all active utangs\\ncomplete or be defaulted, then call set_token.",
+      "name": "set_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Utang",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CustomerUtangs",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "VendorUtangs",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UtangCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "GracePeriod"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CustomerDefaults",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "VendorDefaults",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UtangReserve",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxUtangAmount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ActiveUtangCount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "native_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: true if utang is Active and `now > next_due + grace_period`.",
+      "name": "is_overdue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "utang_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Vendor creates utang agreement. First installment NOT collected here \\xe2\\x80\\x94\\ncustomer pays each installment separately via pay_installment().",
+      "name": "create_utang",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "installments_total",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "interval_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "grace_period",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin marks utang defaulted. Requires `now > next_due + grace_period`.\\nPays out accumulated reserve to vendor and increments customer/vendor default counters.",
+      "name": "mark_default",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "utang_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UtangStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Active"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Completed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Defaulted"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pay_installment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vendor_defaults",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_utang_amount",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin can adjust grace period (seconds past next_due before default allowed).",
+      "name": "set_grace_period",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "customer_defaults",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_vendor_utangs",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "offset",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Utang"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Customer pays late fee to resume a defaulted utang.\\nLate fee = installment_amount * LATE_FEE_BPS / 10_000, paid direct to vendor.\\nStatus flips back to Active, next_due resets to now + interval.",
+      "name": "resume_after_late",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "active_utang_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_customer_utangs",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "offset",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Utang"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenChangedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "old_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UtangCreatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "installments_total",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UtangResumedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "late_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin sets the cap on total_amount accepted by create_utang.\\nMainnet protection against runaway BNPL principal (e.g., cap at \\xe2\\x82\\xb15k worth of token stroops).",
+      "name": "set_max_utang_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UtangCompletedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UtangDefaultedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "customer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reserve_paid_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vendor",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InstallmentPaidEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "installment_number",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "remaining",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "utang_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MaxUtangAmountChangedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "old_max",
+          "type_": "i128"
+        }
+      ]
+    }
+  }
+]

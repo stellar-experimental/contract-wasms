@@ -1,0 +1,466 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "LockboxNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRegistered",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadySettled",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Usdc"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Lockbox",
+            "type_": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin calls this once payer payment is detected in the lockbox.\\nDistributes USDC from the contract's own balance:\\ncollected >= advance_amount \\xe2\\x86\\x92 repay advance to funder, reserve to msme\\ncollected < advance_amount  \\xe2\\x86\\x92 send all to funder, log shortfall (leakage path)",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "collected_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "LockboxRecord"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LockboxRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "advance_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "collected_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "face_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "funder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "msme",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registered_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reserve_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "settled_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shortfall",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "LockboxStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LockboxStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Settled"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Leaked"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. `admin` is the Axial server key (custodial signer).",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_lockbox",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "LockboxRecord"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LeakageReported",
+      "prefix_topics": [
+        "leakage_reported"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "advance_at_risk",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InvoiceRegistered",
+      "prefix_topics": [
+        "invoice_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "funder",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "msme",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "face_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "advance_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin reports leakage: invoice is past due and lockbox shows insufficient payment.\\nTransitions status to Leaked and emits event (off-chain reconciliation takes over).",
+      "name": "report_leakage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "LockboxRecord"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SettlementCompleted",
+      "prefix_topics": [
+        "settlement_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "collected",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "repaid_funder",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "released_msme",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shortfall",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by admin immediately after `axial_swap::execute_advance`.\\nRecords the lockbox terms for this invoice. The settlement contract's\\nown address is the payment destination \\xe2\\x80\\x94 share it with the NoA.",
+      "name": "register_invoice",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "invoice_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "funder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "msme",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "face_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "advance_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "LockboxRecord"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

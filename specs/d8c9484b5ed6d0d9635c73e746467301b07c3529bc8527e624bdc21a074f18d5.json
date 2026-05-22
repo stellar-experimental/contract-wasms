@@ -1,0 +1,289 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Task",
+      "fields": [
+        {
+          "doc": "",
+          "name": "completed_at",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "earner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof_cid",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "TaskStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TaskCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Task",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxReward"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TaskStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Submitted"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Approved"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Rejected"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read a task's current state. Public.",
+      "name": "get_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Task"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract. Called once by the Anchor on deployment.\\n- admin: the parent/OFW's Stellar address (controls approvals)\\n- token: the TOKA token contract address\\n- max_reward: maximum TOKA reward allowed per task (safety cap)",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_reward",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new task. Only callable by the admin (Anchor).\\nReturns the new task's ID.",
+      "name": "create_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "earner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by the Anchor to reject a submission.\\nTask reverts to Pending so the earner can try again.",
+      "name": "reject_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by the Earner (child) to submit proof of task completion.\\n- task_id: which task they're completing\\n- proof_cid: IPFS CID of the proof photo",
+      "name": "submit_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof_cid",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by the Anchor to approve a submission and trigger payment.\\nThis is the core action: it executes the token transfer.",
+      "name": "approve_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read total number of tasks created.",
+      "name": "get_task_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update max reward cap. Admin only.",
+      "name": "set_max_reward",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
