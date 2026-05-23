@@ -1,0 +1,178 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NonPositiveAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "EmptyBatch",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current admin.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless instance-TTL keep-alive (mirrors the router).",
+      "name": "bump_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-gated withdraw of `amount` of `token` to `to`. The collector\\nholds tokens as a Soroban C-address SAC balance, so no trustline is\\never needed on this contract regardless of asset type.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-gated rotation. New admin takes over immediately.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferred",
+      "prefix_topics": [
+        "admin_transferred"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-shot init. Sets the admin who can withdraw and rotate.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-gated batched withdraw. Each item is `(token, amount, to)`.\\nSingle `admin.require_auth()` covers the whole batch \\xe2\\x80\\x94 the admin\\nsigns once, and Soroban host atomicity ensures the entire batch\\neither commits or reverts together. Useful for sweeping many\\naccumulated assets to many destinations in one tx.",
+      "name": "withdraw_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "items",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "address",
+                    "i128",
+                    "address"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
