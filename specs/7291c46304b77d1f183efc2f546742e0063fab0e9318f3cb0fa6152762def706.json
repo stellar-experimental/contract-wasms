@@ -1,0 +1,1589 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BaseFee"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxPendingFee"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "FeeAssetRate",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "DeferredFee",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PendingFee",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "UnsupportedAsset",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "MaxPendingFeeNotFound",
+          "value": 423
+        },
+        {
+          "doc": "",
+          "name": "BaseFeeNotConfigured",
+          "value": 424
+        },
+        {
+          "doc": "",
+          "name": "FeeRateNotSet",
+          "value": 425
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 729
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 739
+        },
+        {
+          "doc": "",
+          "name": "MaxDeferredFeeExceeded",
+          "value": 749
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_base_fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_base_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_deferred_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_deferred_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "-------------------------------------------------------------------------\\nSettles a wallet's accumulated deferred protocol fees.\\n-------------------------------------------------------------------------\\nSecurity model:\\n- `payer` MUST authorize the payment.\\n- `wallet` identifies the wallet whose deferred fee balance is being settled.\\n- `added_base_fee` allows the caller to atomically include the current\\ntransaction fee into settlement instead of writing deferred state first.\\nNotes:\\n- Passing `added_base_fee = 0` settles only existing deferred fees.\\n- Passing `added_base_fee > 0` is intended for wallet execution flows\\nwhere the current transaction fee should be collected immediately.\\n- Third parties are not allowed to inject additional fees.",
+      "name": "settle_wallet_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "added_base_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_fee_asset_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_asset_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_max_deferred_fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_max_deferred_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "quote_transaction_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tx_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tx_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "FeeDecision"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_supported_fee_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_supported_fee_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw collected protocol fees from the fee manager.\\n\\n- Allows the admin to transfer accumulated fee assets out of the contract.\\n\\nValidation:\\n- Caller must be admin.\\n- Asset must be a supported fee asset.\\n- Amount must be positive.\\n- Withdrawal cannot exceed the contract's asset balance.\\n\\nEmits:\\n- WithdrawFeeEvent(asset, amount, to)",
+      "name": "withdraw_collected_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_supported_fee_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "remove_supported_fee_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Increases the deferred fee balance for a wallet.\\n\\nPurpose:\\nAllows a wallet to accumulate unpaid protocol fees in base fee units\\nfor later settlement.\\n\\nSecurity:\\n- Only the wallet itself may authorize deferred fee increases.\\n- The function only permits increasing the balance.\\n- Negative or zero increments are rejected.\\n- Overflow is rejected.\\n\\nBehavior:\\nprevious_deferred_fee + added_base_fee \\xe2\\x86\\x92 updated_deferred_fee\\n\\nNotes:\\n- This function is called when fee is deferred.",
+      "name": "update_wallet_deferred_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "added_base_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Shared access/config storage keys.\\n\\nDESIGN:\\n- Most addresses here are contract-wide configuration and live in instance storage.\\n- Some identity-related keys are included for compatibility with other modules,\\neven if they are not read/written directly in this file.\\n\\nIMPORTANT:\\n- This file provides low-level storage/auth helpers only.\\n- It does not enforce higher-level business rules such as uniqueness between\\nconfigured addresses or one-time initialization beyond what callers enforce.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Registry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeManager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SocialPayments"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PaymentManager"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UseridWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PasskeyWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents the type of upgrade proposal.\\n\\nVARIANTS:\\n- `Upgrade` \\xe2\\x86\\x92 upgrade the current contract WASM\\n- `WalletVersion` \\xe2\\x86\\x92 update approved wallet implementation hash\\n\\nDESIGN:\\n- Persisted in contract storage (`ProposalType`)\\n- Used to determine execution path during proposal finalization\\n\\nCRITICAL COMPATIBILITY NOTE:\\n- This enum is stored on-chain.\\n- DO NOT:\\n- reorder variants\\n- remove existing variants\\n\\n- Adding new variants requires:\\n- updating parsing logic (`upgrade_type`)\\n- ensuring existing stored values remain valid",
+      "lib": "",
+      "name": "UpgradeType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Upgrade"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "WalletVersion"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SocialPlatform",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "X"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Discord"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Telegram"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Email"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Tiktok"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sms"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "- No validation is performed here",
+      "lib": "",
+      "name": "ValidatorSignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "validator",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RegistryError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "DuplicateValidator",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "ValidatorAlreadyExists",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "InvalidThreshold",
+          "value": 106
+        },
+        {
+          "doc": "",
+          "name": "NotValidator",
+          "value": 107
+        },
+        {
+          "doc": "",
+          "name": "IncorrectNumberOfSignatures",
+          "value": 108
+        },
+        {
+          "doc": "",
+          "name": "PlatformNotSupported",
+          "value": 409
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedAsset",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "UseridAlreadyMapped",
+          "value": 443
+        },
+        {
+          "doc": "",
+          "name": "PasskeyAlreadyMapped",
+          "value": 444
+        },
+        {
+          "doc": "",
+          "name": "NotClaimable",
+          "value": 457
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 459
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 461
+        },
+        {
+          "doc": "",
+          "name": "NotRefundable",
+          "value": 463
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 729
+        },
+        {
+          "doc": "",
+          "name": "InvalidUserId",
+          "value": 742
+        },
+        {
+          "doc": "",
+          "name": "UpperNotAllowed",
+          "value": 743
+        },
+        {
+          "doc": "",
+          "name": "SpacesNotAllowed",
+          "value": 744
+        },
+        {
+          "doc": "",
+          "name": "MaxLengthExceeded",
+          "value": 745
+        },
+        {
+          "doc": "",
+          "name": "IdentityNotFound",
+          "value": 4001
+        },
+        {
+          "doc": "",
+          "name": "NotRegistryManager",
+          "value": 4051
+        },
+        {
+          "doc": "",
+          "name": "FactoryNotSet",
+          "value": 4101
+        },
+        {
+          "doc": "",
+          "name": "WalletAlreadyMapped",
+          "value": 5001
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "- No validation is performed here",
+      "lib": "",
+      "name": "ProtocolDependencies",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "social_router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys derived from normalized identity inputs.\\n\\nDESIGN:\\n- `UseridWalletMap` stores mappings derived from `(platform, user_id)`\\n- `PasskeyWalletMap` stores mappings derived from raw passkey bytes\\n\\nIMPORTANT:\\n- These keys depend on the exact hashing/domain-separation logic below.\\n- Changing encoding, validation, or domain strings will break compatibility\\nwith existing stored mappings.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UseridWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PasskeyWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoteEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "VoteCast"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AddVoterEvent",
+      "prefix_topics": [
+        "Add",
+        "Voter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PasskeyMapEvent",
+      "prefix_topics": [
+        "Registry",
+        "PasskeyMap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveVoterEvent",
+      "prefix_topics": [
+        "Remove",
+        "Voter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateAdminEvent",
+      "prefix_topics": [
+        "Update",
+        "Admin"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawFeeEvent",
+      "prefix_topics": [
+        "Withdraw",
+        "Fee"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AddIdentityMapEvent",
+      "prefix_topics": [
+        "Registry",
+        "IdentityMapAdded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "platform",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateRegistryEvent",
+      "prefix_topics": [
+        "Update",
+        "Registry"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletCreationEvent",
+      "prefix_topics": [
+        "Wallet",
+        "Creation"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "bls_keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 96
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractUpgradeEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "ContractUpgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposalEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "ProposalCreated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voting_deadline",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateFeeManagerEvent",
+      "prefix_topics": [
+        "Update",
+        "FeeManager"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelledEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "UpgradeCancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveIdentityMapEvent",
+      "prefix_topics": [
+        "Registry",
+        "IdentityMapRemoved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "platform",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateSocialRouterEvent",
+      "prefix_topics": [
+        "Update",
+        "SocialRouter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletVersionUpgradeEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "WalletVersion"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SyncProtocolDependenciesEvent",
+      "prefix_topics": [
+        "Sync",
+        "ProtocolDependencies"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_fee_manager",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_social_router",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_fee_manager",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_social_router",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Shared storage keys for token utilities and asset configuration.\\n\\nNOTE:\\n- `AllowanceExpiration` is stored as a ledger offset, not an absolute ledger.\\n- Spend limits are stored in instance storage because they are contract-wide config.\\n- Supported assets are stored in persistent storage as a set-like `Map<Address, ()>`.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Relative ledger offset used when creating token approvals.",
+            "name": "AllowanceExpiration"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Default spend limit used when an asset-specific limit is not set.",
+            "name": "DefaultSpendLimit"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset spend limit override.",
+            "name": "SpendLimit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Set of assets supported by the caller contract.",
+            "name": "SupportedAssets"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeferData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "added_base_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "previous_deferred_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_tx_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "updated_deferred_fee",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeDecision",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CollectNow",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CollectNowData"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Defer",
+            "type_": [
+              {
+                "udt": {
+                  "name": "DeferData"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CannotProceed",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CannotProceedData"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollectNowData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "added_fee_in_asset",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "added_fee_in_base",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "previous_deferred_fee_in_asset",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "previous_deferred_fee_in_base",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_fee_in_asset",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_in_base",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_tx_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CannotProceedData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "added_base_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_deferred_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "previous_deferred_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_tx_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "updated_deferred_fee",
+          "type_": "i128"
+        }
+      ]
+    }
+  }
+]
