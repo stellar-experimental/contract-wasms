@@ -1,0 +1,1495 @@
+[
+  {
+    "function_v0": {
+      "doc": "Pauses the bridge\\nRequires GUARDIAN role",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Data key for bridge storage",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Trusted remote addresses per chain",
+            "name": "TrustedRemote",
+            "type_": [
+              "string"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Previous-era trusted remote per chain, captured by `migrate_messenger`\\nso inbound messages from the previous messenger (which used a\\ndifferent sender-address encoding) can still be validated during the\\nmigration grace period.",
+            "name": "PreviousTrustedRemote",
+            "type_": [
+              "string"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Wrapped PT by origin key (chain_id, evm_address)",
+            "name": "WrappedPt",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Volume in current rate limit window per PT",
+            "name": "RateLimitVolume",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Window start timestamp per PT",
+            "name": "RateLimitWindowStart",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-PT rate limit override (max volume per window)",
+            "name": "RateLimitPerPt",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Native Stellar PT locked balance",
+            "name": "NativePtLocked",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Accumulated fees per token address",
+            "name": "AccumulatedFees",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Chain ID \\xe2\\x86\\x92 Axelar chain name mapping",
+            "name": "ChainName",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpauses the bridge\\nRequires GUARDIAN role",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrades the contract to a new WASM implementation",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the admin address",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether the bridge is paused",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets a new admin address",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract errors",
+      "lib": "",
+      "name": "BridgeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "UntrustedSource",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PtNotRegistered",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidPayload",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "WasmHashNotSet",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "RateLimitExceeded",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidFee",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "NotOperator",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NotGuardian",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NotUpgrader",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "NotMessenger",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedChainId",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "LengthMismatch",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvalidRecipient",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "MinAmountOutNotMet",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the bridge contract\\nAll roles (OPERATOR, GUARDIAN, UPGRADER) are initially granted to the admin",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "PT info from bridging message",
+      "lib": "",
+      "name": "PtBridgeInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "pt_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pt_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "source_chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "stellar_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the bridge fee in basis points (type 2: burn wrapped PT)",
+      "name": "get_fee_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BridgedToEvm",
+      "prefix_topics": [
+        "br_to_ev"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "target_chain_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeCollected",
+      "prefix_topics": [
+        "fee_coll"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Bridge request tracking",
+      "lib": "",
+      "name": "BridgeRequest",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "evm_recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "message_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "target_chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wrapped_pt",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the guardian address",
+      "name": "get_guardian",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the operator address",
+      "name": "get_operator",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the upgrader address",
+      "name": "get_upgrader",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the guardian address\\nGuardian can: pause/unpause, emergency functions",
+      "name": "set_guardian",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_guardian",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the operator address\\nOperator can: set trusted remotes, register PTs, set rate limits, set fees",
+      "name": "set_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the upgrader address\\nUpgrader can: upgrade contracts",
+      "name": "set_upgrader",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_upgrader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeesWithdrawn",
+      "prefix_topics": [
+        "fee_wdrw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extends the TTL of the contract instance storage to max_ttl.\\nAnyone can call this to keep the contract alive.",
+      "name": "bump_instance",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current messenger adapter address",
+      "name": "get_messenger",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the WASM hash for wrapped PT deployment",
+      "name": "get_wasm_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the WASM hash for deploying new wrapped PT contracts\\nRequires OPERATOR role",
+      "name": "set_wasm_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws accumulated fees for a given token to the fee recipient.\\nRequires OPERATOR role (matches EVM's `restricted` modifier).",
+      "name": "withdraw_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get wrapped PT address by origin",
+      "name": "get_wrapped_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "origin_chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "origin_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the bridge fee in basis points for type 2 (burn wrapped PT to bridge back to EVM)\\nRequires OPERATOR role",
+      "name": "set_bridge_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the Axelar chain name for a given EVM chain ID.\\nRequires OPERATOR role.",
+      "name": "set_chain_name",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "chain_name",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WrappedPtMinted",
+      "prefix_topics": [
+        "br_to_st"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "source_chain_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the rate limit window in seconds",
+      "name": "get_rate_window",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by the messenger adapter to deliver a validated inbound message.\\nAccepts auth from the current or previous messenger (grace period during migration).\\nThe caller must identify itself so we can verify and require_auth without panicking\\non the wrong address (Soroban's require_auth panics on failure).",
+      "name": "receive_message",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "source_chain",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "message_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "source_address",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "payload",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BridgedToStellar",
+      "prefix_topics": [
+        "br_to_st"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WrappedPtDeployed",
+      "prefix_topics": [
+        "wpt_depl"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "deployed_address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "source_chain_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pt_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the fee recipient",
+      "name": "get_fee_recipient",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically swap the messenger adapter and snapshot its prior per-chain\\ntrusted remotes for the migration grace period.\\n\\nEach messenger encodes the source sender address differently; in-flight\\ninbound messages from the previous messenger only validate against the\\nremote captured at migration time. Chains not in `chains` keep their\\nold-encoding remote under the new messenger (effectively disabled)\\nuntil a follow-up `migrate_messenger` adds them.\\n\\nRequires OPERATOR role.",
+      "name": "migrate_messenger",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "chains",
+          "type_": {
+            "vec": {
+              "element_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_remotes",
+          "type_": {
+            "vec": {
+              "element_type": "string"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes the Axelar chain name for a given EVM chain ID.\\nRequires OPERATOR role.",
+      "name": "remove_chain_name",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the fee recipient address\\nRequires OPERATOR role",
+      "name": "set_fee_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bridge wrapped PT back to EVM (return a foreign asset to its origin chain)\\nBurns the wrapped PT and sends a message via the messenger adapter.\\n\\n`refund_address` names the address that receives any excess gas refunded\\nby the underlying messenger protocol. `None` defaults to `sender`, which\\nmatches the EVM `msg.sender` behaviour for EOA users while letting\\ncontract callers route refunds to an external account.",
+      "name": "bridge_back_to_evm",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wrapped_pt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "target_chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "evm_recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gas_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "refund_address",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the trusted remote for a chain",
+      "name": "get_trusted_remote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets a trusted remote address for a chain\\nRequires OPERATOR role",
+      "name": "set_trusted_remote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the bridge-back fee in basis points for type 3 (lock native PT to bridge to EVM)\\nUses the same fee recipient as bridge fee\\nRequires OPERATOR role",
+      "name": "set_bridge_back_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns accumulated fees for a given token\\n\\nRefreshes the entry's TTL when present, so an offchain watcher can\\nkeep low-traffic fee tallies alive without holding any role.",
+      "name": "get_accumulated_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the locked balance of a native Stellar PT",
+      "name": "get_native_pt_locked",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pt_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the effective rate limit for a specific PT\\nReturns the per-PT volume override if set, otherwise i128::MAX (no limit).\\nA return value of 0 means this PT is blocked (rate limit always exceeded).\\nWindow is always the global window.\\n\\nRefreshes the per-PT entry's TTL when present, so an offchain watcher\\ncan keep idle PTs alive by calling this getter without holding the\\nOPERATOR role.",
+      "name": "get_rate_limit_for_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wrapped_pt",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_wrapped_pt_origin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wrapped_pt",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 20
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets rate limit for a specific wrapped PT.\\nNone/unset means no limit (i128::MAX).\\nSet to 0 to block bridging for this PT.\\nWindow is always the global window (symmetrical with EVM side).\\nRequires OPERATOR role.",
+      "name": "set_rate_limit_for_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wrapped_pt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_volume_per_window",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bridge a native Stellar PT to EVM.\\nLocks the PT in this contract and sends a type 3 message via the messenger.\\n\\n`refund_address` names the address that receives any excess gas refunded\\nby the underlying messenger protocol. `None` defaults to `sender`, which\\nmatches the EVM `msg.sender` behaviour for EOA users while letting\\ncontract callers route refunds to an external account.",
+      "name": "bridge_native_pt_to_evm",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "target_chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "evm_recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gas_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "refund_address",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the bridge-back fee in basis points (type 3: lock native PT)",
+      "name": "get_bridge_back_fee_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Clears the previous messenger and the per-chain previous trusted remotes\\ncaptured at the last `migrate_messenger`. Symmetric with what\\n`migrate_messenger` set.\\n\\nSoroban storage isn't iterable, so the caller passes the chains to free\\nexplicitly. Any `PreviousTrustedRemote(chain)` entries for chains not in\\n`chains` remain in persistent storage and expire on their own via the\\n`PREV_MSGR_PERSISTENT_TTL`-aligned TTL.",
+      "name": "clear_previous_messenger",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chains",
+          "type_": {
+            "vec": {
+              "element_type": "string"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "BridgeError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error type for messenger operations",
+      "lib": "",
+      "name": "MessengerError",
+      "cases": [
+        {
+          "doc": "Required by Axelar's AxelarExecutable derive macro",
+          "name": "NotApproved",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "SendFailed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidDestination",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ChainNotSupported",
+          "value": 4
+        }
+      ]
+    }
+  }
+]

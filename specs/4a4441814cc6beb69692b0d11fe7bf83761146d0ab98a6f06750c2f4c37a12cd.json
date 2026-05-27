@@ -1,0 +1,1230 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Asset type for oracle queries.",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Price data returned by `price()` and `lastprice()`.",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the Spectra Oracle contract",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract has not been initialized",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Maturity timestamp must be in the future",
+          "name": "InvalidMaturity",
+          "value": 3
+        },
+        {
+          "doc": "APY must be between 0 (exclusive) and 100% (inclusive)",
+          "name": "InvalidApy",
+          "value": 4
+        },
+        {
+          "doc": "Future PT value must be positive",
+          "name": "InvalidFuturePtValue",
+          "value": 5
+        },
+        {
+          "doc": "Caller is not authorized to perform this action",
+          "name": "Unauthorized",
+          "value": 6
+        },
+        {
+          "doc": "No upgrader has been set",
+          "name": "NoUpgraderSet",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Re-extend the TTL of the oracle instance storage.\\n\\nThis is a **permissionless** function \\xe2\\x80\\x94 anyone can call it and the\\ncaller pays the transaction fees.\\n\\nThe `ledgers` parameter specifies the desired TTL extension in\\nledgers (clamped to the network's `max_ttl`). For long-maturity\\noracles where the network max TTL (~6 months) is shorter than\\nthe time to maturity, callers should invoke `bump()` periodically.\\n\\nSoroban's `extend_ttl` is monotonic (it never shrinks a TTL), so\\ncalling this when TTLs are already healthy is a safe no-op.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized",
+      "name": "bump",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get price at a specific timestamp.\\n\\nReturns `None` if:\\n- The oracle is not initialized\\n- The timestamp is before the oracle start time\\n- The price computation overflows",
+      "name": "price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PriceData"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the PT token address.",
+      "name": "get_pt",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the number of decimals for the price output.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the upgrader is changed",
+      "lib": "",
+      "name": "UpgraderChanged",
+      "prefix_topics": [
+        "upgrader"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_upgrader",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_upgrader",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the owner address. Returns None if ownership has been renounced.",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the most recent price.\\n\\n# Warning\\n\\nThe `asset` parameter is **ignored**. It exists solely for interface\\ncompatibility. Each oracle instance is bound to a single PT at\\ninitialization and always prices that PT regardless of what is\\npassed here.\\n\\nReturns `None` if the oracle is not initialized.",
+      "name": "lastprice",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PriceData"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the oracle with the required parameters.\\n\\n# Arguments\\n* `owner` - The owner address (can update config and transfer ownership)\\n* `upgrader` - The upgrader address (can upgrade the contract WASM)\\n* `pt` - The PT token address being priced\\n* `maturity` - The maturity timestamp (Unix timestamp)\\n* `initial_implied_apy` - The initial implied APY (18 decimals, e.g., 0.1e18 = 10%)\\n* `future_pt_value` - The future PT value at maturity (in `decimals` precision)\\n* `decimals` - The number of decimals for the price output\\n\\n# Errors\\n* `AlreadyInitialized` - Contract has already been initialized\\n* `InvalidMaturity` - Maturity timestamp is not in the future\\n* `InvalidApy` - APY is not between 0 and 100%\\n* `InvalidFuturePtValue` - Future PT value is not positive",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "upgrader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "initial_implied_apy",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "future_pt_value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the maturity timestamp.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized",
+      "name": "get_maturity",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the upgrader address. Returns None if not initialized.",
+      "name": "get_upgrader",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new upgrader address. Only callable by the current upgrader.\\n\\nThe upgrader role is independent from ownership \\xe2\\x80\\x94 the owner cannot\\nchange the upgrader, and the upgrader cannot perform owner actions.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized\\n* `NoUpgraderSet` - No upgrader has been set\\n* `Unauthorized` - Caller is not the current upgrader",
+      "name": "set_upgrader",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_upgrader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the future PT value is updated",
+      "lib": "",
+      "name": "FuturePtValueUpdated",
+      "prefix_topics": [
+        "pt_value"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_value",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_value",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the start time timestamp.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized",
+      "name": "get_start_time",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a description of this oracle.",
+      "name": "get_description",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept ownership transfer. Must be called by the pending owner.",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renounce ownership permanently. Only callable by the owner.\\nWARNING: This is irreversible and will lock all owner-only functions.\\nThe upgrader role is unaffected \\xe2\\x80\\x94 the upgrader can still upgrade the contract.",
+      "name": "renounce_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer ownership to a new address. Only callable by the current owner.\\nUses OpenZeppelin's two-step transfer process.",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the future PT value.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized",
+      "name": "get_future_pt_value",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the future PT value. Only callable by the owner.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized\\n* `InvalidFuturePtValue` - New value is not positive",
+      "name": "set_future_pt_value",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_value",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the initial implied APY.\\n\\n# Errors\\n* `NotInitialized` - Contract has not been initialized",
+      "name": "get_initial_implied_apy",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "OracleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableError",
+      "cases": [
+        {
+          "doc": "When migration is attempted but not allowed due to upgrade state.",
+          "name": "MigrationNotAllowed",
+          "value": 1100
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the merkle root is set.",
+      "lib": "",
+      "name": "SetRoot",
+      "prefix_topics": [
+        "set_root"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an index is claimed.",
+      "lib": "",
+      "name": "SetClaimed",
+      "prefix_topics": [
+        "set_claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "val",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MerkleDistributorError",
+      "cases": [
+        {
+          "doc": "The merkle root is not set.",
+          "name": "RootNotSet",
+          "value": 1300
+        },
+        {
+          "doc": "The provided index was already claimed.",
+          "name": "IndexAlreadyClaimed",
+          "value": 1301
+        },
+        {
+          "doc": "The proof is invalid.",
+          "name": "InvalidProof",
+          "value": 1302
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with `MerkleDistributor`",
+      "lib": "",
+      "name": "MerkleDistributorStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The Merkle root of the distribution tree",
+            "name": "Root"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps an index to its claimed status",
+            "name": "Claimed",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Rounding direction for division operations",
+      "lib": "",
+      "name": "Rounding",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Round toward negative infinity (down)",
+            "name": "Floor"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Round toward positive infinity (up)",
+            "name": "Ceil"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Round toward zero (truncation)",
+            "name": "Truncate"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SorobanFixedPointError",
+      "cases": [
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "Overflow",
+          "value": 1500
+        },
+        {
+          "doc": "Division by zero",
+          "name": "DivisionByZero",
+          "value": 1501
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CryptoError",
+      "cases": [
+        {
+          "doc": "The merkle proof length is out of bounds.",
+          "name": "MerkleProofOutOfBounds",
+          "value": 1400
+        },
+        {
+          "doc": "The index of the leaf is out of bounds.",
+          "name": "MerkleIndexOutOfBounds",
+          "value": 1401
+        },
+        {
+          "doc": "No data in hasher state.",
+          "name": "HasherEmptyState",
+          "value": 1402
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is paused.",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract is unpaused.",
+      "lib": "",
+      "name": "Unpaused",
+      "prefix_topics": [
+        "unpaused"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausableError",
+      "cases": [
+        {
+          "doc": "The operation failed because the contract is paused.",
+          "name": "EnforcedPause",
+          "value": 1000
+        },
+        {
+          "doc": "The operation failed because the contract is not paused.",
+          "name": "ExpectedPause",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for the pausable state",
+      "lib": "",
+      "name": "PausableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Indicates whether the contract is in paused state.",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is granted.",
+      "lib": "",
+      "name": "RoleGranted",
+      "prefix_topics": [
+        "role_granted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is revoked.",
+      "lib": "",
+      "name": "RoleRevoked",
+      "prefix_topics": [
+        "role_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the admin role is renounced.",
+      "lib": "",
+      "name": "AdminRenounced",
+      "prefix_topics": [
+        "admin_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role admin is changed.",
+      "lib": "",
+      "name": "RoleAdminChanged",
+      "prefix_topics": [
+        "role_admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2000
+        },
+        {
+          "doc": "",
+          "name": "AdminNotSet",
+          "value": 2001
+        },
+        {
+          "doc": "",
+          "name": "IndexOutOfBounds",
+          "value": 2002
+        },
+        {
+          "doc": "",
+          "name": "AdminRoleNotFound",
+          "value": 2003
+        },
+        {
+          "doc": "",
+          "name": "RoleCountIsNotZero",
+          "value": 2004
+        },
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 2005
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 2006
+        },
+        {
+          "doc": "",
+          "name": "RoleNotHeld",
+          "value": 2007
+        },
+        {
+          "doc": "",
+          "name": "RoleIsEmpty",
+          "value": 2008
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2009
+        },
+        {
+          "doc": "",
+          "name": "MaxRolesExceeded",
+          "value": 2010
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is completed.",
+      "lib": "",
+      "name": "AdminTransferCompleted",
+      "prefix_topics": [
+        "admin_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is initiated.",
+      "lib": "",
+      "name": "AdminTransferInitiated",
+      "prefix_topics": [
+        "admin_transfer_initiated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key for enumeration of accounts per role.",
+      "lib": "",
+      "name": "RoleAccountKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the access control",
+      "lib": "",
+      "name": "AccessControlStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ExistingRoles"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccounts",
+            "type_": [
+              {
+                "udt": {
+                  "name": "RoleAccountKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "HasRole",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountsCount",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAdmin",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for `Ownable` utility.",
+      "lib": "",
+      "name": "OwnableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingOwner"
+          }
+        }
+      ]
+    }
+  }
+]
