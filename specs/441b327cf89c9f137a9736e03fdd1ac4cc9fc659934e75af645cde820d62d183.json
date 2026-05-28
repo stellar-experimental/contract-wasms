@@ -1,0 +1,59 @@
+[
+  {
+    "function_v0": {
+      "doc": "Bridge USDC from Stellar to an EVM chain via CCTP V2.\\nSingle-tx: user signs once, contract handles approve + burn atomically.\\n\\n# Arguments\\n* `user` - Stellar address of the sender (require_auth)\\n* `amount` - USDC amount in 7-decimal local units (e.g. 50_000_000 = 5 USDC)\\n* `dest_domain` - CCTP destination domain (6 = Base, 0 = Ethereum, 3 = Arbitrum, etc.)\\n* `mint_recipient` - 32-byte EVM address (left-padded with zeros) where USDC will be minted\\n* `max_fee` - Max fee in 7-decimal local units (2x Circle minimum recommended)",
+      "name": "bridge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "dest_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mint_recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "max_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor \\xe2\\x80\\x94 called atomically at deploy time by the Soroban runtime.\\nSets the official USDC SAC and Circle TokenMessenger addresses.\\nCannot be front-run: deploy + constructor execute in a single host invocation.\\nCannot be called again after deploy (Soroban enforces single-shot constructor).\\n\\nv16 P1-1 fix: replaced separate init() with __constructor to eliminate\\nthe deploy-init race window where an attacker could call init() first\\nwith a malicious token_messenger address.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_messenger",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
