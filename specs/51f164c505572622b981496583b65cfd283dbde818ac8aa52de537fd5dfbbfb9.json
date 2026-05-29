@@ -1,0 +1,108 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Construct the gateway with the fixed deposit destination (the ramp's\\nusdc-distributor account) and the USDC Stellar Asset Contract address.\\nRuns atomically at deploy, so there is no \"deployed but uninitialized\"\\nwindow and nobody can front-run initialization. Both values are\\noperator-set and immutable: there is no setter and the contract is not\\nupgradeable, so funds can never be redirected.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_sac",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Move `amount` USDC from `from` to the fixed destination and emit a\\n`deposit` event tagged with `order_ref`, atomically.\\n\\n`from` may be a classic account or a contract (smart-wallet) address.\\n`from.require_auth()` binds the authorization to the exact invocation \\xe2\\x80\\x94\\n(from, amount, order_ref) plus a nonce \\xe2\\x80\\x94 so a signed deposit cannot be\\nreplayed or repointed to a different order or amount. The destination is\\nnot a parameter, so funds can never be redirected by the caller.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_ref",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Move `amount` USDC from the fixed destination (usdc-distributor) to `to`\\nand emit a `payout` event tagged with `order_ref`, atomically \\xe2\\x80\\x94 the\\non-ramp leg. `to` may be a contract (smart-wallet) address that a Classic\\n`Payment` cannot credit.\\n\\n`destination.require_auth()` means only the usdc-distributor's\\nauthorization can move its funds, so a payout can only be driven by the\\nramp itself \\xe2\\x80\\x94 a caller-supplied `to` cannot drain the account. The SAC\\ntransfer's `from` (= destination) auth is covered by the same invocation\\ntree (and, on-chain, by the source-account credentials when the\\nusdc-distributor is the transaction source).",
+      "name": "payout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_ref",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The fixed deposit destination (usdc-distributor account).",
+      "name": "destination",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configured USDC Stellar Asset Contract address.",
+      "name": "usdc_sac",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  }
+]
