@@ -1,0 +1,1580 @@
+[
+  {
+    "udt_enum_v0": {
+      "doc": "Action discriminator used by the per-chain gas-usage table.",
+      "lib": "",
+      "name": "Action",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Router",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Swap",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Calldata for `send_token`. Mirrors the EVM `Router.SendParams` struct.",
+      "lib": "",
+      "name": "SendParams",
+      "fields": [
+        {
+          "doc": "Amount of `source_token` provided by the sender (in source-token\\nnative decimals, e.g. 7-decimal subunits for Stellar USDC).",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "32-byte destination recipient address.",
+          "name": "destination_address",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination chain id (Allbridge protocol id, not the CCTP domain).",
+          "name": "destination_chain",
+          "type_": "u32"
+        },
+        {
+          "doc": "32-byte destination token address (chain-specific encoding).",
+          "name": "destination_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Amount of native gas token (XLM stroops) the sender is paying to\\nsettle the cross-chain relayer fee. Must be >= the quoted fee\\n(see `relayer_fee_in_native`). Surplus is credited to\\n`Withdrawable(native_token)` for the admin to sweep \\xe2\\x80\\x94 mirrors\\nEVM's `msg.value` overpayment going to `withdrawableAmount[ETH_MARKER]`.",
+          "name": "gas_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "Free-form 32-byte metadata propagated to the `TokenSent` event.",
+          "name": "metadata",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Minimum acceptable swap output on the source chain when\\n`source_token != intermediary_token`.",
+          "name": "min_swap_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Address of the token paid in by the caller.",
+          "name": "source_token",
+          "type_": "address"
+        },
+        {
+          "doc": "Registered swap adapter used when `source_token != intermediary_token`.",
+          "name": "swap_addr",
+          "type_": "address"
+        },
+        {
+          "doc": "Registered token-messenger adapter used to bridge the intermediary.",
+          "name": "token_messenger_addr",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Whether a remote destination token is recognised by the router, and\\nwhether the router should run a destination-side swap for it.",
+      "lib": "",
+      "name": "DestinationToken",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Disabled",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Enabled",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "EnabledWithSwap",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenSent",
+      "prefix_topics": [
+        "TokenSent"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "source_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "normalized_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination_chain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination_address",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "intermediary_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "swap_addr",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_messenger_addr",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "metadata",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdrawn",
+      "prefix_topics": [
+        "Withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeBpChanged",
+      "prefix_topics": [
+        "FeeBpChanged"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "fee_bp",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminAccepted",
+      "prefix_topics": [
+        "AdminAccepted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminProposed",
+      "prefix_topics": [
+        "AdminProposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenReceived",
+      "prefix_topics": [
+        "TokenReceived"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "source_chain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "normalized_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient_b32",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "intermediary_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "swap_addr",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_messenger_addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RelayerFeePaid",
+      "prefix_topics": [
+        "RelayerFeePaid"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "destination_chain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Native-gas portion quoted for the router on the destination chain.",
+          "name": "router_gas_fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Native-gas portion quoted for the optional destination-side swap\\n(zero when `EnabledWithSwap` is not in effect).",
+          "name": "swap_gas_fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Native-gas portion forwarded to the messenger adapter.",
+          "name": "messenger_gas_fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Total native-gas amount pulled from the sender. Surplus over the\\nthree quoted components stays on the router as `Withdrawable`.",
+          "name": "gas_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapRegistry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "bool"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RelayerRegistry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "bool"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenMessengerRegistry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "bool"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NativeToken",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UsedMessage",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UsedMessageKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdrawable",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Address of the Allbridge Core gas oracle this router queries for\\ndestination-chain fee estimates.",
+      "lib": "",
+      "name": "GasOracleAddr",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DestinationTokenKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "intermediary",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(intermediary, dest_chain, dest_token) \\xe2\\x86\\x92 status` mapping. Keyed by a\\nstruct rather than nested maps so each entry can be admin-set in\\nisolation and the lookup is one storage hit.",
+      "lib": "",
+      "name": "DestinationTokenEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "udt": {
+              "name": "DestinationToken"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Monotonically increasing sequence number for outgoing transfers.",
+      "lib": "",
+      "name": "Nonce",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Protocol fee in basis points (1 bp = 0.01%). Capped at 100% (the\\n`BP_DENOMINATOR`) by `set_fee_bp`, matching EVM `Router.sol::setFee`.",
+      "lib": "",
+      "name": "FeeBp",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Allbridge protocol id of this chain (27 for Stellar testnet).",
+      "lib": "",
+      "name": "ChainId",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GasUsage",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "map": {
+              "key_type": {
+                "udt": {
+                  "name": "GasUsageKey"
+                }
+              },
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GasUsageKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "action",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_bp",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "chain_id",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "gas_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "send_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "SendParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_bp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_bp",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "native_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "native_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "receive_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "normalized_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "source_chain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_addr",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_messenger_addr",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_swap_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register_swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registered",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_amount_out",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "normalized_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "intermediary_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_gas_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "chain_gas_usage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register_relayer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "relayer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registered",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_swap_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_chain_gas_usage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "gas_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdrawable_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_relayer_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "relayer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "relayer_fee_in_native",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "destination_chain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_messenger_addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_destination_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intermediary_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination_chain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "destination_token_info",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intermediary_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination_chain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "destination_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register_token_messenger",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registered",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_token_messenger_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_messenger",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Uninitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgument",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PendingAdminMissing",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "SwapNotRegistered",
+          "value": 100
+        },
+        {
+          "doc": "",
+          "name": "TokenMessengerNotRegistered",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "RelayerNotRegistered",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "DestinationTokenDisabled",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "MessageAlreadyUsed",
+          "value": 104
+        },
+        {
+          "doc": "",
+          "name": "MessageNotReceived",
+          "value": 105
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 106
+        },
+        {
+          "doc": "",
+          "name": "InsufficientWithdrawableAmount",
+          "value": 107
+        },
+        {
+          "doc": "",
+          "name": "OracleNotConfigured",
+          "value": 108
+        },
+        {
+          "doc": "",
+          "name": "ReceiptLowerThanPayout",
+          "value": 109
+        },
+        {
+          "doc": "",
+          "name": "OracleChainNotConfigured",
+          "value": 112
+        },
+        {
+          "doc": "",
+          "name": "InsufficientGasAmount",
+          "value": 113
+        },
+        {
+          "doc": "",
+          "name": "DomainNotRegistered",
+          "value": 200
+        },
+        {
+          "doc": "",
+          "name": "RemoteRouterNotSet",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "RemoteMessengerNotSet",
+          "value": 202
+        },
+        {
+          "doc": "",
+          "name": "OnlyRouter",
+          "value": 203
+        },
+        {
+          "doc": "",
+          "name": "MessageAlreadyReceived",
+          "value": 204
+        },
+        {
+          "doc": "",
+          "name": "UnknownSourceDomain",
+          "value": 205
+        },
+        {
+          "doc": "",
+          "name": "InvalidRemoteSender",
+          "value": 206
+        },
+        {
+          "doc": "",
+          "name": "InvalidDestinationCaller",
+          "value": 207
+        },
+        {
+          "doc": "",
+          "name": "InvalidMintRecipient",
+          "value": 208
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedCctpVersion",
+          "value": 209
+        },
+        {
+          "doc": "",
+          "name": "MessageTooShort",
+          "value": 210
+        },
+        {
+          "doc": "",
+          "name": "AmountOutOfRange",
+          "value": 211
+        },
+        {
+          "doc": "",
+          "name": "WithdrawExceedsAvailable",
+          "value": 212
+        },
+        {
+          "doc": "",
+          "name": "MessageTransmitterRejected",
+          "value": 214
+        },
+        {
+          "doc": "",
+          "name": "SwapSlippageExceeded",
+          "value": 400
+        },
+        {
+          "doc": "",
+          "name": "SwapUnknownPair",
+          "value": 401
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pending administrator under the two-step admin transfer flow:\\nthe existing admin nominates a successor with `propose`, and the\\nsuccessor finalises the swap with `accept` from their own auth context.",
+      "lib": "",
+      "name": "PendingAdmin",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Address authorised to call admin entry points on the holding contract.\\nStored in instance storage under the `Admin` symbol.",
+      "lib": "",
+      "name": "Admin",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
