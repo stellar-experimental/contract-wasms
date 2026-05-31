@@ -1,0 +1,408 @@
+[
+  {
+    "udt_enum_v0": {
+      "doc": "Errors customizados (economiza gas vs panic!)",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ReentrancyDetected",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "EmptyBatch",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidOperation",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "ExecutionFailed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AmountMustBePositive",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Opera\\xc3\\xa7\\xc3\\xa3o individual no batch",
+      "lib": "",
+      "name": "Operation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "op_type",
+          "type_": {
+            "udt": {
+              "name": "OperationType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Inicializa o contrato com admin",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Tipo de opera\\xc3\\xa7\\xc3\\xa3o suportada",
+      "lib": "",
+      "name": "OperationType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Payment"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Swap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Supply"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Borrow"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Repay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Withdraw"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Resultado de execu\\xc3\\xa7\\xc3\\xa3o de uma opera\\xc3\\xa7\\xc3\\xa3o",
+      "lib": "",
+      "name": "OperationResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "gas_used",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "return_value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "success",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Executa batch de opera\\xc3\\xa7\\xc3\\xb5es atomicamente\\nReduz custos de gas em at\\xc3\\xa9 70% vs transa\\xc3\\xa7\\xc3\\xb5es individuais",
+      "name": "execute_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Operation"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "udt": {
+                    "name": "OperationResult"
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_dex_router",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View functions",
+      "name": "set_dex_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_execution_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_total_gas_saved",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "DeFi: Executa um swap de tokens com um caminho espec\\xc3\\xadfico (usado pelo Robo-Advisor)",
+      "name": "execute_swap_with_path",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from_asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "to_asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_stablecoin_contract",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_stablecoin_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "stablecoin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
