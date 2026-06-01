@@ -1,0 +1,262 @@
+[
+  {
+    "function_v0": {
+      "doc": "**get_agent**: Retrieve full agent data by agent_id.",
+      "name": "get_agent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AgentData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "**Storage Keys**: Persistent and instance storage structure",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Agent records indexed by agent_id",
+            "name": "Agent",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Admin address for upgrade/deactivation",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "AgentValidator address (only contract that can register agents)",
+            "name": "Validator"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**initialize**: One-time setup to configure admin and validator addresses.\\nMust be called immediately after contract deployment.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "validator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "**AgentData**: Comprehensive on-chain record of a deployed AI agent",
+      "lib": "",
+      "name": "AgentData",
+      "fields": [
+        {
+          "doc": "Whether the agent is currently active and accepting requests",
+          "name": "is_active",
+          "type_": "bool"
+        },
+        {
+          "doc": "IPFS CID or content hash pointing to agent configuration/model",
+          "name": "metadata_hash",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Stellar address of the agent owner",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "Price per request in whole XLM units",
+          "name": "price_xlm",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger sequence when agent was registered",
+          "name": "registered_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total number of requests serviced by this agent",
+          "name": "request_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "Total payments received (in stroops, for accounting)",
+          "name": "total_earnings_stroops",
+          "type_": "i128"
+        },
+        {
+          "doc": "Upgrade/modification version number",
+          "name": "version",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**record_payment**: Track a payment for an agent request.\\nIn production, this integrates with Stellar Asset Contract for actual XLM transfers.\\n\\n# Arguments\\n* `caller` - Address making the payment\\n* `agent_id` - Agent being paid for\\n* `amount_stroops` - Payment amount in stroops",
+      "name": "record_payment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "amount_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**register_agent**: Permanently record a new agent on-chain.\\nCalled exclusively by AgentValidator after fee collection + signature verification.\\n\\n# Arguments\\n* `owner` - Stellar address of agent owner\\n* `agent_id` - Unique on-chain identifier\\n* `price_xlm` - Agent price per request (whole XLM)\\n* `metadata_hash` - IPFS CID or configuration hash\\n\\n# Authority\\n- Only AgentValidator may call this method\\n- Owner authentication is verified at Validator level",
+      "name": "register_agent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "price_xlm",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "metadata_hash",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**registry_admin**: Query the admin address.",
+      "name": "registry_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**get_agent_price**: Query agent's price per request.",
+      "name": "get_agent_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**get_agent_stats**: Get usage and earnings statistics.",
+      "name": "get_agent_stats",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u64",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**is_agent_active**: Quick check if agent is active.",
+      "name": "is_agent_active",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**deactivate_agent**: Disable an agent (admin-only, irreversible).",
+      "name": "deactivate_agent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**validator_address**: Query the registered validator address.",
+      "name": "validator_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  }
+]

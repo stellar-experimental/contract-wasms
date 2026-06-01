@@ -1,0 +1,425 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Persistent data records",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Pending deployment awaiting wallet confirmation",
+            "name": "PendingDeploy",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Confirmed deployment with proof of signature",
+            "name": "ConfirmedDeploy",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total fees accumulated in contract treasury",
+            "name": "TreasuryBalance"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Fee collection history per deployer (for audits)",
+            "name": "FeeRecord",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**initialize**: One-time setup called by deployer to link validator with\\nregistry and configure fee schedule.\\n\\n# Arguments\\n* `admin` - Address authorized to manage fees and withdraw treasury\\n* `registry` - Address of the deployed AgentRegistry contract\\n* `fee_stroops` - Validation fee in stroops (e.g., 50_000_000 = 5 XLM)\\n\\n# Errors\\n- Panics if called more than once (re-initialization guard)",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**get_pending**: Retrieve pending deployment record by agent_id.",
+      "name": "get_pending",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PendingDeployment"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Configuration constants stored in instance storage (set once at initialization)",
+      "lib": "",
+      "name": "ConfigKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address authorized to manage fees and treasury",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "AgentRegistry contract address for inter-contract calls",
+            "name": "Registry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Validation fee in stroops (1 XLM = 10_000_000 stroops)",
+            "name": "ValidationFeeStroops"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**is_confirmed**: Check if an agent has been successfully deployed.",
+      "name": "is_confirmed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "**FeeHistory**: Audit trail of fees paid by a deployer",
+      "lib": "",
+      "name": "FeeHistory",
+      "fields": [
+        {
+          "doc": "Number of agents deployed by this deployer",
+          "name": "deployment_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger sequence of most recent payment",
+          "name": "last_fee_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total fees ever paid by this deployer",
+          "name": "total_fees_stroops",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**admin_address**: Query the current admin address.",
+      "name": "admin_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**get_confirmed**: Retrieve confirmed deployment record with signature proof.",
+      "name": "get_confirmed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ConfirmedDeployment"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**confirm_deploy**: Verify wallet signature and proceed with agent registration.\\nOn success, collects validation fee and calls AgentRegistry inter-contract.\\n\\n# Arguments\\n* `deployer` - Agent owner's Stellar address (must match pending record)\\n* `agent_id` - Unique on-chain agent identifier\\n* `signature_hash` - SHA-256 of the signed confirmation message from Freighter\\n\\n# Flow\\n1. Verify pending deployment exists and matches deployer\\n2. Collect validation fee into treasury\\n3. Call AgentRegistry::register_agent (inter-contract)\\n4. Mark deployment confirmed with signature proof\\n5. Update deployer's fee history\\n\\n# Errors\\n- If no pending deployment for this agent_id\\n- If deployer doesn't match pending record\\n- If deployment already confirmed",
+      "name": "confirm_deploy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deployer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "signature_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**request_deploy**: Record pending deployment intent and emit event for UI.\\nUser's wallet will prompt for signature after this call returns.\\n\\n# Arguments\\n* `deployer` - Agent owner's Stellar address\\n* `agent_id` - Unique on-chain agent identifier\\n* `metadata_hash` - IPFS CID or SHA-256 hash of agent configuration\\n* `price_stroops` - Agent pricing per request (in stroops)\\n\\n# Errors\\n- If duplicate pending deployment exists\\n- If price is negative",
+      "name": "request_deploy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deployer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "metadata_hash",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "price_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**get_fee_history**: Retrieve a deployer's fee payment history.",
+      "name": "get_fee_history",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deployer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "FeeHistory"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**validate_wallet**: Verify deployer's wallet and check for duplicate agents.\\nThis is a read-only inter-contract call to AgentRegistry.\\n\\n# Arguments\\n* `deployer` - The Stellar address wanting to deploy an agent\\n* `agent_id` - Proposed unique agent identifier\\n\\n# Returns\\n`true` if validation passes\\n\\n# Errors\\n- If agent_id already exists in registry\\n- If deployer fails authentication",
+      "name": "validate_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deployer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "agent_id",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**registry_address**: Query the linked AgentRegistry contract address.",
+      "name": "registry_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**treasury_balance**: Returns accumulated validation fees (stroops).",
+      "name": "treasury_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**withdraw_treasury**: Admin withdraws accumulated fees. Integration with\\nnative Stellar transfers happens off-chain (API level).",
+      "name": "withdraw_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**get_validation_fee**: Query the current validation fee in stroops.",
+      "name": "get_validation_fee",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**set_validation_fee**: Update the validation fee (admin-only).\\nUseful for fee adjustments without redeployment.",
+      "name": "set_validation_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_fee_stroops",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "**PendingDeployment**: Ephemeral record created by `request_deploy()` and\\npromoted to confirmed state after wallet signature verification.",
+      "lib": "",
+      "name": "PendingDeployment",
+      "fields": [
+        {
+          "doc": "Unique on-chain agent identifier",
+          "name": "agent_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Whether this deployment has been confirmed",
+          "name": "confirmed",
+          "type_": "bool"
+        },
+        {
+          "doc": "Ledger sequence when request was created (for audit trail)",
+          "name": "created_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Stellar address of the agent deployer",
+          "name": "deployer",
+          "type_": "address"
+        },
+        {
+          "doc": "Validation fee due from deployer (in stroops)",
+          "name": "fee_stroops",
+          "type_": "i128"
+        },
+        {
+          "doc": "IPFS CID or content hash of agent configuration JSON",
+          "name": "metadata_hash",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Agent pricing per request (in stroops)",
+          "name": "price_stroops",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "**ConfirmedDeployment**: Immutable proof of successful deployment",
+      "lib": "",
+      "name": "ConfirmedDeployment",
+      "fields": [
+        {
+          "doc": "Agent ID that was deployed",
+          "name": "agent_id",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Ledger number when confirmed",
+          "name": "confirmed_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Stellar address of the agent deployer",
+          "name": "deployer",
+          "type_": "address"
+        },
+        {
+          "doc": "Fee amount collected (in stroops)",
+          "name": "fee_collected",
+          "type_": "i128"
+        },
+        {
+          "doc": "SHA-256 hash of the signed confirmation message",
+          "name": "signature_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  }
+]
