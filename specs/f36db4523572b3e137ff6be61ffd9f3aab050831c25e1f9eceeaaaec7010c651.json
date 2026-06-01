@@ -1,0 +1,569 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "PolicyNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PolicyRevoked",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PolicyExpired",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AmountExceedsCap",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "PeriodNotElapsed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AuthContextUnsupported",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "SignatureInvalid",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "SessionNotFound",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "SessionRevoked",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "SessionExpired",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "WindowCapExceeded",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "RecipientNotAllowed",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "EmptyAllowlist",
+          "value": 16
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "On-chain per-merchant spending policy. The wallet authorizes any\\n`token.transfer` whose merchant + amount + interval fall inside these\\nconstraints, without consulting the user's passkey again.",
+      "lib": "",
+      "name": "Policy",
+      "fields": [
+        {
+          "doc": "Expected charge amount per cycle (informational).",
+          "name": "amount_per_charge",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp after which the policy auto-revokes. 0 = no expiry.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Minimum gap between successful charges, in seconds.",
+          "name": "interval_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger timestamp of the most recent authorized charge under this\\npolicy. 0 = never charged.",
+          "name": "last_charge_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Hard cap per cycle. Charges above this are rejected by `__check_auth`.",
+          "name": "max_per_charge",
+          "type_": "i128"
+        },
+        {
+          "doc": "Exact merchant Address allowed to pull funds under this policy.",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "User-set kill switch. Once true, all subsequent merchant pulls fail\\nauthorization until the user re-installs the policy.",
+          "name": "revoked",
+          "type_": "bool"
+        },
+        {
+          "doc": "Token contract (SEP-41) the merchant may transfer from this wallet.",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Passkey public key (secp256r1, 65-byte uncompressed X9.62 = 0x04 ||\\nX || Y). Set once at deploy via `init`.",
+            "name": "PasskeyPubkey"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Optional passkey credential id (returned by WebAuthn `navigator\\n.credentials.create`). Stored so the frontend can issue a correct\\n`allowCredentials` parameter on subsequent `get` calls.",
+            "name": "PasskeyCredId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "v0.1 administrator. Calls to `install_policy` and `revoke_policy`\\nrequire this address's `require_auth`. For the spike, admin is a\\nclassic Ed25519 G-account (the trusted-setup oracle that operates\\nthe spike server). v0.2 changes `init` to set admin =\\n`env.current_contract_address()` so that install/revoke flow back\\nthrough `__check_auth` and require the user's passkey.",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-merchant policy. Address is keyed verbatim \\xe2\\x80\\x94 a policy applies to\\nexactly one merchant address (no wildcards in v0.1).",
+            "name": "Policy",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Delegated agent session, keyed by the agent's ed25519 session pubkey.",
+            "name": "AgentSession",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Agent credential carried in the `__check_auth` signature slot: the agent's\\ned25519 session pubkey plus its signature over the host payload.",
+      "lib": "",
+      "name": "AgentAuth",
+      "fields": [
+        {
+          "doc": "",
+          "name": "session_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-shot initializer. Called immediately after deploy with the\\npasskey's secp256r1 public key (65-byte uncompressed X9.62), the\\ncredential id, and the v0.1 admin address. Subsequent calls panic\\nwith `AlreadyInitialized`.\\n\\n`admin` gates `install_policy` and `revoke_policy` in v0.1. For\\nthe spike, callers pass the deployer's classic G-account so that\\nthe trusted-setup server can sign these mutations. v0.2 will\\nmigrate the admin to the wallet's own contract address, at which\\npoint install/revoke require_auth flows back through __check_auth\\nand is gated by the user's passkey.",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_cred_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "The wallet's custom-account signature type (CAP-46-11). The caller declares\\nwhich principal is authorizing: the human passkey (secp256r1) or a delegated\\nagent session (ed25519). Replaces the bare `BytesN<64>` of v0.1.",
+      "lib": "",
+      "name": "WalletAuth",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Passkey",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Agent",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AgentAuth"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Delegated agent spending session. Unlike `Policy` (a *pull* grant keyed by\\na single merchant), this is a *push* grant: a delegated ed25519 session key\\nthe user authorizes once (via passkey) so an autonomous agent can initiate\\ntransfers within an aggregate budget \\xe2\\x80\\x94 without a fresh human signature per\\ntransaction.\\n\\n**A3 \\xe2\\x80\\x94 sliding-window counter.** The budget is enforced with an O(1)\\nsliding-window counter (no per-tx history). We keep the spend of the\\ncurrent epoch (`cur_spent`) and the immediately preceding epoch\\n(`prev_spent`), and estimate the rolling spend as a time-weighted sum of\\nthe two for throughput shaping, while staying gas-bounded under\\nhigh-frequency agent traffic.\\n\\n**Worst-case guarantee (N-A3).** The time-weighted estimate counts\\n`cur_spent` at full weight regardless of *when* in the epoch it was spent.\\nA \"delayed straddle\" \\xe2\\x80\\x94 spend late in one epoch, roll, spend early in the\\nnext \\xe2\\x80\\x94 can therefore place spend that exceeds `window_cap` inside a single\\nreal `window_seconds`-length interval (su",
+      "lib": "",
+      "name": "AgentSession",
+      "fields": [
+        {
+          "doc": "Recipient allowlist. Empty = open (any recipient within budget). When\\nnon-empty, the agent may only pay these addresses \\xe2\\x80\\x94 the core of the\\nagent-to-agent guarantee (pay only approved counterparties).",
+          "name": "allow_recipients",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Amount spent so far in the current epoch.",
+          "name": "cur_spent",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp the current epoch opened. Epochs are rolled lazily on\\ncharge: a charge at `now >= epoch_start + window_seconds` opens a new\\nepoch anchored at `now` (sliding, not grid-aligned).",
+          "name": "epoch_start",
+          "type_": "u64"
+        },
+        {
+          "doc": "Unix timestamp after which the session auto-revokes. 0 = no expiry.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Hard cap per single transfer.",
+          "name": "per_tx_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount spent in the immediately preceding epoch. Decays linearly across\\nthe current epoch in the rolling estimate. 0 if the gap to the previous\\nepoch was >= 2 windows (fully decayed).",
+          "name": "prev_spent",
+          "type_": "i128"
+        },
+        {
+          "doc": "User-set kill switch. Once true, all agent transfers fail until the\\nsession is re-installed.",
+          "name": "revoked",
+          "type_": "bool"
+        },
+        {
+          "doc": "ed25519 public key the agent signs transfer payloads with.",
+          "name": "session_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Token contract (SEP-41) the agent may transfer from this wallet.",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Aggregate cap across the rolling window. The time-weighted estimate of\\nspend across (prev epoch, current epoch) must stay <= this.",
+          "name": "window_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "Length of the spending window, in seconds (e.g. 86_400 = 24h).",
+          "name": "window_seconds",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only accessor used by the frontend to render the four-guarantee\\npanel. Returns the policy as stored or panics with `PolicyNotFound`.",
+      "name": "get_policy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Policy"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Custom account interface (CAP-46-11). Called by the Soroban host on\\nevery auth attempt where this contract is the authorizing principal.\\n\\nAuthorization rule (SECURITY_AUDIT A1 \\xe2\\x80\\x94 dispatch on credential FIRST,\\nexactly one authorization model per entry):\\n- `WalletAuth::Agent`: authenticate the ed25519 session key, then\\nauthorize EVERY context against the session's allowlist + windowed\\nbudget. This path NEVER runs the pull-policy loop, so an agent\\ncredential can never mutate policy `last_charge_at`.\\n- `WalletAuth::Passkey`: first try the pull-policy path \\xe2\\x80\\x94 if **every**\\n`auth_context` matches an active on-chain policy (a\\n`token.transfer(this_wallet, merchant, amount)` with a non-revoked,\\nnon-expired policy, `amount <= max_per_charge`, interval elapsed),\\nauthorize without consulting the signature, bumping `last_charge_at`\\nper matched policy. Otherwise verify the passkey secp256r1 signature\\nover `signature_payload` (panics on failure \\xe2\\x86\\x92 host auth rejection).",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth",
+          "type_": {
+            "udt": {
+              "name": "WalletAuth"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "User-controlled kill switch. After this call, all further merchant\\npulls fail authorization until `install_policy` is called again with\\na fresh passkey signature.",
+      "name": "revoke_policy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Install (or replace) a spending policy for a specific merchant. Requires\\nthe wallet's own auth \\xe2\\x80\\x94 i.e., a passkey signature validated by\\n`__check_auth`. This is the *only* path to grant a merchant the right\\nto pull funds.",
+      "name": "install_policy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_per_charge",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_per_charge",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interval_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only accessor for a delegated agent session.",
+      "name": "get_agent_session",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AgentSession"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "User-controlled kill switch for a delegated agent session. After this\\ncall, all agent transfers under this key fail until the session is\\nre-installed.",
+      "name": "revoke_agent_session",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Install (or replace) a delegated agent spending session. Gated by the\\nsame admin as `install_policy` in v0.1.",
+      "name": "install_agent_session",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "session_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "per_tx_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "window_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "window_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "allow_recipients",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
