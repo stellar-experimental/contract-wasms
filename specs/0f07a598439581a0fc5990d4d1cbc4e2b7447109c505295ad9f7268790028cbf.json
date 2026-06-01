@@ -1,0 +1,560 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SettleError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "EmptyBatch",
+          "value": 5
+        },
+        {
+          "doc": "Investor already settled (in this or a previous batch).",
+          "name": "AlreadySettled",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "BatchTooLarge",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NoDeposit",
+          "value": 8
+        },
+        {
+          "doc": "Duplicate investor address within the same batch.",
+          "name": "DuplicateInvestor",
+          "value": 9
+        },
+        {
+          "doc": "Payout to address holding zero tokens.",
+          "name": "PhantomInvestor",
+          "value": 10
+        },
+        {
+          "doc": "Fee exceeds the max_fee_bps cap declared at initialization.",
+          "name": "FeeTooHigh",
+          "value": 11
+        },
+        {
+          "doc": "Contract is paused \\xe2\\x80\\x94 settle/deposit/withdraw/refund blocked.",
+          "name": "ContractPaused",
+          "value": 12
+        },
+        {
+          "doc": "accept_admin() called but no propose_admin() is pending.",
+          "name": "NoPendingAdmin",
+          "value": 13
+        },
+        {
+          "doc": "v3 (F-006): supplied usdc_sac is not the canonical USDC SAC for this network.",
+          "name": "UnauthorizedToken",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Per-offer contract state keys.\\nEach deployed contract instance = one offer.\\nNo offer_id needed \\xe2\\x80\\x94 the contract address IS the offer scope.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Tracks USDC deposited by a specific address (typically the company).",
+            "name": "Deposit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-investor settlement flag. Set after an investor is settled.\\nStored in persistent storage. Prevents double-payout across batches.",
+            "name": "InvestorSettled",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Counter of total investors settled. Used as guard for refund().\\nStored in instance storage (fast access).",
+            "name": "SettledCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Active admin override. Set after a successful accept_admin().\\nIf absent (fresh-init contract), Config.admin is the active admin.\\nAdded in v2.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Admin proposed by current admin via propose_admin(), awaiting\\nnew admin's accept_admin() call. Cleared on acceptance.\\nAdded in v2.",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pause flag \\xe2\\x80\\x94 when true, deposit/settle_batch/withdraw/refund return\\nContractPaused. Upgrade and admin-rotation are intentionally\\nNOT gated (the recovery path must remain accessible).\\nAdded in v2.",
+            "name": "Paused"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable configuration set once during initialize().\\n\\n`admin`: issuer public key \\xe2\\x80\\x94 must be SAC admin for both USDC (transfer) and\\nsecurity token (clawback). Signs settle_batch() and withdraw().\\n`usdc_sac`: USDC SAC contract address (for payouts + fee routing).\\n`token_sac`: security token SAC contract address (for clawback/burn).\\n`treasury`: platform treasury address (receives aggregated fees).\\n`max_fee_bps`: maximum fee in basis points (e.g. 200 = 2%). Immutable after init.\\nEnforced on-chain: total_fee \\xe2\\x89\\xa4 sum(payouts) \\xc3\\x97 max_fee_bps / 10_000.\\nCVM transparency: auditors can verify fee cap on-chain.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "token_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_sac",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One item in a settlement batch \\xe2\\x80\\x94 represents a single investor's payout.\\n\\nClawback is AUTOMATIC: the contract reads the investor's on-chain token\\nbalance and burns ALL of it. No clawback_amount needed \\xe2\\x80\\x94 the chain is\\nthe source of truth.\\n\\n```text\\ninvestor \\xe2\\x97\\x84\\xe2\\x94\\x80\\xe2\\x94\\x80 payout USDC \\xe2\\x94\\x80\\xe2\\x94\\x80 contract\\ninvestor \\xe2\\x94\\x80\\xe2\\x94\\x80\\xe2\\x96\\xba ALL tokens clawbacked (read from chain)\\n```",
+      "lib": "",
+      "name": "SettleItem",
+      "fields": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payout",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the per-offer settlement contract. Called once after deployment.\\n\\n`admin`: issuer public key (SAC admin for clawback authority).\\n`usdc_sac`: USDC SAC contract address.\\n`token_sac`: security token SAC contract address.\\n`treasury`: platform treasury for fee routing.\\n`max_fee_bps`: maximum platform fee in basis points (200 = 2%).\\nImmutable after init. Enforced in settle_batch().",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Company deposits USDC into this settlement contract.\\nDepositor signs via passkey (C... smart wallet).\\nMultiple deposits from the same depositor accumulate (checked_add).",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically settle a batch of investors:\\n1. Validate: no duplicates, no phantom investors\\n2. USDC \\xe2\\x86\\x92 each investor (payout)\\n3. Read on-chain token balance \\xe2\\x86\\x92 clawback ALL (burn)\\n4. USDC \\xe2\\x86\\x92 treasury (aggregated fee)\\n\\nTRUSTLESS: Clawback is automatic. The contract reads each investor's\\ntoken balance from the chain and burns ALL of it. No backend input\\nneeded for burns \\xe2\\x80\\x94 the public ledger is the source of truth.\\n\\nMULTI-BATCH: Can be called multiple times with different investor sets.\\nPer-investor idempotency prevents double-payouts across batches.",
+      "name": "settle_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "items",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SettleItem"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin withdraws any token from the contract (emergency recovery).",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin refunds a depositor's USDC. Blocked after settlement (V-1).\\nOnly callable by admin (not depositor) to prevent company self-refund attack.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade contract WASM. Admin only (high-privilege).\\nIntentionally NOT pause-gated \\xe2\\x80\\x94 upgrade is the recovery path when a\\npause has been triggered to contain a bug.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause the contract. Admin-only. Blocks deposit/settle/withdraw/refund.\\nUpgrade and accept_admin remain accessible (recovery paths).",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume the contract. Admin-only.",
+      "name": "resume",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 1 of admin rotation: current admin proposes a new admin.\\nThe new admin must then call accept_admin() to take ownership.\\nOverwrites any prior pending proposal.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 2 of admin rotation: pending admin accepts ownership.\\nThe pending admin must sign \\xe2\\x80\\x94 proves they hold the keypair (prevents\\ntransfer-to-typo'd-address footgun).",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether the contract is paused.",
+      "name": "get_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the currently active admin.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the pending admin if one has been proposed.",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend contract instance TTL. Anyone can call (allows cron jobs).",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read: contract's USDC balance.",
+      "name": "get_balance",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SettleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read: deposit amount for a specific depositor.",
+      "name": "get_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the contract version.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  }
+]

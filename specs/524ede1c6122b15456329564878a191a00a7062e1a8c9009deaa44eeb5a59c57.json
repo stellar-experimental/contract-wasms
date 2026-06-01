@@ -1,0 +1,530 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SaleError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyCreated",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "ZeroPrice",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotActive",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TradeTooSmall",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "BelowMinimum",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "BuyerCapExceeded",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "BuyerBlocked",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NotPendingAdmin",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InsufficientForFee",
+          "value": 13
+        },
+        {
+          "doc": "v7 (F-006): supplied buy_token is not the canonical USDC SAC for this network",
+          "name": "UnauthorizedToken",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Offer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "BuyerSpent",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "BuyerBlocked",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Represents a single token sale offer.\\n\\nTwo-role access control:\\n- `admin`: cold key / multisig \\xe2\\x80\\x94 controls upgrade, withdraw, drain, freeze, admin transfer, fee updates\\n- `seller`: hot key \\xe2\\x80\\x94 controls pause, price updates (day-to-day operations)\\n\\nFixed fee model:\\n```text\\nInvestor \\xe2\\x94\\x80\\xe2\\x94\\x80$100\\xe2\\x94\\x80\\xe2\\x94\\x80\\xe2\\x96\\xb6 trade()\\n\\xe2\\x94\\x9c\\xe2\\x94\\x80\\xe2\\x94\\x80 fixed_fee ($5)  \\xe2\\x86\\x92 treasury (processing fee)\\n\\xe2\\x94\\x94\\xe2\\x94\\x80\\xe2\\x94\\x80 remainder ($95) \\xe2\\x86\\x92 company (full capital)\\n```\\n- `fixed_fee = 50_000_000`: $5 USDC per trade (1 USDC = 10^7 stroops)\\n- `fixed_fee = 0`:          no fee, company gets 100%\\n\\nCompliance fields:\\n- `deadline_ledger`: sale closes after this ledger (0 = no deadline)\\n- `min_buy_amount`: minimum trade size in stroops (0 = no minimum)\\n- `max_buy_per_buyer`: cumulative cap per buyer in stroops (0 = no cap)",
+      "lib": "",
+      "name": "Offer",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buy_price",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "buy_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "company",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fixed_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "is_active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "max_buy_per_buyer",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_buy_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sell_price",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sell_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Creates the offer. Must be called once.\\nStarts INACTIVE \\xe2\\x80\\x94 seller must call set_active(true) after deposit + SAC setup.\\n\\n`admin`: high-privilege key (upgrade, withdraw, drain, freeze). Ideally multisig/cold.\\n`seller`: operational key (pause, price). Can be same as admin for MVP.\\n`fixed_fee`: flat fee per trade in stroops (e.g., 50_000_000 = $5 USDC). 0 = no fee.\\n`deadline_ledger`: ledger sequence after which trades are rejected (0 = no deadline).\\n`min_buy_amount`: minimum buy_token amount per trade in stroops (0 = no minimum).\\n`max_buy_per_buyer`: cumulative buy_token cap per buyer in stroops (0 = no cap).",
+      "name": "create",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sell_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buy_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "company",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fixed_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sell_price",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "buy_price",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_buy_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_buy_per_buyer",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SaleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buyer trades buy_token (USDC) for sell_token.\\nEnforces: active, deadline, min amount, per-buyer cap, buyer not frozen.\\nAtomic: all transfers succeed or all revert.",
+      "name": "trade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buy_token_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SaleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin withdraws any token from the contract.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SaleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency drain: atomically pauses the sale AND withdraws all sell_token to admin.\\nAdmin only. For the \"oh shit\" scenario.",
+      "name": "emergency_drain",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause or resume the sale. Seller only.",
+      "name": "set_active",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update price. Seller only. Emits \"price\" event.",
+      "name": "updt_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sell_price",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "buy_price",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SaleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 1: Current admin proposes a new admin.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 2: Proposed admin accepts the role.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SaleError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin freezes or unfreezes a buyer. Frozen buyers cannot trade.",
+      "name": "freeze_buyer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "frozen",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether a buyer is frozen.",
+      "name": "is_frozen",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade contract WASM. Admin only (high-privilege).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend contract instance TTL. Anyone can call (allows cron jobs).\\nNOTE: WASM code TTL must be extended separately via\\n`stellar contract extend --wasm-hash <HASH> --ledgers-to-extend 518400`",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current offer state.",
+      "name": "get_offer",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Offer"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the contract's balance of the sell token.",
+      "name": "get_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns cumulative buy_token spent by a buyer.",
+      "name": "get_buyer_spent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the contract version.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  }
+]
