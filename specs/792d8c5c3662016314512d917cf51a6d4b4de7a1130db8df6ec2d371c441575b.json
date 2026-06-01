@@ -1,0 +1,1043 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "# Order State\\n\\n## Description:\\nComplete order state tracking settlement progress and status.\\n\\n## State Machine:\\n- Created \\xe2\\x86\\x92 [Partially Settled] \\xe2\\x86\\x92 Fully Settled\\n- Created \\xe2\\x86\\x92 Refunded\\n- States are mutually exclusive and one-way\\n\\n## Note:\\n- `is_fulfilled` and `is_refunded` are mutually exclusive\\n- `current_bps` ensures settlement percentage calculations are accurate\\n- `protocol_fee` is calculated once at order creation for predictability\\n\\n## Fields:\\n- `order_id`: Unique order identifier\\n- `sender`: Order creator\\n- `token`: Token contract address\\n- `temporary_wallet_address`: Wallet holding order funds\\n- `protocol_fee`: Calculated protocol fee for entire order\\n- `is_fulfilled`: True when order is completely settled\\n- `is_refunded`: True when order has been refunded\\n- `refund_address`: Fallback recipient for refunds\\n- `current_bps`: Remaining basis points (100,000 = 100% remaining)\\n- `amount`: Remaining order amount to be settled\\n- `rate`: Order exchange rate\\n- `message_hash`: Cross-chain or order metadata\\n- ",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "current_bps",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "i64"
+        },
+        {
+          "doc": "",
+          "name": "fee_tier",
+          "type_": {
+            "udt": {
+              "name": "ProtocolFees"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fees_collected",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "is_fulfilled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "is_refunded",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i64"
+        },
+        {
+          "doc": "",
+          "name": "refund_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "temporary_wallet_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "# Liquidity Provider Node\\n\\n## Description:\\nRepresents a registered liquidity provider node in the system.\\n\\n## Fields:\\n- `capacity`: Maximum order amount this node can handle\\n\\n## Usage:\\nUsed to track and manage LP node capabilities and limits.",
+      "lib": "",
+      "name": "LpNode",
+      "fields": [
+        {
+          "doc": "",
+          "name": "capacity",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "# Storage Data Keys\\n\\n## Overview:\\nEnum defining all storage keys used in the LP contract.\\n\\n## Note:\\n- Keys are namespaced to prevent collisions\\n- Order-specific keys include order_id for isolation\\n- Persistent storage used for all data",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Address of the settings manager contract",
+            "name": "SettingsContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Map of registered LP node IDs to their existence flags",
+            "name": "NodeIDs"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Order data storage, keyed by order_id",
+            "name": "Order",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "USDC token contract address",
+            "name": "Usdc"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pending settlement data, keyed by order_id",
+            "name": "PendingSettlement",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pending refund data, keyed by order_id",
+            "name": "PendingRefund",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Protocol fee percentage datakey",
+            "name": "FeeTierPercent",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ProtocolFees"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "# Order Creation Parameters\\n\\n## Description:\\nInput parameters for creating a new liquidity order.\\n\\n## Validation:\\n- `order_id` must be unique\\n- `amount` must be positive\\n- `message_hash` must not be empty\\n- All addresses must be valid\\n\\n## Fields:\\n- `order_id`: Unique identifier for the order (32 bytes recommended)\\n- `token`: Token contract address (currently only USDC supported)\\n- `sender`: Order creator who provides funds\\n- `amount`: Order amount in token units\\n- `rate`: Exchange rate for the order (implementation specific)\\n- `temporary_wallet_address`: custodial wallet holding order funds\\n- `refund_address`: Recipient for refunds if order fails\\n- `message_hash`: Cross-chain message identifier or order metadata",
+      "lib": "",
+      "name": "OrderParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": {
+            "udt": {
+              "name": "ProtocolFees"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i64"
+        },
+        {
+          "doc": "",
+          "name": "refund_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "temporary_wallet_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "# Protocol Fee Tiers\\n\\n## Description:\\nDifferent fee tiers with corresponding percentages:\\n- **BasicProvider**: 0.4% (400 basis points)\\n- **AlphaProvider**: 0.3% (300 basis points)\\n- **UltimateProvider**: 0.2% (200 basis points)",
+      "lib": "",
+      "name": "ProtocolFees",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Basic"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Alpha"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Ultimate"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "# Pending Refund Data\\n\\n## Description:\\nStores calculated refund amounts between state update and transfer execution.\\n\\n## Note:\\n- Temporary storage cleared after transfer execution\\n- Ensures refund amounts match state changes\\n- Prevents partial refund execution\\n\\n## Fields:\\n- `order_id`: Associated order identifier\\n- `fee`: Protocol fee deducted from refund\\n- `refund_amount`: Net amount to refund to sender",
+      "lib": "",
+      "name": "PendingRefund",
+      "fields": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "refund_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "# Pending Settlement Data\\n\\n## Description:\\nStores calculated settlement amounts between state update and transfer execution.\\n\\n## Note:\\n- Temporary storage cleared after transfer execution\\n- Prevents double-spending of settlement amounts\\n- Ensures atomic transfer execution\\n\\n## Fields:\\n- `order_id`: Associated order identifier\\n- `protocol_fee`: Amount to send to treasury\\n- `transfer_amount`: Amount to send to liquidity provider\\n- `liquidity_provider`: Recipient of settled funds\\n- `settle_percent`: Percentage of order that was settled",
+      "lib": "",
+      "name": "PendingSettlement",
+      "fields": [
+        {
+          "doc": "",
+          "name": "liquidity_provider",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "settle_percent",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "transfer_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Initiate Order Refund (Step 1: State Update)\\n\\n## Description:\\nMarks an order for refund and returns the full remaining amount to the user.\\nThis is the first step in the two-step refund process.\\nSupports partial-settle-then-refund flows \\xe2\\x80\\x94 if a prior settle() has\\nbeen called, its execute_settlement_transfer() must complete before\\nrefund() can be initiated.\\nNo fee is charged on refund \\xe2\\x80\\x94 unsuccessful orders are returned in full.\\n\\n## Authorization:\\n- `relayer`: Must authorize the state change\\n\\n## Validation:\\n- Order must exist and not be fulfilled/refunded\\n- No pending settlement must exist for this order\\n\\n## State Changes:\\n- Marks order as refunded\\n- Zeros out order amounts\\n- Stores pending refund for transfer execution\\n\\n## Events:\\n- `(\"OrderRefunded\", order_id)`",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Settle an order (Step 1: State Update)\\n\\n## Description:\\nUpdates order state and calculates settlement amounts. This is the first step\\nin the two-step settlement process. No tokens are transferred here.\\n\\n## Authorization:\\n- `relayer`: Must authorize the state change\\n\\n## Validation:\\n- Order must exist and not be fulfilled/refunded\\n- Settle percent must be valid (0 < percent \\xe2\\x89\\xa4 100,000)\\n- Order must have sufficient remaining BPS\\n\\n## State Changes:\\n- Updates order amount and current_bps\\n- Marks order as fulfilled if current_bps reaches 0\\n- Stores pending settlement for transfer execution\\n\\n## Events:\\n- `(\"OrderSettled\", order_id, liquidity_provider)` with settle_percent\\n\\n## Parameters:\\n- `order_id`: Unique identifier for the order\\n- `liquidity_provider`: Address to receive settled funds\\n- `settle_percent`: Percentage to settle (in basis points, 100,000 = 100%)\\n\\n## Returns:\\n- `Ok(true)` on successful state update\\n- `Err(ContractError)` on failure",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_provider",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "settle_percent",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Upgrade Contract WASM\\n\\n## Description:\\nUpdates the contract's WASM code for upgrades and bug fixes.\\n\\n## Authorization:\\n- `admin`: Must authorize the upgrade\\n\\n## Note:\\n- Only admin can upgrade the contract\\n- Ensures contract upgradeability while maintaining state",
+      "name": "upgrade_lp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Create a new liquidity order\\n\\n## Description:\\nCreates a new order and transfers funds from sender to temporary wallet.\\nThe order enters a pending state until settled or refunded.\\n\\n## Authorization:\\n- `params.sender`: Must authorize the token transfer\\n\\n## Validation:\\n- Contract must not be paused\\n- Amount must be positive\\n- Message hash must not be empty\\n- Order ID must not already exist\\n\\n## Events:\\n- `(\"OrderCreated\", order_id, sender)` with order details\\n\\n## Parameters:\\n- `env`: Soroban environment\\n- `params`: Order creation parameters\\n\\n## Returns:\\n- `Ok(())` on success\\n- `Err(ContractError)` on failure",
+      "name": "create_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "OrderParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Get the current fee percentage for a tier",
+      "name": "get_tier_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "ProtocolFees"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Initialize the LP Contract with Tiered Fees\\n\\n## Description:\\nSets up the contract with required addresses and configures tier fees.\\n\\n## Fee Configuration:\\n- BasicProvider: 0.4% (400 basis points)\\n- AlphaProvider: 0.3% (300 basis points)\\n- UltimateProvider: 0.2% (200 basis points)",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "settings_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Get complete order information\\n\\n## Returns:\\n- Full Order struct if order exists\\n- Error if order not found",
+      "name": "get_order_info",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Update fee percentage for a tier (admin only)\\n\\n## Description:\\nAllows admin to update the fee percentage for any tier.\\n\\n## Parameters:\\n- `tier`: The tier to update\\n- `fee_bps`: New fee in basis points (e.g., 400 = 0.4%)",
+      "name": "update_tier_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "ProtocolFees"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "i64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "emergency_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "extend_config_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Get token balance for a user\\n\\n## Returns:\\n- USDC balance of the specified user",
+      "name": "get_token_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "calculate_protocol_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "ProtocolFees"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Execute Refund Transfers (Step 2: Token Transfer)\\n\\n## Description:\\nExecutes the actual token transfers for a previously refunded order.\\nThis is the second step in the two-step refund process.\\n\\n## Authorization:\\n- `order.temporary_wallet_address`: Must authorize the token transfers\\n\\n## Transfers:\\n2. Full amount to refund address\\n\\n## Note:\\n- Only executes if pending refund exists\\n- Clears pending refund after execution",
+      "name": "execute_refund_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_settings_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_settings_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "# Execute Settlement Transfers (Step 2: Token Transfer)\\n\\n## Description:\\nExecutes the actual token transfers for a previously settled order.\\nThis is the second step in the two-step settlement process.\\n\\n## Authorization:\\n- `order.temporary_wallet_address`: Must authorize the token transfers\\n\\n## Transfers:\\n1. Protocol fee to treasury (if any)\\n2. Remaining amount to liquidity provider\\n\\n## Events:\\n- `(\"SettlementTransferred\", order_id)` with settle_percent\\n\\n## Note:\\n- Only executes if pending settlement exists\\n- Clears pending settlement after execution\\n- Temporary wallet maintains control of funds until this point",
+      "name": "execute_settlement_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "ZeroAddress",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidSenderFeeRecipient",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidMessageHash",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidSettlePercent",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "OrderAlreadyExists",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "OrderNotFound",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "OrderFulfilled",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "OrderRefunded",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "FeeExceedsProtocolFee",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TransferFailed",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "AddressAlreadySet",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidParameter",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvalidLpNodeParameters",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "LpNodeIdAlreadyExists",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "SettingsContractNotSet",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "UsdcNotSet",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "NoPendingSettlement",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "NoPendingRefund",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "FeePercentNotSet",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeePercent",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 24
+        },
+        {
+          "doc": "",
+          "name": "DivisionByZero",
+          "value": 25
+        },
+        {
+          "doc": "",
+          "name": "AmountBelowMinimum",
+          "value": 26
+        },
+        {
+          "doc": "",
+          "name": "PendingSettlementExists",
+          "value": 27
+        },
+        {
+          "doc": "",
+          "name": "NegativeFee",
+          "value": 28
+        },
+        {
+          "doc": "",
+          "name": "ZeroPayoutSettlement",
+          "value": 29
+        },
+        {
+          "doc": "",
+          "name": "NotPaused",
+          "value": 30
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin1"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin2"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin1"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin2"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Relayer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TokenSupported",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidFeePercent",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "ZeroAddress",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AddressAlreadySet",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidParameter",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AdminSlotConflict",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LegacyDataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProtocolAddressType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Relayer"
+          }
+        }
+      ]
+    }
+  }
+]

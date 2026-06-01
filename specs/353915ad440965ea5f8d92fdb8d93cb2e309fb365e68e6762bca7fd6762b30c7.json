@@ -1,0 +1,884 @@
+[
+  {
+    "function_v0": {
+      "doc": "Liveness safety valve: if Drand round R is never produced (network stall)\\nand the grace window after the reveal deadline has passed without the\\nround opening, anyone can void it and all escrow is refunded.",
+      "name": "void",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deterministically compute the winner after the reveal deadline. If no\\nvalid bid was revealed, the round is voided and all escrow becomes\\nrefundable.",
+      "name": "clear",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": "address"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit (or overwrite, before the deadline) a sealed bid and lock escrow.\\n\\n- `commitment` H binds the bid; checked at reveal.\\n- `ciphertext` C is the timelock seal; guarantees forced reveal.\\n- `escrow` is a public USDC budget and an upper bound on the sealed bid;\\nlocked now so the winner can always pay.\\n- `auditor_blob` is the bidder identity encrypted to the auditor key.",
+      "name": "commit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "bidder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ciphertext",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "escrow",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "auditor_blob",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reveal a bid. Permissionless: once R's signature is public, anyone can\\ndecrypt any ciphertext and submit the reveal \\xe2\\x80\\x94 so no bidder can abort.\\nThe contract checks `sha256(be16(value) \\xe2\\x80\\x96 nonce) == H`.",
+      "name": "reveal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "bidder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle a cleared round. The winner pays their bid from escrow to the\\noperator; the winner's surplus and every loser's escrow are refunded.\\nCannot fail for lack of funds \\xe2\\x80\\x94 everything was escrowed at commit.",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Observer view: the sealed ciphertext + auditor blob, while still in\\nTemporary storage. Visibly unreadable during the sealed phase.",
+      "name": "get_seal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "bidder",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Seal"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Round"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "GlobalConfig"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper view: the deterministic, ordered bidder index for a round. The\\nkeeper reads this to learn exactly which seals must be opened and\\nrevealed \\xe2\\x80\\x94 the reveal set is on-chain state, so no event scraping or\\nindexer is required and nothing can be missed.",
+      "name": "get_bidders",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "address"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open the reveal window by proving Drand round R has been produced.\\n\\nThe supplied signature is verified on-chain via BLS12-381. This is the\\nonly way to move a round into `Revealing`; there is no operator override.",
+      "name": "open_reveal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a new sealed round. Permissionless: anyone can be an operator, and\\nthe operator gets no special read power \\xe2\\x80\\x94 that is the point.",
+      "name": "create_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "item_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "reveal_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "clearing_rule",
+          "type_": {
+            "udt": {
+              "name": "ClearingRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "commit_deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reveal_deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "auditor_pubkey",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_bid_state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "bidder",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "BidState"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time deploy configuration. All Drand parameters are supplied by the\\ndeployer from values validated against a live quicknet round.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "drand_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "g2_neg_generator",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "dst",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "drand_genesis",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_period",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-bid ephemeral sealed payload (Temporary). Auto-expires after the reveal\\nwindow; the auto-expiry is the design, not a workaround (PRD \\xc2\\xa78).",
+      "lib": "",
+      "name": "Seal",
+      "fields": [
+        {
+          "doc": "enc(bidder_identity, auditor_pubkey) \\xe2\\x80\\x94 readable only by the auditor.",
+          "name": "auditor_blob",
+          "type_": "bytes"
+        },
+        {
+          "doc": "C = tlock_encrypt(be16(value) \\xe2\\x80\\x96 nonce, drand_pubkey, R).",
+          "name": "ciphertext",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract error codes. Every failure state from the PRD has a defined code \\xe2\\x80\\x94\\nthere is no undefined behavior and no silent fallback.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "RoundNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BidNotFound",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "CommitClosed",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "CommitNotClosed",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "CommitDeadlineAfterReveal",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "RevealNotOpen",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "RevealAlreadyOpen",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "RevealWindowClosed",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "RevealStillOpen",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "NotCleared",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "AlreadyCleared",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "AlreadySettled",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "RoundVoided",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "NotVoidable",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "WrongStatus",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "InvalidDrandSignature",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "HashMismatch",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRevealed",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "PayloadTooLarge",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 34
+        },
+        {
+          "doc": "",
+          "name": "BidExceedsEscrow",
+          "value": 35
+        },
+        {
+          "doc": "",
+          "name": "DeadlineInPast",
+          "value": 36
+        },
+        {
+          "doc": "",
+          "name": "NoValidBids",
+          "value": 37
+        },
+        {
+          "doc": "",
+          "name": "RoundFull",
+          "value": 38
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-round record (Persistent). Survives until the round is explicitly closed.",
+      "lib": "",
+      "name": "Round",
+      "fields": [
+        {
+          "doc": "Public key bidder-identity blobs are encrypted to (selective disclosure).",
+          "name": "auditor_pubkey",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "bidders",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "clearing_rule",
+          "type_": {
+            "udt": {
+              "name": "ClearingRule"
+            }
+          }
+        },
+        {
+          "doc": "Unix seconds. Must be strictly before time(R).",
+          "name": "commit_deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "Opaque reference to the item / allocation being decided (hash of an\\noff-chain description). The contract is agnostic to its meaning.",
+          "name": "item_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "Unix seconds. Reveal window closes here; must be after time(R).",
+          "name": "reveal_deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "Drand round number R whose threshold signature unseals the bids.",
+          "name": "reveal_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "winner",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "winning_bid",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Round lifecycle. Mirrors the state machine in PRD \\xc2\\xa76.",
+      "lib": "",
+      "name": "Status",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Revealing"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Cleared"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Settled"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Voided"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RoundCounter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Round",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "State",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Seal",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-bid durable state (Persistent). Holds everything required to clear and\\nsettle / refund safely, even if the ephemeral ciphertext has expired.",
+      "lib": "",
+      "name": "BidState",
+      "fields": [
+        {
+          "doc": "H = sha256(be16(value) \\xe2\\x80\\x96 nonce) \\xe2\\x80\\x94 binds the sealed bid.",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Public USDC budget locked at commit; upper bound on the sealed bid.",
+          "name": "escrow",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "revealed_value",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "settled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "valid",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Deterministic clearing rule. Default is a first-price sealed-bid auction\\n(highest valid revealed bid wins).",
+      "lib": "",
+      "name": "ClearingRule",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "HighestBid"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LowestBid"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Contract-global configuration, set once at deploy in Instance storage.\\n\\nAll Drand parameters are supplied at deploy time (validated against a live\\nquicknet round before deploy) so the source carries no guessed constants.\\n`drand_pubkey` and `g2_neg_generator` are uncompressed BLS12-381 G2 points\\n(192 bytes each) in Soroban host serialization. `dst` is the RFC 9380\\ndomain separation tag for the configured Drand scheme.",
+      "lib": "",
+      "name": "GlobalConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "drand_genesis",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_period",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "dst",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "g2_neg_generator",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
