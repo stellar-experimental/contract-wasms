@@ -1,0 +1,967 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "HotWalletNotAllowed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TooManyHotWallets",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "RolesNotDistinct",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "ContractPaused",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ReservedAddress",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NoPendingSacAdmin",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "TooEarlyToExecute",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NoPendingUpgrade",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTooEarly",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "NoPendingTreasury",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "TreasuryRotationTooEarly",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "TreasurySendMaxExceeded",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "TreasurySendDailyCapExceeded",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "BurnMaxExceeded",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "BurnDailyCapExceeded",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "InvalidCapConfig",
+          "value": 34
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovPaused",
+      "prefix_topics": [
+        "gov_paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovUnpaused",
+      "prefix_topics": [
+        "gov_unpaused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreasurySent",
+      "prefix_topics": [
+        "treasury_sent"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "I3: Pause OPS flows (treasury_send, burn_from_pool) \\xe2\\x80\\x94 admin only.\\nAdmin governance ops (caps, allowlist, role rotation, upgrades) remain\\navailable so the admin can remediate and unpause. This is the on-chain\\nbrake for an OPS-key compromise; the admin multisig is uncompromised in\\nthat scenario and can halt fund movement without touching SAC allowances.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovOpsUpdated",
+      "prefix_topics": [
+        "gov_ops_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_ops",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_ops",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BurnedFromPool",
+      "prefix_topics": [
+        "burned_from_pool"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovInitialized",
+      "prefix_topics": [
+        "gov_initialized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ops",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HotWalletAdded",
+      "prefix_topics": [
+        "hot_wallet_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate ops address \\xe2\\x80\\x94 admin only, new ops must co-sign.",
+      "name": "set_ops",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_ops",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "I3: Resume OPS flows \\xe2\\x80\\x94 admin only.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BurnCapsUpdated",
+      "prefix_topics": [
+        "burn_caps_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_max_per_tx",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_max_per_tx",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_daily_cap",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_daily_cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovAdminUpdated",
+      "prefix_topics": [
+        "gov_admin_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HotWalletRemoved",
+      "prefix_topics": [
+        "hot_wallet_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SacAdminProposed",
+      "prefix_topics": [
+        "sac_admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate admin address \\xe2\\x80\\x94 admin only, new admin must co-sign.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovTreasuryUpdated",
+      "prefix_topics": [
+        "gov_treasury_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_treasury",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_treasury",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovUpgradeCanceled",
+      "prefix_topics": [
+        "gov_upgrade_canceled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovUpgradeExecuted",
+      "prefix_topics": [
+        "gov_upgrade_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovUpgradeProposed",
+      "prefix_topics": [
+        "gov_upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovTreasuryProposed",
+      "prefix_topics": [
+        "gov_treasury_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_treasury",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "I-01: deployment-time constructor. Runs atomically with contract\\ncreation, closing the deploy-init race window. Treasury is mutable\\npost-deploy via L-05 propose_treasury / execute_treasury_rotation;\\nburn pool and SAC ID remain immutable (no setters).\\n\\nL-03: caps for treasury_send and burn_from_pool are admin-configurable\\nat deploy time and via setters. Per-tx cap is a hard ceiling on any\\nsingle call; daily cap rolls over at UTC midnight.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ops",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "burn_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sac_contract_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed_hot_wallets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "treasury_send_max_per_tx",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "treasury_send_daily_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "burn_max_per_tx",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "burn_daily_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L-03: update burn_from_pool caps \\xe2\\x80\\x94 admin only.",
+      "name": "set_burn_caps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_max_per_tx",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "new_daily_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Send from treasury to an allowlisted hot wallet \\xe2\\x80\\x94 OPS only.\\n\\nAmount must be positive, destination must be allowlisted.\\nUses SAC allowance model: `transfer_from(spender=this, from=treasury, to, amount)`.\\nThe SAC allowance (granted by Treasury) acts as the on-chain spending ceiling.",
+      "name": "treasury_send",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a hot wallet to the allowlist \\xe2\\x80\\x94 admin only.",
+      "name": "add_hot_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn from the burn pool \\xe2\\x80\\x94 OPS only.\\n\\nAmount must be positive. Uses SAC allowance model:\\n`burn_from(spender=this, from=burn_pool, amount)`.",
+      "name": "burn_from_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending WASM upgrade \\xe2\\x80\\x94 admin only.",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a pending WASM upgrade \\xe2\\x80\\x94 admin only.\\nFails if no pending upgrade or `UPGRADE_DELAY_LEDGERS` has not elapsed.",
+      "name": "execute_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a WASM upgrade \\xe2\\x80\\x94 admin only.\\nStores the hash; must wait `UPGRADE_DELAY_LEDGERS` before executing.",
+      "name": "propose_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SacAdminHandoffCanceled",
+      "prefix_topics": [
+        "sac_admin_handoff_canceled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SacAdminHandoffExecuted",
+      "prefix_topics": [
+        "sac_admin_handoff_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreasurySendCapsUpdated",
+      "prefix_topics": [
+        "treasury_send_caps_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_max_per_tx",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_max_per_tx",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_daily_cap",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_daily_cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new treasury address \\xe2\\x80\\x94 admin only.\\nStarts the timelock window; executable after DELAY_LEDGERS elapsed.",
+      "name": "propose_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "L-04: emitted when propose_sac_admin overwrites a still-pending proposal.",
+      "lib": "",
+      "name": "SacAdminProposalReplaced",
+      "prefix_topics": [
+        "sac_admin_proposal_replaced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose SAC admin rotation \\xe2\\x80\\x94 admin only.\\nStores pending admin + proposal ledger.",
+      "name": "propose_sac_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a hot wallet from the allowlist \\xe2\\x80\\x94 admin only.",
+      "name": "remove_hot_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "L-04: emitted when propose_upgrade overwrites a still-pending proposal.",
+      "lib": "",
+      "name": "GovUpgradeProposalReplaced",
+      "prefix_topics": [
+        "gov_upgrade_proposal_replaced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovTreasuryProposalReplaced",
+      "prefix_topics": [
+        "gov_treasury_proposal_replaced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_treasury",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_treasury",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovTreasuryRotationCanceled",
+      "prefix_topics": [
+        "gov_treasury_rotation_canceled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L-03: update treasury_send caps \\xe2\\x80\\x94 admin only.\\nBoth new values must be positive; daily must be >= per_tx.",
+      "name": "set_treasury_send_caps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_max_per_tx",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "new_daily_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel pending SAC admin handoff \\xe2\\x80\\x94 admin only.",
+      "name": "cancel_sac_admin_handoff",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending treasury rotation \\xe2\\x80\\x94 admin only.",
+      "name": "cancel_treasury_rotation",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute SAC admin handoff \\xe2\\x80\\x94 admin only.\\n\\nRequires pending proposal and `DELAY_LEDGERS` elapsed.\\nCalls `SAC.set_admin(pending)`.",
+      "name": "execute_sac_admin_handoff",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a pending treasury rotation \\xe2\\x80\\x94 admin only.\\nRequires pending proposal, DELAY_LEDGERS elapsed, AND new_treasury co-sign.",
+      "name": "execute_treasury_rotation",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]

@@ -1,0 +1,1418 @@
+[
+  {
+    "function_v0": {
+      "doc": "Draw: send NGNC from vault to hot wallet.\\nReytsCAD settlement to partner is handled off-chain by the API\\nusing the same ref_hash for linkage. OPS only.",
+      "name": "draw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit_asset_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "payment_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hot_wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ref_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Block deposits, draws, normal withdrawals \\xe2\\x80\\x94 admin only.\\nEmergency withdraw still works.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns (paused, admin, ops, max_draw_per_tx, throttled_max_draw).",
+      "name": "status",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "bool",
+              "address",
+              "address",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdrawn",
+      "prefix_topics": [
+        "withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "RolesNotDistinct",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ReservedAddress",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NotOps",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NotPartner",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "PartnerNotAllowed",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "PartnerAlreadyAllowed",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "WalletNotAllowed",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "DepositCapExceeded",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "VelocityExceeded",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "ContractPaused",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "RateStale",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "RateBandThrottled",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "RateBandPaused",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "NotHotWallet",
+          "value": 44
+        },
+        {
+          "doc": "",
+          "name": "RefAlreadyUsed",
+          "value": 45
+        },
+        {
+          "doc": "",
+          "name": "DrawAmountExceedsMax",
+          "value": 46
+        },
+        {
+          "doc": "",
+          "name": "PaymentAmountMismatch",
+          "value": 47
+        },
+        {
+          "doc": "",
+          "name": "WithdrawDestNotAllowed",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "WithdrawInsufficientBal",
+          "value": 51
+        },
+        {
+          "doc": "",
+          "name": "InvalidRate",
+          "value": 60
+        },
+        {
+          "doc": "",
+          "name": "RateNotSet",
+          "value": 61
+        },
+        {
+          "doc": "",
+          "name": "NoPendingUpgrade",
+          "value": 70
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTooEarly",
+          "value": 71
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate ops address \\xe2\\x80\\x94 admin + new_ops must co-sign.",
+      "name": "set_ops",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_ops",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume operations \\xe2\\x80\\x94 admin only.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Normal withdrawal to partner's allowlisted wallet \\xe2\\x80\\x94 OPS only.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RateUpdated",
+      "prefix_topics": [
+        "rate_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "deposit_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_rate",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_rate",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "band_pct",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultPaused",
+      "prefix_topics": [
+        "vault_paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate admin address \\xe2\\x80\\x94 both admin and new_admin must co-sign.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DrawExecuted",
+      "prefix_topics": [
+        "draw_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "payment_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "hot_wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ref_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PartnerAdded",
+      "prefix_topics": [
+        "partner_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if address is an allowed partner.",
+      "name": "is_partner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultUnpaused",
+      "prefix_topics": [
+        "vault_unpaused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a KYC'd partner with an initial deposit cap for a specific asset\\n(M-02). Caps for additional assets are added via set_deposit_cap.\\nAdmin only.",
+      "name": "add_partner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set exchange rate (7-decimal i128) \\xe2\\x80\\x94 OPS only.\\nAuto-calculates band. >=15% \\xe2\\x86\\x92 pauses draws.",
+      "name": "update_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deposit_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_rate",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HotWalletAdded",
+      "prefix_topics": [
+        "hot_wallet_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MaxDrawUpdated",
+      "prefix_topics": [
+        "max_draw_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_max",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PartnerRemoved",
+      "prefix_topics": [
+        "partner_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current rate for an asset pair.",
+      "name": "current_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deposit_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update normal max draw per tx \\xe2\\x80\\x94 admin only.",
+      "name": "set_max_draw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultOpsUpdated",
+      "prefix_topics": [
+        "vault_ops_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_ops",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_ops",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "I-01: deployment-time constructor. Runs atomically with contract\\ncreation, closing the deploy-init race window that initialize() had.\\nSets roles, draw limits, paused=false.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ops",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_draw_per_tx",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "throttled_max_draw",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if address is an allowed hot wallet.",
+      "name": "is_hot_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HotWalletRemoved",
+      "prefix_topics": [
+        "hot_wallet_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultInitialized",
+      "prefix_topics": [
+        "vault_initialized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ops",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add to draw source/destination allowlist \\xe2\\x80\\x94 admin only.",
+      "name": "add_hot_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending upgrade \\xe2\\x80\\x94 admin only.",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove partner from allowlist \\xe2\\x80\\x94 admin only.\\nPositions preserved for emergency withdraw.",
+      "name": "remove_partner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositCapUpdated",
+      "prefix_topics": [
+        "deposit_cap_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_cap",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositRegistered",
+      "prefix_topics": [
+        "deposit_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tx_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultAdminUpdated",
+      "prefix_topics": [
+        "vault_admin_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute pending WASM upgrade after 24h \\xe2\\x80\\x94 admin only.",
+      "name": "execute_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a WASM upgrade \\xe2\\x80\\x94 admin only. Starts 24h timer.",
+      "name": "propose_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or update partner's deposit cap for a specific asset (M-02).\\nCaps are enforced per (partner, asset). Admin only.",
+      "name": "set_deposit_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EmergencyWithdrawn",
+      "prefix_topics": [
+        "emergency_withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PartnerWalletAdded",
+      "prefix_topics": [
+        "partner_wallet_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RateBandOverridden",
+      "prefix_topics": [
+        "rate_band_overridden"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "deposit_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get partner position for a specific asset.",
+      "name": "partner_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Credit partner position after detecting incoming payment \\xe2\\x80\\x94 OPS only.\\nChecks cap + velocity + replay.",
+      "name": "register_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tx_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if wallet is allowlisted for partner withdrawals.",
+      "name": "is_partner_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove from allowlist \\xe2\\x80\\x94 admin only.",
+      "name": "remove_hot_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PartnerWalletRemoved",
+      "prefix_topics": [
+        "partner_wallet_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultUpgradeCanceled",
+      "prefix_topics": [
+        "vault_upgrade_canceled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultUpgradeExecuted",
+      "prefix_topics": [
+        "vault_upgrade_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultUpgradeProposed",
+      "prefix_topics": [
+        "vault_upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a withdrawal destination for partner \\xe2\\x80\\x94 admin only.",
+      "name": "add_partner_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency withdrawal \\xe2\\x80\\x94 partner auth (not OPS).\\nFull balance for given asset. Works while paused and after removal.",
+      "name": "emergency_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Acknowledge >=15% rate move (single-step OR cumulative across multiple\\nsub-15% updates per M-01), re-enable draws \\xe2\\x80\\x94 admin only.",
+      "name": "admin_override_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "deposit_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payment_asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get partner's deposit cap for a specific asset (M-02 per-asset cap).",
+      "name": "partner_deposit_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ThrottledMaxDrawUpdated",
+      "prefix_topics": [
+        "throttled_max_draw_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_max",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a withdrawal destination for partner \\xe2\\x80\\x94 admin only.",
+      "name": "remove_partner_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update throttled max draw (5-15% band) \\xe2\\x80\\x94 admin only.",
+      "name": "set_throttled_max_draw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_max",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "L-04: emitted when propose_upgrade overwrites a still-pending proposal.",
+      "lib": "",
+      "name": "VaultUpgradeProposalReplaced",
+      "prefix_topics": [
+        "vault_upgrade_proposal_replaced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
