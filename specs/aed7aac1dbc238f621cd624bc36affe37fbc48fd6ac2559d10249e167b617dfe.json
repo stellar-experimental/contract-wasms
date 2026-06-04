@@ -1,0 +1,848 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RewardsError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 4
+        },
+        {
+          "doc": "`path` is malformed: empty, single-element, first != reward_token,\\nor last != strategy's asset.",
+          "name": "InvalidPath",
+          "value": 5
+        },
+        {
+          "doc": "Off-chain caller's deadline has already passed by the time the tx\\nreached the validator. Resubmit with a fresher deadline.",
+          "name": "DeadlinePassed",
+          "value": 6
+        },
+        {
+          "doc": "The router returned fewer asset tokens than `min_out`. Tighten the\\noff-chain quote / loosen `min_out` and resubmit.",
+          "name": "SlippageExceeded",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotScheduled",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTooEarly",
+          "value": 9
+        },
+        {
+          "doc": "Reward token must differ from the strategy's principal asset \\xe2\\x80\\x94\\ncompounding USDC into USDC is a no-op masquerading as yield.",
+          "name": "InvalidRewardToken",
+          "value": 10
+        },
+        {
+          "doc": "`min_out` cannot be negative; pass 0 to accept any non-zero output.",
+          "name": "InvalidMinOut",
+          "value": 11
+        },
+        {
+          "doc": "`set_upgrade_delay` was called with a delay below `MIN_UPGRADE_DELAY`.\\nAdmin must respect the timelock floor \\xe2\\x80\\x94 same posture as the strategies.",
+          "name": "InvalidUpgradeDelay",
+          "value": 12
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "keeper",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "router",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomic harvest -> sweep -> swap -> compound. Returns the asset amount\\ntransferred to the vault. Returns 0 (no-op event emitted) when the\\nstrategy holds zero `reward_token` after harvest.",
+      "name": "compound",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the rewards module. Must be called once after deploy\\nbefore any other entry point becomes useful. Matches the\\n`initialize` pattern used by tezoro-vault and the strategies \\xe2\\x80\\x94 the\\nadmin's auth is captured at this call rather than at the deploy\\ntransaction, which makes deploys easier to script (no constructor\\nargs = no auth tree at deploy time) and lets the soroban-fork\\nharness register the wasm without needing a forked auth manager\\nfor the constructor context.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_router",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade_delay",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "schedule_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RewardsError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Pause",
+      "prefix_topics": [
+        "pause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Unpause",
+      "prefix_topics": [
+        "unpause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgrade",
+      "prefix_topics": [
+        "upgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Compound",
+      "prefix_topics": [
+        "compound"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Amount returned by `strategy.harvest`. May be 0 if the underlying\\nprotocol had nothing to claim this cycle but residual rewards from\\na prior harvest were still in the strategy contract.",
+          "name": "claimed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Amount actually swept from strategy to module (covers `claimed`\\nplus any leftover dust).",
+          "name": "swept",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Asset received from the swap and forwarded to the vault.",
+          "name": "deposited",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when `compound` runs but the strategy holds zero balance of\\n`reward_token` after harvest \\xe2\\x80\\x94 keeps the on-chain audit trail symmetric\\n(every compound call leaves a trace, success or no-op).",
+      "lib": "",
+      "name": "CompoundNoOp",
+      "prefix_topics": [
+        "compound_no_op"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "claimed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KeeperChanged",
+      "prefix_topics": [
+        "keeper_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_keeper",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RouterChanged",
+      "prefix_topics": [
+        "router_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_router",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_router",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address allowed to call `compound`. The keeper account in production;\\nadmin in development. Separate from admin so the admin can rotate\\nthe keeper key without losing control of the contract.",
+            "name": "Keeper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Soroswap router address. Reward \\xe2\\x86\\x92 asset swaps go through here.",
+            "name": "Router"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgradeDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ScheduledUpgradeHash"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ScheduledUpgradeAt"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Unhealthy",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidBps",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotScheduled",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTooEarly",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "PairNotFound",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "ZapMathFailed",
+          "value": 13
+        }
+      ]
+    }
+  }
+]

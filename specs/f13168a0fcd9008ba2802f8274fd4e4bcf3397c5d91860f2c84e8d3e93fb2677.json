@@ -1,0 +1,1205 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vault",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit USDC into Blend pool via submit(SupplyCollateral).\\n\\nFlow:\\n1. Transfer USDC from vault to this contract\\n2. Approve Blend pool to spend USDC\\n3. Call blend_pool.submit() with SupplyCollateral request\\n4. Update tracked balance",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim BLND token emissions from the Blend pool. Claimed tokens\\nland in this strategy contract; the rewards module sweeps them\\nout via `sweep_rewards`. Callable by `vault`, `admin`, or the\\nconfigured `rewards_module` (when bound).",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "backstop",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw USDC from Blend pool via submit(WithdrawCollateral).\\n\\nIf requested amount exceeds tracked balance, withdraws up to\\nthe tracked balance and emits both amounts for auditability.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance_of",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "blend_pool",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize with vault, asset, and Blend pool.\\nAdmin must prove identity via require_auth.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pool utilization and backstop coverage health check.\\n\\nQueries the Blend pool's reserve data to compute:\\n1. Utilization = d_supply / b_supply (if > max_utilization -> unhealthy)\\n2. Backstop credit ratio (if depleted -> unhealthy)\\n\\nReturns true if the pool is within configured safety thresholds.",
+      "name": "is_healthy",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept admin role. Must be called by the pending admin.",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the Blend backstop module address used by `is_healthy` to read the\\npool's real insurance coverage. Required for the backstop coverage gate\\nto be active; until set, `is_healthy` runs utilization-only.",
+      "name": "set_backstop",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a new admin. Pending admin must call `accept_admin`.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweep the strategy's full balance of `token` to `to`. Used by the\\nrewards module to extract claimed BLND emissions before swapping\\nthem to USDC and redepositing into the vault.\\n\\nRefuses to sweep `asset` (USDC principal) \\xe2\\x80\\x94 that path is reserved\\nfor `withdraw` / `emergency_withdraw`. Callable by `vault`, `admin`,\\nor the configured `rewards_module`. Returns the swept amount; if\\nthe strategy holds zero of `token`, returns 0 without erroring.",
+      "name": "sweep_rewards",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a scheduled upgrade.",
+      "name": "cancel_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "rewards_module",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a previously scheduled upgrade after delay.",
+      "name": "execute_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Schedule a WASM upgrade. Executes after configured delay.",
+      "name": "schedule_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pull all funds from Blend back to vault.\\nCallable by vault (normal flow) OR admin (emergency).\\n\\nUses actual pool position instead of tracked balance to handle\\ncases where tracked balance drifted (e.g., partial liquidation).",
+      "name": "emergency_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind the off-chain rewards module contract. Once set, the bound\\naddress can call `harvest` and `sweep_rewards` alongside vault/admin.\\nPass `None` to clear the binding (rolls back to vault/admin only).",
+      "name": "set_rewards_module",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_module",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Available liquidity for immediate withdrawal, in underlying asset units.\\n\\nWhat \"available\" actually means in a Blend pool: pool-wide free\\nliquidity is `total_supplied_underlying - total_borrowed_underlying`,\\nNOT `b_supply - d_supply` \\xe2\\x80\\x94 those counts are in different token units\\n(b_token vs d_token) with different accrual rates, and subtracting\\nthem directly was the bug behind the first failed redeem: on a pool\\nat 37.6% utilization the raw `b_supply - d_supply` over-reported\\navailable by the (b_rate \\xe2\\x88\\x92 d_rate) drift, the vault's waterfall\\nhappily asked for that much, and the pool rejected with BalanceError\\nbecause it simply didn't have enough free underlying to deliver.\\n\\nCorrect formula:\\n\\npool_supplied   = b_supply * b_rate / 1e12\\npool_borrowed   = d_supply * d_rate / 1e12\\npool_available  = pool_supplied - pool_borrowed\\nour_cap         = min(tracked, pool_available)\\n\\nA 2-stroop safety margin is subtracted so exact-match withdraws don't\\nrace rounding on the b_token burn inside the pool \\xe2\\x80\\x94 same trick the\\nEVM ",
+      "name": "available_liquidity",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_approval_buffer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buffer",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_max_utilization",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_min_backstop_coverage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Pause",
+      "prefix_topics": [
+        "pause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposit",
+      "prefix_topics": [
+        "deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Harvest",
+      "prefix_topics": [
+        "harvest"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "claimed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Unpause",
+      "prefix_topics": [
+        "unpause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgrade",
+      "prefix_topics": [
+        "upgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "requested",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ConfigUpdate",
+      "prefix_topics": [
+        "config_update"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SweepRewards",
+      "prefix_topics": [
+        "sweep_rewards"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultChanged",
+      "prefix_topics": [
+        "vault_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_vault",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BackstopChanged",
+      "prefix_topics": [
+        "backstop_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_backstop",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_backstop",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EmergencyWithdraw",
+      "prefix_topics": [
+        "emergency_withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RewardsModuleChanged",
+      "prefix_topics": [
+        "rewards_module_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_module",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_module",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Vault"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Asset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "BlendPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address of the global Blend backstop module. Used by `is_healthy` to\\nread the pool's real insurance coverage. Optional \\xe2\\x80\\x94 when unset the\\nbackstop coverage gate is skipped (utilization-only health).",
+            "name": "Backstop"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TrackedBalance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxUtilizationBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MinBackstopCoverageBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ApprovalLedgerBuffer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgradeDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ScheduledUpgradeHash"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ScheduledUpgradeAt"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Optional address of the off-chain rewards module contract.\\nWhen set, this address joins {admin, vault} as an authorized caller\\nfor `harvest` and `sweep_rewards`. Unset by default \\xe2\\x80\\x94 the rewards\\nmodule is bound after initial deploy via `set_rewards_module`.",
+            "name": "RewardsModule"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Unhealthy",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidBps",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotScheduled",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTooEarly",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "PairNotFound",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "ZapMathFailed",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 14
+        }
+      ]
+    }
+  }
+]

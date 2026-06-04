@@ -1,0 +1,1112 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pair",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fair price `(num, den)` of one OTHER raw unit in USDC raw units used by\\n`balance_of`. Defaults to (1, 1).",
+      "name": "price",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vault",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "router",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Single-sided zap-in: USDC \\xe2\\x86\\x92 LP.\\n\\nSteps:\\n1. Read live pool reserves\\n2. Compute optimal swap split (`zap::optimal_swap_amount`)\\n3. Swap `swap_in` USDC \\xe2\\x86\\x92 OTHER, slippage-guarded\\n4. `add_liquidity(USDC_remaining, OTHER_received)`, slippage-guarded\\n5. Update `tracked_balance += amount`\\n\\nVault MUST pre-transfer `amount` USDC to this contract before calling.\\nAny LP minted plus any USDC/OTHER dust stays in the strategy and is\\nreflected in `balance_of`.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "factory",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw `amount` USDC by burning the proportional fraction of LP.\\n\\nSteps:\\n1. Compute LP fraction = amount / current_lp_value_usdc\\n2. `remove_liquidity` to receive USDC + OTHER\\n3. Swap OTHER \\xe2\\x86\\x92 USDC, slippage-guarded\\n4. Transfer total USDC out to caller (vault)\\n5. Update `tracked_balance`\\n\\nCaps to actual position value if `amount` exceeds it. Returns the\\nactual USDC delivered.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the external price of one OTHER raw unit in USDC raw units, as the\\nrational `num / den`. Required for non-1:1 pairs (e.g. USDC/EURC must be\\nset to the EUR/USD rate); a 1:1 equal-decimal peg can leave the (1, 1)\\ndefault. Both components are bounded to `[1, MAX_PRICE_COMPONENT]` so a\\nmisconfiguration cannot overflow `balance_of`'s fair-LP math.",
+      "name": "set_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "num",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "den",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Manipulation-resistant USDC value of the strategy's holdings.\\n\\nThe LP position is valued with the fair-LP formula\\n`2 * (lp / total_lp) * sqrt(reserve_usdc * reserve_other * price)`. The\\nproduct `reserve_usdc * reserve_other` is the constant-product invariant,\\nwhich an in-block swap leaves unchanged \\xe2\\x80\\x94 so a flash-swap that moves the\\nreserves cannot move this value (see `tezoro_common::fair_lp_value_usdc`).\\nThe external price comes from `storage::get_price()`, never from spot\\nreserves. This deliberately replaces the previous spot swap-back\\nvaluation, which read live reserves and was manipulable.\\n\\nComponents:\\n- LP position: fair-LP value above.\\n- Idle OTHER dust: valued at the external price.\\n- Idle USDC dust: 1:1.\\n\\nTrade-off: fair value is a mid-price, so it does not subtract the swap\\nfee/impact a real exit would realize on the OTHER half (bounded by the\\npool fee, ~10-30 bps on that half). The previous spot valuation netted\\nthat out but was manipulable \\xe2\\x80\\x94 manipulation-resistance is the priority\\nfor a number t",
+      "name": "balance_of",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the adapter.\\n\\nAll on-chain references (`router`, `factory`, `pair`,\\n`usdc_is_token_0`) are pre-resolved by the deploy script \\xe2\\x80\\x94 the script\\nqueries Soroswap directly and passes verified values. Init does not\\nmake external calls; it just stores. This keeps init testable without\\nmocking the entire Soroswap protocol and matches the trust model\\n(admin is the deployer's multisig, expected to pass correct params).\\nThe pair's health is later validated lazily by `is_healthy` and at\\nevery `deposit` / `withdraw` (`reserves > 0` check).",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "other_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_is_token_0",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether the underlying pool is healthy enough to operate against.\\n\\nCurrently checks reserves > 0; returning false also if reserves can't\\nbe read. A future revision will add depth thresholds and an oracle\\ndeviation check once a Stellar oracle is wired up.",
+      "name": "is_healthy",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "other_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "tracked_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "usdc_is_token_0",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_slippage_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "schedule_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_max_slippage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pull all funds back to the vault.\\n\\nBurns ALL LP, swaps ALL OTHER to USDC, transfers ALL USDC. Slippage\\nguards are RELAXED here (uses 0 mins) because this is the escape\\nhatch \\xe2\\x80\\x94 taking some loss is preferable to being stuck. Callable by\\nvault (normal) or admin (emergency).",
+      "name": "emergency_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Liquidity available for immediate withdrawal \\xe2\\x80\\x94 the realizable spot value\\n(`recoverable_usdc`), trimmed by 2 stroops to absorb integer rounding in\\nthe AMM on exact-match withdraws. NOT `balance_of` (the fair-LP mark),\\nwhich would over-state what `withdraw()` can deliver and could revert the\\nvault's redeem waterfall.",
+      "name": "available_liquidity",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_deadline_buffer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Pause",
+      "prefix_topics": [
+        "pause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ZapIn",
+      "prefix_topics": [
+        "zap_in"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usdc_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "swap_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "swap_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "lp_minted",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ZapOut",
+      "prefix_topics": [
+        "zap_out"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "lp_burned",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "other_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "other_swapped_to_usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "requested",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Unpause",
+      "prefix_topics": [
+        "unpause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgrade",
+      "prefix_topics": [
+        "upgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceUpdate",
+      "prefix_topics": [
+        "price_update"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "price_num",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "price_den",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ConfigUpdate",
+      "prefix_topics": [
+        "config_update"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultChanged",
+      "prefix_topics": [
+        "vault_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_vault",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EmergencyWithdraw",
+      "prefix_topics": [
+        "emergency_withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "lp_burned",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Vault"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Asset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OtherAsset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Router"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pair"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UsdcIsToken0"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TrackedBalance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxSlippageBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DeadlineBuffer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgradeDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ScheduledUpgradeHash"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ScheduledUpgradeAt"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "External price of one OTHER raw unit in USDC raw units, as the rational\\n`PriceNum / PriceDen`. Feeds `balance_of`'s manipulation-resistant fair-LP\\nvaluation (the price only affects accuracy, never manipulation-resistance \\xe2\\x80\\x94\\nsee `tezoro_common::fair_lp_value_usdc`). Defaults to 1/1, which is exact\\nfor a 1:1, equal-decimal peg (e.g. USDC/PYUSD). Non-1:1 pairs (USDC/EURC)\\nMUST have the price set post-init via `set_price`.",
+            "name": "PriceNum"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PriceDen"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Unhealthy",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidBps",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotScheduled",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "UpgradeTooEarly",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "PairNotFound",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "ZapMathFailed",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 14
+        }
+      ]
+    }
+  }
+]
