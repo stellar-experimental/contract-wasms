@@ -1,0 +1,234 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "ReserveData shape Strate's Oracle expects. `b_rate` is 1e9-scaled.\\n\\nMust match `oracle::ReserveData` in `strate-oracle/src/lib.rs` exactly\\n(field names, order, types). Soroban contracttype serialisation is\\npositional + named, so drift here breaks the Oracle silently.",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "`b_rate`, 1e9-scaled (V1 convention).",
+          "name": "b_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last accrual timestamp.",
+          "name": "last_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Underlying reserve held by the pool (unused by the Oracle \\xe2\\x80\\x94\\npassed through so the struct shape stays identical).",
+          "name": "reserve",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Blend V2's ReserveData. `b_rate` is 1e12-scaled. We mirror only the\\nfields needed for the translation; the actual V2 struct has more.",
+      "lib": "",
+      "name": "BlendV2ReserveData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "b_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "b_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "backstop_credit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "d_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "d_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ir_mod",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_time",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Blend V2's Reserve struct (wraps ReserveData + the asset address).",
+      "lib": "",
+      "name": "BlendV2Reserve",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "BlendV2ReserveConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "udt": {
+              "name": "BlendV2ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "scalar",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Subset of V2 ReserveConfig \\xe2\\x80\\x94 we only need to round-trip the struct.",
+      "lib": "",
+      "name": "BlendV2ReserveConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "c_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "l_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_util",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_base",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_one",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_three",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "r_two",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "reactivity",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "supply_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "util",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What the Oracle reads. Forwards to Blend V2 and rescales the\\nrate. Panics if Blend returns a non-positive rate so the\\nOracle's own checks see a clean error code rather than silently\\ndividing.",
+      "name": "get_reserve_data",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ReserveData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "blend_pool",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  }
+]

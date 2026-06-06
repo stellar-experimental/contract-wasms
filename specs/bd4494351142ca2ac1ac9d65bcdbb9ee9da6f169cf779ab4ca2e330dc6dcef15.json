@@ -1,0 +1,738 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable per-market AMM config. Set by the constructor once, then\\nonly the `fee_bps` field is admin-mutable (within `MAX_FEE_BPS`).",
+      "lib": "",
+      "name": "AmmConfig",
+      "fields": [
+        {
+          "doc": "Admin address (pause / fee adjustment).",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Swap fee in basis points (`0..=MAX_FEE_BPS`).",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Unix-seconds maturity.",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "Strate Oracle.",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "PT SAC.",
+          "name": "pt",
+          "type_": "address"
+        },
+        {
+          "doc": "Pendle scalar root, WAD-scaled.",
+          "name": "scalar_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total tenor (maturity - inception) in seconds. Locked at construction.",
+          "name": "total_duration",
+          "type_": "u64"
+        },
+        {
+          "doc": "Underlying SAC (the AMM's quote asset).",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "YT SAC (recorded for symmetry; not traded in v1).",
+          "name": "yt",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key enum.\\n\\nThe shape matches the spec literally \\xe2\\x80\\x94 adding a variant must\\n**append**, never insert, so an upgraded contract reading legacy\\nstate still maps the right keys.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Hot config.",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pause flag.",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Initialised marker (set in `__constructor`).",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "`(x_pt, x_under)` reserve tuple.",
+            "name": "Reserves"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total LP supply.",
+            "name": "TotalLp"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-LP balance.",
+            "name": "LpBalance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Last swap-or-observation timestamp.",
+            "name": "LastTradeTime"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "TWAP cumulative-price accumulator.",
+            "name": "CumulativePrice"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialise the AMM. Called exactly once by the Factory; later\\ncalls revert with [`Error::AlreadyInitialized`].\\n\\nInputs:\\n- `pt` \\xe2\\x80\\x94 PT token SAC.\\n- `yt` \\xe2\\x80\\x94 YT token SAC (recorded for symmetry; not traded in v1).\\n- `underlying` \\xe2\\x80\\x94 underlying SAC the pool quotes against.\\n- `oracle` \\xe2\\x80\\x94 Strate Oracle for TWAP observations.\\n- `maturity` \\xe2\\x80\\x94 Unix seconds. Must satisfy `maturity > now +\\nMIN_TOTAL_DURATION_SECONDS + MARKET_LOCK_WINDOW_SECONDS`.\\n- `scalar_root` \\xe2\\x80\\x94 curve scalar in WAD. Pendle's `scalarRoot`;\\ncontrols how aggressive the rate response is. Typical: 1e18 to\\n1e19.\\n- `fee_bps` \\xe2\\x80\\x94 initial swap fee in basis points; `<= MAX_FEE_BPS`.\\n- `admin` \\xe2\\x80\\x94 pause/unpause and fee adjustment authority.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "scalar_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add liquidity. Pre-maturity only.\\n\\nFirst call (empty pool): caller chooses any `pt_in`, `under_in`;\\nLP shares = `sqrt(pt_in * under_in) - MINIMUM_LIQUIDITY` and\\n`MINIMUM_LIQUIDITY` is permanently locked at the zero address.\\n\\nSubsequent calls: shares = `min(pt_in / x_pt, under_in / x_under)\\n* total_lp` (Uniswap V2 mint formula; rounds **down** so the LP\\nreceives no more than their fair share).\\n\\nSlippage guard: reverts if `lp_minted < min_lp_out`.",
+      "name": "add_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "provider",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "under_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_lp_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove liquidity proportionally. Available **regardless of the\\nAMM near-maturity lock** \\xe2\\x80\\x94 withdraw is pure share math, not a\\nswap, so the asymptote does not apply. Pre-maturity only (post-\\nmaturity withdrawal is via the YieldStripping redemption path).",
+      "name": "remove_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "provider",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lp_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_under_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swap exact PT for underlying. Locked inside the near-maturity\\nwindow. Reverts on slippage.",
+      "name": "swap_exact_pt_for_sy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_sy_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swap exact underlying for PT.\\n\\nNote: the IAmm trait's `swap_sy_for_exact_pt` semantics are\\n\"trader specifies PT they want, AMM quotes max SY in\". Pendle\\nV1's solver for the inverse path requires Newton iteration \\xe2\\x80\\x94\\nout of scope for v1. We implement the simpler, equally-useful\\n`swap_exact_sy_for_pt` here and keep the same selector name for\\ntrait compatibility but treat `pt_out` as `sy_in` semantically.\\n**TODO(post-v1):** add `swap_sy_for_exact_pt` proper with Newton\\nsolver once it is needed by the front-end. For now, callers\\nasking for an exact-PT-out can rely on quote \\xe2\\x86\\x92 adjust \\xe2\\x86\\x92 submit.",
+      "name": "swap_sy_for_exact_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current implied APY of the PT price (WAD).",
+      "name": "implied_rate",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current implied APY (alias for the spec name).",
+      "name": "get_implied_apy",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current PT spot price in underlying (WAD).",
+      "name": "get_pt_price",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the LP balance of an address.",
+      "name": "lp_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read total LP supply.",
+      "name": "total_lp",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read current reserves.",
+      "name": "reserves",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the config (returns the address tuple \\xe2\\x80\\x94 admin tooling /\\nindexers consume this).",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AmmConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless: update the TWAP cumulative. Anyone may call.\\nCosts the caller a small fee; useful for keepers that want to\\nkeep the oracle fresh during quiet periods.",
+      "name": "update_observation",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause the AMM. Stops swaps and add_liquidity. Remove-liquidity\\nis also paused so the admin can freeze the market state for\\ninspection; the emergency LP exit lives in YieldStripping per\\nADR-005.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpause.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adjust swap fee. Bounded to `MAX_FEE_BPS`. (Per spec there is no\\nexplicit timelock here \\xe2\\x80\\x94 the Factory's admin schedule is\\nexpected to enforce that out-of-band. Bounding the max prevents\\nany single setter call from being catastrophic.)",
+      "name": "set_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that any Strate contract can return.\\n\\nDiscriminant policy: append-only. Numbers are reserved in ranges:\\n\\n- `1..20`  math\\n- `20..40` access control / lifecycle\\n- `40..60` maturity / state machine\\n- `60..80` AMM / liquidity\\n- `80..100` oracle / pricing\\n- `100..120` token / balance / input validation",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Generic math failure (should rarely surface; specific variants\\nbelow are preferred).",
+          "name": "Math",
+          "value": 1
+        },
+        {
+          "doc": "256-bit intermediate overflowed.",
+          "name": "MathOverflow",
+          "value": 2
+        },
+        {
+          "doc": "Result is below the representable range.",
+          "name": "MathUnderflow",
+          "value": 3
+        },
+        {
+          "doc": "Division by zero.",
+          "name": "DivisionByZero",
+          "value": 4
+        },
+        {
+          "doc": "`ln` called with `x <= 0`.",
+          "name": "LnOfNegative",
+          "value": 5
+        },
+        {
+          "doc": "Caller lacks the required role / capability.",
+          "name": "Unauthorized",
+          "value": 20
+        },
+        {
+          "doc": "Contract is paused.",
+          "name": "Paused",
+          "value": 21
+        },
+        {
+          "doc": "Contract is already initialized.",
+          "name": "AlreadyInitialized",
+          "value": 22
+        },
+        {
+          "doc": "Contract has not been initialized.",
+          "name": "NotInitialized",
+          "value": 23
+        },
+        {
+          "doc": "Operation requires maturity to have passed.",
+          "name": "MaturityNotReached",
+          "value": 40
+        },
+        {
+          "doc": "Operation requires the market to still be pre-maturity.",
+          "name": "MaturityReached",
+          "value": 41
+        },
+        {
+          "doc": "Liquidity actions are disabled inside the no-trade window\\npreceding maturity (anti-asymptote guard for the AMM).",
+          "name": "MarketLockedNearMaturity",
+          "value": 42
+        },
+        {
+          "doc": "Maturity supplied at construction is invalid (in the past or\\noutside the configured policy window).",
+          "name": "InvalidMaturity",
+          "value": 43
+        },
+        {
+          "doc": "Not enough liquidity in the pool to satisfy this trade.",
+          "name": "InsufficientLiquidity",
+          "value": 60
+        },
+        {
+          "doc": "Quoted output is below the caller's minimum tolerance.",
+          "name": "SlippageExceeded",
+          "value": 61
+        },
+        {
+          "doc": "Deposit is below the per-market minimum.",
+          "name": "MinDepositNotMet",
+          "value": 62
+        },
+        {
+          "doc": "Oracle observation is older than the staleness threshold.",
+          "name": "OracleStale",
+          "value": 80
+        },
+        {
+          "doc": "Oracle observation is implausible (sanity checks rejected it).",
+          "name": "OracleRejected",
+          "value": 81
+        },
+        {
+          "doc": "Caller's balance is below the requested amount.",
+          "name": "InsufficientBalance",
+          "value": 100
+        },
+        {
+          "doc": "Underlying asset is not one the protocol supports for this\\nfactory.",
+          "name": "InvalidUnderlying",
+          "value": 101
+        },
+        {
+          "doc": "Mint would push `TotalUnderlying` past the market's `tvl_cap`.\\nReturned by YS::mint; introduced for the unaudited mainnet\\nlaunch where every market ships with a hard cap.",
+          "name": "TvlCapExceeded",
+          "value": 102
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_MINT, user)` indexed; `data = MintEvent`.",
+      "lib": "",
+      "name": "MintEvent",
+      "fields": [
+        {
+          "doc": "Yield index at mint (the \"ghost\" snapshot the YT inherits).",
+          "name": "index_at_mint",
+          "type_": "i128"
+        },
+        {
+          "doc": "PT minted (== YT minted at mint time).",
+          "name": "pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Underlying amount deposited.",
+          "name": "underlying_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "User receiving PT + YT.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "YT minted.",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_REDEEM, user)` indexed; `data = RedeemEvent`.\\n\\n`redeem_kind` distinguishes the two paths:\\n- `0`: pre-maturity redeem of PT+YT pair (one-for-one).\\n- `1`: post-maturity redeem of PT alone.",
+      "lib": "",
+      "name": "RedeemEvent",
+      "fields": [
+        {
+          "doc": "PT burned.",
+          "name": "pt_burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "`0` = pre-maturity pair redeem, `1` = post-maturity PT redeem.",
+          "name": "redeem_kind",
+          "type_": "u32"
+        },
+        {
+          "doc": "Underlying returned.",
+          "name": "underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "User redeeming.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "YT burned (zero on the post-maturity path).",
+          "name": "yt_burned",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_YIELD, user)` indexed; `data = YieldClaimedEvent`.",
+      "lib": "",
+      "name": "YieldClaimedEvent",
+      "fields": [
+        {
+          "doc": "YT holder claiming.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "User's local yield index snapshot **after** the claim\\n(== global index at claim time).",
+          "name": "user_index_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "User's local yield index snapshot **before** the claim.",
+          "name": "user_index_before",
+          "type_": "i128"
+        },
+        {
+          "doc": "Underlying paid out as yield.",
+          "name": "yield_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_INDEX,)` (single-tag, no indexed key); `data = IndexSyncEvent`.\\n\\nEmitted whenever the global yield index is rolled forward. This\\ngives indexers a complete monotonic timeline of the index without\\nneeding to reconstruct it from mint / claim flows.",
+      "lib": "",
+      "name": "IndexSyncEvent",
+      "fields": [
+        {
+          "doc": "Ledger timestamp at sync (seconds since epoch).",
+          "name": "at_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Global index after sync, in WAD.",
+          "name": "new_index",
+          "type_": "i128"
+        },
+        {
+          "doc": "Previous index, in WAD.",
+          "name": "old_index",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_SWAP, trader)` indexed; `data = SwapEvent`.",
+      "lib": "",
+      "name": "SwapEvent",
+      "fields": [
+        {
+          "doc": "Fee paid in SY (already deducted from `sy_delta`).",
+          "name": "fee_sy",
+          "type_": "i128"
+        },
+        {
+          "doc": "Implied rate (WAD-scaled) **after** the swap.",
+          "name": "implied_rate_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "PT delta from the trader's perspective. Positive = trader\\nreceived PT, negative = trader spent PT.",
+          "name": "pt_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "SY delta from the trader's perspective.",
+          "name": "sy_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "Trader.",
+          "name": "trader",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_LIQ, provider)` indexed; `data = LiquidityEvent`.\\n\\n`op` distinguishes:\\n- `0`: add (mint LP).\\n- `1`: remove (burn LP).",
+      "lib": "",
+      "name": "LiquidityEvent",
+      "fields": [
+        {
+          "doc": "LP tokens minted (`op=0`) or burned (`op=1`).",
+          "name": "lp_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "`0` = add, `1` = remove.",
+          "name": "op",
+          "type_": "u32"
+        },
+        {
+          "doc": "LP provider.",
+          "name": "provider",
+          "type_": "address"
+        },
+        {
+          "doc": "PT contributed (positive on add, negative on remove).",
+          "name": "pt_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "SY contributed (positive on add, negative on remove).",
+          "name": "sy_delta",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_OBS,)` (single-tag); `data = ObservationEvent`.\\n\\nEmitted whenever the oracle ring buffer accepts a new observation.",
+      "lib": "",
+      "name": "ObservationEvent",
+      "fields": [
+        {
+          "doc": "Ledger timestamp of this observation (seconds since epoch).",
+          "name": "at_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Implied rate captured, WAD-scaled.",
+          "name": "implied_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Index in the ring buffer that was written.",
+          "name": "slot",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]

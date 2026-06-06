@@ -1,0 +1,989 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One TWAP observation. `price` is WAD-scaled; `ts` is ledger\\ntimestamp in seconds.",
+      "lib": "",
+      "name": "Observation",
+      "fields": [
+        {
+          "doc": "WAD-scaled price (typically the AMM's implied rate).",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger timestamp of the sample, in seconds.",
+          "name": "ts",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pending reattest proposal, recorded when the admin first calls\\n`reattest(rate)` while the oracle is frozen. After `eta` the same\\nadmin (or anyone \\xe2\\x80\\x94 execution is permissionless) can finalize via\\n`execute_reattest`.",
+      "lib": "",
+      "name": "PendingReattest",
+      "fields": [
+        {
+          "doc": "Earliest ledger timestamp at which `execute_reattest` may run.",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "The rate the admin attests to (WAD-scaled).",
+          "name": "rate",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pending unpause proposal \\xe2\\x80\\x94 pause is instant, unpause is 48h.",
+      "lib": "",
+      "name": "PendingUnpause",
+      "fields": [
+        {
+          "doc": "Earliest ledger timestamp at which `execute_unpause` may run.",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage layout discriminants.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Instance: hot config (read on every call).",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: admin address.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: paused flag.",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: frozen flag.",
+            "name": "Frozen"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: pending unpause proposal.",
+            "name": "PendingUnpause"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: pending reattest proposal.",
+            "name": "PendingReattest"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent: last known good rate, WAD.",
+            "name": "CachedRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent: ledger timestamp at which `CachedRate` was written.",
+            "name": "CachedRateAt"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent: ring buffer slot (0..observation_window).",
+            "name": "Observations",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent: head pointer into the ring buffer.",
+            "name": "ObservationHead"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent: how many observations have ever been written\\n(capped at `observation_window`). Distinguishes \"buffer not full\"\\nfrom \"fully populated buffer with old data\".",
+            "name": "ObservationCount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Reserve-data shape exposed by Blend's pool. We mirror only the fields\\nStrate consumes; this struct's serde-layout must match\\n`MockBlendPool::MockReserveData` in `strate-testutils`.",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "`b_rate`, 1e9-scaled.",
+          "name": "b_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last accrual timestamp inside Blend.",
+          "name": "last_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Underlying reserve held by the pool (unused by the oracle).",
+          "name": "reserve",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialise the oracle. Idempotent against re-init: a second call\\nreverts with `AlreadyInitialized`.\\n\\nValidates:\\n- `max_delta_per_sync_wad > 0 && < WAD` (a 100%+ allowed delta\\nwould disable the rate-limit entirely).\\n- `observation_window >= 2` (a 1-slot buffer cannot do TWAP).\\n- `max_staleness_ledgers > 0`.\\n\\n# Constructor wiring\\n\\nSoroban's `__constructor` runs once on `register()`. We treat the\\n`admin` arg as the multisig/timelocked controller (ADR-002).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cfg",
+          "type_": {
+            "udt": {
+              "name": "OracleConfig"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refresh the cached rate from Blend.\\n\\nPermissionless: anyone can prod the oracle. Validates\\nmonotonicity and the per-sync delta cap; on violation the oracle\\nfreezes, the violation is emitted as an event, and the\\n**last-known-good** cached rate is returned. The freeze flag\\nmust persist across the call, so this function deliberately\\nreturns `Ok(cached_rate)` instead of `Err`: a Soroban `Err`\\nreturn rolls back storage writes, which would defeat the freeze.\\nConsumers must check `is_frozen()` after `sync_rate` and refuse\\nto proceed if it returns `true`.\\n\\nReturns:\\n- `Ok(new_rate)` on a clean sync.\\n- `Ok(cached_rate)` (the last-known-good rate) on a violation;\\nthe oracle is frozen as a side effect.\\n- `Err(Paused)` if the oracle is paused.\\n- `Err(OracleRejected)` only if the oracle was already frozen\\nbefore the call, or Blend returned a non-positive rate.",
+      "name": "sync_rate",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Push an observation into the TWAP ring buffer.\\n\\nCalled by the AMM on each swap. Auth is not enforced at the\\ncontract level (the AMM signs the call as itself, which is the\\nonly address that should bother); the worst an adversary can do\\nby spamming is write their own price into the buffer, which the\\ntime-weighted formula naturally amortises \\xe2\\x80\\x94 and the AMM's lock\\nagainst same-block reads (ADR-001 \\xc2\\xa74) eliminates the single-block\\nmanipulation vector.",
+      "name": "update_observation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: latest cached rate, WAD-scaled. Reverts with `OracleStale`\\nif the cache hasn't been refreshed within the configured\\nstaleness window. Consumers should call `sync_rate` and retry.",
+      "name": "get_rate",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: TWAP across the populated portion of the ring buffer.\\n\\nReverts with `OracleStale` if fewer than 2 observations are\\nrecorded (TWAP is undefined). The weight of each observation is\\n`ts[i+1] - ts[i]`; the final observation runs to `now`.",
+      "name": "get_twap",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: latest single observation `(price, ts)`. Convenience for\\nindexers; protocol logic should prefer `get_twap`.",
+      "name": "latest_observation",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "u64"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: whether the oracle is frozen.",
+      "name": "is_frozen",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: whether the oracle is paused.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: pause the oracle. Instant. While paused, all sync /\\nread / observation paths revert with `Paused`.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: propose unpause. Records a 48h-eta proposal; the\\nasymmetric pause from ADR-002 forbids instant unpause.",
+      "name": "propose_unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless after eta: finalize the pending unpause.",
+      "name": "execute_unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: propose a re-attestation. Records `(attested_rate,\\neta = now + 48h)`. After the eta, `execute_reattest` finalises\\nthe operation, writes the attested rate as the new cached rate,\\nand clears the frozen flag.\\n\\nRepeated calls overwrite the pending proposal (and reset the\\ntimer), so the admin can revise the attested rate before\\nexecution. This is desirable: between proposal and execution, the\\nadmin may observe Blend's true rate moving and want to update.",
+      "name": "reattest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "attested_rate",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending reattest proposal. Admin-only.",
+      "name": "cancel_reattest",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless: execute a previously-proposed reattest after its\\n`eta`. Unfreezes the oracle and overwrites the cached rate.",
+      "name": "execute_reattest",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: the active config.",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "OracleConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: the current admin address.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: the cached rate and its timestamp without applying the\\nstaleness gate. Returns `(0, 0)` if never synced.",
+      "name": "cached_rate_raw",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "View: how many observations are currently populated.",
+      "name": "observation_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that any Strate contract can return.\\n\\nDiscriminant policy: append-only. Numbers are reserved in ranges:\\n\\n- `1..20`  math\\n- `20..40` access control / lifecycle\\n- `40..60` maturity / state machine\\n- `60..80` AMM / liquidity\\n- `80..100` oracle / pricing\\n- `100..120` token / balance / input validation",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Generic math failure (should rarely surface; specific variants\\nbelow are preferred).",
+          "name": "Math",
+          "value": 1
+        },
+        {
+          "doc": "256-bit intermediate overflowed.",
+          "name": "MathOverflow",
+          "value": 2
+        },
+        {
+          "doc": "Result is below the representable range.",
+          "name": "MathUnderflow",
+          "value": 3
+        },
+        {
+          "doc": "Division by zero.",
+          "name": "DivisionByZero",
+          "value": 4
+        },
+        {
+          "doc": "`ln` called with `x <= 0`.",
+          "name": "LnOfNegative",
+          "value": 5
+        },
+        {
+          "doc": "Caller lacks the required role / capability.",
+          "name": "Unauthorized",
+          "value": 20
+        },
+        {
+          "doc": "Contract is paused.",
+          "name": "Paused",
+          "value": 21
+        },
+        {
+          "doc": "Contract is already initialized.",
+          "name": "AlreadyInitialized",
+          "value": 22
+        },
+        {
+          "doc": "Contract has not been initialized.",
+          "name": "NotInitialized",
+          "value": 23
+        },
+        {
+          "doc": "Operation requires maturity to have passed.",
+          "name": "MaturityNotReached",
+          "value": 40
+        },
+        {
+          "doc": "Operation requires the market to still be pre-maturity.",
+          "name": "MaturityReached",
+          "value": 41
+        },
+        {
+          "doc": "Liquidity actions are disabled inside the no-trade window\\npreceding maturity (anti-asymptote guard for the AMM).",
+          "name": "MarketLockedNearMaturity",
+          "value": 42
+        },
+        {
+          "doc": "Maturity supplied at construction is invalid (in the past or\\noutside the configured policy window).",
+          "name": "InvalidMaturity",
+          "value": 43
+        },
+        {
+          "doc": "Not enough liquidity in the pool to satisfy this trade.",
+          "name": "InsufficientLiquidity",
+          "value": 60
+        },
+        {
+          "doc": "Quoted output is below the caller's minimum tolerance.",
+          "name": "SlippageExceeded",
+          "value": 61
+        },
+        {
+          "doc": "Deposit is below the per-market minimum.",
+          "name": "MinDepositNotMet",
+          "value": 62
+        },
+        {
+          "doc": "Oracle observation is older than the staleness threshold.",
+          "name": "OracleStale",
+          "value": 80
+        },
+        {
+          "doc": "Oracle observation is implausible (sanity checks rejected it).",
+          "name": "OracleRejected",
+          "value": 81
+        },
+        {
+          "doc": "Caller's balance is below the requested amount.",
+          "name": "InsufficientBalance",
+          "value": 100
+        },
+        {
+          "doc": "Underlying asset is not one the protocol supports for this\\nfactory.",
+          "name": "InvalidUnderlying",
+          "value": 101
+        },
+        {
+          "doc": "Mint would push `TotalUnderlying` past the market's `tvl_cap`.\\nReturned by YS::mint; introduced for the unaudited mainnet\\nlaunch where every market ships with a hard cap.",
+          "name": "TvlCapExceeded",
+          "value": 102
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_MINT, user)` indexed; `data = MintEvent`.",
+      "lib": "",
+      "name": "MintEvent",
+      "fields": [
+        {
+          "doc": "Yield index at mint (the \"ghost\" snapshot the YT inherits).",
+          "name": "index_at_mint",
+          "type_": "i128"
+        },
+        {
+          "doc": "PT minted (== YT minted at mint time).",
+          "name": "pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Underlying amount deposited.",
+          "name": "underlying_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "User receiving PT + YT.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "YT minted.",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_REDEEM, user)` indexed; `data = RedeemEvent`.\\n\\n`redeem_kind` distinguishes the two paths:\\n- `0`: pre-maturity redeem of PT+YT pair (one-for-one).\\n- `1`: post-maturity redeem of PT alone.",
+      "lib": "",
+      "name": "RedeemEvent",
+      "fields": [
+        {
+          "doc": "PT burned.",
+          "name": "pt_burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "`0` = pre-maturity pair redeem, `1` = post-maturity PT redeem.",
+          "name": "redeem_kind",
+          "type_": "u32"
+        },
+        {
+          "doc": "Underlying returned.",
+          "name": "underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "User redeeming.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "YT burned (zero on the post-maturity path).",
+          "name": "yt_burned",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_YIELD, user)` indexed; `data = YieldClaimedEvent`.",
+      "lib": "",
+      "name": "YieldClaimedEvent",
+      "fields": [
+        {
+          "doc": "YT holder claiming.",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "User's local yield index snapshot **after** the claim\\n(== global index at claim time).",
+          "name": "user_index_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "User's local yield index snapshot **before** the claim.",
+          "name": "user_index_before",
+          "type_": "i128"
+        },
+        {
+          "doc": "Underlying paid out as yield.",
+          "name": "yield_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_INDEX,)` (single-tag, no indexed key); `data = IndexSyncEvent`.\\n\\nEmitted whenever the global yield index is rolled forward. This\\ngives indexers a complete monotonic timeline of the index without\\nneeding to reconstruct it from mint / claim flows.",
+      "lib": "",
+      "name": "IndexSyncEvent",
+      "fields": [
+        {
+          "doc": "Ledger timestamp at sync (seconds since epoch).",
+          "name": "at_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Global index after sync, in WAD.",
+          "name": "new_index",
+          "type_": "i128"
+        },
+        {
+          "doc": "Previous index, in WAD.",
+          "name": "old_index",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_SWAP, trader)` indexed; `data = SwapEvent`.",
+      "lib": "",
+      "name": "SwapEvent",
+      "fields": [
+        {
+          "doc": "Fee paid in SY (already deducted from `sy_delta`).",
+          "name": "fee_sy",
+          "type_": "i128"
+        },
+        {
+          "doc": "Implied rate (WAD-scaled) **after** the swap.",
+          "name": "implied_rate_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "PT delta from the trader's perspective. Positive = trader\\nreceived PT, negative = trader spent PT.",
+          "name": "pt_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "SY delta from the trader's perspective.",
+          "name": "sy_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "Trader.",
+          "name": "trader",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_LIQ, provider)` indexed; `data = LiquidityEvent`.\\n\\n`op` distinguishes:\\n- `0`: add (mint LP).\\n- `1`: remove (burn LP).",
+      "lib": "",
+      "name": "LiquidityEvent",
+      "fields": [
+        {
+          "doc": "LP tokens minted (`op=0`) or burned (`op=1`).",
+          "name": "lp_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "`0` = add, `1` = remove.",
+          "name": "op",
+          "type_": "u32"
+        },
+        {
+          "doc": "LP provider.",
+          "name": "provider",
+          "type_": "address"
+        },
+        {
+          "doc": "PT contributed (positive on add, negative on remove).",
+          "name": "pt_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "SY contributed (positive on add, negative on remove).",
+          "name": "sy_delta",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`(TOPIC_OBS,)` (single-tag); `data = ObservationEvent`.\\n\\nEmitted whenever the oracle ring buffer accepts a new observation.",
+      "lib": "",
+      "name": "ObservationEvent",
+      "fields": [
+        {
+          "doc": "Ledger timestamp of this observation (seconds since epoch).",
+          "name": "at_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Implied rate captured, WAD-scaled.",
+          "name": "implied_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Index in the ring buffer that was written.",
+          "name": "slot",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Constructor args for the Principal Token contract.",
+      "lib": "",
+      "name": "PtInitArgs",
+      "fields": [
+        {
+          "doc": "Token decimals. Must match the underlying's decimals so 1 PT\\nredeems 1 underlying at maturity with no scale conversion.",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maturity timestamp (Unix seconds).",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "Token name, e.g. `\"PT-bUSDC-DEC2026\"`.",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "Symbol, e.g. `\"PT-bUSDC\"`.",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "Display handle for the underlying asset (not called into).",
+          "name": "underlying",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Constructor args for the Yield Token contract.",
+      "lib": "",
+      "name": "YtInitArgs",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Constructor args for the Oracle contract.",
+      "lib": "",
+      "name": "OracleConfig",
+      "fields": [
+        {
+          "doc": "Address of the Blend lending pool we read `b_rate` from.",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Maximum allowed relative jump per `sync_rate`, in WAD.\\n`5e16` == 5%. A rate moving more than this freezes the oracle.",
+          "name": "max_delta_per_sync_wad",
+          "type_": "i128"
+        },
+        {
+          "doc": "Maximum age (in ledger units) of `CachedRate` before reads revert.\\nAt 5s/ledger, 120 ledgers \\xe2\\x89\\x88 10 minutes.",
+          "name": "max_staleness_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "Size of the TWAP ring buffer. Bounded so it always fits in\\ninstance budget. Values < 2 are rejected at construction.",
+          "name": "observation_window",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Constructor args for the YieldStripping contract. Named `YsConfig`\\nin this crate to avoid colliding with the generic name `Config` when\\nother crates re-export it.",
+      "lib": "",
+      "name": "YsConfig",
+      "fields": [
+        {
+          "doc": "Admin address \\xe2\\x80\\x94 single role: pause/unpause.",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt",
+          "type_": "address"
+        },
+        {
+          "doc": "AMM curve parameter, immutable per market. YS doesn't use this\\ndirectly; recorded for discoverability so external callers can\\nread the market's curve scaling from a single contract.",
+          "name": "scalar_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "Hard cap on total underlying deposited into this market, in\\nunderlying-token base units (7 decimals on Stellar for SAC).\\n\\nImmutable per market. Enforced on every `mint`. A value of `0`\\nmeans \"no cap\" \\xe2\\x80\\x94 only safe post-audit; until then every mainnet\\ndeploy MUST set this to a real number.",
+          "name": "tvl_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Oracle configuration passed through `Factory::deploy_market` to\\n`Oracle::__constructor`. Same field set as [`OracleConfig`] minus the\\n`blend_pool` which the factory provides separately at deploy time.",
+      "lib": "",
+      "name": "OracleParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "max_delta_per_sync_wad",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_staleness_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "observation_window",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "PT + YT cosmetic metadata passed through `Factory::deploy_market`. The\\ntoken decimals must match the underlying asset; PT and YT share the\\nvalue intentionally so 1 PT + 1 YT redeems 1 U at maturity with no\\nscale conversion.",
+      "lib": "",
+      "name": "TokenMetadata",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "pt_name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "pt_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "yt_name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "yt_symbol",
+          "type_": "string"
+        }
+      ]
+    }
+  }
+]
