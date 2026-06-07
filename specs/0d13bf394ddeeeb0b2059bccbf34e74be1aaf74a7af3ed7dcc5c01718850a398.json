@@ -1,0 +1,598 @@
+[
+  {
+    "function_v0": {
+      "doc": "Emergency pause.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume after pause.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a plan by its ID.",
+      "name": "get_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SubscriptionPlan"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Emergency pause flag",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Global plan counter for unique ID generation",
+            "name": "PlanCounter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Plan data keyed by plan_id",
+            "name": "Plan",
+            "type_": [
+              "string"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "List of plan IDs for a merchant",
+            "name": "MerchantPlans",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total number of plans",
+            "name": "TotalPlans"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Subscription Factory with an admin address.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new subscription plan.\\n\\n# Arguments\\n* `merchant` \\xe2\\x80\\x94 The merchant creating the plan\\n* `name` \\xe2\\x80\\x94 Human-readable plan name\\n* `description` \\xe2\\x80\\x94 Plan description\\n* `amount` \\xe2\\x80\\x94 Price per billing period\\n* `token` \\xe2\\x80\\x94 Token contract address\\n* `interval` \\xe2\\x80\\x94 Billing interval in seconds\\n* `max_payments` \\xe2\\x80\\x94 Maximum number of payments (0 = infinite)\\n* `metadata_uri` \\xe2\\x80\\x94 IPFS URI for additional metadata\\n\\n# Security\\n- Requires merchant authentication\\n- Validates all inputs\\n- Generates unique plan ID",
+      "name": "create_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_payments",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "metadata_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SubscriptionPlan"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get total number of plans.",
+      "name": "total_plans",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update an existing plan. Only the plan owner (merchant) can update.\\n\\n# Security\\n- Requires merchant auth\\n- Only the original creator can update\\n- Cannot change merchant or plan_id",
+      "name": "update_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_payments",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "metadata_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "SubscriptionPlan"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FactoryError",
+      "cases": [
+        {
+          "doc": "Plan not found",
+          "name": "PlanNotFound",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not the plan owner (merchant)",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "Plan already exists with this ID",
+          "name": "PlanAlreadyExists",
+          "value": 3
+        },
+        {
+          "doc": "Plan is not active",
+          "name": "PlanInactive",
+          "value": 4
+        },
+        {
+          "doc": "Invalid input parameter",
+          "name": "InvalidInput",
+          "value": 5
+        },
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 6
+        },
+        {
+          "doc": "Contract is paused",
+          "name": "Paused",
+          "value": 7
+        },
+        {
+          "doc": "Maximum plans per merchant reached",
+          "name": "MaxPlansReached",
+          "value": 8
+        },
+        {
+          "doc": "Overflow error",
+          "name": "Overflow",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deactivate a plan \\xe2\\x80\\x94 prevents new subscriptions but existing ones continue.\\n\\n# Security\\n- Only the plan owner can deactivate",
+      "name": "deactivate_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reactivate a previously deactivated plan.",
+      "name": "reactivate_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when a plan is created",
+      "lib": "",
+      "name": "PlanCreatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A subscription plan created by a merchant",
+      "lib": "",
+      "name": "SubscriptionPlan",
+      "fields": [
+        {
+          "doc": "Price per billing period (in smallest token unit)",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Timestamp when the plan was created",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Plan description",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "Billing interval in seconds (2592000 = 30 days)",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "Whether the plan accepts new subscriptions",
+          "name": "is_active",
+          "type_": "bool"
+        },
+        {
+          "doc": "Maximum number of payments (0 = infinite)",
+          "name": "max_payments",
+          "type_": "u32"
+        },
+        {
+          "doc": "Merchant who created this plan",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "IPFS URI for additional metadata",
+          "name": "metadata_uri",
+          "type_": "string"
+        },
+        {
+          "doc": "Human-readable plan name (e.g., \"Pro Plan\")",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "Unique plan identifier",
+          "name": "plan_id",
+          "type_": "string"
+        },
+        {
+          "doc": "Number of active subscribers",
+          "name": "subscriber_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Token contract address (e.g., USDC)",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "List all plans for a merchant.",
+      "name": "list_merchant_plans",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Decrement subscriber count (called by Payment Engine on cancellation).",
+      "name": "decrement_subscribers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Increment subscriber count (called by Payment Engine on new subscription).",
+      "name": "increment_subscribers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "FactoryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

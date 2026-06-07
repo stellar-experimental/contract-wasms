@@ -1,0 +1,889 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Authorization Manager contract address",
+            "name": "AuthManager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Subscription Factory contract address",
+            "name": "SubFactory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Token Wrapper contract address",
+            "name": "TokenWrapper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Emergency pause flag",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Subscription counter for unique ID generation",
+            "name": "SubCounter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Keeper whitelist",
+            "name": "Keepers"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Platform fee recipient address",
+            "name": "FeeRecipient"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Platform fee basis points (50 = 0.5%)",
+            "name": "FeeBps"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Subscription data by ID",
+            "name": "Subscription",
+            "type_": [
+              "string"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "User's subscription list",
+            "name": "UserSubs",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Merchant's subscription list",
+            "name": "MerchantSubs",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Idempotency key: (subscription_id, payment_number)",
+            "name": "PaymentExecuted",
+            "type_": [
+              "string",
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total payments executed",
+            "name": "TotalPayments"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total volume processed",
+            "name": "TotalVolume"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Payment Engine with all dependent contract addresses.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "auth_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sub_factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_wrapper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_volume",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mark a subscription as past due (called when payment fails).",
+      "name": "mark_past_due",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_payments",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PaymentError",
+      "cases": [
+        {
+          "doc": "Payment is not yet due",
+          "name": "PaymentNotDue",
+          "value": 1
+        },
+        {
+          "doc": "Subscription is inactive (cancelled/expired)",
+          "name": "SubscriptionInactive",
+          "value": 2
+        },
+        {
+          "doc": "User's authorization has been revoked",
+          "name": "AuthorizationRevoked",
+          "value": 3
+        },
+        {
+          "doc": "User has insufficient token balance",
+          "name": "InsufficientBalance",
+          "value": 4
+        },
+        {
+          "doc": "Payment was already executed (idempotency)",
+          "name": "PaymentAlreadyExecuted",
+          "value": 5
+        },
+        {
+          "doc": "Subscription not found",
+          "name": "SubscriptionNotFound",
+          "value": 6
+        },
+        {
+          "doc": "Plan not found",
+          "name": "PlanNotFound",
+          "value": 7
+        },
+        {
+          "doc": "Contract not initialized",
+          "name": "NotInitialized",
+          "value": 8
+        },
+        {
+          "doc": "Contract is paused",
+          "name": "Paused",
+          "value": 9
+        },
+        {
+          "doc": "Unauthorized caller",
+          "name": "Unauthorized",
+          "value": 10
+        },
+        {
+          "doc": "Overflow error",
+          "name": "Overflow",
+          "value": 11
+        },
+        {
+          "doc": "Invalid input",
+          "name": "InvalidInput",
+          "value": 12
+        },
+        {
+          "doc": "Maximum subscriptions reached",
+          "name": "MaxSubscriptionsReached",
+          "value": 13
+        },
+        {
+          "doc": "Authorization check failed",
+          "name": "AuthCheckFailed",
+          "value": 14
+        },
+        {
+          "doc": "Token transfer failed",
+          "name": "TransferFailed",
+          "value": 15
+        },
+        {
+          "doc": "Subscription already exists",
+          "name": "AlreadyExists",
+          "value": 16
+        },
+        {
+          "doc": "Cannot resume \\xe2\\x80\\x94 wrong status",
+          "name": "CannotResume",
+          "value": 17
+        },
+        {
+          "doc": "Cannot pause \\xe2\\x80\\x94 wrong status",
+          "name": "CannotPause",
+          "value": 18
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a payment for a subscription. CRITICAL FUNCTION.\\n\\n# Security: Checks-Effects-Interactions Pattern\\n1. Load and validate subscription (CHECKS)\\n2. Verify payment is due, status is valid\\n3. Check authorization via Authorization Manager\\n4. Update state BEFORE transfer (EFFECTS)\\n5. Execute token transfer (INTERACTIONS)\\n6. Record payment in Authorization Manager\\n\\n# Idempotency\\nUses (subscription_id, payment_number) to prevent double execution",
+      "name": "execute_payment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PaymentExecutedEvent"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_subscription",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "UserSubscription"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause a subscription. Can be called by user or merchant.",
+      "name": "pause_subscription",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A user's active subscription",
+      "lib": "",
+      "name": "UserSubscription",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "grace_period_end",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "last_payment_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_payments",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "next_payment_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "payments_made",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "start_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "SubscriptionStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a subscription. Only the subscriber can cancel.",
+      "name": "cancel_subscription",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new subscription. The user subscribes to a merchant's plan.\\n\\n# Flow\\n1. Validate plan exists and is active\\n2. Check user has authorized the merchant\\n3. Create subscription record\\n4. Execute first payment immediately",
+      "name": "create_subscription",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_payments",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "UserSubscription"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume a paused subscription. Only the user can resume.",
+      "name": "resume_subscription",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "PaymentError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SubscriptionStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Cancelled",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PastDue",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Trialing",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_user_subscriptions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when a payment is executed",
+      "lib": "",
+      "name": "PaymentExecutedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "next_payment_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "payment_number",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_merchant_subscriptions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event emitted when a subscription is created",
+      "lib": "",
+      "name": "SubscriptionCreatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "plan_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "subscription_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]

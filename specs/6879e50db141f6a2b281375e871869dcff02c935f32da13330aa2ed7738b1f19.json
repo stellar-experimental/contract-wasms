@@ -1,0 +1,618 @@
+[
+  {
+    "function_v0": {
+      "doc": "Emergency pause \\xe2\\x80\\x94 halts all operations.\\nRequires admin authentication.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Revoke authorization for a merchant. Instant and permanent.\\n\\n# Arguments\\n* `user` \\xe2\\x80\\x94 The subscriber revoking permission\\n* `merchant` \\xe2\\x80\\x94 The merchant losing permission\\n* `token` \\xe2\\x80\\x94 Token contract address\\n\\n# Security\\n- Requires user authentication\\n- Revocation is permanent \\xe2\\x80\\x94 a new authorization must be created",
+      "name": "revoke",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume operations after emergency pause.\\nRequires admin authentication.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Grant authorization for a merchant to pull funds.\\n\\n# Arguments\\n* `user` \\xe2\\x80\\x94 The subscriber granting permission\\n* `merchant` \\xe2\\x80\\x94 The merchant receiving permission\\n* `token` \\xe2\\x80\\x94 Token contract address (e.g., USDC)\\n* `max_per_payment` \\xe2\\x80\\x94 Maximum per individual payment\\n* `total_allowed` \\xe2\\x80\\x94 Total lifetime allowance\\n* `expiry` \\xe2\\x80\\x94 Expiration timestamp (0 = no expiry)\\n\\n# Security\\n- Requires user authentication (`require_auth`)\\n- Validates all input parameters\\n- Prevents duplicate authorizations",
+      "name": "authorize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_per_payment",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_allowed",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiry",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Authorization"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for contract-level configuration",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The address of the Payment Engine contract (only caller allowed for record_payment)",
+            "name": "PaymentEngine"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Admin address for emergency operations",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Emergency pause flag",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Authorization record keyed by (user, merchant, token)",
+            "name": "Auth",
+            "type_": [
+              "address",
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "List of all authorizations for a user",
+            "name": "UserAuths",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "List of all authorizations for a merchant",
+            "name": "MerchantAuths",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with admin and payment engine addresses.\\nCan only be called once.\\n\\n# Arguments\\n* `admin` \\xe2\\x80\\x94 Admin address (multi-sig recommended)\\n* `payment_engine` \\xe2\\x80\\x94 Address of the Payment Engine contract\\n\\n# Security\\n- Sets the authorized Payment Engine address\\n- Only admin can perform emergency operations",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payment_engine",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AuthError",
+      "cases": [
+        {
+          "doc": "Authorization not found for the given user-merchant-token tuple",
+          "name": "NotFound",
+          "value": 1
+        },
+        {
+          "doc": "Authorization has been revoked by the user",
+          "name": "Revoked",
+          "value": 2
+        },
+        {
+          "doc": "Payment amount exceeds the per-payment maximum",
+          "name": "ExceedsMaxPerPayment",
+          "value": 3
+        },
+        {
+          "doc": "Payment would exceed the total lifetime allowance",
+          "name": "ExceedsTotalAllowed",
+          "value": 4
+        },
+        {
+          "doc": "Authorization has expired",
+          "name": "Expired",
+          "value": 5
+        },
+        {
+          "doc": "Caller is not the authorized Payment Engine",
+          "name": "UnauthorizedCaller",
+          "value": 6
+        },
+        {
+          "doc": "Arithmetic overflow detected",
+          "name": "Overflow",
+          "value": 7
+        },
+        {
+          "doc": "Authorization already exists (use update instead)",
+          "name": "AlreadyExists",
+          "value": 8
+        },
+        {
+          "doc": "Contract has not been initialized",
+          "name": "NotInitialized",
+          "value": 9
+        },
+        {
+          "doc": "Contract is paused for emergency",
+          "name": "Paused",
+          "value": 10
+        },
+        {
+          "doc": "Invalid input parameter",
+          "name": "InvalidInput",
+          "value": 11
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a successful payment against an authorization.\\n**RESTRICTED:** Only callable by the Payment Engine contract.\\n\\n# Arguments\\n* `user` \\xe2\\x80\\x94 Subscriber address\\n* `merchant` \\xe2\\x80\\x94 Merchant address\\n* `token` \\xe2\\x80\\x94 Token contract address\\n* `amount` \\xe2\\x80\\x94 Payment amount executed\\n\\n# Security\\n- Caller must be the registered Payment Engine address\\n- Uses `checked_add` for overflow protection\\n- Updates total_spent and payment_count atomically",
+      "name": "record_payment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An authorization record granting a merchant permission to pull funds",
+      "lib": "",
+      "name": "Authorization",
+      "fields": [
+        {
+          "doc": "Timestamp when this authorization was created",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Optional expiration timestamp (ledger timestamp)",
+          "name": "expiry",
+          "type_": "u64"
+        },
+        {
+          "doc": "Maximum amount per individual payment",
+          "name": "max_per_payment",
+          "type_": "i128"
+        },
+        {
+          "doc": "Merchant's address (C-Address)",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "Number of payments executed under this authorization",
+          "name": "payment_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether this authorization has been revoked",
+          "name": "revoked",
+          "type_": "bool"
+        },
+        {
+          "doc": "Token contract address (e.g., USDC)",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Total lifetime allowance",
+          "name": "total_allowed",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total amount already pulled",
+          "name": "total_spent",
+          "type_": "i128"
+        },
+        {
+          "doc": "Subscriber's address (C-Address)",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get authorization details for a user-merchant-token tuple.",
+      "name": "get_authorization",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Authorization"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event data emitted on authorization grant",
+      "lib": "",
+      "name": "AuthGrantedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "max_per_payment",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_allowed",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event data emitted on authorization revocation",
+      "lib": "",
+      "name": "AuthRevokedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if an authorization is valid for a given payment amount.\\nCalled by the Payment Engine before executing a payment.\\n\\n# Arguments\\n* `user` \\xe2\\x80\\x94 Subscriber address\\n* `merchant` \\xe2\\x80\\x94 Merchant address\\n* `token` \\xe2\\x80\\x94 Token contract address\\n* `amount` \\xe2\\x80\\x94 Payment amount to validate\\n\\n# Returns\\n`true` if the payment is authorized, error otherwise\\n\\n# Security\\n- Pure read operation \\xe2\\x80\\x94 no auth required\\n- Validates all authorization constraints",
+      "name": "check_authorization",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the Payment Engine address.\\nRequires admin authentication.",
+      "name": "update_payment_engine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_payment_engine",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AuthError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all authorizations for a user (returns list of (merchant, token) tuples).",
+      "name": "get_user_authorizations",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "address"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get all authorizations for a merchant (returns list of (user, token) tuples).",
+      "name": "get_merchant_authorizations",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "address"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
