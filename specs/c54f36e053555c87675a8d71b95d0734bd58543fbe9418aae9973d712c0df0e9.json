@@ -1,0 +1,1839 @@
+[
+  {
+    "event_v0": {
+      "doc": "Event published when the seed is set or updated",
+      "lib": "",
+      "name": "SeedSet",
+      "prefix_topics": [
+        "seed_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event published when a transaction is executed",
+      "lib": "",
+      "name": "TransactionExecuted",
+      "prefix_topics": [
+        "transaction_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event published when an executor is added or removed",
+      "lib": "",
+      "name": "ExecutorSet",
+      "prefix_topics": [
+        "executor_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "executor",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event published when executor requirement is toggled",
+      "lib": "",
+      "name": "ExecutorRequiredSet",
+      "prefix_topics": [
+        "executor_required_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "required",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OneSigError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ExecutorAlreadyExists",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "ExecutorAlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ExecutorNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidAuthContext",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofOrNonce",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "MerkleRootExpired",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NonContractInvoke",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "OnlyExecutorOrSigner",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "SignerProofExpired",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single Soroban invocation that will be executed atomically inside a OneSig transaction.",
+      "lib": "",
+      "name": "Call",
+      "fields": [
+        {
+          "doc": "ABI-encoded arguments forwarded to the target method.",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "Method identifier that will be called on `to`.",
+          "name": "func",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Sub-invocations that the OneSig contract must pre-authorize\\nvia `authorize_as_current_contract` before invoking this call.",
+          "name": "sub_invocations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "InvokerContractAuthEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Target contract address (mirrors `invoke_contract`'s `contractAddress`).",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A merkle leaf describing the call that should be executed.",
+      "lib": "",
+      "name": "Transaction",
+      "fields": [
+        {
+          "doc": "The single authorized invocation.",
+          "name": "call",
+          "type_": {
+            "udt": {
+              "name": "Call"
+            }
+          }
+        },
+        {
+          "doc": "Merkle proof (sibling hashes) proving `call` belongs to an authorised root.",
+          "name": "proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Account Abstraction payload used by `__check_auth` to validate an execution.",
+      "lib": "",
+      "name": "TransactionAuthData",
+      "fields": [
+        {
+          "doc": "Unix timestamp (seconds) after which the root is invalid.",
+          "name": "expiry",
+          "type_": "u64"
+        },
+        {
+          "doc": "Approved merkle root covering the transaction.",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Merkle proof binding the calls to `merkle_root`.",
+          "name": "proof",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Entity submitting the transaction (signer, executor, or permissionless).",
+          "name": "sender",
+          "type_": {
+            "udt": {
+              "name": "Sender"
+            }
+          }
+        },
+        {
+          "doc": "Threshold signatures (r\\xe2\\x80\\x96s\\xe2\\x80\\x96v) covering `merkle_root` and `expiry`.",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents the entity that is authorising the `__check_auth` invocation.",
+      "lib": "",
+      "name": "Sender",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "A registered multisig signer acting as its own executor. Binds a secp256k1\\nsigner proof to the ed25519 submitter (`delegate`), per the\\nsigner-as-executor spec for Account Abstraction chains.",
+            "name": "Signer",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SignerAsExecutor"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A registered executor (ed25519) submitting the transaction.\\nThe tuple is `(public_key, signature)` where the signature covers the Soroban payload.",
+            "name": "Executor",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Permissionless execution (anyone may submit when `executor_required` is disabled).",
+            "name": "Permissionless"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Payload bound to a signer-as-executor submission.\\n\\nEnforces the spec's \"signer acting as executor\" guarantee on Stellar:\\na secp256k1 signer commits to the ed25519 submitter via `signer_proof`,\\nand the submitter proves control of `delegate` via `delegate_proof`.",
+      "lib": "",
+      "name": "SignerAsExecutor",
+      "fields": [
+        {
+          "doc": "ed25519 public key (32 bytes) the signer binds as the submitter.",
+          "name": "delegate",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "ed25519 signature (64 bytes) by `delegate` over the Soroban runtime\\npayload hash \\xe2\\x80\\x94 proves the submitter actually holds that key.",
+          "name": "delegate_proof",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "secp256k1 signature (r\\xe2\\x80\\x96s\\xe2\\x80\\x96v, 65 bytes) over the EIP-712 digest of\\n`SignerProof { leafHash, merkleRoot, delegate, signerProofExpiry }` (domain: `OneSig v1`).",
+          "name": "signer_proof",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "Unix timestamp (seconds) after which `signer_proof` can no longer be used.",
+          "name": "signer_proof_expiry",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Identifier used by `can_execute_transaction` to describe the caller.\\nSigners use Ethereum-style 20-byte addresses while executors use ed25519 public keys.",
+      "lib": "",
+      "name": "SenderKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "An Ethereum-style signer address (20 bytes, left-padded).",
+            "name": "Signer",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "An ed25519 executor public key (32 bytes).",
+            "name": "Executor",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds or removes an executor based on the `active` flag.",
+      "name": "set_executor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "executor",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets whether an executor is required for transactions.",
+      "name": "set_executor_required",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "required",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the list of all registered executors.",
+      "name": "get_executors",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks whether a given address is a registered executor.",
+      "name": "is_executor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "executor",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total number of registered executors.",
+      "name": "total_executors",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether an executor signature is required.",
+      "name": "executor_required",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_data",
+          "type_": {
+            "udt": {
+              "name": "TransactionAuthData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the seed used for EIP-712 digest construction and emits an event.",
+      "name": "set_seed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Dispatches external contract calls. All security verification happens in `__check_auth`.\\nEach call's `sub_invocations` are pre-authorized via `authorize_as_current_contract`\\nimmediately before invoking, enabling deeper sub-invocations (e.g. token transfers).",
+      "name": "execute_transaction",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verifies a merkle root by checking expiry and validating EIP-712 signatures.",
+      "name": "verify_merkle_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "expiry",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verifies a transaction's merkle proof against the given root using the current nonce.",
+      "name": "verify_transaction_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merkle_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "transaction",
+          "type_": {
+            "udt": {
+              "name": "Transaction"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Encodes a leaf node by serializing version, onesig ID, contract address, nonce, and call, then double-hashing with keccak256.",
+      "name": "encode_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "call",
+          "type_": {
+            "udt": {
+              "name": "Call"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks if the sender is authorized to execute a transaction (executor or signer when required).",
+      "name": "can_execute_transaction",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": {
+            "udt": {
+              "name": "SenderKey"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the unique identifier for this OneSig deployment.",
+      "name": "onesig_id",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current transaction nonce.",
+      "name": "nonce",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current seed used for EIP-712 digest construction.",
+      "name": "seed",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the contract version string.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the leaf encoding version used for merkle proof construction.",
+      "name": "leaf_encoding_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor to initialize the OneSig contract with initial state\\n\\n# Arguments\\n* `onesig_id` - Unique identifier for this OneSig deployment\\n* `seed` - Initial seed value for merkle root verification\\n* `signers` - Array of initial signer addresses (32 bytes each, Ethereum addresses padded)\\n* `threshold` - Number of signatures required for transaction execution\\n* `executors` - Array of initial executor public keys (BytesN<32>)\\n* `executor_required` - Whether executor permission is required for transaction execution",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "onesig_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "executors",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "executor_required",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "authorizer",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds or removes a signer from the multisig. Requires owner authorization.",
+      "name": "set_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the signature threshold (quorum). Requires owner authorization.",
+      "name": "set_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns all registered signers.",
+      "name": "get_signers",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 20
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total number of registered signers.",
+      "name": "total_signers",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks if an address is a registered signer.",
+      "name": "is_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current signature threshold (quorum).",
+      "name": "threshold",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verifies signatures against the configured threshold.",
+      "name": "verify_signatures",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verifies signatures against a custom threshold.",
+      "name": "verify_n_signatures",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extends the instance TTL.\\n\\n# Arguments\\n\\n* `threshold` - The threshold to extend the TTL (if current TTL is below this, extend).\\n* `extend_to` - The TTL to extend to.",
+      "name": "extend_instance_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "extend_to",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets TTL configs for instance and persistent storage.\\n\\n- `None` values remove the corresponding config (disables auto-extension for that type)\\n- Validates that `threshold <= extend_to <= MAX_TTL`\\n\\n# Arguments\\n- `instance` - TTL config for instance storage\\n- `persistent` - TTL config for persistent storage\\n\\n# Panics\\n- `TtlConfigFrozen` if configs are frozen\\n- `InvalidTtlConfig` if validation fails",
+      "name": "set_ttl_configs",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "instance",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "TtlConfig"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "persistent",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "TtlConfig"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current TTL configs as (instance_config, persistent_config).",
+      "name": "ttl_configs",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "option": {
+                  "value_type": {
+                    "udt": {
+                      "name": "TtlConfig"
+                    }
+                  }
+                }
+              },
+              {
+                "option": {
+                  "value_type": {
+                    "udt": {
+                      "name": "TtlConfig"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permanently freezes TTL configs, preventing any future modifications.\\n\\nThis is irreversible and provides immutability guarantees to users.\\nEmits `TtlConfigsFrozen` event.\\n\\n# Panics\\n- `TtlConfigAlreadyFrozen` if already frozen",
+      "name": "freeze_ttl_configs",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether TTL configs are frozen.",
+      "name": "is_ttl_configs_frozen",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OneSigStorage",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Executors"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ExecutorRequired"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OneSigId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Seed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Nonce"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "BufferReaderError: 1000-1009",
+      "lib": "",
+      "name": "BufferReaderError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidLength",
+          "value": 1000
+        },
+        {
+          "doc": "",
+          "name": "InvalidAddressPayload",
+          "value": 1001
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "BufferWriterError: 1010-1019",
+      "lib": "",
+      "name": "BufferWriterError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAddressPayload",
+          "value": 1010
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "TtlConfigurableError: 1020-1029",
+      "lib": "",
+      "name": "TtlConfigurableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidTtlConfig",
+          "value": 1020
+        },
+        {
+          "doc": "",
+          "name": "TtlConfigFrozen",
+          "value": 1021
+        },
+        {
+          "doc": "",
+          "name": "TtlConfigAlreadyFrozen",
+          "value": 1022
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "OwnableError: 1030-1039",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAuthorizer",
+          "value": 1030
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingOwner",
+          "value": 1031
+        },
+        {
+          "doc": "",
+          "name": "InvalidTtl",
+          "value": 1032
+        },
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 1033
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 1034
+        },
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 1035
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 1036
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "BytesExtError: 1040-1049",
+      "lib": "",
+      "name": "BytesExtError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "LengthMismatch",
+          "value": 1040
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "UpgradeableError: 1050-1059",
+      "lib": "",
+      "name": "UpgradeableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidMigrationData",
+          "value": 1050
+        },
+        {
+          "doc": "",
+          "name": "MigrationNotAllowed",
+          "value": 1051
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "MultiSigError: 1060-1069",
+      "lib": "",
+      "name": "MultiSigError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1060
+        },
+        {
+          "doc": "",
+          "name": "InvalidAuthorizer",
+          "value": 1061
+        },
+        {
+          "doc": "",
+          "name": "InvalidSigner",
+          "value": 1062
+        },
+        {
+          "doc": "",
+          "name": "SignatureError",
+          "value": 1063
+        },
+        {
+          "doc": "",
+          "name": "SignerAlreadyExists",
+          "value": 1064
+        },
+        {
+          "doc": "",
+          "name": "SignerNotFound",
+          "value": 1065
+        },
+        {
+          "doc": "",
+          "name": "TotalSignersLessThanThreshold",
+          "value": 1066
+        },
+        {
+          "doc": "",
+          "name": "UnsortedSigners",
+          "value": 1067
+        },
+        {
+          "doc": "",
+          "name": "ZeroThreshold",
+          "value": 1068
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "AuthError: 1070-1079",
+      "lib": "",
+      "name": "AuthError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AuthorizerNotFound",
+          "value": 1070
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "RbacError: 1080-1089",
+      "lib": "",
+      "name": "RbacError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AdminRoleNotFound",
+          "value": 1080
+        },
+        {
+          "doc": "",
+          "name": "IndexOutOfBounds",
+          "value": 1081
+        },
+        {
+          "doc": "",
+          "name": "MaxRolesExceeded",
+          "value": 1082
+        },
+        {
+          "doc": "",
+          "name": "RoleIsEmpty",
+          "value": 1083
+        },
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 1084
+        },
+        {
+          "doc": "",
+          "name": "RoleNotHeld",
+          "value": 1085
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 1086
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a signer is added or removed.",
+      "lib": "",
+      "name": "SignerSet",
+      "prefix_topics": [
+        "signer_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the signature threshold is changed.",
+      "lib": "",
+      "name": "ThresholdSet",
+      "prefix_topics": [
+        "threshold_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MultiSigStorage",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Signers"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Threshold"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is transferred (both single-step and two-step completion).",
+      "lib": "",
+      "name": "OwnershipTransferred",
+      "prefix_topics": [
+        "ownership_transferred"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a 2-step ownership transfer is proposed.",
+      "lib": "",
+      "name": "OwnershipTransferring",
+      "prefix_topics": [
+        "ownership_transferring"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ttl",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a 2-step ownership transfer is cancelled.",
+      "lib": "",
+      "name": "OwnershipTransferCancelled",
+      "prefix_topics": [
+        "ownership_transfer_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "cancelled_pending_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableStorage",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingOwner"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is granted.",
+      "lib": "",
+      "name": "RoleGranted",
+      "prefix_topics": [
+        "role_granted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is revoked.",
+      "lib": "",
+      "name": "RoleRevoked",
+      "prefix_topics": [
+        "role_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role admin is changed.",
+      "lib": "",
+      "name": "RoleAdminChanged",
+      "prefix_topics": [
+        "role_admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin_role",
+          "type_": {
+            "option": {
+              "value_type": "symbol"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin_role",
+          "type_": {
+            "option": {
+              "value_type": "symbol"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RbacStorage",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ExistingRoles"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleIndexToAccount",
+            "type_": [
+              "symbol",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountToIndex",
+            "type_": [
+              "symbol",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountsCount",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAdmin",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "TTL configuration: threshold (when to extend) and extend_to (target TTL).",
+      "lib": "",
+      "name": "TtlConfig",
+      "fields": [
+        {
+          "doc": "Target TTL after extension (in ledgers).",
+          "name": "extend_to",
+          "type_": "u32"
+        },
+        {
+          "doc": "TTL threshold that triggers extension (in ledgers).",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when TTL configs are set.",
+      "lib": "",
+      "name": "TtlConfigsSet",
+      "prefix_topics": [
+        "ttl_configs_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "instance",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "TtlConfig"
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "persistent",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "TtlConfig"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when TTL configs are frozen.",
+      "lib": "",
+      "name": "TtlConfigsFrozen",
+      "prefix_topics": [
+        "ttl_configs_frozen"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TtlConfigStorage",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Frozen"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Instance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Persistent"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeableStorage",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Migrating"
+          }
+        }
+      ]
+    }
+  }
+]
