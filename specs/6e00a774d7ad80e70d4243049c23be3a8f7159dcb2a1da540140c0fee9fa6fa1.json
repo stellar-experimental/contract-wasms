@@ -1,0 +1,734 @@
+[
+  {
+    "function_v0": {
+      "doc": "Synchronous asset deposit into the underlying vault.\\n\\n`operator` is explicit because Soroban has no ambient `msg.sender`; the\\nproxy must know which address to authenticate with `require_auth()`.\\nThis method follows the ERC-4626 deposit shape, but with the Soroban\\noperator address passed as an argument. The operator is also the asset\\nsource for this compatibility entrypoint.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Synchronous asset deposit with explicit minimum shares out.\\n\\nThis exposes the vault's native `DepositWithMin` slippage guard through\\nthe proxy. `operator` is authenticated and is also the asset source for\\nthis compatibility entrypoint.",
+      "name": "deposit_with_min",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_shares_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Synchronous share mint into the underlying vault.\\n\\n`operator` is explicit because Soroban has no ambient `msg.sender`; the\\nproxy must know which address to authenticate with `require_auth()`.\\nThe proxy previews the assets needed and submits a minimum share output\\nequal to `shares`. The operator is also the asset source for this\\ncompatibility entrypoint.",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Request an asynchronous redemption by asset amount.\\n\\nThis is an ERC-7540-style redemption request, not a synchronous\\nERC-4626 withdrawal. It escrows shares in the vault and returns a\\n`request_id`; assets are not transferred to `receiver` until the\\nwithdrawal becomes executable and `execute_withdraw` succeeds.\\n\\n`operator` is explicit because Soroban has no ambient `msg.sender`.\\nThe supported path is `operator == owner`. Operator-style delegated\\nrequests require a transfer-from-backed vault request path.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Request an asynchronous redemption by share amount.\\n\\nThis is an ERC-7540-style redemption request, not a synchronous\\nERC-4626 redeem. It escrows `shares` in the vault and returns a\\n`request_id`; assets are not transferred to `receiver` until the\\nwithdrawal becomes executable and `execute_withdraw` succeeds.\\n\\n`operator` is explicit because Soroban has no ambient `msg.sender`.\\nThe supported path is `operator == owner`. Operator-style delegated\\nrequests require a transfer-from-backed vault request path.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lower-level asynchronous redemption request with explicit slippage.\\n\\nThis mirrors the vault's native request path: `owner` authenticates,\\n`shares` are escrowed, and the returned `request_id` identifies the\\nqueued redemption request. Claiming assets is a separate\\n`execute_withdraw` step after cooldown/liquidity conditions are met.",
+      "name": "request_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_assets_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute the next claimable queued withdrawal.\\n\\n`operator` is the authenticated vault executor/keeper, not a request id.\\nThis method executes according to the vault's queue and authorization\\npolicy; it does not select a withdrawal request by `request_id`.",
+      "name": "execute_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "convert_to_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "convert_to_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "preview_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "share_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend proxy configuration TTL.\\n\\nThis is permissionless because it only preserves existing proxy config;\\nit cannot mutate vault accounting or authorization state.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidInput",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "VaultError",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InsufficientAllowance",
+          "value": 5
+        }
+      ]
+    }
+  }
+]
