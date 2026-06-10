@@ -1,0 +1,2294 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FactoryContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AggregatedBlsKey"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Passkey"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Nonce"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RpidHash"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RPID"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Spend wallet-held asset using spender authorization and stored allowance.\\n\\nAuth:\\n- Requires direct authorization from the spender address.\\n\\nEffects:\\n- Consumes allowance and transfers asset to the recipient.\\n\\nNotes:\\n- Rejects non-positive amounts.\\n-`spend_asset` validates allowance, reduces it correctly,\\nand transfers from wallet-controlled balance.",
+      "name": "spend",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approve a spender to use wallet-held asset up to a given amount.\\n\\nAuth:\\n- Requires owner authorization through the wallet auth flow.\\n\\nEffects:\\n- Writes or updates spender allowance for the specified asset.\\n\\nNotes:\\n- Rejects negative amounts.\\n- Enforces the configured asset spend limit.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_pref",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "FeePreference"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit asset into the wallet.\\n\\nAuth:\\n- Requires authorization from the source address.\\n\\nEffects:\\n- Pulls asset from the source address into wallet-controlled balance.\\n\\nNotes:\\n- Rejects non-positive amounts.\\n-`take_asset` transfers funds into the current contract context.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the current contract to the latest factory-approved wasm.\\n\\nAuth:\\n- Requires owner authorization through the wallet auth flow.\\n\\nEffects:\\n- Retrieves the approved wallet wasm hash from the factory.\\n- Replaces the currently deployed contract code with that version.\\n\\nNotes:\\n- Authorization payload is bound to the target wasm hash.\\n- Replay protection is enforced through the wallet authorization flow.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw asset from the wallet to a recipient.\\n\\nAuth:\\n- Requires owner authorization through the wallet auth flow.\\n\\nEffects:\\n- Quotes and handles protocol transaction fees before withdrawal.\\n- Transfers the requested asset amount from the wallet to the recipient.\\n\\nNotes:\\n- Rejects non-positive amounts.\\n- Enforces the configured asset spend limit before withdrawal.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_pref",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "FeePreference"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the configured spend limit for an asset.\\n\\nAudit note:\\nReturning `Option<i128>` avoids overloading sentinel values (e.g. `0`)\\nand makes the semantics explicit:\\n- `Some(limit)` \\xe2\\x86\\x92 enforce the configured limit\\n- `None` \\xe2\\x86\\x92 no asset-specific limit configured",
+      "name": "get_limit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the linked external owner wallet, if set.\\n\\nEffects:\\n- Reads owner state from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return wallet balance for the specified asset.\\n\\nEffects:\\n- Reads asset balance associated with the wallet.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured factory contract address, if set.\\n\\nEffects:\\n- Reads factory reference from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_factory",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the stored passkey, if configured.\\n\\nEffects:\\n- Reads passkey state from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_passkey",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 65
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Invoke an external contract/dapp through the wallet.\\n\\nAuth:\\n- Requires owner authorization through the wallet auth flow.\\n\\nEffects:\\n- Validates top-level token operations against configured spend limits.\\n- Optionally validates and registers deep auth entries.\\n- Performs an external contract call with the provided function and args.\\n\\nNotes:\\n- Payload binds owner authorization to the target contract, function,\\nargs, and optional deep auth payload.\\n- Deep auth entries are authorized only after owner auth succeeds.",
+      "name": "dapp_invoker",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "contract_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "func",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "option": {
+              "value_type": {
+                "vec": {
+                  "element_type": "val"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_vec",
+          "type_": {
+            "option": {
+              "value_type": {
+                "vec": {
+                  "element_type": {
+                    "map": {
+                      "key_type": "string",
+                      "value_type": "val"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_pref",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "FeePreference"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "val",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured registry contract address, if set.\\n\\nEffects:\\n- Reads registry reference from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_registry",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize wallet state and linked contract addresses.\\n\\nAuth:\\n- Intended to run once during wallet deployment/creation.\\n\\nEffects:\\n- Stores access keys and linked contract references.\\n- Marks the wallet as initialized.\\n\\nNotes:\\n- Reverts if initialization was already completed.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "challenge",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "udt": {
+              "name": "PasskeySignature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "rpid_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "bls_keys_pop",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "BlsKeyWithPoP"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "social_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "external_wallet",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return current allowance for a spender on a asset.\\n\\nEffects:\\n- Reads allowance state from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compute the authorization payload hash for a function call.\\n\\nEffects:\\n- Returns the payload derived from function name, args, and nonce.\\n\\nNotes:\\n- Read-only helper for off-chain signing flows.\\n- Reviewers should confirm payload construction matches verification logic.",
+      "name": "get_tx_payload",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "func",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the wallet passkey.\\n\\nAuth:\\n- Requires authorization from the currently registered wallet passkey or g account.\\n\\nEffects:\\n- Replaces the existing wallet passkey with a newly provided passkey.\\n- Increments wallet nonce after successful rotation.\\n\\nNotes:\\n- The new passkey must prove ownership by signing the rotation challenge.\\n- Rotation challenge is derived from wallet-specific transaction nonce data.\\n- Prevents replay through nonce-based challenge construction.\\n- Rejects rotation if RP ID hash configuration is missing.\\n- `valid_until_ledger` limits how long the authorization remains valid.\\n- The new passkey is not activated unless both:\\n- current owner authorization succeeds, and\\n- proof-of-possession for the new passkey succeeds.",
+      "name": "rotate_passkey",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_passkey_pop_sig",
+          "type_": {
+            "udt": {
+              "name": "PasskeySignature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured fee manager contract address, if set.\\n\\nEffects:\\n- Reads fee manager reference from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_fee_manager",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Recover wallet access using the configured recovery mechanism.\\n\\nAuth:\\n- Requires valid recovery authorization from the registered recovery\\nsigner set through aggregated BLS signature verification.\\n\\nEffects:\\n- Replaces the current wallet passkey with a newly provided passkey.\\n- Increments wallet nonce after successful recovery.\\n\\nNotes:\\n- Intended for account recovery after successful off-chain ownership\\nverification and recovery approval flow.\\n- The new passkey must prove ownership by signing the recovery challenge.\\n- Recovery authorization is validated against the wallet recovery policy.\\n- Recovery challenge is derived from wallet-specific transaction nonce data.\\n- Prevents replay through nonce-based challenge construction.\\n- Rejects recovery if RP ID hash configuration is missing.\\n- `valid_until_ledger` limits how long the recovery authorization remains valid.\\n- The new passkey is not activated unless both:\\n- recovery authorization succeeds, and\\n- proof-of-possession for the new passkey succeeds.",
+      "name": "recover_account",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_passkey_pop_sig",
+          "type_": {
+            "udt": {
+              "name": "PasskeySignature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "agg_bls_sig",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a asset-specific spend limit.\\nAuth:\\n- Requires owner authorization through the wallet auth flow.\\n\\nEffects:\\n- Stores a per-asset limit override.\\n\\nNotes:\\n- Rejects negative values.\\n- Payload includes asset, limit, and nonce to prevent replay.",
+      "name": "set_asset_limit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Links a `(platform, user_id)` identity to this wallet in the registry.\\n\\nRequires wallet authorization before forwarding the request to the registry.\\nThe mapping is used to associate an external identity (e.g. X, Discord,\\nTelegram) with the current wallet address.\\n\\nValidation of platform support, signature threshold, and identity ownership\\nis enforced by the registry contract.",
+      "name": "add_id_wallet_map",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "platform_str",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "ValidatorSignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the configured social router contract address, if set.\\n\\nEffects:\\n- Reads social router reference from storage.\\n\\nNotes:\\n- Read-only helper.",
+      "name": "get_social_router",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or replace the linked external owner wallet.\\n\\nAuth:\\n- Requires owner authorization through the wallet bls auth flow.\\n\\nEffects:\\n- Updates the stored external owner address.\\n\\nNotes:\\n- Payload includes the new address and nonce to prevent replay.",
+      "name": "set_external_wallet",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "external_wallet",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes an existing `(platform, user_id)` identity mapping from the registry.\\n\\nRequires wallet authorization before forwarding the request to the registry.\\nThis operation detaches the external identity from the current wallet\\naddress.\\n\\nRegistry-level validation ensures only valid and authorized removals occur.",
+      "name": "remove_id_wallet_map",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "platform_str",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Synchronizes wallet protocol dependencies from the currently configured factory.\\n\\nSECURITY:\\n- Dependencies are not accepted from caller input.\\n- Reads approved protocol addresses directly from the trusted factory.\\n- Keeps existing wallets aligned with current protocol configuration.\\n- Synchronization is authenticated and nonce protected.\\n- Updates only local dependency references and does not modify factory state.",
+      "name": "sync_protocol_dependencies",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey_sig",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "WalletError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Shared access/config storage keys.\\n\\nDESIGN:\\n- Most addresses here are contract-wide configuration and live in instance storage.\\n- Some identity-related keys are included for compatibility with other modules,\\neven if they are not read/written directly in this file.\\n\\nIMPORTANT:\\n- This file provides low-level storage/auth helpers only.\\n- It does not enforce higher-level business rules such as uniqueness between\\nconfigured addresses or one-time initialization beyond what callers enforce.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Factory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Registry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeManager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SocialPayments"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PaymentManager"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UseridWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PasskeyWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents the type of upgrade proposal.\\n\\nVARIANTS:\\n- `Upgrade` \\xe2\\x86\\x92 upgrade the current contract WASM\\n- `WalletVersion` \\xe2\\x86\\x92 update approved wallet implementation hash\\n\\nDESIGN:\\n- Persisted in contract storage (`ProposalType`)\\n- Used to determine execution path during proposal finalization\\n\\nCRITICAL COMPATIBILITY NOTE:\\n- This enum is stored on-chain.\\n- DO NOT:\\n- reorder variants\\n- remove existing variants\\n\\n- Adding new variants requires:\\n- updating parsing logic (`upgrade_type`)\\n- ensuring existing stored values remain valid",
+      "lib": "",
+      "name": "UpgradeType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Upgrade"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "WalletVersion"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SocialPlatform",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "X"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Discord"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Telegram"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Email"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Tiktok"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sms"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "- No validation is performed here",
+      "lib": "",
+      "name": "ValidatorSignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "validator",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RegistryError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "DuplicateValidator",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "InvalidThreshold",
+          "value": 106
+        },
+        {
+          "doc": "",
+          "name": "NotValidator",
+          "value": 107
+        },
+        {
+          "doc": "",
+          "name": "IncorrectNumberOfSignatures",
+          "value": 108
+        },
+        {
+          "doc": "",
+          "name": "PlatformNotSupported",
+          "value": 409
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedAsset",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "UseridAlreadyMapped",
+          "value": 443
+        },
+        {
+          "doc": "",
+          "name": "PasskeyAlreadyMapped",
+          "value": 444
+        },
+        {
+          "doc": "",
+          "name": "NotClaimable",
+          "value": 457
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 459
+        },
+        {
+          "doc": "",
+          "name": "NotExpired",
+          "value": 460
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 461
+        },
+        {
+          "doc": "",
+          "name": "NotRefundable",
+          "value": 463
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 729
+        },
+        {
+          "doc": "",
+          "name": "InvalidUserId",
+          "value": 742
+        },
+        {
+          "doc": "",
+          "name": "UpperNotAllowed",
+          "value": 743
+        },
+        {
+          "doc": "",
+          "name": "SpacesNotAllowed",
+          "value": 744
+        },
+        {
+          "doc": "",
+          "name": "MaxLengthExceeded",
+          "value": 745
+        },
+        {
+          "doc": "",
+          "name": "IdentityNotFound",
+          "value": 4001
+        },
+        {
+          "doc": "",
+          "name": "NotRegistryManager",
+          "value": 4051
+        },
+        {
+          "doc": "",
+          "name": "FactoryNotSet",
+          "value": 4101
+        },
+        {
+          "doc": "",
+          "name": "WalletAlreadyMapped",
+          "value": 5001
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "- No validation is performed here",
+      "lib": "",
+      "name": "ProtocolDependencies",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "social_router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys derived from normalized identity inputs.\\n\\nDESIGN:\\n- `UseridWalletMap` stores mappings derived from `(platform, user_id)`\\n- `PasskeyWalletMap` stores mappings derived from raw passkey bytes\\n\\nIMPORTANT:\\n- These keys depend on the exact hashing/domain-separation logic below.\\n- Changing encoding, validation, or domain strings will break compatibility\\nwith existing stored mappings.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "UseridWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PasskeyWalletMap",
+            "type_": [
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoteEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "VoteCast"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AddVoterEvent",
+      "prefix_topics": [
+        "Add",
+        "Voter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PasskeyMapEvent",
+      "prefix_topics": [
+        "Registry",
+        "PasskeyMap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveVoterEvent",
+      "prefix_topics": [
+        "Remove",
+        "Voter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateAdminEvent",
+      "prefix_topics": [
+        "Update",
+        "Admin"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawFeeEvent",
+      "prefix_topics": [
+        "Withdraw",
+        "Fee"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AddIdentityMapEvent",
+      "prefix_topics": [
+        "Registry",
+        "IdentityMapAdded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "platform",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateRegistryEvent",
+      "prefix_topics": [
+        "Update",
+        "Registry"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletCreationEvent",
+      "prefix_topics": [
+        "Wallet",
+        "Creation"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "bls_keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 96
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractUpgradeEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "ContractUpgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposalEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "ProposalCreated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "voting_deadline",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateFeeManagerEvent",
+      "prefix_topics": [
+        "Update",
+        "FeeManager"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelledEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "UpgradeCancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveIdentityMapEvent",
+      "prefix_topics": [
+        "Registry",
+        "IdentityMapRemoved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "platform",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpdateSocialRouterEvent",
+      "prefix_topics": [
+        "Update",
+        "SocialRouter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletVersionUpgradeEvent",
+      "prefix_topics": [
+        "Upgrade",
+        "WalletVersion"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SyncProtocolDependenciesEvent",
+      "prefix_topics": [
+        "Sync",
+        "ProtocolDependencies"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_fee_manager",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_social_router",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_fee_manager",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_social_router",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Shared storage keys for token utilities and asset configuration.\\n\\nNOTE:\\n- `AllowanceExpiration` is stored as a ledger offset, not an absolute ledger.\\n- Spend limits are stored in instance storage because they are contract-wide config.\\n- Supported assets are stored in persistent storage as a set-like `Map<Address, ()>`.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Relative ledger offset used when creating token approvals.",
+            "name": "AllowanceExpiration"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset spend limit override.",
+            "name": "SpendLimit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Set of assets supported by the caller contract.",
+            "name": "SupportedAssets"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeferData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "max_deferred_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "updated_deferred_fee",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeDecision",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CollectNow",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CollectNowData"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Defer",
+            "type_": [
+              {
+                "udt": {
+                  "name": "DeferData"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CannotProceed",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CannotProceedData"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeePreference",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_total_fee",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CollectNowData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_total_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_fee_in_asset",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_fee_in_base",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CannotProceedData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "max_deferred_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_total_fee",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": {
+            "udt": {
+              "name": "CannotProceedReason"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_fee_in_asset",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_fee_in_base",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CannotProceedReason",
+      "cases": [
+        {
+          "doc": "",
+          "name": "UnsupportedFeeAsset",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "FeeExceedsMaximum",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "MaxDeferredFeeExceeded",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidMaxTotalFee",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidSignature",
+          "value": 99
+        },
+        {
+          "doc": "",
+          "name": "InvalidBlsKey",
+          "value": 211
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 411
+        },
+        {
+          "doc": "",
+          "name": "ExceedMaxAllowance",
+          "value": 719
+        },
+        {
+          "doc": "",
+          "name": "InvalidLimit",
+          "value": 723
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 729
+        },
+        {
+          "doc": "",
+          "name": "InvalidInvokeContract",
+          "value": 735
+        },
+        {
+          "doc": "",
+          "name": "InvalidInvokeFunction",
+          "value": 737
+        },
+        {
+          "doc": "",
+          "name": "TooManyKeys",
+          "value": 739
+        },
+        {
+          "doc": "",
+          "name": "InsufficientKeys",
+          "value": 745
+        },
+        {
+          "doc": "",
+          "name": "DuplicateKeys",
+          "value": 755
+        },
+        {
+          "doc": "",
+          "name": "KeyAtInfinity",
+          "value": 765
+        },
+        {
+          "doc": "",
+          "name": "ClientDataTooLarge",
+          "value": 1999
+        },
+        {
+          "doc": "",
+          "name": "InvalidClientDataType",
+          "value": 2009
+        },
+        {
+          "doc": "",
+          "name": "InvalidChallenge",
+          "value": 2019
+        },
+        {
+          "doc": "",
+          "name": "InvalidRpIdHash",
+          "value": 2029
+        },
+        {
+          "doc": "",
+          "name": "UserPresenceRequired",
+          "value": 2039
+        },
+        {
+          "doc": "",
+          "name": "UserVerificationRequired",
+          "value": 2049
+        },
+        {
+          "doc": "",
+          "name": "InvalidPoPSignature",
+          "value": 2051
+        },
+        {
+          "doc": "",
+          "name": "MissingBlsKeys",
+          "value": 2055
+        },
+        {
+          "doc": "",
+          "name": "NonceAlreadyUsed",
+          "value": 2075
+        },
+        {
+          "doc": "",
+          "name": "RpidNotFound",
+          "value": 2085
+        },
+        {
+          "doc": "",
+          "name": "FactoryNotFound",
+          "value": 2087
+        },
+        {
+          "doc": "",
+          "name": "FeeManagerNotFound",
+          "value": 2089
+        },
+        {
+          "doc": "",
+          "name": "RegistryNotFound",
+          "value": 2091
+        },
+        {
+          "doc": "",
+          "name": "SocialRouterNotFound",
+          "value": 2093
+        },
+        {
+          "doc": "",
+          "name": "InvalidNetwork",
+          "value": 2095
+        },
+        {
+          "doc": "",
+          "name": "InvalidAuthenticatorData",
+          "value": 2105
+        },
+        {
+          "doc": "",
+          "name": "InvalidInvokeArgs",
+          "value": 2115
+        },
+        {
+          "doc": "",
+          "name": "WalletVersionNotFound",
+          "value": 2125
+        },
+        {
+          "doc": "",
+          "name": "MaxDeferredFeeExceeded",
+          "value": 2135
+        },
+        {
+          "doc": "",
+          "name": "InvalidLedgerWindow",
+          "value": 2145
+        },
+        {
+          "doc": "",
+          "name": "WindowTooLarge",
+          "value": 2155
+        },
+        {
+          "doc": "",
+          "name": "AllowanceMustBeReset",
+          "value": 2301
+        },
+        {
+          "doc": "",
+          "name": "InvalidExpiration",
+          "value": 2401
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BlsKeyWithPoP",
+      "fields": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PasskeySignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "authenticator_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  }
+]
