@@ -1,0 +1,728 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "boost",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sends `amount` tokens from a campaign's tracked budget to `to`. Admin\\nonly. Used for refunds (returning unspent budget to depositors) or for\\nreallocating between vaults.\\n\\n\\xe2\\x9a\\xa0\\xef\\xb8\\x8f This function grants the admin role full power to drain any\\ncampaign's `available()` budget to any address. Depositors should be\\naware that admin can redirect their funds \\xe2\\x80\\x94 this is by design, the\\nadmin is the trusted operator of the treasury. For tokens that arrived\\nOUTSIDE `deposit()` (direct transfers, dust, mistaken sends), use\\n`rescue_orphan` instead, which is bounded by the campaign-tracked totals\\nand cannot accidentally move funds attributed to a campaign.",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_manager",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accepts a pending admin transfer. Must be called by the exact address\\nthat was previously proposed. Clears the pending slot on success.",
+      "name": "accept_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_campaign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Campaign"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Proposes a new admin. The new address must call `accept_admin` to take\\nthe role. Calling again with a different address overwrites the pending\\nslot; calling with the current admin's own address effectively cancels.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweeps tokens out of the treasury that aren't accounted for in any\\ncampaign \\xe2\\x80\\x94 direct transfers, refunds from a vault, dust, mistaken\\nsends. Admin only.\\n\\nThe function computes `orphan = balance(token) - sum_of_available()` for\\nevery campaign whose `asset == token`, and refuses to send more than\\n`orphan`. This bound ensures that an admin typo cannot move tokens\\nattributed to an active campaign \\xe2\\x80\\x94 `rescue_orphan` is strictly safer\\nthan `transfer()` for handling unaccounted balances.",
+      "name": "rescue_orphan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_campaign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registers a boost campaign for a single-asset DeFindex vault. Admin must\\npass `asset` explicitly and the contract asserts the vault's\\n`get_assets()` returns the same address \\xe2\\x80\\x94 this prevents a malicious or\\nmisconfigured vault from steering subsequent `deposit` / `boost` token\\ntransfers to an unexpected token.",
+      "name": "register_campaign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unregister_campaign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 4000
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 4001
+        },
+        {
+          "doc": "",
+          "name": "CampaignAlreadyRegistered",
+          "value": 4010
+        },
+        {
+          "doc": "",
+          "name": "CampaignNotRegistered",
+          "value": 4011
+        },
+        {
+          "doc": "",
+          "name": "CampaignInactive",
+          "value": 4012
+        },
+        {
+          "doc": "",
+          "name": "CampaignHasBalance",
+          "value": 4013
+        },
+        {
+          "doc": "",
+          "name": "MultiAssetVaultNotSupported",
+          "value": 4020
+        },
+        {
+          "doc": "",
+          "name": "AssetMismatch",
+          "value": 4021
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 4030
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBudget",
+          "value": 4031
+        },
+        {
+          "doc": "",
+          "name": "InsufficientOrphanBalance",
+          "value": 4032
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 4040
+        },
+        {
+          "doc": "",
+          "name": "AccountingCorrupted",
+          "value": 4041
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Boosted",
+      "prefix_topics": [
+        "boosted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposited",
+      "prefix_topics": [
+        "deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Transferred",
+      "prefix_topics": [
+        "transferred"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminUpdated",
+      "prefix_topics": [
+        "admin_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminProposed",
+      "prefix_topics": [
+        "admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OrphanRescued",
+      "prefix_topics": [
+        "orphan_rescued"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ManagerUpdated",
+      "prefix_topics": [
+        "manager_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_addr",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CampaignUpdated",
+      "prefix_topics": [
+        "campaign_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CampaignRegistered",
+      "prefix_topics": [
+        "campaign_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CampaignUnregistered",
+      "prefix_topics": [
+        "campaign_unregistered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Manager"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Campaign",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Persistent list of every registered vault. Maintained by\\n`register_campaign` / `unregister_campaign`. Read by `rescue_orphan` to\\nenumerate tracked-balance per token.",
+            "name": "CampaignList"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Campaign",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Ledger timestamp (seconds) of the most recent `boost()` call. 0 if never boosted.",
+          "name": "last_boosted_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "total_boosted",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_deposited",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_withdrawn",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultStrategy",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultAssetStrategySet",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategies",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "VaultStrategy"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
