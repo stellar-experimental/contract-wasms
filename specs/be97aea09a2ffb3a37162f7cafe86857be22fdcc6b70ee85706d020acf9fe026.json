@@ -1,0 +1,642 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One action bundled into a pool `submit` call.",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "Asset address relevant to the request.",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount in underlying stroops.",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "`RequestType` discriminant (u32): 2 = SupplyCollateral, 4 = Borrow, etc.",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Snapshot of one reserve as returned by `get_reserve`.\\n\\nField names and types must EXACTLY match blend-contracts-v2 pool wasm @ ba22b487.\\nThe `asset` and `scalar` fields are part of the real struct and must be present\\nfor correct XDR decoding (Soroban decodes maps by matching ALL fields in the struct).",
+      "lib": "",
+      "name": "Reserve",
+      "fields": [
+        {
+          "doc": "Asset address this reserve tracks.",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Reserve configuration (admin-set, changes rarely).",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "ReserveConfig"
+            }
+          }
+        },
+        {
+          "doc": "Reserve runtime data (accrues on interest updates).",
+          "name": "data",
+          "type_": {
+            "udt": {
+              "name": "ReserveData"
+            }
+          }
+        },
+        {
+          "doc": "SCALAR_7 constant embedded in the reserve snapshot (10_000_000).",
+          "name": "scalar",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Flash-loan parameters.\\n\\nField names and order MUST match the pool wasm exactly (XDR struct encoding is by field name).\\nSource: blend-contracts-v2 pool wasm @ ba22b487, confirmed via `stellar contract inspect`:\\n\\xe2\\x80\\xa2 amount: I128\\n\\xe2\\x80\\xa2 asset: Address\\n\\xe2\\x80\\xa2 contract: Address",
+      "lib": "",
+      "name": "FlashLoan",
+      "fields": [
+        {
+          "doc": "Amount of `asset` to flash (in underlying stroops).",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Token to flash.",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Receiver contract address (the flash-loan callback target; \\xe2\\x89\\xa0 `from`).",
+          "name": "contract",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A user's position snapshot keyed by reserve index (u32).\\n\\nField names must match blend-contracts-v2 pool wasm (pool/src/storage.rs Positions).\\nMaps are reserve-index \\xe2\\x86\\x92 share amount (b-token or d-token shares, SCALAR_12).",
+      "lib": "",
+      "name": "Positions",
+      "fields": [
+        {
+          "doc": "Collateral shares by reserve index.",
+          "name": "collateral",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Liability (debt) shares by reserve index.",
+          "name": "liabilities",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Supply (non-collateral) shares by reserve index.",
+          "name": "supply",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Reserve runtime data (updated on every interest accrual).\\n\\nField names and types must EXACTLY match blend-contracts-v2 pool wasm @ ba22b487.\\nSource: pool/src/storage.rs `ReserveData`.\\nRates are SCALAR_12 (1_000_000_000_000).\\nAvailable underlying \\xe2\\x89\\x88 (b_supply \\xc3\\x97 b_rate \\xe2\\x88\\x92 d_supply \\xc3\\x97 d_rate) / SCALAR_12.",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "b-token rate: underlying per b-token share (SCALAR_12).",
+          "name": "b_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "b-token supply (b-token shares, not underlying).",
+          "name": "b_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "Backstop credit accumulated for this reserve.",
+          "name": "backstop_credit",
+          "type_": "i128"
+        },
+        {
+          "doc": "d-token rate: underlying per d-token share (SCALAR_12).",
+          "name": "d_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "d-token supply (d-token shares, not underlying).",
+          "name": "d_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "Interest rate modifier (SCALAR_7).",
+          "name": "ir_mod",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger timestamp of last accrual.",
+          "name": "last_time",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Reserve configuration set by the pool admin (persistent; changes rarely).\\n\\nALL fields from the real pool wasm MUST be present and correctly named \\xe2\\x80\\x94\\nSoroban decodes structs by unpacking the full field set; a missing or extra\\nfield panics with `ScErrorCode::UnexpectedSize`.  This struct mirrors\\nblend-contracts-v2 `ReserveConfig` field-for-field.",
+      "lib": "",
+      "name": "ReserveConfig",
+      "fields": [
+        {
+          "doc": "Collateral factor in SCALAR_7 [0,1], e.g. 9_000_000 = 0.90.",
+          "name": "c_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "Decimals for the asset (not used in exec_op, but present in the real struct).",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Whether this reserve is enabled.",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Reserve index within the pool.",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "Liability factor in SCALAR_7 [0,1], e.g. 9_000_000 = 0.90.",
+          "name": "l_factor",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum utilization (SCALAR_7).",
+          "name": "max_util",
+          "type_": "u32"
+        },
+        {
+          "doc": "Interest rate: base (SCALAR_7).",
+          "name": "r_base",
+          "type_": "u32"
+        },
+        {
+          "doc": "Interest rate: slope 1 (SCALAR_7).",
+          "name": "r_one",
+          "type_": "u32"
+        },
+        {
+          "doc": "Interest rate: slope 3 (SCALAR_7).",
+          "name": "r_three",
+          "type_": "u32"
+        },
+        {
+          "doc": "Interest rate: slope 2 (SCALAR_7).",
+          "name": "r_two",
+          "type_": "u32"
+        },
+        {
+          "doc": "Reactivity constant (SCALAR_7).",
+          "name": "reactivity",
+          "type_": "u32"
+        },
+        {
+          "doc": "Supply cap in underlying stroops.",
+          "name": "supply_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "Target utilization (SCALAR_7).",
+          "name": "util",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Blend flash-loan callback (ModERC-3156 interface).\\n\\nCalled by the source pool with `exec_op(from, token, amount, fee=0)`.\\nPublic by ABI necessity; all legitimate paths reach it only via\\n`migrate \\xe2\\x86\\x92 source_pool.flash_loan`.  Guarded by `consume_staged_params`\\nwhich enforces: NoStagedParams, source_pool auth, SamePoolNotAllowed,\\nAssetMismatch, AmountMismatch (see consume_staged_params doc above).\\n\\nCross-pool supply/borrow (slice 3), swap (slice 4), and walking skeleton\\n(slice 5) follow after the guard layer.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "_fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stage params on `receiver` and call `source_pool.flash_loan` atomically.\\n\\nCall stack (no re-entry):\\nmigrator.migrate \\xe2\\x86\\x92 receiver.stage_params (done) \\xe2\\x86\\x92 source_pool.flash_loan \\xe2\\x86\\x92 receiver.exec_op",
+      "name": "migrate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "route",
+          "type_": {
+            "udt": {
+              "name": "MigrationRoute"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "udt": {
+              "name": "MigrationAmounts"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stage migration params for the calling position owner.\\n\\nPublic entry point called by the `RefinanceMigrator` contract BEFORE `flash_loan`.\\nSeparated from the flash_loan invocation to avoid Soroban re-entry:\\n- Soroban prohibits a contract from having two frames on the call stack simultaneously.\\n- `migrate` on the receiver would be: receiver.migrate \\xe2\\x86\\x92 pool.flash_loan \\xe2\\x86\\x92 receiver.exec_op\\n(receiver appears twice \\xe2\\x86\\x92 re-entry error from the Soroban host).\\n- Fix: a separate `RefinanceMigrator` contract calls `receiver.stage_params` (frame A,\\ncompletes), then calls `pool.flash_loan` (frame B \\xe2\\x86\\x92 receiver.exec_op frame C).\\nFrames A and C are sequential, not concurrent \\xe2\\x86\\x92 no re-entry.\\n\\nRequires auth from `route.from` (position owner signing the migration).\\nAnyone may call this, but the stored params are useless without source_pool calling exec_op.",
+      "name": "stage_params",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "route",
+          "type_": {
+            "udt": {
+              "name": "MigrationRoute"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "udt": {
+              "name": "MigrationAmounts"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One hop in an Aquarius `swap_chained` call.\\n\\nEncodes the real Aquarius router's per-hop tuple `(Vec<Address>, BytesN<32>, Address)`:\\n- `tokens`:    ordered token pair `[token_a, token_b]` (must be sorted per the router).\\n- `pool`:      pool index hash (identifies the specific pool for this token pair).\\n- `token_out`: which token in `tokens` to receive from this hop.\\n\\nTwo-hop example (PYUSD\\xe2\\x86\\x92USDC\\xe2\\x86\\x92EURC):\\n```text\\nhop1 = SwapHop { tokens: [PYUSD, USDC], pool: <pyusd_usdc_hash>, token_out: USDC }\\nhop2 = SwapHop { tokens: [USDC, EURC],  pool: <usdc_eurc_hash>,  token_out: EURC }\\n```",
+      "lib": "",
+      "name": "SwapHop",
+      "fields": [
+        {
+          "doc": "Pool index hash (Aquarius identifies pools by `(tokens_salt, pool_index)` \\xe2\\x80\\x94 this is the\\npool-index portion, a `BytesN<32>` that uniquely selects a pool within a token pair).",
+          "name": "pool",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Token to receive from this hop.",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "Sorted token pair for the pool lookup.",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A Blend pool address. Distinct from `AssetAddr` to prevent pool/asset transposition.",
+      "lib": "",
+      "name": "PoolAddr",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A token/asset address. Distinct from `PoolAddr`.",
+      "lib": "",
+      "name": "AssetAddr",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "New-debt (PYUSD) amount in stroops.\\nDistinct from `CollateralAmt` and `OldDebtAmt`.",
+      "lib": "",
+      "name": "NewDebtAmt",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Old-debt (EURC) amount in stroops.\\nDistinct from `CollateralAmt` and `NewDebtAmt`.",
+      "lib": "",
+      "name": "OldDebtAmt",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The staged payload bundling both structs \\xe2\\x80\\x94 what `stage` writes and `take` removes.",
+      "lib": "",
+      "name": "StagedParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "udt": {
+              "name": "MigrationAmounts"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "route",
+          "type_": {
+            "udt": {
+              "name": "MigrationRoute"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Collateral (USDC) amount in stroops (7-decimal fixed-point).\\nDistinct from `NewDebtAmt` and `OldDebtAmt`; passing one where the other is expected\\nis a compile-time type error.",
+      "lib": "",
+      "name": "CollateralAmt",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Stable topology chosen once per migration strategy and reused across invocations.\\n\\nThese fields are determined by the migration strategy (which pools, which assets, which\\nrouter) and do not change between parameter computations for the same route.",
+      "lib": "",
+      "name": "MigrationRoute",
+      "fields": [
+        {
+          "doc": "Aquarius AMM router contract address.",
+          "name": "aquarius_router",
+          "type_": "address"
+        },
+        {
+          "doc": "Collateral asset relocated between pools (USDC); also the flash asset.",
+          "name": "collateral",
+          "type_": {
+            "udt": {
+              "name": "AssetAddr"
+            }
+          }
+        },
+        {
+          "doc": "Pool that receives collateral and issues new debt (YieldBlox V2).",
+          "name": "dest_pool",
+          "type_": {
+            "udt": {
+              "name": "PoolAddr"
+            }
+          }
+        },
+        {
+          "doc": "Position owner whose debt is being refinanced.",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "Asset borrowed on `dest_pool` (PYUSD).",
+          "name": "new_debt",
+          "type_": {
+            "udt": {
+              "name": "AssetAddr"
+            }
+          }
+        },
+        {
+          "doc": "Asset repaid on `source_pool` (EURC).",
+          "name": "old_debt",
+          "type_": {
+            "udt": {
+              "name": "AssetAddr"
+            }
+          }
+        },
+        {
+          "doc": "Pool that issues the flash loan and holds the old debt (Fixed V2).",
+          "name": "source_pool",
+          "type_": {
+            "udt": {
+              "name": "PoolAddr"
+            }
+          }
+        },
+        {
+          "doc": "Ordered list of swap hops: first hop's token_in = new_debt; last hop's token_out = old_debt.\\nTwo-hop example: [SwapHop{[PYUSD,USDC], pool_hash_1, USDC}, SwapHop{[USDC,EURC], pool_hash_2, EURC}].",
+          "name": "swap_chain",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapHop"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Ephemeral amounts freshly computed seconds before submission and fixed at signing time.\\n\\nThese expire with the ledger: staleness is bounded by re-reading live reserve state\\nimmediately before construction and pinning all amounts here so they match signed auth entries.",
+      "lib": "",
+      "name": "MigrationAmounts",
+      "fields": [
+        {
+          "doc": "N \\xe2\\x80\\x94 PYUSD to borrow on dest pool. Fixed at sign time; never re-capped in `exec_op`.",
+          "name": "borrow_amount",
+          "type_": {
+            "udt": {
+              "name": "NewDebtAmt"
+            }
+          }
+        },
+        {
+          "doc": "C \\xe2\\x80\\x94 USDC collateral to relocate (= flash amount).",
+          "name": "collateral_amt",
+          "type_": {
+            "udt": {
+              "name": "CollateralAmt"
+            }
+          }
+        },
+        {
+          "doc": "Conservative floor on `dest_pool.reserve(collateral).c_factor` in SCALAR_7.\\nGuard rejects a reserve whose CF has degraded below this threshold.",
+          "name": "min_cf",
+          "type_": "i128"
+        },
+        {
+          "doc": "R_static \\xe2\\x80\\x94 minimum EURC out from the swap; also the settlement Repay amount.",
+          "name": "min_old_debt_out",
+          "type_": {
+            "udt": {
+              "name": "OldDebtAmt"
+            }
+          }
+        },
+        {
+          "doc": "\\xce\\xb5 \\xe2\\x80\\x94 d-token share-alignment overage (capped); sizes the flash to a share boundary so\\n`from`'s flash liability clears to exactly 0. C/d_rate-dependent. Funded by the\\nreceiver, not `from`. Caveat: assumes d_rate stable between off-chain read and\\non-chain exec (holds within one tx). See \\xc2\\xa73.4 / interfaces.md \\xc2\\xa75.",
+          "name": "share_overage",
+          "type_": {
+            "udt": {
+              "name": "CollateralAmt"
+            }
+          }
+        },
+        {
+          "doc": "Unix timestamp deadline for the swap. Reserved for future use; the Aquarius router\\ndoes not take a deadline parameter \\xe2\\x80\\x94 this field is retained in MigrationAmounts for\\nABI stability and potential future use with a deadline-aware router variant.",
+          "name": "swap_deadline",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReceiverError",
+      "cases": [
+        {
+          "doc": "Guard: `exec_op` called with no staged params for `from`.",
+          "name": "NoStagedParams",
+          "value": 1
+        },
+        {
+          "doc": "Business: aggregator delivered zero or negative tokens (actual \\xe2\\x89\\xa4 0).",
+          "name": "SwapUnderMin",
+          "value": 3
+        },
+        {
+          "doc": "Business: `borrow_amount` is zero or dest pool has insufficient liquidity.",
+          "name": "BorrowUnavailable",
+          "value": 4
+        },
+        {
+          "doc": "Guard: `source_pool == dest_pool`.",
+          "name": "SamePoolNotAllowed",
+          "value": 5
+        },
+        {
+          "doc": "Guard: flashed token \\xe2\\x89\\xa0 `route.collateral`.",
+          "name": "AssetMismatch",
+          "value": 6
+        },
+        {
+          "doc": "Guard: flashed amount \\xe2\\x89\\xa0 `amounts.collateral_amt` (pool/caller tampering).",
+          "name": "AmountMismatch",
+          "value": 7
+        },
+        {
+          "doc": "Business: on-chain collateral sufficiency check: C\\xc2\\xb7cf\\xc2\\xb7lf < N\\xc2\\xb7HF\\xc2\\xb7SCALAR_7.",
+          "name": "InsufficientCollateral",
+          "value": 8
+        },
+        {
+          "doc": "Guard: staged params are internally inconsistent \\xe2\\x80\\x94 `eps < 0` or\\n`c_supply \\xe2\\x89\\xa4 0` (i.e. `share_overage \\xe2\\x89\\xa5 collateral_amt`).",
+          "name": "MalformedParams",
+          "value": 9
+        }
+      ]
+    }
+  }
+]
