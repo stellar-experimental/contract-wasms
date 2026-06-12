@@ -1,0 +1,274 @@
+[
+  {
+    "function_v0": {
+      "doc": "Execute a swap atomically (single-path or split-order).\\n\\n`sub_routes` is always a list of legs; a simple swap is one entry with\\nthe full `amount_in` and its hop `steps`. Split execution uses\\nmultiple entries.\\n\\nFlow:\\n1. Pull total input from user (sum of sub-route amounts)\\n2. For each sub-route: execute its path with its allocated amount\\n3. Sum outputs (all must produce the same `token_out`)\\n4. Verify total output >= `min_amount_out`\\n5. Transfer total output to user",
+      "name": "swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sub_routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SubRoute"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin address.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM code. Only admin can call.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Supported DEX protocol types",
+      "lib": "",
+      "name": "DexType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Aquarius"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SoroswapPair"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Phoenix"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sushi"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CometDex"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the contract with an admin address.\\nMust be called once after deployment.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A sub-route in a split order.\\nEach sub-route has its own amount and path (sequence of swap steps).",
+      "lib": "",
+      "name": "SubRoute",
+      "fields": [
+        {
+          "doc": "Amount of input token allocated to this sub-route",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "Swap steps for this sub-route (multi-hop path)",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapStep"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single swap step in the aggregation path",
+      "lib": "",
+      "name": "SwapStep",
+      "fields": [
+        {
+          "doc": "DEX pool contract address",
+          "name": "dex_id",
+          "type_": "address"
+        },
+        {
+          "doc": "Which DEX protocol",
+          "name": "dex_type",
+          "type_": {
+            "udt": {
+              "name": "DexType"
+            }
+          }
+        },
+        {
+          "doc": "Input token index in the pool's token list (0-based)",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Output token index in the pool's token list (0-based)",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Input token for this step",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "Output token for this step",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Round-trip swap: base \\xe2\\x86\\x92 bridge (split OK) \\xe2\\x86\\x92 base (split OK) in one\\natomic invocation.\\n\\nFunds are pulled from `user` and the final `base_token` balance is\\nreturned to `user`. The contract does not retain funds after\\nexecution.\\n\\n- `leg_out`: sub-routes from `base_token` to `bridge_token`; `amount_in`\\nmust sum to `amount_in`\\n- `leg_back`: sub-routes from `bridge_token` to `base_token`;\\n`amount_in` must sum to leg_out output\\n- `min_amount_out`: minimum total `base_token` returned (principal +\\nprofit floor)",
+      "name": "round_trip_swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bridge_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "leg_out",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SubRoute"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "leg_back",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SubRoute"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
