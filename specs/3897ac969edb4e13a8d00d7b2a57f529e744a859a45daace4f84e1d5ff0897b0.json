@@ -1,0 +1,255 @@
+[
+  {
+    "function_v0": {
+      "doc": "One Aquarius swap through the router's `swap_chained`.\\n\\n`pool_tokens`  \\xe2\\x80\\x94 the pool's ordered token vector (canonical, by\\ncontract-id). For USDC/AQUA: [AQUA_SAC, USDC_SAC].\\n`pool_index`   \\xe2\\x80\\x94 the pool hash (BytesN<32>) from get_pools.\\n`pool`         \\xe2\\x80\\x94 the pool contract address (the router pulls\\ntoken_in into it; used for the auth subtree).\\n`token_in/out` \\xe2\\x80\\x94 SAC contract ids.\\n\\nswap_chained(user, swaps_chain, token_in, in_amount, out_min):\\nswaps_chain = [ (pool_tokens, pool_index, token_out) ]   (single hop)\\n\\nReturns the amount of token_out delivered (u128 -> i128).",
+      "name": "swap_aqua",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_index",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One Phoenix swap. Phoenix trades through the POOL contract directly\\n(no router), unlike Soroswap/Aquarius.\\n\\npool.swap(sender, offer_asset, offer_amount,\\nmax_belief_price: Option<i64>, max_spread_bps: Option<i64>)\\n-> i128 (amount of the other asset received)\\n\\n`sender` is the CONTRACT (it holds the funds and receives output).\\nWe pass None/None for price & spread limits; the final slippage\\nguard enforces amount_out_min end-to-end.",
+      "name": "swap_phoenix",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One Soroswap swap along `path`. (S1 \\xe2\\x80\\x94 proven on mainnet.)",
+      "name": "swap_soroswap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "CROSS-PROTOCOL chain in ONE call (S3): leg 1 Aquarius, leg 2\\nSoroswap.  token_in --[aqua]--> mid_token --[soroswap]--> token_out.\\n\\nThe contract holds the intermediate (mid_token) and feeds its\\nACTUAL balance into leg 2 \\xe2\\x80\\x94 the exact mechanic the parts splitter\\n(S4) generalizes. Soroswap's own aggregator cannot do this: one\\nDexDistribution path is single-protocol.\\n\\nAuth targets are the ones proven on mainnet:\\n- Aquarius pulls token_in to the ROUTER  (swap_aqua / S2)\\n- Soroswap pulls mid_token to the POOL    (swap_soroswap / S1)",
+      "name": "swap_aqua_then_soroswap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_pool_tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "aqua_pool_index",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "mid_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
