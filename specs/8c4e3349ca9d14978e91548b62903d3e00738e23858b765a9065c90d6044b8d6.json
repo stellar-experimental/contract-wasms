@@ -1,0 +1,770 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "A venue-tagged swap step. The contract expands each variant into the venue's\\nexact call args + authorization tree on-chain, so the (user-signed) payload\\ncarries only this compact descriptor \\xe2\\x80\\x94 not raw call args or auth entries.",
+      "lib": "",
+      "name": "Step",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aquarius",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AquariusStep"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Comet",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CometStep"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Sushi",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SushiStep"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One leg of a split swap: `amount_in` of the input asset routed through `path`.",
+      "lib": "",
+      "name": "Route",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CometStep",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SushiStep",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hints",
+          "type_": {
+            "udt": {
+              "name": "OracleHints"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "zero_for_one",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Drain stranded balances (incl. accumulated, not-yet-converted fees).\\n`amount = 0` sweeps the full balance.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_to",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Sushi v3 per-ledger oracle hints. Computed off-chain at quote time and passed\\nthrough verbatim (no on-chain scan \\xe2\\x80\\x94 that read dozens of tick ledger entries\\nand bloated the footprint past hardware-wallet limits).",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "checkpoint_min",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_ppm",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AquariusStep",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapExecuted",
+      "prefix_topics": [
+        "swap",
+        "executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Allow/deny a swap target and a set of function names in one call\\n(the discovery job uses this to register newly-qualified pools).",
+      "name": "allow_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fns",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Aggregated, atomic swap with a platform-fee skim.\\n\\n- `user`: the trader and transaction source (single signature).\\n- `asset_in` / `total_amount_in`: pulled from `user` into the contract.\\n- `asset_out` / `min_total_out`: revert unless the contract nets at least\\n`min_total_out` of `asset_out` across all routes.\\n- `routes`: the split \\xe2\\x80\\x94 each `Route.amount_in` of `asset_in` through its\\nown `path`. `sum(amount_in)` must equal `total_amount_in - fee`. A\\n`path` of more than one `Step` is a chained multi-hop (A\\xe2\\x86\\x92C\\xe2\\x86\\x92B): each hop\\nafter the first swaps exactly what the previous hop deposited into the\\nrouter (its `Step.amount_in` is advisory only), so the intermediate\\namount never has to be predicted at signing time.\\n\\nThe `fee_ppm` skim is retained in the contract **in the input asset** and\\nswept/converted to the fee asset later by the owner (deferred \\xe2\\x80\\x94 avoids a\\nsecond in-band swap in every user transaction). `fee_ppm`/`fee_to` are\\nread from storage, never the caller.",
+      "name": "swap_split",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_total_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Route"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_fn_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_target_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "EmptyRoute",
+          "value": 3
+        },
+        {
+          "doc": "Final received `asset_out` was below the user's `min_total_out` floor.",
+          "name": "OutputTooLow",
+          "value": 4
+        },
+        {
+          "doc": "A route step targeted a contract not on the admin allowlist.",
+          "name": "TargetNotAllowed",
+          "value": 5
+        },
+        {
+          "doc": "A route step called a function not on the admin allowlist for that target.",
+          "name": "FnNotAllowed",
+          "value": 6
+        },
+        {
+          "doc": "`sum(routes[i].amount_in)` did not equal `total_amount_in - fee`.",
+          "name": "SplitMismatch",
+          "value": 7
+        },
+        {
+          "doc": "The fee conversion produced less XLM than `fee_min_out`.",
+          "name": "FeeOutputTooLow",
+          "value": 8
+        },
+        {
+          "doc": "Contract config (fee_to / fee_asset) was not initialized.",
+          "name": "NotConfigured",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Platform fee in parts-per-million (0.05% == 500).",
+            "name": "FeePpm"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address that receives the (XLM) platform fee.",
+            "name": "FeeTo"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SAC address of the asset the fee is collected in (XLM SAC).",
+            "name": "FeeAsset"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlist: is this contract a permitted swap target?",
+            "name": "AllowedTarget",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlist: is `(target, fn_name)` a permitted call?",
+            "name": "AllowedFn",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Version"
+          }
+        }
+      ]
+    }
+  }
+]
