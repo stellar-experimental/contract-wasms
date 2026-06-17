@@ -1,0 +1,177 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Discriminated hop: one entry in the arb route.",
+      "lib": "",
+      "name": "Hop",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Soroswap",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SoroswapHop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aquarius",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AquariusHop"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ArbError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "UnderMinOut",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "EmptyHops",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "EmptyPath",
+          "value": 3
+        },
+        {
+          "doc": "The route does not return to `token_in` (not a closed cycle).",
+          "name": "NotCyclic",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One Aquarius pool swap hop.",
+      "lib": "",
+      "name": "AquariusHop",
+      "fields": [
+        {
+          "doc": "Minimum acceptable output from this hop.",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Pool token index for token_in (Aquarius uses positional indices).",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Pool token index for token_out.",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Aquarius pool contract address.",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Token being sent to the pool.",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "Token expected back from the pool.",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One Soroswap router hop.\\n\\nThe router's `swap_exact_tokens_for_tokens` handles the full path internally,\\nso a single `SoroswapHop` can span multiple pools.",
+      "lib": "",
+      "name": "SoroswapHop",
+      "fields": [
+        {
+          "doc": "Minimum acceptable output from this hop.",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "Full swap path: [token_in, ...intermediates, token_out].",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Soroswap router contract address.",
+          "name": "router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a multi-hop atomic arb.\\n\\nFlow:\\n1. `caller` authorises this invocation (must include token transfer auth).\\n2. Contract pulls `amount_in` of `token_in` from `caller`.\\n3. Each hop executes a cross-contract DEX swap.\\n4. Final balance is verified against `min_final_out`; panics if below.\\n5. Final tokens are returned to `caller`.\\n\\nFor cyclic arbs, `token_in` equals the last hop's output token.\\nReturns the final output amount.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_final_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Hop"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
