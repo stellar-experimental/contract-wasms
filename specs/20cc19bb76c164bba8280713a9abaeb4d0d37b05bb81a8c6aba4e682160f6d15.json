@@ -1,0 +1,131 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "`transfer_amount` or `withdraw_amount` was not strictly positive. This proxy exists for\\nthe split case (both wallet and collateral contribute); a zero leg means the caller\\nshould use a plain transfer or a single `withdraw_assets` call instead.",
+          "name": "NonPositiveAmount",
+          "value": 1
+        },
+        {
+          "doc": "The token does not report [`EXPECTED_DECIMALS`] decimals.",
+          "name": "UnsupportedToken",
+          "value": 2
+        },
+        {
+          "doc": "The wallet's balance did not increase by exactly `withdraw_amount` after the withdrawal \\xe2\\x80\\x94\\nthe Coordinator did not deliver what was requested. The whole transaction reverts.",
+          "name": "WithdrawAmountMismatch",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Rain's withdrawal authorization, as returned by the Rain withdrawal-signature API and\\nverified inside the Coordinator. These fields are opaque to this proxy \\xe2\\x80\\x94 it only forwards\\nthem to [`Coordinator::withdraw_assets`].\\n\\nNOTE: the byte widths below mirror an ed25519 scheme (32-byte key, 32-byte salt, 64-byte\\nsignature). The published SignifyHQ example passes these as dynamic `Bytes`; confirm the\\nexact widths and dynamic-vs-fixed encoding against the deployed Rain Coordinator before\\nmainnet use, and adjust both this struct and the [`Coordinator`] client to match.",
+      "lib": "",
+      "name": "WithdrawAuth",
+      "fields": [
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically pull `withdraw_amount` of `token` out of the Rain `collateral` (via\\n`coordinator`) back into the wallet, verify it arrived exactly, then send\\n`transfer_amount` from the wallet to `recipient`.\\n\\n`caller` is the collateral owner (the user's wallet) and the withdrawal recipient.\\n`token` is both the withdrawn asset and the transferred token; it must report\\n[`EXPECTED_DECIMALS`] decimals. All amounts are token SMALLEST UNITS.\\n\\nReverts (nothing moves) if a guard fails, if the wallet's balance does not increase by\\nexactly `withdraw_amount`, if the Coordinator rejects, or if the wallet cannot cover\\n`transfer_amount`.",
+      "name": "withdraw_and_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "coordinator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "withdraw_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "transfer_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "auth",
+          "type_": {
+            "udt": {
+              "name": "WithdrawAuth"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
