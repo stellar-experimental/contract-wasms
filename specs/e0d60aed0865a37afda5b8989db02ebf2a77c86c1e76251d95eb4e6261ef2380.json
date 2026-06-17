@@ -1,0 +1,356 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AttestationCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Attestations",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "LatestScore",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "EventLog",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the latest cached health score for a vehicle.",
+      "name": "get_latest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "LatestHealthScore"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Write a daily health score snapshot for a single vehicle.\\nAdmin-only. Called in batch from the Ambient Evaluator cron.",
+      "name": "write_daily",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "master_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "legal_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mechanical_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "driving_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maintenance_score",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Write an event-driven attestation (fires immediately on significant changes).\\nAdmin-only.",
+      "name": "write_event",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "event_type",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "payload_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "score_at_event",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the event-driven attestation log (up to 100 entries).",
+      "name": "get_event_log",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "EventAttestation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Daily snapshot attestation \\xe2\\x80\\x94 written by the 3AM cron",
+      "lib": "",
+      "name": "Attestation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "driving_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "legal_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maintenance_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "master_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mechanical_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Batch write daily snapshots for multiple vehicles in one transaction.\\nEach entry is (nft_token_id, master, legal, mechanical, driving, maintenance).",
+      "name": "batch_write_daily",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "entries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "u64",
+                    "u32",
+                    "u32",
+                    "u32",
+                    "u32",
+                    "u32"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the full daily attestation history (up to 365 entries).",
+      "name": "get_daily_history",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Attestation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the total number of attestations written across all vehicles.",
+      "name": "total_attestations",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Event-driven attestation \\xe2\\x80\\x94 written immediately on significant changes",
+      "lib": "",
+      "name": "EventAttestation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "event_type",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "payload_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "score_at_event",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Cached latest score for fast reads (no need to iterate history)",
+      "lib": "",
+      "name": "LatestHealthScore",
+      "fields": [
+        {
+          "doc": "",
+          "name": "driving_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "last_daily_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "last_event_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "legal_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maintenance_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "master_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mechanical_score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "total_attestations",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,365 @@
+[
+  {
+    "function_v0": {
+      "doc": "Cancel a pre-funded escrow. Admin-only.",
+      "name": "cancel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refund \\xe2\\x80\\x94 returns full USDC to buyer. Admin-only (dispute resolution).",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buyer deposits USDC into escrow.\\nThe buyer must authorize this transaction (their wallet signs).",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Raise a dispute \\xe2\\x80\\x94 freezes funds until admin resolves.\\nCan be called by either buyer or seller.",
+      "name": "dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Release escrow \\xe2\\x80\\x94 sends USDC to seller (minus custody fee).\\nAdmin-only. Should be called atomically with NFT transfer.",
+      "name": "release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin validates documents (after AI/OCR approval in backend).",
+      "name": "validate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EscrowCounter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Escrow",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ActiveEscrows",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UsdcToken"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "EscrowData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize with admin and USDC token contract address.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EscrowData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_usdc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "custody_percent",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "dispute_reason",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "escrow_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "funded_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "released_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "EscrowStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new escrow. Admin-only (triggered by backend on sale preparation).\\nReturns the new escrow_id.",
+      "name": "create_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nft_token_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount_usdc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "custody_percent",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_escrows",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EscrowStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Created"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Funded"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Validated"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Released"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Disputed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Refunded"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Cancelled"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_active_escrows",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  }
+]
