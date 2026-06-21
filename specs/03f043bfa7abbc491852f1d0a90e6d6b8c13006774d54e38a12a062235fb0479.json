@@ -1,0 +1,90 @@
+[
+  {
+    "function_v0": {
+      "doc": "Read the configured admin (the account that funded the contract).",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit a guess. The caller must first authorize a 0.1 XLM transfer\\nto the contract as the cost of playing.\\n\\nReturns:\\n- `Ok(\"correct\")` if the guess matches \\xe2\\x80\\x94 the contract pays the\\n0.5 XLM reward to the guesser and rolls a new random number.\\n- `Ok(\"incorrect\")` if the guess does not match \\xe2\\x80\\x94 the bet stays\\nin the contract and the number is NOT rolled.\\n\\nErrors (all state changes are rolled back atomically by Soroban):\\n- `Err(InvalidGuess)` if the guess is outside `1..=5`.\\n- `Err(FailedToTransferBet)` if the 0.1 XLM bet could not be pulled\\nfrom the guesser.\\n- `Err(InsufficientRewardFunds)` if the contract cannot pay the\\nfull 0.5 XLM reward on a correct guess.\\n- `Err(FailedToTransferReward)` if the reward transfer itself\\nfails.",
+      "name": "guess",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_number",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "guesser",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "symbol",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor.\\n\\n`admin` funds the contract with `INITIAL_FUNDING_XLM` XLM out of its\\nown balance (the deployer should fund the admin first).\\n`xlm` is the address of the XLM Stellar Asset Contract on the target\\nnetwork \\xe2\\x80\\x94 the deployer supplies it explicitly so the contract stays\\nnetwork-agnostic.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "The contract failed to transfer the 0.5 XLM reward to the guesser.",
+          "name": "FailedToTransferReward",
+          "value": 1
+        },
+        {
+          "doc": "The contract does not currently hold enough XLM to pay the 0.5 XLM reward.",
+          "name": "InsufficientRewardFunds",
+          "value": 2
+        },
+        {
+          "doc": "The guess must be a whole number between 1 and 5 (inclusive).",
+          "name": "InvalidGuess",
+          "value": 3
+        },
+        {
+          "doc": "The contract failed to pull the 0.1 XLM bet from the guesser.",
+          "name": "FailedToTransferBet",
+          "value": 4
+        }
+      ]
+    }
+  }
+]
