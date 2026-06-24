@@ -1,0 +1,321 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AgeVerifierError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "MalformedPublicInputs",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NullifierUsed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AgeConstraintFailed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidIssuerSig",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Vk"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "IssuerPubKey"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Nullifier",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Credential",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 verification key \\xe2\\x80\\x94 stored once during initialize().",
+      "lib": "",
+      "name": "StoredVk",
+      "fields": [
+        {
+          "doc": "",
+          "name": "alpha",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "beta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "delta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gamma",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "IC[0..n_public+1] \\xe2\\x80\\x94 one entry per public signal + constant term.\\nFor this circuit: IC has 4 entries (3 public signals + 1 constant).",
+          "name": "ic",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 proof submitted by the user.",
+      "lib": "",
+      "name": "Groth16Proof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Store the verification key and Issuer public key. Called once after deploy.\\n\\n`issuer_pub_key` \\xe2\\x80\\x94 Ed25519 public key (32 bytes) of the trusted KYC issuer.\\nThe Issuer signs Poseidon commitments during KYC (Option A architecture).\\nHardcode the real key before mainnet deployment.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vk",
+          "type_": {
+            "udt": {
+              "name": "StoredVk"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "issuer_pub_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "AgeVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a Groth16 proof and mint a soulbound credential to the caller.\\n\\n`pub_inputs` \\xe2\\x80\\x94 must have exactly 3 elements in this order:\\n[0] isOldEnough   (Fr with value 1)\\n[1] commitment    (Fr = Poseidon(birthDate, addressHash))\\n[2] addressHash   (Fr derived from caller's Stellar address)\\n\\n`nullifier`   \\xe2\\x80\\x94 unique 32-byte value preventing proof replay.\\nRecommended: random bytes generated client-side per submission.\\n\\n`issuer_sig`  \\xe2\\x80\\x94 Ed25519 signature (64 bytes) from the trusted Issuer over\\nthe raw bytes of commitment (pub_inputs[1]).\\nThe Issuer produces this during KYC after verifying the user's document.",
+      "name": "verify",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Groth16Proof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pub_inputs",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "issuer_sig",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "AgeVerifierError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check whether an address hash already has a verified credential.",
+      "name": "has_credential",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check whether a nullifier has been consumed.",
+      "name": "is_nullifier_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  }
+]
