@@ -1,0 +1,529 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "KeyNotFound",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "KeyAlreadyExists",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of a find operation in the sparse Merkle tree",
+      "lib": "",
+      "name": "FindResult",
+      "fields": [
+        {
+          "doc": "Whether the key was found in the tree",
+          "name": "found",
+          "type_": "bool"
+        },
+        {
+          "doc": "Value associated with the key (if found), zero otherwise",
+          "name": "found_value",
+          "type_": "u256"
+        },
+        {
+          "doc": "True if the path ended at an empty branch, false if collision with\\nexisting leaf",
+          "name": "is_old0",
+          "type_": "bool"
+        },
+        {
+          "doc": "Key at the collision point",
+          "name": "not_found_key",
+          "type_": "u256"
+        },
+        {
+          "doc": "Value at the collision point",
+          "name": "not_found_value",
+          "type_": "u256"
+        },
+        {
+          "doc": "Sibling hashes along the path from root to leaf",
+          "name": "siblings",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LeafDeletedEvent",
+      "prefix_topics": [
+        "LeafDeleted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Find a key in the tree\\n\\nPublic entry point for searching the tree. Returns comprehensive\\ninformation about the key including whether it exists, its value,\\nand the Merkle path siblings required for proof generation.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `key` - Key to search for in the tree\\n\\n# Returns\\n\\nReturns `Ok(FindResult)` containing whether the key was found, siblings\\nalong the path, and collision information for non-membership proofs,\\nor an error if database operations fail.\\n\\n# Errors\\n\\n* `Error::KeyNotFound` - Database operations failed or invalid node\\nstructure",
+      "name": "find_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "FindResult"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current root of the tree\\n\\nReturns the root hash of the Sparse Merkle tree. Returns zero if the\\ntree is empty or hasn't been initialized yet.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n\\n# Returns\\n\\nReturns the current root hash as a U256 value, or zero if empty",
+      "name": "get_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LeafInsertedEvent",
+      "prefix_topics": [
+        "LeafInserted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Delete a key from the tree\\n\\nRemoves a leaf from the Sparse Merkle tree, handling both sparse\\nbranches (single child) and mixed branches (two populated children).\\nWhen a leaf is deleted, its sibling may be promoted to replace the\\nparent node, collapsing the tree structure. Requires admin\\nauthorization.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `key` - Key to delete from the tree\\n\\n# Returns\\n\\nReturns `Ok(())` on success, emitting a `LeafDeletedEvent` with the new\\nroot.\\n\\n# Errors\\n\\n* `Error::KeyNotFound` - Key does not exist in the tree or database\\noperations failed",
+      "name": "delete_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Insert a new key-value pair into the tree\\n\\nAdds a new leaf to the Sparse Merkle tree, building any missing\\nintermediate nodes. Handles collision cases where a new key shares a\\npath prefix with an existing leaf by extending the tree depth.\\nRequires admin authorization.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `key` - Key to insert\\n* `value` - Value to associate with the key\\n\\n# Returns\\n\\nReturns `Ok(())` on success, emitting a `LeafInsertedEvent` with the new\\nroot.\\n\\n# Errors\\n\\n* `Error::KeyAlreadyExists` - Key already exists in the tree\\n* `Error::KeyNotFound` - Database operations failed",
+      "name": "insert_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the admin address\\n\\nTransfers administrative control to a new address. Requires\\nauthorization from the current admin.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `new_admin` - New address that will have permission to modify the tree",
+      "name": "update_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: initialize the contract with an admin address and an empty\\ntree\\n\\nSets up the contract with the specified admin and initializes an empty\\nSparse Merkle Tree with root = 0. This function can only be called once.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `admin` - Address that will have permission to modify the tree\\n\\n# Returns\\n\\nReturns `Ok(())` on success",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify non-membership proof for a key\\n\\nVerifies that a key is NOT in the tree by checking the provided Merkle\\nproof. The proof includes siblings along the path and collision\\ninformation (not_found_key/value at the leaf). Reconstructs the root\\nfrom the proof and compares it with the stored root.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `key` - Key to verify is not in the tree\\n* `siblings` - Sibling hashes along the path from root to leaf\\n* `not_found_key` - Key at the collision point (or queried key if empty\\npath)\\n* `not_found_value` - Value at the collision point (or zero if empty\\npath)\\n\\n# Returns\\n\\nReturns `Ok(true)` if non-membership is verified, `Ok(false)` if the key\\nactually exists in the tree.",
+      "name": "verify_non_membership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "siblings",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "not_found_key",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "not_found_value",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur during Groth16 proof verification.",
+      "lib": "",
+      "name": "Groth16Error",
+      "cases": [
+        {
+          "doc": "The pairing product did not equal identity.",
+          "name": "InvalidProof",
+          "value": 0
+        },
+        {
+          "doc": "The public inputs length does not match the verification key.",
+          "name": "MalformedPublicInputs",
+          "value": 1
+        },
+        {
+          "doc": "The proof bytes are malformed.",
+          "name": "MalformedProof",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 proof composed of points A, B, and C.\\nG2 point B uses Soroban's c1||c0 (imaginary||real) ordering.",
+      "lib": "",
+      "name": "Groth16Proof",
+      "fields": [
+        {
+          "doc": "Point A",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Point B",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Point C",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 verification key for BN254 curve (byte-oriented).\\nAll G2 points use Soroban's c1||c0 (imaginary||real) ordering.",
+      "lib": "",
+      "name": "VerificationKeyBytes",
+      "fields": [
+        {
+          "doc": "Alpha G1 point",
+          "name": "alpha",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Beta G2 point",
+          "name": "beta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Delta G2 point",
+          "name": "delta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Gamma G2 point",
+          "name": "gamma",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "IC (public input commitments)",
+          "name": "ic",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

@@ -1,0 +1,794 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for Merkle tree persistent data",
+      "lib": "",
+      "name": "MerkleDataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Number of levels in the Merkle tree",
+            "name": "Levels"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Current position in the root history ring buffer",
+            "name": "CurrentRootIndex"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next available index for leaf insertion",
+            "name": "NextIndex"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Subtree hashes at each level (indexed by level)",
+            "name": "FilledSubtree",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Zero hash values for each level (indexed by level)",
+            "name": "Zeroes",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Historical roots ring buffer",
+            "name": "Root",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract error types for the privacy pool",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Caller is not authorized to perform this operation",
+          "name": "NotAuthorized",
+          "value": 1
+        },
+        {
+          "doc": "Merkle tree has reached maximum capacity",
+          "name": "MerkleTreeFull",
+          "value": 2
+        },
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 3
+        },
+        {
+          "doc": "Invalid Merkle tree levels configuration",
+          "name": "WrongLevels",
+          "value": 4
+        },
+        {
+          "doc": "Internal error: next leaf index is not even",
+          "name": "NextIndexNotEven",
+          "value": 5
+        },
+        {
+          "doc": "External amount is invalid (negative or exceeds 2^248)",
+          "name": "WrongExtAmount",
+          "value": 6
+        },
+        {
+          "doc": "Zero-knowledge proof verification failed or proof is empty",
+          "name": "InvalidProof",
+          "value": 7
+        },
+        {
+          "doc": "Provided Merkle root is not in the recent history",
+          "name": "UnknownRoot",
+          "value": 8
+        },
+        {
+          "doc": "Nullifier has already been spent (double-spend attempt)",
+          "name": "AlreadySpentNullifier",
+          "value": 9
+        },
+        {
+          "doc": "External data hash does not match the provided data",
+          "name": "WrongExtHash",
+          "value": 10
+        },
+        {
+          "doc": "Contract is not initialized",
+          "name": "NotInitialized",
+          "value": 11
+        },
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "Overflow",
+          "value": 12
+        },
+        {
+          "doc": "Public input is not canonical in the BN254 scalar field",
+          "name": "NonCanonicalPublicInput",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Zero-knowledge proof data for a transaction\\n\\nContains all the cryptographic data needed to verify a transaction,\\nincluding the proof itself, public inputs, and nullifiers.",
+      "lib": "",
+      "name": "Proof",
+      "fields": [
+        {
+          "doc": "Merkle root the policy membership proof was generated against",
+          "name": "asp_membership_root",
+          "type_": "u256"
+        },
+        {
+          "doc": "Merkle root the policy NON-membership proof was generated against",
+          "name": "asp_non_membership_root",
+          "type_": "u256"
+        },
+        {
+          "doc": "Hash of the external data (binds proof to transaction parameters)",
+          "name": "ext_data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Nullifiers for spent input UTXOs (prevents double-spending)",
+          "name": "input_nullifiers",
+          "type_": {
+            "vec": {
+              "element_type": "u256"
+            }
+          }
+        },
+        {
+          "doc": "Commitment for the first output UTXO",
+          "name": "output_commitment0",
+          "type_": "u256"
+        },
+        {
+          "doc": "Commitment for the second output UTXO",
+          "name": "output_commitment1",
+          "type_": "u256"
+        },
+        {
+          "doc": "The serialized zero-knowledge proof",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Groth16Proof"
+            }
+          }
+        },
+        {
+          "doc": "Net public amount (deposit - withdrawal, modulo field size)",
+          "name": "public_amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "Merkle root the proof was generated against",
+          "name": "root",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "User account registration data\\n\\nUsed for registering a user's public key to enable encrypted communication\\nfor receiving transfers.\\nNot required to interact with the pool. But facilitates in-pool transfers\\nvia events. As parties can learn about each other public key.",
+      "lib": "",
+      "name": "Account",
+      "fields": [
+        {
+          "doc": "X25519 encryption public key for encrypting note data (32 bytes)",
+          "name": "encryption_key",
+          "type_": "bytes"
+        },
+        {
+          "doc": "BN254 note public key for creating commitments (32 bytes)",
+          "name": "note_key",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Owner address of the account",
+          "name": "owner",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "External data for a transaction\\n\\nContains public information about the transaction that is hashed and\\nincluded in the zero-knowledge proof to bind the proof to specific\\ntransaction parameters (e.g. recipient address).",
+      "lib": "",
+      "name": "ExtData",
+      "fields": [
+        {
+          "doc": "Encrypted data for the first output UTXO",
+          "name": "encrypted_output0",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Encrypted data for the second output UTXO",
+          "name": "encrypted_output1",
+          "type_": "bytes"
+        },
+        {
+          "doc": "External amount: positive for deposits, negative for withdrawals",
+          "name": "ext_amount",
+          "type_": "i256"
+        },
+        {
+          "doc": "Recipient address for withdrawals",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the latest root of the Merkle tree that defines the pool",
+      "name": "get_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a user's public encryption key\\n\\nAllows users to publish their public key so others can send them\\nencrypted outputs for private transfers.\\nThe account owner must authorize this call\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `account` - Account data containing owner address and public key",
+      "name": "register",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a shielded transaction with deposit handling\\n\\nThis is the main entry point for users to interact with the pool.\\nIf `ext_amount > 0`, tokens are transferred from the sender to the pool\\nbefore processing the transaction.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `proof` - Zero-knowledge proof and public inputs\\n* `ext_data` - External transaction data\\n* `sender` - Address of the transaction sender (must authorize funding\\ntransaction)\\n\\n# Returns\\n\\nReturns `Ok(())` on success, or an error if validation fails",
+      "name": "transact",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Proof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ext_data",
+          "type_": {
+            "udt": {
+              "name": "ExtData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a user registers their public keys\\n\\nThis event allows other users to discover keys for sending private\\ntransfers. Two key types are required:\\n- encryption_key: X25519 key for encrypting note data (amount, blinding)\\n- note_key: BN254 key for creating commitments in the ZK circuit",
+      "lib": "",
+      "name": "PublicKeyEvent",
+      "prefix_topics": [
+        "public_key_event"
+      ],
+      "params": [
+        {
+          "doc": "Address of the account owner",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "X25519 encryption public key",
+          "name": "encryption_key",
+          "type_": "bytes",
+          "location": "data"
+        },
+        {
+          "doc": "BN254 note public key",
+          "name": "note_key",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the contract administrator\\n\\nTransfers administrative control to a new address. Requires\\nauthorization from the current admin.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `new_admin` - New address that will have administrative permissions",
+      "name": "update_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a nullifier is spent\\n\\nThis event allows off-chain observers to track which UTXOs have been spent.",
+      "lib": "",
+      "name": "NewNullifierEvent",
+      "prefix_topics": [
+        "new_nullifier_event"
+      ],
+      "params": [
+        {
+          "doc": "The nullifier that was spent",
+          "name": "nullifier",
+          "type_": "u256",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: initialize the privacy pool contract\\n\\nSets up the contract with the specified token, verifier, and Merkle tree\\nconfiguration. This function can only be called once.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `admin` - Address of the contract administrator\\n* `token` - Address of the token contract for deposits/withdrawals\\n* `verifier` - Address of the ZK proof verifier contract\\n* `asp_membership` - Address of the ASP Membership contract\\n* `asp_non_membership` - Address of the ASP Non-Membership contract\\n* `maximum_deposit_amount` - Maximum allowed deposit per transaction\\n* `levels` - Number of levels in the commitment Merkle tree (1-32)\\n\\n# Returns\\n\\nReturns `Ok(())` on success, or an error if already initialized or\\ninvalid configuration",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "verifier",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asp_membership",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asp_non_membership",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maximum_deposit_amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "levels",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check whether a pool Merkle root is still in the recent root history.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `root` - Pool Merkle root to check",
+      "name": "is_known_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a new commitment is added to the Merkle tree\\n\\nThis event allows off-chain observers to track new UTXOs and decrypt\\noutputs intended for them.",
+      "lib": "",
+      "name": "NewCommitmentEvent",
+      "prefix_topics": [
+        "new_commitment_event"
+      ],
+      "params": [
+        {
+          "doc": "The commitment hash added to the tree",
+          "name": "commitment",
+          "type_": "u256",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Index position in the Merkle tree",
+          "name": "index",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Encrypted output data (decryptable by the recipient)",
+          "name": "encrypted_output",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the ASP Membership contract address\\n\\nChanges the ASP Membership contract address. Requires admin\\nauthorization.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `new_asp_membership` - New ASP Membership contract address",
+      "name": "update_asp_membership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_asp_membership",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current Merkle root from the ASP Membership contract\\n\\nMakes a cross-contract call to retrieve the current root of the\\nmembership Merkle tree.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n\\n# Returns\\n\\nThe current membership Merkle root as U256",
+      "name": "get_asp_membership_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the ASP Non-Membership contract address\\n\\nChanges the ASP Non-Membership contract address. Requires admin\\nauthorization.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n* `new_asp_non_membership` - New ASP Non-Membership contract address",
+      "name": "update_asp_non_membership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_asp_non_membership",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current Merkle root from the ASP Non-Membership contract\\n\\nMakes a cross-contract call to retrieve the current root of the\\nnon-membership Sparse Merkle tree.\\n\\n# Arguments\\n\\n* `env` - The Soroban environment\\n\\n# Returns\\n\\nThe current non-membership Merkle root as U256",
+      "name": "get_asp_non_membership_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur during Groth16 proof verification.",
+      "lib": "",
+      "name": "Groth16Error",
+      "cases": [
+        {
+          "doc": "The pairing product did not equal identity.",
+          "name": "InvalidProof",
+          "value": 0
+        },
+        {
+          "doc": "The public inputs length does not match the verification key.",
+          "name": "MalformedPublicInputs",
+          "value": 1
+        },
+        {
+          "doc": "The proof bytes are malformed.",
+          "name": "MalformedProof",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 proof composed of points A, B, and C.\\nG2 point B uses Soroban's c1||c0 (imaginary||real) ordering.",
+      "lib": "",
+      "name": "Groth16Proof",
+      "fields": [
+        {
+          "doc": "Point A",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Point B",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Point C",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 verification key for BN254 curve (byte-oriented).\\nAll G2 points use Soroban's c1||c0 (imaginary||real) ordering.",
+      "lib": "",
+      "name": "VerificationKeyBytes",
+      "fields": [
+        {
+          "doc": "Alpha G1 point",
+          "name": "alpha",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Beta G2 point",
+          "name": "beta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Delta G2 point",
+          "name": "delta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Gamma G2 point",
+          "name": "gamma",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "IC (public input commitments)",
+          "name": "ic",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

@@ -1,0 +1,419 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract error types",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Caller is not authorized to perform this operation",
+          "name": "NotAuthorized",
+          "value": 1
+        },
+        {
+          "doc": "Merkle tree has reached maximum capacity",
+          "name": "MerkleTreeFull",
+          "value": 2
+        },
+        {
+          "doc": "Wrong Number of levels specified",
+          "name": "WrongLevels",
+          "value": 3
+        },
+        {
+          "doc": "The contract has not been yet initialized",
+          "name": "NotInitialized",
+          "value": 4
+        },
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "Overflow",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current Merkle root\\n\\nReturns the current root hash of the Merkle tree.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n\\n# Returns\\nThe current Merkle root as U256\\n\\n# Panics\\nPanics if the contract has not been initialized",
+      "name": "get_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a new leaf is added to the Merkle tree",
+      "lib": "",
+      "name": "LeafAddedEvent",
+      "prefix_topics": [
+        "LeafAdded"
+      ],
+      "params": [
+        {
+          "doc": "The leaf value that was inserted",
+          "name": "leaf",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "Index position where the leaf was inserted",
+          "name": "index",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "New Merkle root after insertion",
+          "name": "root",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Hash two U256 values using Poseidon2 compression\\n\\nComputes the Poseidon2 hash of two field elements in compression mode.\\nThis is the core hashing function used for Merkle tree operations.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `left` - Left input value\\n* `right` - Right input value\\n\\n# Returns\\nThe Poseidon2 hash result as U256",
+      "name": "hash_pair",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "left",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "right",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "u256"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Insert a new leaf into the Merkle tree\\n\\nAdds a new member to the Merkle tree and updates the root. The leaf is\\ninserted at the next available index and the tree is updated efficiently\\nby only recomputing the hashes along the path to the root. If\\n`admin_insert_only` is enabled (the default), only the admin can insert\\nleaves; otherwise, anyone can call this function.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `leaf` - The leaf value to insert (typically a commitment or hash)\\n\\n# Returns\\nReturns `Ok(())` on success, or `MerkleTreeFull` if the tree is at\\ncapacity",
+      "name": "insert_leaf",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the contract administrator\\n\\nChanges the admin address to a new address. Only the current admin\\ncan call this function.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `new_admin` - Address of the new administrator",
+      "name": "update_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: initialize the ASP Membership contract\\n\\nCreates a new Merkle tree with the specified number of levels and sets\\nthe admin address. The tree is initialized with zero hashes at each\\nlevel.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `admin` - Address of the contract administrator\\n* `levels` - Number of levels in the Merkle tree (must be in range\\n[1..32])\\n\\n# Returns\\nReturns `Ok(())` on success, or an error if already initialized\\n\\n# Panics\\nPanics if levels is 0 or greater than 32",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "levels",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set whether admin permission is required to insert a leaf\\n\\nWhen `admin_only` is true (default), only the admin can insert leaves.\\nWhen false, anyone can insert leaves. Only the admin can change this\\nsetting.\\n\\n# Arguments\\n* `env` - The Soroban environment\\n* `admin_only` - Whether admin permission is required for leaf insertion",
+      "name": "set_admin_insert_only",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin_only",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur during Groth16 proof verification.",
+      "lib": "",
+      "name": "Groth16Error",
+      "cases": [
+        {
+          "doc": "The pairing product did not equal identity.",
+          "name": "InvalidProof",
+          "value": 0
+        },
+        {
+          "doc": "The public inputs length does not match the verification key.",
+          "name": "MalformedPublicInputs",
+          "value": 1
+        },
+        {
+          "doc": "The proof bytes are malformed.",
+          "name": "MalformedProof",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 proof composed of points A, B, and C.\\nG2 point B uses Soroban's c1||c0 (imaginary||real) ordering.",
+      "lib": "",
+      "name": "Groth16Proof",
+      "fields": [
+        {
+          "doc": "Point A",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Point B",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Point C",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 verification key for BN254 curve (byte-oriented).\\nAll G2 points use Soroban's c1||c0 (imaginary||real) ordering.",
+      "lib": "",
+      "name": "VerificationKeyBytes",
+      "fields": [
+        {
+          "doc": "Alpha G1 point",
+          "name": "alpha",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "Beta G2 point",
+          "name": "beta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Delta G2 point",
+          "name": "delta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "Gamma G2 point",
+          "name": "gamma",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "IC (public input commitments)",
+          "name": "ic",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
