@@ -1,0 +1,467 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Policy",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "contract_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "institution_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "liquidation_threshold",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "policy_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "remaining_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "updated_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "version",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "SEP-40 oracle asset selector \\xe2\\x80\\x94 must match the oracle contract's `Asset` type.",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "SEP-40 price record returned by the oracle \\xe2\\x80\\x94 must match the oracle's `PriceData`.",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Loan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrowed_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "collateral_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "collateral_ticker",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "deposited_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "institution_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "loan_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "oracle_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "oracle_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "policy_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "tx",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "updated_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor - Initialize the contract with admin, compliance, and policy addresses",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "compliance_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "policy_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set (or repoint) the SEP-40 price oracle used at origination. Admin-gated.\\nMust be called once after deploy (like compliance/policy) before create_loan.",
+      "name": "set_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the configured oracle address (panics if unset).",
+      "name": "get_oracle",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the number of loans created so far\\n\\nThis is derived from NEXT_LOAN_ID, which starts at 1 and is incremented\\nafter each successful create_loan.",
+      "name": "get_loan_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the next loan ID that will be assigned on create_loan",
+      "name": "get_next_loan_id",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new loan",
+      "name": "create_loan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "borrowed_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deposited_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "policy_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "institution_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "collateral_ticker",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "collateral_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "collateral_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tx",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get loan by ID",
+      "name": "get_loan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "loan_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Loan"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update loan amounts",
+      "name": "update_loan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "loan_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "borrowed_amount",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deposited_amount",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay back part or all of the loan\\nUpdates the loan's borrowed_amount and policy's remaining_amount\\nReturns: (remaining_debt, total_paid)",
+      "name": "payback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "loan_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "payment_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Calculate interest on the loan and return the total amount user needs to pay back\\nReturns: (principal, interest, total_amount_to_pay)",
+      "name": "calculate_interest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "loan_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if loan should be liquidated based on current asset price\\nReturns: (should_liquidate: bool, collateral_value: i128, debt_value: i128, threshold_value: i128)\\n\\nParameters:\\n- loan_id: The loan to check\\n- asset_price: Current price of the collateral asset in the borrowed currency (with same decimals as borrowed_amount)\\ne.g., if borrowed_amount is in USD cents (2 decimals), price should be in USD cents",
+      "name": "check_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "loan_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "asset_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "bool",
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

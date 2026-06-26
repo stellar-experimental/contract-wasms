@@ -1,0 +1,287 @@
+[
+  {
+    "function_v0": {
+      "doc": "Emits a forged \"transfer\" ContractEvent with arbitrary topics/data.\\nhonest field: contractID == self (the deployed contract address) \\xe2\\x80\\x94 NOT the SAC of the named asset.",
+      "name": "fire",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#25) Emits a DIAGNOSTIC event via log!() containing target/amount.\\nDiagnostic events are a separate XDR field (`diagnosticEvents`) and\\nare retained in meta even when contract events would be rolled back.\\nProbes parsers that index diagnosticEvents alongside contract events.\\n\\nLimitation honestly stated: log!() produces topics=[Symbol(\"log\"),\\nSymbol(\"fmt\")] with a structured data payload. A parser that filters\\ntopics[0]==Symbol(\"transfer\") won't match. The test is whether the\\nparser indexes diagnostic events at all and what it does with them.",
+      "name": "fire_log",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#26) SEP-0041 token-interface conformant `transfer`.\\nA parser that whitelists \"anything implementing the SAC token\\ninterface\" (rather than a specific contractID) would treat this\\ncontract's events as legitimate token transfers. The event topic\\nshape exactly matches SAC's transfer event.",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emits a forged \"mint\" ContractEvent.",
+      "name": "fake_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#12) Emits N forged \"transfer\" events in one invocation.\\nProbes whether the parser accumulates per-event credits or dedups.",
+      "name": "fire_many",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#21) Inner \\xe2\\x80\\x94 emits a forged transfer event, then panics.\\nInvoked indirectly via outer_pan's try_invoke_contract.",
+      "name": "inner_pan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#21) Outer that invokes inner_pan via try_invoke_contract.\\nInner emits a forged transfer event THEN panics. The outer ignores\\nthe inner's error and returns OK.\\n\\nSoroban's correctness guarantee: events from an inner frame that\\nerrors out are DISCARDED on rollback, even when the outer recovers\\nvia try_invoke_contract. If this holds, the tx-level meta should\\ncontain NO transfer event after this call.\\n\\nIf the host has a bug and the inner event survives \\xe2\\x86\\x92 phantom credit.",
+      "name": "outer_pan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#13) Emits a forged \"transfer\" event with a NEGATIVE i128 amount.\\nProbes whether the parser silently treats negative as a deduction,\\nor normalises via abs(), or rejects.",
+      "name": "fire_negative",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(#22) Real-deposit + forged-event amplification.\\n\\nPerforms a REAL 1-stroop XLM transfer via the XLM SAC (legitimate\\nevent with contractID = XLM SAC) AND emits a FORGED transfer event\\nfor a larger fake_amount (contractID = self = fake_emitter).\\n\\nProbes whether the parser aggregates events by topic shape across\\nthe tx without per-event contractID gating.\\n\\nxlm_sac:    Address of the XLM Stellar Asset Contract.\\nfrom:       Attacker's account \\xe2\\x80\\x94 must auth the real SAC transfer.\\nto:         Target deposit address.\\nfake_amount: i128 used as the forged event's `data` (in stroops).\\nThe REAL transfer is hard-coded to 1 stroop.\\n(#23) Like `fire`, but topic[0] is a STRING (\"transfer\") not a SYMBOL.\\nProbes parsers that compare topic[0] as decoded text without\\nchecking the ScVal type tag.",
+      "name": "fire_str_topic",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "real_plus_fake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "xlm_sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fake_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
