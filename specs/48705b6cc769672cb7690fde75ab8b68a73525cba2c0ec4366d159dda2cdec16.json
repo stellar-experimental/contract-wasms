@@ -1,0 +1,1641 @@
+[
+  {
+    "function_v0": {
+      "doc": "Get a user's vote record for a round (None if not voted).",
+      "name": "get_vote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "UserVote"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cast a weighted vote directly \\xe2\\x80\\x94 the voter signs this transaction.\\n\\nTier and weight are resolved via cross-contract call to the Reputation contract.\\n\\n# Returns\\nThe vote weight applied",
+      "name": "cast_vote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "option_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vote_type",
+          "type_": {
+            "udt": {
+              "name": "VoteType"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a governance round by ID.",
+      "name": "get_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "GovernanceRound"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a redistribution option to an existing round.\\n\\nRequires the \"admin\" role.\\n\\n# Returns\\nThe newly assigned `option_id`",
+      "name": "add_option",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the admin role symbol.",
+      "name": "admin_role",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a governance option by round and option ID.",
+      "name": "get_option",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "option_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "GovernanceOption"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "grant_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close a round and compute the winner.\\n\\nRequires the \"admin\" role.\\nCan only be called once `end_ledger` has been reached.\\n\\n# Returns\\nWinning option ID (None if no upvotes were cast)",
+      "name": "close_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a vote on behalf of a voter via the trusted recorder service.\\n\\nRequires the \"recorder\" role.\\n\\nThis is the primary API integration path. Eligibility and tier are verified\\noff-chain; the supplied `tier` is the authoritative vote weight source.\\n\\n# Arguments\\n* `caller`    - Recorder address (must have recorder role)\\n* `voter`     - Address of the voter\\n* `round_id`  - Active governance round ID\\n* `option_id` - Option to vote for\\n* `vote_type` - Up or Down\\n* `tier`      - Voter's NFT tier (verified off-chain by the API)\\n\\n# Returns\\nThe vote weight applied",
+      "name": "record_vote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "option_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vote_type",
+          "type_": {
+            "udt": {
+              "name": "VoteType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "NftTier"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revoke_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a new governance round.\\n\\nRequires the \"admin\" role.\\n\\n# Arguments\\n* `caller`       - Admin address\\n* `title`        - Human-readable round title\\n* `start_ledger` - Ledger sequence when voting opens\\n* `end_ledger`   - Ledger sequence when voting closes\\n* `fund_amount`  - Community fund at stake in stroops (0 if unset)\\n\\n# Returns\\nThe newly assigned `round_id`",
+      "name": "create_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "start_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "end_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fund_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Governance contract.\\n\\n# Arguments\\n* `admin` - Address with admin privileges\\n* `reputation_contract` - Address of the Reputation contract (for tier lookup)\\n\\n# Errors\\n* `Error::AlreadyInitialized` - Contract was already initialized",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reputation_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the recorder role symbol.",
+      "name": "recorder_role",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "renounce_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_role_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "symbol"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Query a voter's NFT tier from the Reputation contract.",
+      "name": "get_voter_tier",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "NftTier"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "renounce_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_role_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "admin_role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_role_member",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the total number of voters in a round.",
+      "name": "get_voter_count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the live status of a round (automatically computes from current ledger).",
+      "name": "get_round_status",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "RoundStatus"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the next round ID that would be assigned.",
+      "name": "get_next_round_id",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the next option ID that would be assigned for a round.",
+      "name": "get_next_option_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin_transfer",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_role_member_count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the configured Reputation contract address.",
+      "name": "get_reputation_contract",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the Reputation contract address.\\n\\nOnly the contract admin can call this.",
+      "name": "set_reputation_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reputation_contract",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "NFT tier mapped from the Reputation contract level (0\\xe2\\x80\\x934).",
+      "lib": "",
+      "name": "NftTier",
+      "cases": [
+        {
+          "doc": "Level 0 \\xe2\\x80\\x94 not eligible to vote",
+          "name": "Rookie",
+          "value": 0
+        },
+        {
+          "doc": "Level 1 \\xe2\\x80\\x94 1 vote weight",
+          "name": "Bronze",
+          "value": 1
+        },
+        {
+          "doc": "Level 2 \\xe2\\x80\\x94 3 vote weight",
+          "name": "Silver",
+          "value": 2
+        },
+        {
+          "doc": "Level 3 \\xe2\\x80\\x94 5 vote weight",
+          "name": "Gold",
+          "value": 3
+        },
+        {
+          "doc": "Level 4 \\xe2\\x80\\x94 10 vote weight",
+          "name": "Diamond",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Record of a single user's vote in a round.",
+      "lib": "",
+      "name": "UserVote",
+      "fields": [
+        {
+          "doc": "Option the user voted for",
+          "name": "option_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Voter's NFT tier at time of vote",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "NftTier"
+            }
+          }
+        },
+        {
+          "doc": "Up or Down",
+          "name": "vote_type",
+          "type_": {
+            "udt": {
+              "name": "VoteType"
+            }
+          }
+        },
+        {
+          "doc": "Ledger timestamp of the vote",
+          "name": "voted_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Tier-based weight applied",
+          "name": "weight",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Direction of a vote.",
+      "lib": "",
+      "name": "VoteType",
+      "cases": [
+        {
+          "doc": "Positive vote for this option",
+          "name": "Up",
+          "value": 0
+        },
+        {
+          "doc": "Negative vote against this option",
+          "name": "Down",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Initialized flag",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Reputation contract address (for tier lookup)",
+            "name": "ReputationContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Auto-increment counter for round IDs",
+            "name": "NextRoundId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Round data: Round(round_id) \\xe2\\x86\\x92 GovernanceRound",
+            "name": "Round",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Option data: Option(round_id, option_id) \\xe2\\x86\\x92 GovernanceOption",
+            "name": "Option",
+            "type_": [
+              "u32",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Auto-increment counter per round: NextOptionId(round_id) \\xe2\\x86\\x92 u32",
+            "name": "NextOptionId",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "User vote record: UserVote(voter_address, round_id) \\xe2\\x86\\x92 UserVote",
+            "name": "UserVote",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Total voter count per round: VoterCount(round_id) \\xe2\\x86\\x92 u32",
+            "name": "VoterCount",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Status of a governance round.",
+      "lib": "",
+      "name": "RoundStatus",
+      "cases": [
+        {
+          "doc": "Round created but start ledger not yet reached",
+          "name": "Upcoming",
+          "value": 0
+        },
+        {
+          "doc": "Round is open for voting",
+          "name": "Active",
+          "value": 1
+        },
+        {
+          "doc": "Round is closed; winner determined",
+          "name": "Ended",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An on-chain governance voting round.",
+      "lib": "",
+      "name": "GovernanceRound",
+      "fields": [
+        {
+          "doc": "Ledger timestamp when the round was created",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger sequence number when voting closes",
+          "name": "end_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total community fund amount at stake (in stroops)",
+          "name": "fund_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Number of options registered for this round",
+          "name": "option_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Unique sequential ID",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Ledger sequence number when voting opens",
+          "name": "start_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Current status",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "RoundStatus"
+            }
+          }
+        },
+        {
+          "doc": "Human-readable title",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "Winning option ID (None until round ends)",
+          "name": "winner_option_id",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A redistribution option within a governance round.",
+      "lib": "",
+      "name": "GovernanceOption",
+      "fields": [
+        {
+          "doc": "Cumulative weight of all downvotes",
+          "name": "downvote_weight",
+          "type_": "u32"
+        },
+        {
+          "doc": "Unique ID within the round (sequential from 0)",
+          "name": "option_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Round this option belongs to",
+          "name": "round_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Human-readable title (e.g., campaign name)",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "Cumulative weight of all upvotes",
+          "name": "upvote_weight",
+          "type_": "u32"
+        },
+        {
+          "doc": "Number of individual votes cast (up + down)",
+          "name": "vote_count",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error codes for the KindFi Governance contract.\\nUses codes starting at 500 to avoid conflicts with other contracts.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 500
+        },
+        {
+          "doc": "Caller does not have the required role",
+          "name": "Unauthorized",
+          "value": 501
+        },
+        {
+          "doc": "The governance round was not found",
+          "name": "RoundNotFound",
+          "value": 502
+        },
+        {
+          "doc": "The governance option was not found",
+          "name": "OptionNotFound",
+          "value": 503
+        },
+        {
+          "doc": "Voting is not open (round is upcoming or already ended)",
+          "name": "RoundNotActive",
+          "value": 504
+        },
+        {
+          "doc": "Voter has already cast a vote in this round",
+          "name": "AlreadyVoted",
+          "value": 505
+        },
+        {
+          "doc": "Voter does not hold a Kinders NFT (Rookie tier = ineligible)",
+          "name": "NotEligible",
+          "value": 506
+        },
+        {
+          "doc": "Failed to query the Reputation contract for the voter's level",
+          "name": "ReputationQueryFailed",
+          "value": 507
+        },
+        {
+          "doc": "Option does not belong to the specified round",
+          "name": "OptionNotInRound",
+          "value": 508
+        },
+        {
+          "doc": "Round title must not be empty",
+          "name": "EmptyTitle",
+          "value": 509
+        },
+        {
+          "doc": "start_ledger must be strictly before end_ledger",
+          "name": "InvalidLedgerRange",
+          "value": 510
+        },
+        {
+          "doc": "Round has already ended; cannot add more options",
+          "name": "RoundAlreadyEnded",
+          "value": 511
+        },
+        {
+          "doc": "Cannot close a round that has not yet ended (end_ledger not reached)",
+          "name": "RoundNotYetEnded",
+          "value": 512
+        },
+        {
+          "doc": "Reputation contract address has not been configured",
+          "name": "ReputationContractNotSet",
+          "value": 513
+        },
+        {
+          "doc": "Fund amount must be non-negative",
+          "name": "InvalidFundAmount",
+          "value": 514
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a vote is successfully cast.",
+      "lib": "",
+      "name": "VoteCastEvent",
+      "prefix_topics": [
+        "vote_cast_event"
+      ],
+      "params": [
+        {
+          "doc": "Round the vote belongs to",
+          "name": "round_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Voter's address",
+          "name": "voter",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Option the vote was cast for",
+          "name": "option_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Up or Down",
+          "name": "vote_type",
+          "type_": {
+            "udt": {
+              "name": "VoteType"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Tier-based weight applied",
+          "name": "weight",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Voter's NFT tier at the time of voting",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "NftTier"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a redistribution option is added to a round.",
+      "lib": "",
+      "name": "OptionAddedEvent",
+      "prefix_topics": [
+        "option_added_event"
+      ],
+      "params": [
+        {
+          "doc": "Round the option was added to",
+          "name": "round_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "New option ID",
+          "name": "option_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Option title",
+          "name": "title",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a round is closed and a winner is determined.",
+      "lib": "",
+      "name": "RoundClosedEvent",
+      "prefix_topics": [
+        "round_closed_event"
+      ],
+      "params": [
+        {
+          "doc": "Round that was closed",
+          "name": "round_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Winning option ID (None if no votes were cast)",
+          "name": "winner_option_id",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Total voters who participated",
+          "name": "total_voters",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a new governance round is created.",
+      "lib": "",
+      "name": "RoundCreatedEvent",
+      "prefix_topics": [
+        "round_created_event"
+      ],
+      "params": [
+        {
+          "doc": "Admin who created the round",
+          "name": "creator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Unique round ID assigned",
+          "name": "round_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Round title",
+          "name": "title",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "Ledger sequence when voting opens",
+          "name": "start_ledger",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Ledger sequence when voting closes",
+          "name": "end_ledger",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Fund amount in stroops",
+          "name": "fund_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is granted.",
+      "lib": "",
+      "name": "RoleGranted",
+      "prefix_topics": [
+        "role_granted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is revoked.",
+      "lib": "",
+      "name": "RoleRevoked",
+      "prefix_topics": [
+        "role_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the admin role is renounced.",
+      "lib": "",
+      "name": "AdminRenounced",
+      "prefix_topics": [
+        "admin_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role admin is changed.",
+      "lib": "",
+      "name": "RoleAdminChanged",
+      "prefix_topics": [
+        "role_admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2000
+        },
+        {
+          "doc": "",
+          "name": "AdminNotSet",
+          "value": 2001
+        },
+        {
+          "doc": "",
+          "name": "IndexOutOfBounds",
+          "value": 2002
+        },
+        {
+          "doc": "",
+          "name": "AdminRoleNotFound",
+          "value": 2003
+        },
+        {
+          "doc": "",
+          "name": "RoleCountIsNotZero",
+          "value": 2004
+        },
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 2005
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 2006
+        },
+        {
+          "doc": "",
+          "name": "RoleNotHeld",
+          "value": 2007
+        },
+        {
+          "doc": "",
+          "name": "RoleIsEmpty",
+          "value": 2008
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2009
+        },
+        {
+          "doc": "",
+          "name": "MaxRolesExceeded",
+          "value": 2010
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is completed.",
+      "lib": "",
+      "name": "AdminTransferCompleted",
+      "prefix_topics": [
+        "admin_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is initiated.",
+      "lib": "",
+      "name": "AdminTransferInitiated",
+      "prefix_topics": [
+        "admin_transfer_initiated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key for enumeration of accounts per role.",
+      "lib": "",
+      "name": "RoleAccountKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the access control",
+      "lib": "",
+      "name": "AccessControlStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ExistingRoles"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccounts",
+            "type_": [
+              {
+                "udt": {
+                  "name": "RoleAccountKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "HasRole",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountsCount",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAdmin",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for `Ownable` utility.",
+      "lib": "",
+      "name": "OwnableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingOwner"
+          }
+        }
+      ]
+    }
+  }
+]
