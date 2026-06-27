@@ -1,0 +1,332 @@
+[
+  {
+    "function_v0": {
+      "doc": "One-time initializer wiring the native XLM token contract address.\\nAfter init, the token reference is immutable \\xe2\\x80\\x94 there is no setter.",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add more funds to an existing vault. **Does not** alter `unlock_timestamp`.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "StillLocked",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AlreadyWithdrawn",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ShortenForbidden",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "VaultNotFound",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidTimestamp",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialised",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Vault",
+      "fields": [
+        {
+          "doc": "",
+          "name": "balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "created_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "unlock_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "withdrawn",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw the full vault balance to the owner address.\\nReverts with `StillLocked` if `env.ledger().timestamp() < unlock_timestamp`.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only \\xe2\\x80\\x94 fetch a vault by id.",
+      "name": "get_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Vault"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "XLM (or other native asset) token contract address used by all vaults.\\nSet once via `init`; the contract intentionally exposes no setter.",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Monotonic counter for vault ids.",
+            "name": "NextId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Vault by id.",
+            "name": "Vault",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-owner index of vault ids.",
+            "name": "Owned",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only \\xe2\\x80\\x94 list vault ids owned by `owner`.",
+      "name": "list_owned",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Push the unlock timestamp further into the future by `additional_seconds`.\\nReducing or zeroing the lock is impossible \\xe2\\x80\\x94 there is no `set_unlock` API.",
+      "name": "extend_lock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "additional_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a vault and lock `initial_deposit` of the configured asset.\\n`unlock_timestamp` is recorded immutably; it can only ever be PUSHED\\nFORWARD via `extend_lock`.",
+      "name": "create_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "initial_deposit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "unlock_timestamp",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
