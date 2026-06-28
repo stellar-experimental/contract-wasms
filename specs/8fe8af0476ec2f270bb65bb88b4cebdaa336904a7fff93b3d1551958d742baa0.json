@@ -1,0 +1,1783 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause invest/rebalance (withdraw stays open). Auth: admin.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pull `asset`, deposit across `allocations` by weight, record positions.\\nAuth: owner. T1: USDC-only, every `swap == None`.",
+      "name": "invest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "allocations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Allocation"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency: pull a vault's funds to the **Owner** if its protocol bricks\\n`redeem`. Auth: admin. No fee; callable even when Paused.",
+      "name": "rescue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lift the pause. Auth: admin.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the contract Wasm. Auth: admin (checked BEFORE the swap).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw `amount` (underlying; `i128::MAX` = whole position) from one vault\\nback to the owner. Auth: owner. Allowed even when Paused. T1: `Raw` only.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "out",
+          "type_": {
+            "udt": {
+              "name": "WithdrawOut"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ledger state + raw `shares_held` per open vault. Display value is computed\\noff-chain (no on-chain value read \\xe2\\x80\\x94 docs/02 \\xc2\\xa74.3).",
+      "name": "positions",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PositionView"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw every position in full + drain caller-named idle assets. Skips a\\nvault whose redeem reverts (exit-liveness). Auth: owner.",
+      "name": "withdraw_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "out",
+          "type_": {
+            "udt": {
+              "name": "WithdrawOut"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "extra_idle",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy-time init (Protocol-22 `__constructor`, atomic with deploy). Writes\\nOwner/Admin/Registry + AutoRebalance=false/Paused=false; `Nonce`/\\n`RebalanceOn`/`ActiveDeltaBps` follow the read-default rule (UPG-1).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "auto_rebalance",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Convert idle `asset_in` \\xe2\\x86\\x92 `asset_out` via the whitelisted router (measured\\noutput \\xe2\\x89\\xa5 `amount_out_min`). Auth: owner or keeper. Nonce-guarded.",
+      "name": "rebalance_swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": {
+            "udt": {
+              "name": "SwapLeg"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emit a `RebalanceNoOp` receipt (target breached, no feasible move). Auth:\\nowner or keeper. No state change; consumes no nonce.",
+      "name": "note_no_rebalance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "observed_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "target_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit idle `asset` into a whitelisted active vault (debt-free). Auth:\\nowner or keeper. Nonce-guarded.",
+      "name": "rebalance_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Redeem from a vault \\xe2\\x86\\x92 fee \\xe2\\x86\\x92 keep proceeds idle. Auth: owner or Registry\\nkeeper (gated by AutoRebalance + keeper_enabled). Nonce-guarded.",
+      "name": "rebalance_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Opt in to keeper-driven rebalance (settle OFF\\xe2\\x86\\x92ON, snapshot the surcharge).\\nAuth: owner. Idempotent.",
+      "name": "enable_auto_rebalance",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Opt out (settle ON\\xe2\\x86\\x92OFF) \\xe2\\x80\\x94 the owner's instant kill-switch. Auth: owner.",
+      "name": "disable_auto_rebalance",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Registry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AutoRebalance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RebalanceOn"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ActiveDeltaBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Nonce"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Position",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultList"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "On-chain `positions()` view row \\xe2\\x80\\x94 ledger state + raw `shares_held` (no value;\\ndisplay value is computed off-chain, docs/02 \\xc2\\xa74.3).",
+      "lib": "",
+      "name": "PositionView",
+      "fields": [
+        {
+          "doc": "",
+          "name": "banked_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": {
+            "udt": {
+              "name": "Protocol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "shares_held",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Matches the live Blend `Request` (field names \\xe2\\x80\\x94 `#[contracttype]` structs are\\nkeyed by field name, so declaration order is irrelevant to the wire format).",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Holder positions, exactly as the live Blend pool returns them \\xe2\\x80\\x94 each map keyed\\nby reserve **index** (`u32`). Backyard reads only `supply` (its bToken\\nbalances); `collateral`/`liabilities` are present so the return decodes.",
+      "lib": "",
+      "name": "Positions",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liabilities",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "supply",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotKeeper",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyDeployed",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "WeightsInvalid",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "EmptyAllocations",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "VaultNotWhitelisted",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "SwapRequired",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "UnexpectedSwap",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExceeded",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "SwapFailed",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "BadSwapPath",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "PositionNotFound",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "NothingToWithdraw",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "TooManyVaults",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "AdapterError",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedProtocol",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "Math",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedOutput",
+          "value": 51
+        },
+        {
+          "doc": "",
+          "name": "InactiveVault",
+          "value": 52
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 53
+        },
+        {
+          "doc": "",
+          "name": "TreasuryUnset",
+          "value": 54
+        },
+        {
+          "doc": "",
+          "name": "BadNonce",
+          "value": 55
+        },
+        {
+          "doc": "",
+          "name": "NothingToSwap",
+          "value": 56
+        },
+        {
+          "doc": "",
+          "name": "NothingToDeposit",
+          "value": 57
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single Soroswap swap leg. Full shape frozen at T1; the swap *logic* is\\ndormant in T1 (Router unset \\xe2\\x87\\x92 revert) and activates by config in T2.",
+      "lib": "",
+      "name": "SwapLeg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-vault position + fee-engine accounting (see docs/14 + fee-engine.rs).",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "Fee banked at a past rate toggle, owed but not yet collected.",
+          "name": "banked_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Basis / high-water mark: `profit = max(0, value - deposit_amount)`.",
+          "name": "deposit_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Snapshot of `VaultInfo.fee_bps` at the first deposit into this vault.",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": {
+            "udt": {
+              "name": "Protocol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Underlying-protocol tag stored alongside each whitelisted vault; the Strategy\\ndispatches the right adapter by matching on this (no `_` arm \\xe2\\x80\\x94 adding a\\nprotocol is an exhaustive-match break on purpose). T2 adds `DeFindex`; T3 +1.",
+      "lib": "",
+      "name": "Protocol",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Blend"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Optional per-leg swap. Semantically `Option<SwapLeg>`, but expressed as a\\ndedicated `#[contracttype]` enum: soroban-sdk 26 cannot derive the (testutils)\\nXDR conversions for an `Option<CustomStruct>` *struct field*, because the\\n`Option<T> -> ScVal` blanket requires `T: Into<ScVal>` (infallible) while a\\n`#[contracttype]` struct is only `TryFrom<_> for ScVal` (fallible). An enum\\ngoes through the Val path and has no such bound. T1 always uses `None`.",
+      "lib": "",
+      "name": "MaybeSwap",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "None"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Swap",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Registry record for one whitelisted vault.",
+      "lib": "",
+      "name": "VaultInfo",
+      "fields": [
+        {
+          "doc": "`false` delists the vault for **new** deposits only; never blocks exits.",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "Base performance fee for this vault (engine `VaultState.feeBps`).\\n`0` = no fee (the T1 default until a % is configured).",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": {
+            "udt": {
+              "name": "Protocol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One leg of an `invest` allocation. `swap == MaybeSwap::None` on every leg in\\nT1 (USDC-only, no swaps yet); `Swap(..)` is accepted shape-wise but the swap\\npath is config-gated dormant.",
+      "lib": "",
+      "name": "Allocation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": {
+            "udt": {
+              "name": "MaybeSwap"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "weight_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Post-state for one deposit leg, carried in the `Deposited` event so the\\nindexer mirrors fee state with no live read.",
+      "lib": "",
+      "name": "DepositLeg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-vault post-state for the `RebalanceToggled` event (profit banked at the\\nOLD rate on a genuine regime transition).",
+      "lib": "",
+      "name": "VaultSettle",
+      "fields": [
+        {
+          "doc": "",
+          "name": "banked_fee_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "How a withdrawal returns funds. T1 accepts only `Raw` (anything else \\xe2\\x87\\x92\\n`Error::UnsupportedOutput`); the `Normalize` swap-out logic lands in T2 \\xe2\\x80\\x94 the\\nsignature never changes. (soroban-sdk `#[contracttype]` enums don't allow\\nnamed-field variants, so the payload is a one-field wrapper struct.)",
+      "lib": "",
+      "name": "WithdrawOut",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Raw"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Normalize",
+            "type_": [
+              {
+                "udt": {
+                  "name": "NormalizeOut"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Normalize-out payload: swap each redeemed underlying into `asset` before\\nreturning it to the owner (T2). `swaps` maps source-underlying \\xe2\\x86\\x92 its leg.",
+      "lib": "",
+      "name": "NormalizeOut",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swaps",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin emergency (`rescue`) \\xe2\\x80\\x94 funds go ONLY to Owner; Position closed; no fee.",
+      "lib": "",
+      "name": "Rescued",
+      "prefix_topics": [
+        "rescued"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`Some` = upsert, `None` = removed.",
+      "lib": "",
+      "name": "VaultSet",
+      "prefix_topics": [
+        "vault_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "info",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "VaultInfo"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposited",
+      "prefix_topics": [
+        "deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "(vault, amount_in, received, deposit_amount_after) \\xe2\\x80\\x94 post-state per leg.",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "DepositLeg"
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`withdraw_all`'s `extra_idle` drain \\xe2\\x80\\x94 one event per idle asset returned RAW\\nto the owner (no engine call, no fee).",
+      "lib": "",
+      "name": "IdleSwept",
+      "prefix_topics": [
+        "idle_swept"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin set/rotated the global keeper (`set_keeper`).",
+      "lib": "",
+      "name": "KeeperSet",
+      "prefix_topics": [
+        "keeper_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Soroswap router updated (used from T2).",
+      "lib": "",
+      "name": "RouterSet",
+      "prefix_topics": [
+        "router_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdrawn",
+      "prefix_topics": [
+        "withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "gross_redeemed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_cash",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "out_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "out_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "banked_fee_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Protocol-wide fee config updated (`set_fee_config`).",
+      "lib": "",
+      "name": "FeeConfigSet",
+      "prefix_topics": [
+        "fee_config_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "rebalance_delta_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Hybrid no-op receipt (A2): target breached, no feasible move. `reason` is a\\nCLOSED SET (authoritative): `APY_BREACH | WEIGHT_DRIFT | RISK_BREACH`.",
+      "lib": "",
+      "name": "RebalanceNoOp",
+      "prefix_topics": [
+        "rebalance_no_op"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "observed_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "target_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`withdraw_all` terminal receipt (T1). `exited` = vaults fully redeemed,\\n`skipped` = vaults whose `redeem` reverted (frozen protocol). A non-empty\\n`skipped` signals a PARTIAL exit so the indexer marks those positions stuck.",
+      "lib": "",
+      "name": "WithdrawAllDone",
+      "prefix_topics": [
+        "withdraw_all_done"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "exited",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "skipped",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin global kill-switch (`set_keeper_enabled`).",
+      "lib": "",
+      "name": "KeeperEnabledSet",
+      "prefix_topics": [
+        "keeper_enabled_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RebalanceSwapped",
+      "prefix_topics": [
+        "rebalance_swapped"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "spent",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Enable/disable auto-rebalance = the fee-regime toggle.",
+      "lib": "",
+      "name": "RebalanceToggled",
+      "prefix_topics": [
+        "rebalance_toggled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "on",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "settled",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "VaultSettle"
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyDeployed",
+      "prefix_topics": [
+        "strategy_deployed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RebalanceDeposited",
+      "prefix_topics": [
+        "rebalance_deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RebalanceWithdrawn",
+      "prefix_topics": [
+        "rebalance_withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "gross",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_paid",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "net_kept",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "banked_fee_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
