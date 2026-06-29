@@ -1,0 +1,1294 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "A venue-tagged swap step. Each variant is a FLAT tuple of **registry ids** and\\namounts \\xe2\\x80\\x94 no struct field-names \\xe2\\x80\\x94 so the user-signed payload references pools\\nand tokens by a few-byte `u32` id instead of a 32-byte `Address` each. The\\ncontract resolves the ids to Addresses on-chain from the registry (instance\\nstorage, so it adds no ledger keys to the signed envelope), then expands each\\nstep into the venue's exact call args + authorization tree. This keeps the\\ntransaction small enough for hardware wallets to sign reliably.\\n\\nTuple layouts \\xe2\\x80\\x94 these ARE the wire format the backend encodes (`encodeStep`):\\nAquarius (pool_id, token_in_id, in_idx,  out_idx, amount_in)\\nComet    (pool_id, token_in_id, token_out_id,     amount_in)\\nSushi    (pool_id, token_in_id, zero_for_one, checkpoint, checkpoint_min, slot, amount_in)\\nPhoenix  (pool_id, token_in_id, amount_in)\\nSoroswap (pool_id, token_in_id, zero_for_one, amount_in)\\n\\nOn a chained hop the `amount_in` field is advisory \\xe2\\x80\\x94 the router swaps the\\namount the previous hop ",
+      "lib": "",
+      "name": "Step",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aquarius",
+            "type_": [
+              {
+                "tuple": {
+                  "value_types": [
+                    "u32",
+                    "u32",
+                    "u32",
+                    "u32",
+                    "i128"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Comet",
+            "type_": [
+              {
+                "tuple": {
+                  "value_types": [
+                    "u32",
+                    "u32",
+                    "u32",
+                    "i128"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Sushi",
+            "type_": [
+              {
+                "tuple": {
+                  "value_types": [
+                    "u32",
+                    "u32",
+                    "bool",
+                    "u32",
+                    "u32",
+                    "u128",
+                    "i128"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Phoenix",
+            "type_": [
+              {
+                "tuple": {
+                  "value_types": [
+                    "u32",
+                    "u32",
+                    "i128"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Soroswap",
+            "type_": [
+              {
+                "tuple": {
+                  "value_types": [
+                    "u32",
+                    "u32",
+                    "bool",
+                    "i128"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One leg of a split swap: `amount_in` of the input asset routed through `path`.\\nA named struct (not a bare tuple) so it's a proper, well-formed entry in the\\ncontract spec \\xe2\\x80\\x94 wallets that decode the call for display need it. The per-step\\n`Step` tuples carry the byte savings; a route appears only 1\\xe2\\x80\\x933\\xc3\\x97 per swap.",
+      "lib": "",
+      "name": "Route",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Drain stranded balances (incl. accumulated, not-yet-converted fees).\\n`amount = 0` sweeps the full balance.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_to",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Sushi v3 per-ledger oracle hints. Computed off-chain at quote time and passed\\nthrough verbatim (no on-chain scan \\xe2\\x80\\x94 that read dozens of tick ledger entries\\nand bloated the footprint past hardware-wallet limits). Reconstructed on-chain\\nfrom the flat `Step::Sushi` tuple fields to hand to the pool's `swap`.",
+      "lib": "",
+      "name": "OracleHints",
+      "fields": [
+        {
+          "doc": "",
+          "name": "checkpoint",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "checkpoint_min",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_ppm",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registry lookups (used by the backend to encode compact routes).",
+      "name": "pool_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapExecuted",
+      "prefix_topics": [
+        "swap",
+        "executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pool_addr",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**Legacy** \\xe2\\x80\\x94 toggle the pre-registry `(target, fn)` allowlist. Kept only so\\nthe owner can clear stale pre-registry entries (`allowed = false`);\\n`run_step` no longer consults it (the registry is the allowlist).",
+      "name": "allow_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fns",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Aggregated, atomic swap with a platform-fee skim.\\n\\n- `user`: the trader and transaction source (single signature).\\n- `asset_in` / `total_amount_in`: pulled from `user` into the contract.\\n- `asset_out` / `min_total_out`: revert unless the contract nets at least\\n`min_total_out` of `asset_out` across all routes.\\n- `routes`: the split \\xe2\\x80\\x94 each route is `(amount_in, path)`: `amount_in` of\\n`asset_in` through its own `path`. `sum(amount_in)` must equal\\n`total_amount_in - fee`. A `path` of more than one `Step` is a chained\\nmulti-hop (A\\xe2\\x86\\x92C\\xe2\\x86\\x92B): each hop after the first swaps exactly what the\\nprevious hop deposited into the router (its `Step.amount_in` is advisory\\nonly), so the intermediate amount never has to be predicted at signing time.\\n\\nSteps reference pools/tokens by **registry id** (compact payload); the ids\\nare resolved to Addresses on-chain. `asset_in`/`asset_out`/`user` stay full\\nAddresses so the submit-side fact derivation + event need no registry.\\n\\n`swap_split_trust` is the identical operation that additio",
+      "name": "swap_split",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_total_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Route"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm_override",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token_addr",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "account_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Backward-compatible view \\xe2\\x80\\x94 a registered pool is callable with its venue's\\nfixed function, so this mirrors `is_target_allowed` regardless of `fn_name`.",
+      "name": "is_fn_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a swap-target pool, returning its registry id. Idempotent \\xe2\\x80\\x94 a\\npool already registered returns its existing id. Registration IS the\\nallowlist: `run_step` will only route through a registered pool.",
+      "name": "register_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_authorizer",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Batch-register pools (the discovery backfill / sync), returning their ids.",
+      "name": "register_pools",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "u32"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a token (SAC), returning its registry id. Idempotent.",
+      "name": "register_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Batch-register tokens, returning their ids.",
+      "name": "register_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "u32"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a per-account fee override in ppm (e.g. `0` for an internal service\\naccount that should swap fee-free). Applies automatically on every swap by\\n`account`, ahead of the default fee and any per-swap voucher.",
+      "name": "set_account_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Identical to `swap_split` in args and economics, but FIRST establishes the user's\\n`asset_out` trustline in this same transaction (CAP-73 SAC `trust`) so a swap into a\\nfresh CLASSIC asset settles without a separate ChangeTrust tx. The backend calls this\\nin place of `swap_split` ONLY when the output is a classic-asset SAC the user does not\\nyet trust \\xe2\\x80\\x94 never for Soroban-native tokens (no trustline / no `trust` fn). The `trust`\\ncall is a no-op if the trustline already exists, and its `user.require_auth()` is\\ncovered by the user's existing source-account signature (no extra signature).",
+      "name": "swap_split_trust",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_total_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Route"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm_override",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an account's fee override (it reverts to the default fee).",
+      "name": "clear_account_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A target is \"allowed\" iff it is registered (the registry is the allowlist).\\nBackward-compatible view name for the discovery/reconcile tooling.",
+      "name": "is_target_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Identical to `swap_split` in args and economics, but delivers each route's FINAL hop\\noutput DIRECTLY to `user` instead of holding it in the router first. This is how a swap\\ninto a RECIPIENT-AUTH token (whose `transfer` calls `to.require_auth()`, e.g. some RWA\\ntokens) settles: the output goes straight to the user, whose source-account signature\\nsatisfies that recipient auth \\xe2\\x80\\x94 the router can't, since it can't pre-authorize an\\nunknown (pool-computed) amount. Every final hop MUST be a venue that can pay a separate\\nrecipient (Sushi/Soroswap); run_step rejects others with `RecipientNotSupported`.\\n`min_total_out` is enforced from the user's output-balance delta. The backend calls this\\nin place of `swap_split` when every route's final hop is Sushi/Soroswap.",
+      "name": "swap_split_direct",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_total_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Route"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_ppm_override",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register the address whose signature authorizes per-swap fee overrides\\n(the backend's referral-discount signer).",
+      "name": "set_fee_authorizer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "authorizer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "SwapError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SwapError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "EmptyRoute",
+          "value": 3
+        },
+        {
+          "doc": "Final received `asset_out` was below the user's `min_total_out` floor.",
+          "name": "OutputTooLow",
+          "value": 4
+        },
+        {
+          "doc": "A route step targeted a contract not on the admin allowlist.",
+          "name": "TargetNotAllowed",
+          "value": 5
+        },
+        {
+          "doc": "A route step called a function not on the admin allowlist for that target.",
+          "name": "FnNotAllowed",
+          "value": 6
+        },
+        {
+          "doc": "`sum(routes[i].amount_in)` did not equal `total_amount_in - fee`.",
+          "name": "SplitMismatch",
+          "value": 7
+        },
+        {
+          "doc": "The fee conversion produced less XLM than `fee_min_out`.",
+          "name": "FeeOutputTooLow",
+          "value": 8
+        },
+        {
+          "doc": "Contract config (fee_to / fee_asset / fee_authorizer) was not initialized.",
+          "name": "NotConfigured",
+          "value": 9
+        },
+        {
+          "doc": "A per-swap fee override exceeded the current default fee (overrides may\\nonly *lower* the fee, never raise it).",
+          "name": "FeeOverrideTooHigh",
+          "value": 10
+        },
+        {
+          "doc": "A Soroswap (UniV2) step read non-positive reserves or computed a\\nnon-positive output \\xe2\\x80\\x94 the pair is empty/unusable.",
+          "name": "SoroswapBadReserves",
+          "value": 11
+        },
+        {
+          "doc": "A direct-delivery (`swap_split_direct`) route's final step targeted a venue\\nthat can't pay a separate recipient \\xe2\\x80\\x94 Aquarius/Comet/Phoenix conflate the\\ninput source and output recipient, so they can only deliver to the router.",
+          "name": "RecipientNotSupported",
+          "value": 12
+        },
+        {
+          "doc": "A route step referenced a token id that isn't in the registry (the\\nowner must `register_token` it first). A bad pool id is reported as\\n`TargetNotAllowed` (#5) \\xe2\\x80\\x94 the registry IS the swap-target allowlist.",
+          "name": "TokenNotRegistered",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Platform fee in parts-per-million (0.05% == 500).",
+            "name": "FeePpm"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address that receives the (XLM) platform fee.",
+            "name": "FeeTo"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SAC address of the asset the fee is collected in (XLM SAC).",
+            "name": "FeeAsset"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlist: is this contract a permitted swap target?\\n**Legacy** \\xe2\\x80\\x94 superseded by the pool registry (a registered pool *is* an\\nallowed target). Retained so the owner can still clear pre-registry\\nentries via `allow_pool(.., false)`; `run_step` no longer reads it.",
+            "name": "AllowedTarget",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlist: is `(target, fn_name)` a permitted call? **Legacy** (see above).",
+            "name": "AllowedFn",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Version"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-account fee override in ppm (owner-set; e.g. internal services \\xe2\\x86\\x92 0).\\nTakes precedence over both the per-swap voucher and the default `FeePpm`.",
+            "name": "AccountFee",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Address whose signature authorizes a per-swap fee override (referral\\ndiscounts). The backend holds this key and `authorizeEntry`-signs the\\nswap invocation when a referrer redeems a half-off credit.",
+            "name": "FeeAuthorizer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next pool id to assign (monotonic).",
+            "name": "NextPoolId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next token id to assign (monotonic).",
+            "name": "NextTokenId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pool id \\xe2\\x86\\x92 pool Address (hot-path resolution in `run_step`).",
+            "name": "PoolAddr",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pool Address \\xe2\\x86\\x92 pool id (idempotent (re)registration + the `pool_id` view).",
+            "name": "PoolKey",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Token id \\xe2\\x86\\x92 token (SAC) Address.",
+            "name": "TokenAddr",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Token Address \\xe2\\x86\\x92 token id.",
+            "name": "TokenKey",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

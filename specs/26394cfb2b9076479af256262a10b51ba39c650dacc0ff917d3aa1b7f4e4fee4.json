@@ -1,0 +1,1445 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "The engine has not been wired to a VAMM yet (see `set_vamm`).",
+          "name": "VammNotSet",
+          "value": 1
+        },
+        {
+          "doc": "Token is not configured as margin-eligible (see `set_margin_asset_config`).",
+          "name": "AssetNotConfigured",
+          "value": 2
+        },
+        {
+          "doc": "Withdrawal exceeds the account's balance for that token.",
+          "name": "InsufficientBalance",
+          "value": 3
+        },
+        {
+          "doc": "`settle_position` was called before the pool reached `term_end`.",
+          "name": "PoolNotMatured",
+          "value": 4
+        },
+        {
+          "doc": "The APR oracle returned an invalid variable factor for the position's term.",
+          "name": "InvalidAprRate",
+          "value": 5
+        },
+        {
+          "doc": "A pool with an open position has no worst-case variable factor configured.",
+          "name": "WorstCaseNotSet",
+          "value": 6
+        },
+        {
+          "doc": "A collateral/underlying price needed for valuation was missing or stale.",
+          "name": "StalePrice",
+          "value": 7
+        },
+        {
+          "doc": "Post-action LTV-discounted collateral does not cover the worst-case obligation.",
+          "name": "InsufficientMargin",
+          "value": 8
+        },
+        {
+          "doc": "`settle_position` was called for a position the account does not hold.",
+          "name": "PositionNotFound",
+          "value": 9
+        },
+        {
+          "doc": "Liquidation attempted on an account that is not below its liquidation threshold.",
+          "name": "CannotLiquidate",
+          "value": 10
+        },
+        {
+          "doc": "Liquidation target position has no fixed-token debt to cover (`fixedBalance >= 0`).",
+          "name": "PositionNotInDebt",
+          "value": 11
+        },
+        {
+          "doc": "A partial liquidation would leave dust (sub-threshold) collateral or debt behind.",
+          "name": "DustResidue",
+          "value": 12
+        },
+        {
+          "doc": "The unwind swap did not fully close the position's variable leg.",
+          "name": "VariableTokensNotFullyLiquidated",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Global wiring, set at construction (`vamm` set afterwards via `set_vamm`).",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "APR oracle \\xe2\\x80\\x94 variable factor / settlement (Milestone B).",
+          "name": "apr_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "Reflector price oracle \\xe2\\x80\\x94 collateral valuation (Milestone B).",
+          "name": "price_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "The VAMM allowed to call `update_position_post_vamm_action`.",
+          "name": "vamm",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One LP/taker position's accounting (a trimmed `Position.Info`: liquidation fields\\nomitted). `*_growth_inside_last` snapshot the per-unit-liquidity X128 accumulators; an LP\\nposition's accrued balances are reconstructed from them in [`crate::growth`].",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fixed_growth_inside_last",
+          "type_": "i256"
+        },
+        {
+          "doc": "",
+          "name": "fixed_token_balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_growth_inside_last",
+          "type_": "i256"
+        },
+        {
+          "doc": "",
+          "name": "variable_token_balance",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Aave-style per-asset collateral config.",
+      "lib": "",
+      "name": "AssetConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "default",
+          "type_": {
+            "udt": {
+              "name": "AssetRiskConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "isolated",
+          "type_": {
+            "udt": {
+              "name": "AssetRiskConfig"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An element of an account's position list: the pool (by `pool_id`) and tick range.",
+      "lib": "",
+      "name": "PositionKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-asset risk parameters (WAD). An asset carries two: a `default` (cross-margin) path\\nand an `isolated` path used when it is the account's `isolated_margin_token`.",
+      "lib": "",
+      "name": "AssetRiskConfig",
+      "fields": [
+        {
+          "doc": "Auto-exchange / liquidation bonus (WAD). Unused until liquidations land.",
+          "name": "auto_exchange_bonus",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        },
+        {
+          "doc": "Liquidation threshold (WAD), `\\xe2\\x89\\xa5 ltv`.",
+          "name": "liquidation_threshold",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        },
+        {
+          "doc": "LTV (WAD). Margin gate: `\\xce\\xa3 amount\\xc2\\xb7price\\xc2\\xb7ltv \\xe2\\x89\\xa5 obligation`.",
+          "name": "ltv",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-pool worst-case variable factor envelope (WAD) \\xe2\\x80\\x94 bounds the unknown variable leg\\nwhen valuing a position (Milestone B).",
+      "lib": "",
+      "name": "WorstCaseVariableFactor",
+      "fields": [
+        {
+          "doc": "",
+          "name": "negative_wad",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "positive_wad",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AssetConfig",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "WorstCaseFactor",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PoolKeyOf",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Operator",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "MarginAssets",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Position",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "i32",
+              "i32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AccountPositions",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeMerkleRoot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DustThreshold"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_vamm",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vamm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pool_key_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PoolKey"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Position"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Wire the engine. `admin` governs config; `price_oracle` (Reflector) values collateral;\\n`apr_oracle` supplies the variable factor / settlement.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "apr_oracle",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deposit_margin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_merkle_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_liquidatable",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "settle_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw_margin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_margin_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "liquidate_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "liquidator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_dust_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_account_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_account_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_merkle_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_account_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_account_positions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PositionKey"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_account_margin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delta",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_margin_asset_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "AssetConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_position_settlement",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_margin_asset_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "AssetConfig"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "check_margin_requirement",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_account_margin_values",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "calculate_account_obligation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "calculate_liquidation_amounts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fixed_balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt_to_cover",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "collateral_user_balance",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u128",
+              "u128",
+              "u128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_worst_case_variable_factor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "factor",
+          "type_": {
+            "udt": {
+              "name": "WorstCaseVariableFactor"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_position_post_vamm_action",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "UpdatePositionParams"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "is_liquidation",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool identifier: `keccak256(xdr(PoolKey))`, the Soroban analogue of `PoolKey.toId`.\\n\\nA compact 32-byte handle for a pool: pass it to `mint`/`burn`/`swap` (and the read\\nhelpers) instead of re-supplying the full `PoolKey` on every call. Only `create_pool`,\\n`pool_id`, and `pool_exists` still take the full key.\\n\\nA `#[contracttype]` newtype, NOT a bare `type` alias: an alias makes the spec macros emit\\nan undefined UDT named \"PoolId\" (the CLI then fails \"Missing Entry PoolId\" on\\ndeploy/invoke), whereas the newtype registers a real spec entry. Being a 1-tuple, its wire\\nform wraps the inner bytes \\xe2\\x80\\x94 the CLI renders a `PoolId` as `[\"<hex>\"]` (like `Wad`), not a\\nbare `\"<hex>\"`. Reach the inner `BytesN<32>` via `.0`.",
+      "lib": "",
+      "name": "PoolId",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Trader / LP account. `isolated_margin_token = None` is unrestricted (cross) margin;\\n`Some(token)` selects isolated-margin mode against that asset.",
+      "lib": "",
+      "name": "Account",
+      "fields": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "isolated_margin_token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool identity passed to the CollateralEngine.",
+      "lib": "",
+      "name": "PoolKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "compound_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": {
+            "udt": {
+              "name": "Wad"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "term_end_timestamp",
+          "type_": {
+            "udt": {
+              "name": "TimestampWad"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "term_start_timestamp",
+          "type_": {
+            "udt": {
+              "name": "TimestampWad"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_spacing",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "underlying_asset",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Swap inputs. `amount_specified > 0` is a fixed taker (exact input), `< 0` a variable\\ntaker (exact output). `tick_lower`/`tick_upper` identify the position for the engine.",
+      "lib": "",
+      "name": "SwapParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount_specified",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sqrt_price_limit",
+          "type_": {
+            "udt": {
+              "name": "SqrtPriceX96"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Swap outputs.",
+      "lib": "",
+      "name": "SwapResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_incurred",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fixed_token_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fixed_token_delta_unbalanced",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "position_margin_requirement",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "price_after",
+          "type_": {
+            "udt": {
+              "name": "SqrtPriceX96"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_after",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "variable_token_delta",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Arguments for `CollateralEngine.update_position_post_vamm_action`.\\n\\nMixed-width by design: the token deltas are SEP-41 `i128` amounts, while the\\ngrowth-inside fields are X128 per-unit-liquidity accumulators carried as host `I256`.",
+      "lib": "",
+      "name": "UpdatePositionParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": {
+            "udt": {
+              "name": "Account"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fixed_growth_inside_x128",
+          "type_": "i256"
+        },
+        {
+          "doc": "",
+          "name": "fixed_token_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_delta",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool_key",
+          "type_": {
+            "udt": {
+              "name": "PoolKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tick_lower",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "tick_upper",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "variable_growth_inside_x128",
+          "type_": "i256"
+        },
+        {
+          "doc": "",
+          "name": "variable_token_delta",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An unsigned WAD (`1e18`) fixed-point quantity: a rate, fee, or duration in seconds.",
+      "lib": "",
+      "name": "Wad",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A `Q64.96` sqrt price (`sqrt(token1/token0) * 2^96`). The pool-constrained range\\n(`tick_math::{MIN,MAX}_SQRT_PRICE`) fits in `u128`; wide intermediates widen via\\n[`to_u256`](Self::to_u256).",
+      "lib": "",
+      "name": "SqrtPriceX96",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A Unix timestamp in WAD-scaled seconds (`seconds * 1e18`), the EVM\\n`Time.blockTimestampScaled` convention. Distinct from [`Wad`] so a point in time is\\nnever mistaken for a duration: timestamps only compare and subtract (yielding a\\n[`Wad`] duration).",
+      "lib": "",
+      "name": "TimestampWad",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  }
+]
