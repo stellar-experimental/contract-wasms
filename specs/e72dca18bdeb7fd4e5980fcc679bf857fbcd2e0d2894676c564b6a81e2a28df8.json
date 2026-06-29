@@ -1,0 +1,438 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Explicit, contiguous `u32` error codes so the TypeScript client can map each\\nfailure mode to a precise user-facing message.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientPrincipal",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NoSavers",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NoPrize",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys.\\n\\n`Principal(saver)` lives in *persistent* storage \\xe2\\x80\\x94 a saver's deposit must\\noutlive the contract instance's TTL window (their money is never lost).\\nEverything else (admin/token/aggregates/saver index) lives in *instance*\\nstorage so it shares the instance TTL bumped on every state-changing call.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Sum of every saver's withdrawable principal (escrowed, never raffled).",
+            "name": "TotalPrincipal"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Admin/yield-funded prize that the next draw pays to the winner.",
+            "name": "PrizePool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ordered index of addresses that currently hold a positive principal.",
+            "name": "Savers"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of completed draws.",
+            "name": "DrawCount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Most recent winner (for views / UI).",
+            "name": "LastWinner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Prize paid in the most recent draw.",
+            "name": "LastPrize"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "saver -> withdrawable principal (minor units / stroops).",
+            "name": "Principal",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. Records the admin and the escrow token (a SAC address,\\ne.g. the native XLM contract), zeroes the aggregates, unpauses.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit `amount` of the pool token. The same authorization that the saver\\ngives covers the inner SAC `transfer(saver -> contract)`.\\n\\nReturns the saver's new total principal.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "saver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw `amount` of principal back to the saver. Always available \\xe2\\x80\\x94 this\\nis the no-loss guarantee: a saver can reclaim up to their full principal\\nat any time, regardless of draws. A draw never reduces principal.\\n\\nReturns the saver's remaining principal.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "saver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add `amount` of the token to the prize the next draw pays out. Anyone may\\nfund the prize (the admin, a sponsor, or a yield-routing account); the\\nfunder authorizes the inner transfer into the contract.\\n\\nReturns the new prize-pool balance.",
+      "name": "fund_prize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "funder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only draw. Picks ONE winner, weighted by principal, using the\\non-chain PRNG, and transfers the entire prize pool to them. Principal is\\nuntouched \\xe2\\x80\\x94 only the prize moves. Returns the winning address.",
+      "name": "draw",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "principal_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "saver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_principal",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "prize_pool",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_savers",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "savers",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "draw_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "last_winner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "last_prize",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
