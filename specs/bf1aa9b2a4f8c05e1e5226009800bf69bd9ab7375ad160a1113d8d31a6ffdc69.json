@@ -1,0 +1,329 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "udt": {
+              "name": "WebAuthnSigData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind the account to one secp256r1 (WebAuthn) public key (65-byte uncompressed 0x04||x||y).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Context of a single authorized call performed by an address.\\n\\nCustom account contracts that implement `__check_auth` special function\\nreceive a list of `Context` values corresponding to all the calls that\\nneed to be authorized.",
+      "lib": "",
+      "name": "Context",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "Contract invocation.",
+            "name": "Contract",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ContractContext"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Contract that has a constructor with no arguments is created.",
+            "name": "CreateContractHostFn",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CreateContractHostFnContext"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Contract that has a constructor with 1 or more arguments is created.",
+            "name": "CreateContractWithCtorHostFn",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CreateContractWithConstructorHostFnContext"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Authorization context of a single contract call.\\n\\nThis struct corresponds to a `require_auth_for_args` call for an address\\nfrom `contract` function with `fn_name` name and `args` arguments.",
+      "lib": "",
+      "name": "ContractContext",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fn_name",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Contract executable used for creating a new contract and used in\\n`CreateContractHostFnContext`.",
+      "lib": "",
+      "name": "ContractExecutable",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Wasm",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Authorization context for `create_contract` host function that creates a\\nnew contract on behalf of authorizer address.",
+      "lib": "",
+      "name": "CreateContractHostFnContext",
+      "fields": [
+        {
+          "doc": "",
+          "name": "executable",
+          "type_": {
+            "udt": {
+              "name": "ContractExecutable"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Authorization context for `create_contract` host function that creates a\\nnew contract on behalf of authorizer address.\\nThis is the same as `CreateContractHostFnContext`, but also has\\ncontract constructor arguments.",
+      "lib": "",
+      "name": "CreateContractWithConstructorHostFnContext",
+      "fields": [
+        {
+          "doc": "",
+          "name": "constructor_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "executable",
+          "type_": {
+            "udt": {
+              "name": "ContractExecutable"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error types for WebAuthn verification operations.",
+      "lib": "",
+      "name": "WebAuthnError",
+      "cases": [
+        {
+          "doc": "The signature payload is invalid or has incorrect format.",
+          "name": "SignaturePayloadInvalid",
+          "value": 3110
+        },
+        {
+          "doc": "The client data exceeds the maximum allowed length.",
+          "name": "ClientDataTooLong",
+          "value": 3111
+        },
+        {
+          "doc": "Failed to parse JSON from client data.",
+          "name": "JsonParseError",
+          "value": 3112
+        },
+        {
+          "doc": "The type field in client data is not \"webauthn.get\".",
+          "name": "TypeFieldInvalid",
+          "value": 3113
+        },
+        {
+          "doc": "The challenge in client data does not match expected value.",
+          "name": "ChallengeInvalid",
+          "value": 3114
+        },
+        {
+          "doc": "The authenticator data format is invalid or too short.",
+          "name": "AuthDataFormatInvalid",
+          "value": 3115
+        },
+        {
+          "doc": "The User Present (UP) bit is not set in authenticator flags.",
+          "name": "PresentBitNotSet",
+          "value": 3116
+        },
+        {
+          "doc": "The User Verified (UV) bit is not set in authenticator flags.",
+          "name": "VerifiedBitNotSet",
+          "value": 3117
+        },
+        {
+          "doc": "Invalid relationship between Backup Eligibility and State bits.",
+          "name": "BackupEligibilityAndStateNotSet",
+          "value": 3118
+        },
+        {
+          "doc": "The provided key data does not contain a valid 65-byte public key.",
+          "name": "KeyDataInvalid",
+          "value": 3119
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "WebAuthn signature data structure containing all components needed for\\nverification.\\n\\nThis structure encapsulates the signature and associated data generated\\nduring a WebAuthn authentication ceremony.",
+      "lib": "",
+      "name": "WebAuthnSigData",
+      "fields": [
+        {
+          "doc": "Raw authenticator data from the WebAuthn response.",
+          "name": "authenticator_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Raw client data JSON from the WebAuthn response.",
+          "name": "client_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "The cryptographic signature (64 bytes for secp256r1).",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  }
+]
