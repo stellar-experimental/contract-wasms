@@ -1,0 +1,436 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Where a pool's rate comes from. Single-variant for now; new source kinds\\n(e.g. a contract quoting an APR directly, like Solidity's `ExternalRay`)\\nextend this enum without a storage migration.",
+      "lib": "",
+      "name": "Source",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "The rate is pulled as the ln-slope of a cumulative growth index exposed\\nby this contract (any fixed scale \\xe2\\x80\\x94 only ratios are used).",
+            "name": "GrowthIndex",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "State",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cumulative compound index since inception (RAY). 1.0 == RAY == no growth.",
+      "name": "index",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AprState",
+      "fields": [
+        {
+          "doc": "Cumulative compound index since inception, RAY. 1.0 == RAY == no growth.",
+          "name": "index_ray",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last `Source::GrowthIndex` snapshot (0 = no snapshot yet).",
+          "name": "last_source_index",
+          "type_": "i128"
+        },
+        {
+          "doc": "Observation ring buffer (see [`buffer`]).",
+          "name": "obs",
+          "type_": {
+            "udt": {
+              "name": "RingBuffer"
+            }
+          }
+        },
+        {
+          "doc": "Latest raw instantaneous APR, annualized, RAY (1e27).",
+          "name": "raw_apr_ray",
+          "type_": "i128"
+        },
+        {
+          "doc": "EWMA-smoothed APR, RAY (1e27).",
+          "name": "smooth_apr_ray",
+          "type_": "i128"
+        },
+        {
+          "doc": "Where this pool's rate comes from.",
+          "name": "source",
+          "type_": {
+            "udt": {
+              "name": "Source"
+            }
+          }
+        },
+        {
+          "doc": "EWMA time constant in seconds (0 disables smoothing).",
+          "name": "tau_sec",
+          "type_": "u64"
+        },
+        {
+          "doc": "Last update timestamp (unix seconds). 0 = configured but never updated.",
+          "name": "updated_at",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the contract's wasm (admin-gated). Address and storage are kept.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Index value (RAY) at an arbitrary past timestamp `t`.\\n\\nSemantics (mirroring the Solidity `_indexAt`):\\n* `t` newer than the latest observation -> the latest index (flat:\\nthe index only moves on updates, so this is the stale-read value);\\n* `t` exactly on an observation -> that observation's index;\\n* `t` between two observations -> geometric interpolation\\n(constant-rate assumption between the surrounding snapshots);\\n* `t` in the future, or older than the oldest retained observation,\\nor pool never updated -> panic.",
+      "name": "index_at",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "t",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a pool/asset and start its index at 1.0 (RAY) \"from inception\".\\n\\n`obs_capacity` sizes the per-pool observation ring buffer (must be >= 1).",
+      "name": "configure",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tau_sec",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "obs_capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": {
+            "udt": {
+              "name": "Source"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Full state for a pool (debugging / off-chain reads).",
+      "name": "get_state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AprState"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accrued rate since pool inception as a RAY fraction (`current_index - 1`).\\ne.g. `0.05 * RAY` means 5% has accrued since the pool started.",
+      "name": "accrued_ray",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Advance a `Source::GrowthIndex` pool by pulling its source index and\\nderiving the rate from the index growth since the previous snapshot.\\n\\nDeliberately **permissionless** (mirrors the public `updateState` in the\\nSolidity implementation): the caller only chooses the moment of the update,\\nthe data comes from the configured source and cannot be forged.",
+      "name": "update_state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accrued rate over `[from, to]` as a RAY fraction:\\n`index(to) / index(from) - 1`.",
+      "name": "accrued_between",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read one observation slot (debugging / off-chain reads).",
+      "name": "get_observation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Observation"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Floating rate accrued over `[from, to]` as a [`Wad`] (1e18):\\n`index(to) / index(from) - 1`, converted down from the RAY-scale index.",
+      "name": "get_rate_from_to",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "udt": {
+                  "name": "Wad"
+                }
+              },
+              "bool"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Ring bookkeeping; the slots live in storage under `(owner, slot)` keys.",
+      "lib": "",
+      "name": "RingBuffer",
+      "fields": [
+        {
+          "doc": "Ring size; bounds how far back history reaches.",
+          "name": "capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "Number of slots written so far (grows to `capacity`, then stays there).",
+          "name": "count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Slot of the newest observation.",
+          "name": "head",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A snapshot of some value at a point in time (one slot of the ring).",
+      "lib": "",
+      "name": "Observation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An unsigned WAD (`1e18`) fixed-point quantity: a rate, fee, or duration in seconds.",
+      "lib": "",
+      "name": "Wad",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A `Q64.96` sqrt price (`sqrt(token1/token0) * 2^96`). The pool-constrained range\\n(`tick_math::{MIN,MAX}_SQRT_PRICE`) fits in `u128`; wide intermediates widen via\\n[`to_u256`](Self::to_u256).",
+      "lib": "",
+      "name": "SqrtPriceX96",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A Unix timestamp in WAD-scaled seconds (`seconds * 1e18`), the EVM\\n`Time.blockTimestampScaled` convention. Distinct from [`Wad`] so a point in time is\\nnever mistaken for a duration: timestamps only compare and subtract (yielding a\\n[`Wad`] duration).",
+      "lib": "",
+      "name": "TimestampWad",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u128"
+        }
+      ]
+    }
+  }
+]
