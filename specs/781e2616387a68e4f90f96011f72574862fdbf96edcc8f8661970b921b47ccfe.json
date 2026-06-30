@@ -1,0 +1,514 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "All failure modes are explicit, contiguous `u32` codes so the TypeScript\\nclient can map them to user-facing messages without guessing.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidCapacity",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidTime",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "EventNotFound",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "EventInactive",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "SoldOut",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "TicketNotFound",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "AlreadyUsed",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRefunded",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "EventStarted",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NothingToSettle",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys. `Event` and `Ticket` live in *persistent* storage (they must\\noutlive the contract instance); `Admin`/`Token`/counters live in *instance*\\nstorage so they share the instance's TTL.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Stellar Asset Contract address of the settlement token (native XLM SAC).",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EventCounter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TicketCounter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "event id -> Event",
+            "name": "Event",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "ticket id -> Ticket",
+            "name": "Ticket",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Lifecycle of an event. Created `Active`; an organizer may `Cancel` it, which\\nstops further sales (existing tickets can still be refunded before start).",
+      "lib": "",
+      "name": "EventStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Cancelled",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Lifecycle of a single ticket.\\n- `Valid`    : bought, escrowed, not yet used.\\n- `Used`     : the organizer checked the holder in; price settled to organizer.\\n- `Refunded` : the buyer reclaimed the price before the event started.",
+      "lib": "",
+      "name": "TicketStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Valid",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Used",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Refunded",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An on-chain event. Funds for its tickets are escrowed in the contract until\\neach ticket is either checked in (settles to the organizer) or refunded\\n(returns to the buyer).",
+      "lib": "",
+      "name": "Event",
+      "fields": [
+        {
+          "doc": "Maximum number of tickets that can be sold.",
+          "name": "capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "Creator and the only address allowed to check attendees in.",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "Ticket price in the token's minor units (XLM = 7 decimals / stroops).\\n`0` = free entry.",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Tickets sold so far.",
+          "name": "sold",
+          "type_": "u32"
+        },
+        {
+          "doc": "Unix timestamp (ledger time). Refunds are allowed strictly before this.",
+          "name": "start_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "EventStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single ticket. The contract custodies `price_paid` of the event token\\nuntil the ticket is used (paid out to the organizer) or refunded.",
+      "lib": "",
+      "name": "Ticket",
+      "fields": [
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "Wallet that bought (and owns) the ticket; the only address that can refund.",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount escrowed for this ticket (the event price at purchase time).",
+          "name": "price_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "TicketStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. Records the admin and the settlement token (XLM SAC).",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Organizer creates an event. Returns the new event id.\\n\\nAuth: requires the organizer's signature.",
+      "name": "create_event",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "start_time",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buyer buys a ticket for `event_id`. The price is escrowed into the\\ncontract and an on-chain ticket is recorded. Returns the new ticket id.\\n\\nAuth: requires the buyer's signature (the same authorization covers the\\ninner SAC `transfer(buyer -> contract)`).",
+      "name": "buy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Organizer checks a holder in. Marks the ticket `Used` on-chain and\\nsettles the escrowed price to the organizer.\\n\\nAuth: requires the event organizer's signature (organizer-only).",
+      "name": "check_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ticket_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buyer refunds a ticket before the event starts. Returns the escrowed\\nprice to the owner and flips the ticket to `Refunded`.\\n\\nAuth: requires the ticket owner's signature.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ticket_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Organizer cancels an event, stopping further sales. Existing tickets can\\nstill be refunded before the start time.",
+      "name": "cancel_event",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_event",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Event"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_ticket",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ticket_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Ticket"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_events",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_tickets",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

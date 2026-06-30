@@ -1,0 +1,1004 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "Deprecated: retained for ABI stability (was the issuer-whitelist model,\\nreplaced by open issuance + denylist). No longer raised.",
+          "name": "IssuerNotAuthorized",
+          "value": 2
+        },
+        {
+          "doc": "Deprecated: retained for ABI stability (was the issuer-whitelist model).\\nNo longer raised.",
+          "name": "IssuerAlreadyAuthorized",
+          "value": 3
+        },
+        {
+          "doc": "Vault is revoked; writes blocked.",
+          "name": "VaultRevoked",
+          "value": 4
+        },
+        {
+          "doc": "VC not found in vault or status registry.",
+          "name": "VCNotFound",
+          "value": 6
+        },
+        {
+          "doc": "VC already revoked.",
+          "name": "VCAlreadyRevoked",
+          "value": 7
+        },
+        {
+          "doc": "Vault not initialized for this owner.",
+          "name": "VaultNotInitialized",
+          "value": 8
+        },
+        {
+          "doc": "Contract not initialized (no admin).",
+          "name": "NotInitialized",
+          "value": 9
+        },
+        {
+          "doc": "vault_contract param is not this contract.",
+          "name": "InvalidVaultContract",
+          "value": 10
+        },
+        {
+          "doc": "vc_id already exists in this vault; re-issuance is not allowed.",
+          "name": "VCAlreadyExists",
+          "value": 12
+        },
+        {
+          "doc": "accept_contract_admin called but no admin nomination is pending.",
+          "name": "NoPendingAdmin",
+          "value": 13
+        },
+        {
+          "doc": "Vault has reached the maximum number of active VCs.",
+          "name": "VaultFull",
+          "value": 15
+        },
+        {
+          "doc": "Pagination `limit` exceeds `MAX_LIST_LIMIT`.",
+          "name": "LimitTooLarge",
+          "value": 16
+        },
+        {
+          "doc": "Batch issuance request exceeds `MAX_BATCH_SIZE`.",
+          "name": "BatchTooLarge",
+          "value": 17
+        },
+        {
+          "doc": "Batch issuance called with an empty `vcs` list.",
+          "name": "BatchEmpty",
+          "value": 18
+        },
+        {
+          "doc": "String input exceeds its per-field maximum length (vc_id, vc_data,\\ndid_uri, issuer_did, or date).",
+          "name": "InputTooLong",
+          "value": 19
+        },
+        {
+          "doc": "Deprecated: retained for ABI stability (was the bulk authorize-issuers\\nlist cap). No longer raised.",
+          "name": "IssuerListTooLong",
+          "value": 20
+        },
+        {
+          "doc": "Batch fee total (per-credential fee \\xc3\\x97 batch size) overflowed `i128`.",
+          "name": "FeeOutOfBounds",
+          "value": 23
+        },
+        {
+          "doc": "Source vault is not registered in the factory.",
+          "name": "SourceNotAVault",
+          "value": 24
+        },
+        {
+          "doc": "Issuer is in this vault's denied list.",
+          "name": "IssuerDenied",
+          "value": 25
+        },
+        {
+          "doc": "receive_push source vault has a different owner than this vault.",
+          "name": "PushOwnerMismatch",
+          "value": 26
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "VC payload stored in a vault. `data` should be ciphertext only (never plaintext PII).",
+      "lib": "",
+      "name": "VerifiableCredential",
+      "fields": [
+        {
+          "doc": "VC payload (ciphertext or reference).",
+          "name": "data",
+          "type_": "string"
+        },
+        {
+          "doc": "Application-level VC identifier.",
+          "name": "id",
+          "type_": "string"
+        },
+        {
+          "doc": "Issuance contract that can verify/revoke the VC status.",
+          "name": "issuance_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "Issuer DID (metadata for wallets/UX).",
+          "name": "issuer_did",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "dest",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Status of a VC in the issuance registry.",
+      "lib": "",
+      "name": "VCStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "VC exists and is currently valid.",
+            "name": "Valid"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "VC does not exist in the registry.",
+            "name": "Invalid"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "VC was revoked at the given ISO-8601 date string.",
+            "name": "Revoked",
+            "type_": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VCIssued",
+      "prefix_topics": [
+        "vc_issued"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VCPushed",
+      "prefix_topics": [
+        "vc_pushed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "dest_vault",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VCRevoked",
+      "prefix_topics": [
+        "vc_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "date",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "IssuerDenied",
+      "prefix_topics": [
+        "issuer_denied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultCreated",
+      "prefix_topics": [
+        "vault_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "did_uri",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultRevoked",
+      "prefix_topics": [
+        "vault_revoked"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "IssuerAllowed",
+      "prefix_topics": [
+        "issuer_allowed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminNominated",
+      "prefix_topics": [
+        "admin_nominated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nominee",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultDidChanged",
+      "prefix_topics": [
+        "vault_did_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "did_uri",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferred",
+      "prefix_topics": [
+        "admin_transferred"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultAdminChanged",
+      "prefix_topics": [
+        "vault_admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractInitialized",
+      "prefix_topics": [
+        "contract_initialized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys. Instance = admin, flags. Persistent = vault metadata, VCs, status.",
+      "lib": "",
+      "name": "VcVaultDataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ContractAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultOwner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultFactory"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultDid"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VaultRevoked"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of denied issuers.",
+            "name": "VaultDeniedIssuerCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Denied issuer at a given position (0-indexed).",
+            "name": "VaultDeniedIssuerIndex",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Position of a given denied issuer.",
+            "name": "VaultDeniedIssuerPosition",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "VaultVC",
+            "type_": [
+              "string"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of active VCs in this vault.",
+            "name": "VaultVCCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "vc_id at a given position (0-indexed).",
+            "name": "VaultVCIndex",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Position of a given vc_id in the index.",
+            "name": "VaultVCPosition",
+            "type_": [
+              "string"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "VCStatus",
+            "type_": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "push",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "dest_vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "issue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "vc_data",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "vault_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "issuer_addr",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "issuer_did",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_vc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "VerifiableCredential"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revoke",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "date",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vc_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vault_did",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "verify_vc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VCStatus"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "batch_issue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_addr",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "issuer_did",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "vcs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "string",
+                    "string"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deny_issuer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "list_vc_ids",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vault_owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "allow_issuer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer_addr",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "receive_push",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "source_vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "source_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vc_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "vc_data",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "issuer_did",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revoke_vault",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "did_uri",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "factory_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_vault_did",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "did_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "nominate_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_vault_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "denied_issuer_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "list_denied_issuers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_contract_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]
