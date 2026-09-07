@@ -1,0 +1,615 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Read-only snapshot returned by `get_config`. `receiver` is `None` until an\\nadmin wires it with `set_receiver` after both contracts are deployed.",
+      "lib": "",
+      "name": "ExecutorConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed_pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address"
+        },
+        {
+          "doc": "Allowed-submitters list (multi-submitter upgrade, 2026-09-06). When the\\n`Submitters` key was never set this reflects the fallback: the legacy\\nsingle `submitter` above, alone.",
+          "name": "submitters",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Submitter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AllowedPools"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Receiver"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Vec<Address> of allowed submitters (multi-submitter upgrade, 2026-09-06).\\nAppended after the original variants -- existing entries' XDR keys are\\nname-encoded, so adding a variant never shifts them.",
+            "name": "Submitters"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes admin (withdraw/pause/upgrade/set_receiver), submitter (seeds\\nthe allowed-submitters list -- it is the sole allowed submitter until the\\nadmin calls `set_submitters`), and the Blend-pool allow-list. The\\nreceiver is wired separately post-deploy via `set_receiver` (circular dep).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed_pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ExecutorConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_submitter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_submitter",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: replace the whole allowed-submitters list (multi-submitter\\nupgrade, 2026-09-06). Whole-list replace, idempotent, mirroring\\n`set_allowed_pools`. Until this is called for the first time, the list\\nfalls back to the legacy single submitter (see `storage::get_submitters`),\\nso calling it is safe at any point after the wasm upgrade. Setting an\\nempty list locks every submitter out of `execute`/`execute_owned` until\\nthe admin sets a non-empty one (use `pause` as the intended kill switch).",
+      "name": "set_submitters",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "submitters",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_allowed_pools",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only: wire the deployed receiver. Required before `execute` works.",
+      "name": "set_receiver",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-only profit sweep. The contract accumulates profit (spec: no auto-sweep).",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs one flash-loan-financed arb route atomically. Only an address on\\nthe allowed-submitters list may call (multi-submitter upgrade,\\n2026-09-06): the caller names itself via `submitter` and must authorize\\nthe invocation (implicitly satisfied when it is the tx source account).\\nReturns realized profit in `loan_asset` raw units.\\n\\nTwo-contract flow (avoids Soroban's re-entry prohibition): arm the receiver\\n(sub-call returns \\xe2\\x86\\x92 receiver off-stack) \\xe2\\x86\\x92 approve the pool \\xe2\\x86\\x92 `flash_loan`\\n(pool calls the now-off-stack receiver's `exec_op`, a fresh invocation) \\xe2\\x86\\x92\\ndisarm (proves the callback ran) \\xe2\\x86\\x92 assert profit on the real balance delta.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "loan_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "loan_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Leg"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs one arb cycle financed from this contract's own `asset` balance\\n(operator deposits are plain transfers to this address; the admin's\\n`withdraw` doubles as the rescue path). Same gates as `execute` minus\\nthe Blend allow-list \\xe2\\x80\\x94 no pool is involved (including the same\\nallowed-submitters gate on the `submitter` arg). Returns realized profit.",
+      "name": "execute_owned",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Leg"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ExecutorError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExceeded",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "PoolNotAllowed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BadRoute",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotInFlight",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AlreadyExecuted",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "FlightNotConsumed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "MinOutNotMet",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "MinProfitNotMet",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "UnknownVenue",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "ReceiverNotSet",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "AlreadyArmed",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "SubmitterNotAllowed",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Venue discriminants \\xe2\\x80\\x94 MUST stay in sync with src/executor/txBuilder.ts VENUE_IDS.",
+      "lib": "",
+      "name": "Venue",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Soroswap",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Aqua",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Phoenix",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Comet",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Sushi",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One swap hop. `amount_in` is NOT stored: leg *i* consumes leg *i\\xe2\\x88\\x921*'s actual\\noutput (leg 0 consumes the loan amount).",
+      "lib": "",
+      "name": "Leg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "venue",
+          "type_": {
+            "udt": {
+              "name": "Venue"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirrors Blend v2's FlashLoan (verified: .superpowers/iface-blend-fixed-v2.txt).\\nDeclared locally \\xe2\\x80\\x94 resources/ is never a dependency.",
+      "lib": "",
+      "name": "FlashLoan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirrors Blend v2's Request. request_type Repay = 5\\n(resources/blend-protocol/pool/src/pool/actions.rs:29).",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One in-flight flash-loan execution, staged by the executor via `receiver.arm`\\nand consumed by `receiver.exec_op`. Lives in the receiver's temporary storage;\\nstrictly single-use within a transaction (armed \\xe2\\x86\\x92 consumed \\xe2\\x86\\x92 disarmed).",
+      "lib": "",
+      "name": "Flight",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "consumed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Leg"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
