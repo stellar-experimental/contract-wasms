@@ -1,0 +1,933 @@
+[
+  {
+    "function_v0": {
+      "doc": "Stops both swap entrypoints. Admin.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moves this contract's whole balance of `token` to the treasury (\\xc2\\xa75.10). Admin. The\\ntreasury is the only destination, so there is no address to get wrong; the keeper\\nconverts or withdraws from there under the treasury's rules. A zero balance is not an\\nerror. Only intermediate dust can ever be here: every hop pulls exactly its input and\\nthe swap refunds any leftover input.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin.",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "In-place upgrade to an already uploaded wasm. Admin.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the protocol fee and the partner floor. Admin.",
+      "name": "set_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "protocol_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_partner_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Repoints the Soroswap and Aqua routers (\\xc2\\xa75.2). Admin. Pools of the other venues are\\nnamed per hop and need no setting.",
+      "name": "set_routers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Second half: the pending admin signs.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Points fees at another treasury. Admin.",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploys with the admin, the treasury fees go to, the two fee dials and the two venue\\nrouters (\\xc2\\xa75.1).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_partner_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swaps exactly `amount_in` of `token_in` for at least `min_out` of `token_out` through\\n`routes`, each route's hops run in order with this contract as caller and each hop's\\nreturned amount feeding the next. Returns the amount of `token_out` delivered. Fee in\\n`token_in` per v3 \\xc2\\xa75.3; the routes' shares add up to the post-fee amount (\\xc2\\xa75.3). \\xc2\\xa75.4\\nlists the steps in order.",
+      "name": "swap_exact_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Route"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "Partner"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buys at least `amount_out` of `token_out` (everything delivered is paid out) for at\\nmost `max_in` of `token_in`, fee included. The routes are exact-in hops sized by the\\napi from a forward quote; the fee is taken on the input they consumed (\\xc2\\xa75.5). Returns\\nthe input spent, hops plus fee.",
+      "name": "swap_exact_out",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Route"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "Partner"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "First half of the admin rotation. Admin.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Spec \\xc2\\xa75.8. Numbering is part of the api contract: the api maps codes to messages.",
+      "lib": "",
+      "name": "AggregatorError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "SameToken",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PartnerBpsOutOfRange",
+          "value": 4
+        },
+        {
+          "doc": "\\xc2\\xa75.3: empty routes or hops, non-positive share, shares that do not add up, broken\\ncontinuity, an Aqua hop without steps, an Aqua return above `i128::MAX`, or a Sushi\\npool returning `i128::MIN` on the received leg, where `checked_neg` fails.",
+          "name": "BadRoute",
+          "value": 5
+        },
+        {
+          "doc": "A Comet hop left `allowance(aggregator, pool) > 0` after the call (\\xc2\\xa75.7).",
+          "name": "AllowanceLeft",
+          "value": 6
+        },
+        {
+          "doc": "Delivered less than `min_out` (exact-in) or `amount_out` (exact-out).",
+          "name": "InsufficientOutput",
+          "value": 7
+        },
+        {
+          "doc": "Exact-out: the hops consumed no input, or the leftover input cannot cover the fee.",
+          "name": "InsufficientInput",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 9
+        },
+        {
+          "doc": "A dial above `MAX_BPS`, or `min_partner_bps < protocol_bps`.",
+          "name": "BpsOutOfRange",
+          "value": 10
+        },
+        {
+          "doc": "`Partner.id` is longer than 9 characters (not a `SymbolSmall`).",
+          "name": "PartnerIdTooLong",
+          "value": 11
+        },
+        {
+          "doc": "Config missing. Unreachable after the constructor; kept so the read has no unwrap.",
+          "name": "NotInitialized",
+          "value": 12
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One per swap. `#[contractevent]` puts `swap` as the first topic (soroban-sdk-macros\\nderive_event.rs:106), so the three topic fields fill the four-topic limit exactly.",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Deposit for exact-in; `consumed + fee` for exact-out.",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": {
+            "option": {
+              "value_type": "symbol"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One per admin `sweep` (\\xc2\\xa75.9), including a zero amount.",
+      "lib": "",
+      "name": "Swept",
+      "prefix_topics": [
+        "swept"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeesSet",
+      "prefix_topics": [
+        "fees_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "protocol_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "min_partner_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausedSet",
+      "prefix_topics": [
+        "paused_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoutersSet",
+      "prefix_topics": [
+        "routers_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "soroswap_router",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminAccept",
+      "prefix_topics": [
+        "admin_accept"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreasurySet",
+      "prefix_topics": [
+        "treasury_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransfer",
+      "prefix_topics": [
+        "admin_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pend_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The one instance entry, read once per swap (\\xc2\\xa75.1).",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Aqua router every `Hop::Aqua` calls (mainnet `CBQDHNBF\\xe2\\x80\\xa6`, \\xc2\\xa75.1).",
+          "name": "aqua_router",
+          "type_": "address"
+        },
+        {
+          "doc": "Floor for `Partner.bps`; never below `protocol_bps`.",
+          "name": "min_partner_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "pend_admin",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Fee when no partner is given; 0 turns the protocol fee off.",
+          "name": "protocol_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Soroswap router every `Hop::Soroswap` calls (mainnet `CAG5LRYQ\\xe2\\x80\\xa6`, \\xc2\\xa75.1).",
+          "name": "soroswap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Variant names stay at most 9 chars so the key encodes as a SymbolSmall.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "One venue call. Variants are tagged by name on the wire, so declaration order is\\ncosmetic: Phoenix and Comet are last because they are the first to be removed (\\xc2\\xa72).",
+      "lib": "",
+      "name": "Hop",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Soroswap",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SoroswapHop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aqua",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AquaHop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Sushi",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SushiHop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Phoenix",
+            "type_": [
+              {
+                "udt": {
+                  "name": "PhoenixHop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Comet",
+            "type_": [
+              {
+                "udt": {
+                  "name": "CometHop"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One path from token_in to token_out with its share of the input (\\xc2\\xa74).",
+      "lib": "",
+      "name": "Route",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Hop"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Aqua: one `swap_chained` call over one or more pools. Each step is exactly the router's\\n`swaps_chain` element: (the pool's full token set sorted by binary ScAddress order,\\npool hash, token out of that step). Passed through unchanged. The hop's token out is the\\nlast step's.",
+      "lib": "",
+      "name": "AquaHop",
+      "fields": [
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    {
+                      "vec": {
+                        "element_type": "address"
+                      }
+                    },
+                    {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    },
+                    "address"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Partner attribution. `bps` is the whole fee the user pays on this swap.",
+      "lib": "",
+      "name": "Partner",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Comet: one pool swap.",
+      "lib": "",
+      "name": "CometHop",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Sushi: one pool swap. `zero_for_one` is `token_in == pool.token0()`; a wrong value makes\\nthe pool pull a token the aggregator did not grant, and the swap fails in the host.",
+      "lib": "",
+      "name": "SushiHop",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "zero_for_one",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Phoenix: one pool swap, the pool called directly (the multihop returns nothing, \\xc2\\xa72).",
+      "lib": "",
+      "name": "PhoenixHop",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Soroswap: one router call with path [token_in, token_out]. `pair` is the pool the\\nrouter pulls into; the api has it as the hop's poolId.",
+      "lib": "",
+      "name": "SoroswapHop",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
