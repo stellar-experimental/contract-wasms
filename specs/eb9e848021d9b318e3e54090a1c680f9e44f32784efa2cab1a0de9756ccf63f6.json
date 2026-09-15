@@ -1,0 +1,909 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Un nodo del Fenwick tree. Guarda los coeficientes lineales del peso\\n(`T\\xc2\\xb7a \\xe2\\x88\\x92 b`) para su rango de \\xc3\\xadndices, m\\xc3\\xa1s una copia congelada para la\\nronda cuyo sorteo est\\xc3\\xa1 pendiente.\\n\\nLas estampas de ronda valen 0 en un nodo reci\\xc3\\xa9n creado, y 0 nunca es una\\nronda real (empiezan en 1): as\\xc3\\xad un nodo fresco no puede confundirse con uno\\nescrito o congelado en la ronda en curso.",
+      "lib": "",
+      "name": "Nodo",
+      "fields": [
+        {
+          "doc": "\\xce\\xa3 dep\\xc3\\xb3sito del rango. Sobrevive entre rondas.",
+          "name": "a",
+          "type_": "i128"
+        },
+        {
+          "doc": "Copia de `(a, b)` tal como estaban al cerrar `ronda_congelada`.",
+          "name": "a_congelado",
+          "type_": "i128"
+        },
+        {
+          "doc": "\\xce\\xa3 b del rango, v\\xc3\\xa1lido solo para `ronda_b`. Otra ronda lo lee como 0.",
+          "name": "b",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "b_congelado",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ronda_b",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ronda_congelada",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Clave",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Ronda"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RondaDesde"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CierraAt"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Entropia"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sorteo"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Cuentas con \\xc3\\xadndice asignado. Solo crece.",
+            "name": "Indexadas"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Cuentas con dep\\xc3\\xb3sito > 0 ahora.",
+            "name": "Activas"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Capital total depositado. Lo que nadie puede perder.",
+            "name": "Principal"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "\\xce\\xa3 a de todo el \\xc3\\xa1rbol: capital m\\xc3\\xa1s bonos de referidos.",
+            "name": "TotalA"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "\\xce\\xa3 b de todo el \\xc3\\xa1rbol para una ronda.",
+            "name": "TotalB",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Cuenta",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Direccion",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Nodo",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "SinInicializar",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "MontoInvalido",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "SaldoInsuficiente",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PozoLleno",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NoParticipa",
+          "value": 5
+        },
+        {
+          "doc": "La ronda todav\\xc3\\xada no venci\\xc3\\xb3.",
+          "name": "RondaEnCurso",
+          "value": 6
+        },
+        {
+          "doc": "No hay ninguna ronda cerrada esperando sorteo.",
+          "name": "SinCierre",
+          "value": 7
+        },
+        {
+          "doc": "Ya hay una ronda cerrada esperando su firma de drand.",
+          "name": "RondaYaCerrada",
+          "value": 8
+        },
+        {
+          "doc": "La firma no es la de drand para la ronda fijada al cerrar.",
+          "name": "FirmaInvalida",
+          "value": 9
+        },
+        {
+          "doc": "No hay peso: nadie particip\\xc3\\xb3 de la ronda.",
+          "name": "SinParticipantes",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "PeriodoInvalido",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "DrandInvalido",
+          "value": 12
+        },
+        {
+          "doc": "El dep\\xc3\\xb3sito superar\\xc3\\xada el tope de capital del pozo.",
+          "name": "TopeAlcanzado",
+          "value": 13
+        },
+        {
+          "doc": "Ya se marc\\xc3\\xb3 la racha hoy (d\\xc3\\xada UTC).",
+          "name": "YaAhorroHoy",
+          "value": 14
+        },
+        {
+          "doc": "La racha exige tener capital adentro.",
+          "name": "SinDeposito",
+          "value": 15
+        },
+        {
+          "doc": "El referente es uno mismo o no existe en el pozo.",
+          "name": "ReferenteInvalido",
+          "value": 16
+        },
+        {
+          "doc": "El referente solo se declara en el primer dep\\xc3\\xb3sito.",
+          "name": "NoEsPrimerDeposito",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Lo que necesita la pantalla, en una sola llamada.",
+      "lib": "",
+      "name": "Vista",
+      "fields": [
+        {
+          "doc": "Rendimiento anual en puntos b\\xc3\\xa1sicos, derivado de lo que reporta la\\nfuente. `None` mientras no haya con qu\\xc3\\xa9 calcularlo.",
+          "name": "apy_bps",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "cierra_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Cuentas con capital adentro ahora.",
+          "name": "participantes",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "periodo",
+          "type_": "u64"
+        },
+        {
+          "doc": "Rendimiento en juego: el generado hasta ahora, o el congelado si la\\nronda ya cerr\\xc3\\xb3 y espera su sorteo.",
+          "name": "premio",
+          "type_": "i128"
+        },
+        {
+          "doc": "Capital total depositado. Es lo que nadie puede perder.",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ronda",
+          "type_": "u32"
+        },
+        {
+          "doc": "Qu\\xc3\\xa9 ronda de drand hay que traer para sortear, si hay una pendiente.",
+          "name": "ronda_drand",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        },
+        {
+          "doc": "`true` entre el cierre y el sorteo.",
+          "name": "sorteo_pendiente",
+          "type_": "bool"
+        },
+        {
+          "doc": "Capital total m\\xc3\\xa1ximo. 0 = sin tope.",
+          "name": "tope",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Racha",
+      "prefix_topics": [
+        "racha"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "racha",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Peso (dep\\xc3\\xb3sito \\xc3\\x97 segundos) que sum\\xc3\\xb3 por marcar hoy.",
+          "name": "bono",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Unix time de la ronda 1 de drand.",
+          "name": "drand_genesis",
+          "type_": "u64"
+        },
+        {
+          "doc": "Segundos entre rondas de drand.",
+          "name": "drand_periodo",
+          "type_": "u64"
+        },
+        {
+          "doc": "Clave p\\xc3\\xbablica del grupo de drand, G2 sin comprimir.",
+          "name": "drand_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "Contrato que genera el rendimiento (Blend en producci\\xc3\\xb3n, mock en tests).",
+          "name": "fuente",
+          "type_": "address"
+        },
+        {
+          "doc": "Duraci\\xc3\\xb3n de una ronda, en segundos.",
+          "name": "periodo",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Capital total m\\xc3\\xa1ximo. 0 = sin tope. Fijo: el pozo no tiene admin.",
+          "name": "tope",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Una cuenta. Una entrada de storage por cuenta; nunca se listan.",
+      "lib": "",
+      "name": "Cuenta",
+      "fields": [
+        {
+          "doc": "`REF_BPS` del capital de sus referidos. Entra en `a` con tope.",
+          "name": "bono_ref",
+          "type_": "i128"
+        },
+        {
+          "doc": "Capital actual. Nunca se toca al sortear.",
+          "name": "deposito",
+          "type_": "i128"
+        },
+        {
+          "doc": "Segundos desde el inicio de la ronda hasta el \\xc3\\xbaltimo movimiento.",
+          "name": "desde",
+          "type_": "u64"
+        },
+        {
+          "doc": "Peso ya devengado en la ronda: dep\\xc3\\xb3sito \\xc3\\x97 segundos, hasta `desde`,\\nm\\xc3\\xa1s los bonos de racha de la ronda.",
+          "name": "devengado",
+          "type_": "i128"
+        },
+        {
+          "doc": "Posici\\xc3\\xb3n 1-based en el \\xc3\\xa1rbol. Se asigna al primer dep\\xc3\\xb3sito y no se\\nreusa nunca.",
+          "name": "indice",
+          "type_": "u32"
+        },
+        {
+          "doc": "D\\xc3\\xadas seguidos de \"ahorr\\xc3\\xa9 hoy\". Se corta al saltear un d\\xc3\\xada.",
+          "name": "racha",
+          "type_": "u32"
+        },
+        {
+          "doc": "Qui\\xc3\\xa9n la invit\\xc3\\xb3, si alguien. Se fija en el primer dep\\xc3\\xb3sito.",
+          "name": "referente",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Cu\\xc3\\xa1ntas cuentas la declararon como referente.",
+          "name": "referidos",
+          "type_": "u32"
+        },
+        {
+          "doc": "Ronda a la que corresponden `desde` y `devengado`. Si es anterior a la\\nronda en curso, los dos valen 0 para la ronda en curso.",
+          "name": "ronda",
+          "type_": "u32"
+        },
+        {
+          "doc": "\\xc3\\x9altimo d\\xc3\\xada UTC (timestamp / 86400) en que marc\\xc3\\xb3 la racha.",
+          "name": "ultimo_dia",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Una ronda cerrada esperando su firma. Todo lo que define el sorteo queda\\nfijo ac\\xc3\\xa1 o congelado en el \\xc3\\xa1rbol: depositar o retirar despu\\xc3\\xa9s no lo cambia.",
+      "lib": "",
+      "name": "Sorteo",
+      "fields": [
+        {
+          "doc": "Entrop\\xc3\\xada acumulada de los dep\\xc3\\xb3sitos hasta el cierre.",
+          "name": "entropia",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "peso_total",
+          "type_": "i128"
+        },
+        {
+          "doc": "Rendimiento generado hasta el cierre. Es lo que se paga.",
+          "name": "premio",
+          "type_": "i128"
+        },
+        {
+          "doc": "La ronda del pozo que cerr\\xc3\\xb3.",
+          "name": "ronda",
+          "type_": "u32"
+        },
+        {
+          "doc": "La ronda de drand cuya firma decide. Estaba en el futuro al cerrar.",
+          "name": "ronda_drand",
+          "type_": "u64"
+        },
+        {
+          "doc": "Instante del cierre, en segundos desde el inicio de esa ronda.",
+          "name": "t_cierre",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Capital de una cuenta. Lo que puede retirar, siempre.",
+      "name": "saldo",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Retiro",
+      "prefix_topics": [
+        "retiro"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "monto",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Todo lo que muestra la pantalla, en una llamada.",
+      "name": "estado",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Vista"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retira capital. Sin penalidad y en cualquier momento: el producto se\\napoya en que nadie pierde nada, y una salida trabada romper\\xc3\\xada eso.\\n\\nNo depende de que haya o no un sorteo pendiente. El peso ya devengado en\\nla ronda se conserva: la plata estuvo generando mientras estuvo adentro.",
+      "name": "retirar",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "monto",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposito",
+      "prefix_topics": [
+        "deposito"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "monto",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Referido",
+      "prefix_topics": [
+        "referido"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "referente",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "referido",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "La cuenta entera: capital, racha, referidos. `None` si nunca deposit\\xc3\\xb3.",
+      "name": "cuenta_de",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Cuenta"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposita capital y entra al sorteo. El capital se puede retirar entero\\ncuando se quiera: lo que se sortea es el rendimiento, nunca el capital.",
+      "name": "depositar",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "monto",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Marca la racha de hoy. Una vez por d\\xc3\\xada UTC; exige capital adentro.\\n\\nCada d\\xc3\\xada seguido suma m\\xc3\\xa1s peso a la ronda en curso:\\n`dep\\xc3\\xb3sito \\xc3\\x97 periodo \\xc3\\x97 d\\xc3\\xada / RACHA_DIVISOR`. Siete d\\xc3\\xadas seguidos suman\\nun per\\xc3\\xadodo entero de peso, o sea duplican las chances. Saltear un d\\xc3\\xada\\nvuelve al d\\xc3\\xada 1. El peso entra en la misma unidad que todo lo dem\\xc3\\xa1s\\n(dep\\xc3\\xb3sito \\xc3\\x97 tiempo), as\\xc3\\xad que la escala del \\xc3\\xa1rbol no cambia.",
+      "name": "ahorrar_hoy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Chances de una cuenta sobre el total, en puntos b\\xc3\\xa1sicos, para la ronda\\nen curso.\\n\\nEs lo que muestra la UI como \"tu probabilidad\". El peso es\\ndep\\xc3\\xb3sito \\xc3\\x97 tiempo: depositar justo antes del cierre casi no suma.\\n\\nTrunca hacia abajo, as\\xc3\\xad que las chances de todos suman hasta\\n`participantes - 1` puntos menos de 10.000. Nunca m\\xc3\\xa1s: nadie ve una\\nprobabilidad mayor a la que tiene.",
+      "name": "chances_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RondaCerrada",
+      "prefix_topics": [
+        "ronda_cerrada"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "ronda",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "La ronda de drand que hay que traer. El keeper la lee de ac\\xc3\\xa1.",
+          "name": "ronda_drand",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "peso_total",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "premio",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cierra la ronda vencida y congela el sorteo. Cualquiera puede llamarla.\\n\\nFija la ronda de drand que va a decidir, \\xe2\\x89\\xa5 `MARGEN_SEGUNDOS` en el\\nfuturo: al cerrar, esa firma todav\\xc3\\xada no existe para nadie. La ronda\\nsiguiente arranca ac\\xc3\\xa1 mismo: lo que se deposite desde ahora cuenta para\\nella y no toca las chances de la que cerr\\xc3\\xb3.",
+      "name": "cerrar_ronda",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constructor: corre en la misma transacci\\xc3\\xb3n que el deploy, as\\xc3\\xad que nadie\\npuede adelantarse a inicializar con otra configuraci\\xc3\\xb3n.\\n\\nNo hay admin ni keeper. Despu\\xc3\\xa9s de esto el contrato no tiene llaves.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fuente",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "periodo",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "tope",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "drand_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_genesis",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_periodo",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SorteoEjecutado",
+      "prefix_topics": [
+        "sorteo_ejecutado"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "ronda",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "ganador",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "premio",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Para que cualquiera pueda recomputar el sorteo y verificarlo.",
+          "name": "ronda_drand",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "firma",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "peso_total",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Trae la firma de drand de la ronda fijada al cerrar, verifica, elige\\nganador y le paga el rendimiento. Cualquiera puede llamarla.\\n\\nEl capital de todos queda intacto. La ronda siguiente ya est\\xc3\\xa1 corriendo\\ndesde el cierre; esto solo paga.",
+      "name": "ejecutar_sorteo",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "firma",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Primer dep\\xc3\\xb3sito declarando qui\\xc3\\xa9n invit\\xc3\\xb3. El referente pasa a pesar como\\nsi tuviera `REF_BPS` del capital del referido, mientras est\\xc3\\xa9 adentro.",
+      "name": "depositar_con_referente",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usuario",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "monto",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "referente",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
