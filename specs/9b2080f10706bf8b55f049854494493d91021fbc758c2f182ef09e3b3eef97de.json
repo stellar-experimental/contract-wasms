@@ -1,0 +1,460 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "enforce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": {
+            "udt": {
+              "name": "Context"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "authenticated_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "install",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "install_params",
+          "type_": {
+            "udt": {
+              "name": "PolicyInstallParams"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "uninstall",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "grammar_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "rotate_master_signer_set",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rule_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "new_set",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "An authorised identity for a context rule.",
+      "lib": "",
+      "name": "Signer",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Delegated",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "External",
+            "type_": [
+              "address",
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "OZ's `ContextRule`, in full.\\n\\nEvery field is declared even though the interpreter only reads `id`,\\n`signers` and (via the caller) `valid_until`. A `#[contracttype]` struct\\ndecodes from a host map keyed by field name and requires an EXACT field\\nset - a subset raises `Error(Object, UnexpectedSize)` and the call traps\\nbefore any policy logic runs. This type is the wire shape the smart\\naccount sends, not a convenience view of it, so it has to match OZ's\\ndefinition field for field.\\n\\nPinned against `packages/accounts/src/smart_account/storage.rs` in OZ\\nstellar-accounts. `tests/oz_abi.rs` decodes a hand-built map into this\\nstruct so a drift here fails a test rather than only failing on chain.",
+      "lib": "",
+      "name": "ContextRule",
+      "fields": [
+        {
+          "doc": "",
+          "name": "context_type",
+          "type_": {
+            "udt": {
+              "name": "ContextRuleType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "policies",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policy_ids",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signer_ids",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "valid_until",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What a context rule is scoped to. Mirrors OZ's\\n`smart_account::storage::ContextRuleType`.",
+      "lib": "",
+      "name": "ContextRuleType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Default"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CallContract",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CreateContract",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Frozen wire ABI for `Policy::install`'s `AccountParams`.\\n\\n`predicate` is the raw canonical ScVal XDR \\xe2\\x80\\x94 `ScVal::Vec([symbol, ...])`\\nfor the root \\xe2\\x80\\x94 that the encoder emits. The host parses it on receipt; the\\ncontract never touches `stellar-xdr`.",
+      "lib": "",
+      "name": "PolicyInstallParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "grammar_version",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "install_nonce",
+          "type_": "u32"
+        },
+        {
+          "doc": "The Policy Signer role: the set that authorises re-install, uninstall\\nand rotation of this mandate. Appointed explicitly here, under the\\naccount's own authorisation, so it can differ from the rule's signers\\n(the operators). The first install stores it as the master set; a\\nre-install must present the same set, and only\\n`rotate_master_signer_set` may change it.",
+          "name": "policy_admins",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "predicate",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "predicate_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StoredDoc",
+      "fields": [
+        {
+          "doc": "",
+          "name": "predicate_bytes",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PolicyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ArgMismatch",
+          "value": 100
+        },
+        {
+          "doc": "",
+          "name": "ContractScope",
+          "value": 101
+        },
+        {
+          "doc": "A `call_arg_scaled` operand overflowed `checked_mul`/`checked_div`, or\\nreached the evaluator with a zero denominator. Denies rather than\\npanicking the frame on the arithmetic itself.",
+          "name": "ArithmeticOverflow",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedNode",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "NotInAllowlist",
+          "value": 105
+        },
+        {
+          "doc": "A comparison against a `call_arg_scaled` operand failed. Distinct from\\n`ArgMismatch` so a swap policy's review card can say \"output below the\\nfloor\" rather than \"argument mismatch\".",
+          "name": "SlippageFloor",
+          "value": 107
+        },
+        {
+          "doc": "",
+          "name": "VersionMismatch",
+          "value": 200
+        },
+        {
+          "doc": "",
+          "name": "MalformedPredicate",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "NonceReplay",
+          "value": 202
+        },
+        {
+          "doc": "",
+          "name": "MasterAuthRequired",
+          "value": 203
+        },
+        {
+          "doc": "",
+          "name": "RuleSignersChanged",
+          "value": 204
+        },
+        {
+          "doc": "",
+          "name": "MissingState",
+          "value": 206
+        },
+        {
+          "doc": "",
+          "name": "PredicateTooLarge",
+          "value": 207
+        },
+        {
+          "doc": "",
+          "name": "PredicateHashMismatch",
+          "value": 208
+        },
+        {
+          "doc": "",
+          "name": "EmptySignerSet",
+          "value": 209
+        },
+        {
+          "doc": "",
+          "name": "NoAuthenticatedSigners",
+          "value": 210
+        },
+        {
+          "doc": "",
+          "name": "ExternalSignerNotSupported",
+          "value": 212
+        },
+        {
+          "doc": "A `call_arg_scaled` leaf declared `den == 0`, or a non-positive `num`\\nor `den`. A zero denominator would divide by zero at evaluate; a\\nnegative ratio silently INVERTS the comparison, so a floor written as\\n`call_arg >= call_arg_scaled(in, -1, 100)` would permit exactly the\\ntrades it was meant to refuse. Refused at install so the mistake is\\nloud once rather than silent forever.",
+          "name": "InvalidScaledRatio",
+          "value": 214
+        },
+        {
+          "doc": "Predicate carries no selector leaf - literals on both sides of every\\ncompare, no `call_contract`/`call_fn`/`call_arg`/`now`. Such a\\npredicate is either trivially true or trivially false at install\\ntime, so it permits everything or nothing forever. Refused at\\ninstall.",
+          "name": "SelectorLeafRequired",
+          "value": 216
+        },
+        {
+          "doc": "Master signer set exceeded `MAX_SIGNERS`. Re-hashed on every permit\\nand one `require_auth` per signer; an unbounded set pushes `enforce`\\npast the CPU budget and bricks the rule.",
+          "name": "TooManySigners",
+          "value": 217
+        },
+        {
+          "doc": "The context rule is `Default`-scoped. That scope matches every\\noperation on the account, including its own administration\\n(`add_context_rule` and friends), so the predicate would be the only\\nfence around the admin surface and a weakened predicate would hand\\nthe rule's operators the whole account. Predicates install on scoped\\nrules only.",
+          "name": "DefaultContextNotSupported",
+          "value": 218
+        }
+      ]
+    }
+  }
+]

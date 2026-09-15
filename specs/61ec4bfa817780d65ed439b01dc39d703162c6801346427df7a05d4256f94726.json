@@ -1,0 +1,947 @@
+[
+  {
+    "function_v0": {
+      "doc": "Burn an NFT (e.g. when stream is depleted or voided).\\nOnly admin (Router) can burn.",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mint a new NFT representing a stream.\\nOnly the admin (Router) can mint.",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "stream_type",
+          "type_": {
+            "udt": {
+              "name": "StreamType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "stream_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get token name",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get token symbol",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the number of NFTs owned by an address.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin can upgrade the contract logic.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the owner of an NFT.",
+      "name": "owner_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer an NFT to a new owner.",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the NFT contract with the Router contract address as admin.\\n\\nNote: admin is the Router contract address, which cannot authorize off-chain transactions.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the stream details associated with an NFT.",
+      "name": "get_stream_data",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "udt": {
+                  "name": "StreamType"
+                }
+              },
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Core data structure for a Flow (open-ended, rate-per-second) stream.\\n\\nPorted from Sablier's `Flow.Stream` struct with these adaptations:\\n\\n- `UD21x18 ratePerSecond` \\xe2\\x86\\x92 `i128 rate_per_second` scaled to 18 decimals.\\nSoroban has no native fixed-point type, so we use i128 with manual scaling.\\nA rate of 1 token/sec for a 7-decimal token = 1e18 internally.\\n\\n- `IERC20 token` \\xe2\\x86\\x92 `Address` (Soroban token contract address).\\n\\n- `uint128 balance` \\xe2\\x86\\x92 `i128` (Soroban SDK convention for token amounts).\\n\\n- `uint40 snapshotTime` \\xe2\\x86\\x92 `u64` (Soroban ledger timestamp is u64).\\n\\n- `bool isStream` sentinel removed \\xe2\\x80\\x94 we use storage key existence instead.\\n\\n- `bool isTransferable` removed \\xe2\\x80\\x94 delegated to the NFT contract layer.\\n\\n# Storage Layout\\n\\nEach stream is stored under `DataKey::Stream(stream_id)` in persistent storage.\\nThe struct is kept as flat as possible to minimize serialization overhead.",
+      "lib": "",
+      "name": "FlowStream",
+      "fields": [
+        {
+          "doc": "Current balance held in the stream (deposited - withdrawn), in token decimals.",
+          "name": "balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "Whether the stream has been permanently voided.",
+          "name": "is_voided",
+          "type_": "bool"
+        },
+        {
+          "doc": "Rate at which debt accrues, in 18-decimal fixed-point.\\n0 means the stream is paused.\\nExample: 1 token/sec for a 7-decimal token \\xe2\\x86\\x92 1_000_000_000_000_000_000 (1e18).",
+          "name": "rate_per_second",
+          "type_": "i128"
+        },
+        {
+          "doc": "The address receiving the tokens (can withdraw).",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "The address streaming the tokens (can pause, adjust, refund).",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "Accumulated debt at the last snapshot, in 18-decimal fixed-point.\\nTotal debt = snapshot_debt_scaled + ongoing_debt_scaled.",
+          "name": "snapshot_debt_scaled",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp of the last debt snapshot.\\nDebt accrues from this point forward at `rate_per_second`.",
+          "name": "snapshot_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "The Soroban token contract address (SAC or custom SEP-41).",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Number of decimals for the token (e.g. 7 for most Stellar assets).\\nUsed for scale/descale operations. Max 18.",
+          "name": "token_decimals",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Type of stream (Flow or Lockup).\\nUsed by the Stream NFT and Router to route logic to the correct engine.",
+      "lib": "",
+      "name": "StreamType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Flow",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Lockup",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Status of a Lockup stream.\\n\\nUses \"temperature\" semantics:\\n- **Warm** (Pending, Streaming): time alone can change the status.\\n- **Cold** (Settled, Canceled, Depleted): time alone cannot change the status.",
+      "lib": "",
+      "name": "LockupStatus",
+      "cases": [
+        {
+          "doc": "Created but start_time is in the future. No tokens have vested.",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "Active \\xe2\\x80\\x94 tokens are currently vesting over time.",
+          "name": "Streaming",
+          "value": 1
+        },
+        {
+          "doc": "All tokens have fully vested. Recipient can withdraw the remaining balance.",
+          "name": "Settled",
+          "value": 2
+        },
+        {
+          "doc": "Sender canceled the stream. Unvested tokens returned to sender.",
+          "name": "Canceled",
+          "value": 3
+        },
+        {
+          "doc": "Fully withdrawn (and/or refunded). No tokens remain in the stream.",
+          "name": "Depleted",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Core data structure for a Lockup (fixed-term vesting) stream.\\n\\nSupports linear unlock with optional cliff. The vested (\"streamed\") amount\\nat any time `t` is calculated as:\\n\\n```text\\nif t < start_time:       vested = 0\\nif t < cliff_time:       vested = start_unlock_amount\\nif t >= end_time:         vested = total_amount\\nelse:\\nelapsed = floor((t - cliff_time) / granularity) * granularity\\nstreamable_duration = end_time - cliff_time\\nstreamable_amount = total_amount - start_unlock_amount - cliff_unlock_amount\\nvested = start_unlock_amount + cliff_unlock_amount + (elapsed * streamable_amount / streamable_duration)\\n```\\n\\nThis mirrors the reference linear lockup calculation with discrete unlock\\nsteps at `granularity`-second intervals.",
+      "lib": "",
+      "name": "LockupStream",
+      "fields": [
+        {
+          "doc": "Whether the sender can cancel this stream and reclaim unvested tokens.",
+          "name": "cancelable",
+          "type_": "bool"
+        },
+        {
+          "doc": "Optional cliff timestamp. No tokens beyond `start_unlock_amount`\\nvest before this time. Set to 0 for no cliff.",
+          "name": "cliff_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Amount unlocked at `cliff_time` (in addition to `start_unlock_amount`).",
+          "name": "cliff_unlock_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp when the lockup is fully unlocked.",
+          "name": "end_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Unlock granularity in seconds. Tokens vest in discrete steps of this\\ninterval. Default = 1 (per-second vesting). Must be > 0.",
+          "name": "granularity",
+          "type_": "u64"
+        },
+        {
+          "doc": "Whether all tokens have been withdrawn and/or refunded.",
+          "name": "is_depleted",
+          "type_": "bool"
+        },
+        {
+          "doc": "The address that receives tokens as they unlock (can withdraw).",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Amount refunded to sender on cancellation. Zero unless cancelled.",
+          "name": "refunded_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "The address that created and funded the lockup (can cancel if `cancelable`).",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "Unix timestamp when the lockup begins.",
+          "name": "start_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Amount unlocked immediately at `start_time`.",
+          "name": "start_unlock_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "The Soroban token contract address.",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Total amount deposited into the stream (in token decimals).",
+          "name": "total_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Whether the stream has been cancelled.",
+          "name": "was_canceled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Cumulative amount withdrawn by the recipient.",
+          "name": "withdrawn_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Status of a Flow stream.\\n\\nThe status is derived from the stream's current state (rate, balance, debt, voided flag) rather than\\nbeing stored directly \\xe2\\x80\\x94 keeping storage minimal.",
+      "lib": "",
+      "name": "StreamStatus",
+      "cases": [
+        {
+          "doc": "Stream scheduled to start in the future (snapshot_time > now).",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "Actively streaming with balance covering all debt.",
+          "name": "StreamingSolvent",
+          "value": 1
+        },
+        {
+          "doc": "Actively streaming but debt exceeds available balance.",
+          "name": "StreamingInsolvent",
+          "value": 2
+        },
+        {
+          "doc": "Paused by sender with no uncovered debt.",
+          "name": "PausedSolvent",
+          "value": 3
+        },
+        {
+          "doc": "Paused by sender with uncovered debt.",
+          "name": "PausedInsolvent",
+          "value": 4
+        },
+        {
+          "doc": "Permanently stopped. Cannot be restarted. Uncovered debt written off.",
+          "name": "Voided",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for creating a new Lockup stream.\\n\\nBundled into a struct because Soroban contract functions\\nhave a max of 10 parameters.",
+      "lib": "",
+      "name": "CreateLockupParams",
+      "fields": [
+        {
+          "doc": "Whether the sender can cancel the stream.",
+          "name": "cancelable",
+          "type_": "bool"
+        },
+        {
+          "doc": "Optional cliff timestamp. Set to 0 for no cliff.",
+          "name": "cliff_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Tokens unlocked at cliff (added to start).",
+          "name": "cliff_unlock_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp when vesting completes.",
+          "name": "end_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Unlock step interval in seconds. 0 defaults to 1.",
+          "name": "granularity",
+          "type_": "u64"
+        },
+        {
+          "doc": "Address receiving vested tokens.",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Address funding the stream (can cancel if `cancelable`).",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "Unix timestamp when vesting begins.",
+          "name": "start_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Tokens unlocked immediately at start.",
+          "name": "start_unlock_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Soroban token contract address.",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Total tokens to vest (in token decimals).",
+          "name": "total_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors specific to the Stream NFT contract.",
+      "lib": "",
+      "name": "NftError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 201
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 202
+        },
+        {
+          "doc": "",
+          "name": "TokenNotFound",
+          "value": 203
+        },
+        {
+          "doc": "",
+          "name": "NotTransferable",
+          "value": 204
+        },
+        {
+          "doc": "Token ID has already been minted.",
+          "name": "AlreadyMinted",
+          "value": 205
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors emitted by the Flow streaming contract.",
+      "lib": "",
+      "name": "FlowError",
+      "cases": [
+        {
+          "doc": "Stream ID does not exist.",
+          "name": "StreamNotFound",
+          "value": 1
+        },
+        {
+          "doc": "Caller is not authorized for this operation.",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "Stream is paused; operation requires active streaming.",
+          "name": "StreamPaused",
+          "value": 3
+        },
+        {
+          "doc": "Stream is voided; no further mutations allowed.",
+          "name": "StreamVoided",
+          "value": 4
+        },
+        {
+          "doc": "Stream is not paused; restart requires a paused stream.",
+          "name": "StreamNotPaused",
+          "value": 5
+        },
+        {
+          "doc": "Stream has not started yet (snapshot_time in the future).",
+          "name": "StreamPending",
+          "value": 6
+        },
+        {
+          "doc": "New rate per second must be > 0.",
+          "name": "RatePerSecondZero",
+          "value": 7
+        },
+        {
+          "doc": "New rate must differ from current rate.",
+          "name": "RateNotDifferent",
+          "value": 8
+        },
+        {
+          "doc": "Deposit amount must be > 0.",
+          "name": "DepositAmountZero",
+          "value": 9
+        },
+        {
+          "doc": "Withdraw amount must be > 0.",
+          "name": "WithdrawAmountZero",
+          "value": 10
+        },
+        {
+          "doc": "Withdraw amount exceeds withdrawable balance.",
+          "name": "Overdraw",
+          "value": 11
+        },
+        {
+          "doc": "Refund amount must be > 0.",
+          "name": "RefundAmountZero",
+          "value": 12
+        },
+        {
+          "doc": "Refund amount exceeds refundable balance.",
+          "name": "RefundOverflow",
+          "value": 13
+        },
+        {
+          "doc": "Token has > 18 decimals, unsupported.",
+          "name": "InvalidTokenDecimals",
+          "value": 14
+        },
+        {
+          "doc": "Stream balance is zero (e.g. querying depletion time).",
+          "name": "BalanceZero",
+          "value": 15
+        },
+        {
+          "doc": "Contract already initialized.",
+          "name": "AlreadyInitialized",
+          "value": 16
+        },
+        {
+          "doc": "Contract not yet initialized.",
+          "name": "NotInitialized",
+          "value": 17
+        },
+        {
+          "doc": "Cannot create a pending stream with rate_per_second = 0.",
+          "name": "CreateRatePerSecondZero",
+          "value": 18
+        },
+        {
+          "doc": "Internal math error \\xe2\\x80\\x94 should never occur in production.",
+          "name": "InvalidCalculation",
+          "value": 19
+        },
+        {
+          "doc": "Sender and recipient must be different addresses.",
+          "name": "SenderEqualsRecipient",
+          "value": 20
+        },
+        {
+          "doc": "Rate per second must not be negative.",
+          "name": "NegativeRate",
+          "value": 21
+        },
+        {
+          "doc": "Token transfer resulted in a different balance change than requested.",
+          "name": "TokenTransferMismatch",
+          "value": 22
+        },
+        {
+          "doc": "Caller-supplied token decimals do not match the token contract.",
+          "name": "TokenDecimalsMismatch",
+          "value": 23
+        },
+        {
+          "doc": "Checked arithmetic operation failed (overflow/underflow).",
+          "name": "ArithmeticError",
+          "value": 24
+        },
+        {
+          "doc": "Admin transfer already pending.",
+          "name": "AdminTransferPending",
+          "value": 25
+        },
+        {
+          "doc": "No admin transfer pending to accept.",
+          "name": "NoAdminTransferPending",
+          "value": 26
+        },
+        {
+          "doc": "Upgrade is timelocked and cannot be executed yet.",
+          "name": "UpgradeTimelocked",
+          "value": 27
+        },
+        {
+          "doc": "No upgrade has been proposed.",
+          "name": "NoUpgradeProposed",
+          "value": 28
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors emitted by the Lockup vesting contract.",
+      "lib": "",
+      "name": "LockupError",
+      "cases": [
+        {
+          "doc": "Stream ID does not exist.",
+          "name": "StreamNotFound",
+          "value": 101
+        },
+        {
+          "doc": "Caller is not authorized.",
+          "name": "Unauthorized",
+          "value": 102
+        },
+        {
+          "doc": "Stream is already cancelled.",
+          "name": "AlreadyCancelled",
+          "value": 103
+        },
+        {
+          "doc": "Stream is not cancelable.",
+          "name": "NotCancelable",
+          "value": 104
+        },
+        {
+          "doc": "Withdraw amount exceeds unlocked balance.",
+          "name": "Overdraw",
+          "value": 105
+        },
+        {
+          "doc": "Invalid time parameters (start >= end, cliff outside range).",
+          "name": "InvalidTimeRange",
+          "value": 106
+        },
+        {
+          "doc": "Total amount must be > 0.",
+          "name": "AmountZero",
+          "value": 107
+        },
+        {
+          "doc": "Contract already initialized.",
+          "name": "AlreadyInitialized",
+          "value": 108
+        },
+        {
+          "doc": "Contract not yet initialized.",
+          "name": "NotInitialized",
+          "value": 109
+        },
+        {
+          "doc": "Sender and recipient must be different addresses.",
+          "name": "SenderEqualsRecipient",
+          "value": 110
+        },
+        {
+          "doc": "start_unlock_amount or cliff_unlock_amount is negative.",
+          "name": "NegativeUnlockAmount",
+          "value": 111
+        },
+        {
+          "doc": "Checked addition of unlock amounts overflowed.",
+          "name": "UnlockSumOverflow",
+          "value": 112
+        },
+        {
+          "doc": "Unlock sum is not in the valid range [0, total_amount].",
+          "name": "InvalidUnlockSum",
+          "value": 113
+        },
+        {
+          "doc": "Defensive cancellation amount validation failed.",
+          "name": "InvalidCancellationAmount",
+          "value": 114
+        },
+        {
+          "doc": "Token transfer resulted in a different balance change than requested.",
+          "name": "TokenTransferMismatch",
+          "value": 115
+        },
+        {
+          "doc": "Checked arithmetic operation failed (overflow/underflow).",
+          "name": "ArithmeticError",
+          "value": 116
+        },
+        {
+          "doc": "Admin transfer already pending.",
+          "name": "AdminTransferPending",
+          "value": 117
+        },
+        {
+          "doc": "No admin transfer pending to accept.",
+          "name": "NoAdminTransferPending",
+          "value": 118
+        },
+        {
+          "doc": "Upgrade is timelocked and cannot be executed yet.",
+          "name": "UpgradeTimelocked",
+          "value": 119
+        },
+        {
+          "doc": "No upgrade has been proposed.",
+          "name": "NoUpgradeProposed",
+          "value": 120
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors specific to the Router contract.",
+      "lib": "",
+      "name": "RouterError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 301
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 302
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 303
+        },
+        {
+          "doc": "",
+          "name": "InvalidStreamType",
+          "value": 304
+        },
+        {
+          "doc": "A required contract address is invalid (zero/unset).",
+          "name": "InvalidContractAddress",
+          "value": 305
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for contract data.\\n\\nUsing a typed enum prevents key collisions (SKILL.md \\xc2\\xa73).\\nKeys are namespaced by variant to keep different data types separate.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address (Instance storage).",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Next stream ID counter (Instance storage).",
+            "name": "NextStreamId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A Flow stream record, keyed by stream ID (Persistent storage).",
+            "name": "FlowStream",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A Lockup stream record, keyed by stream ID (Persistent storage).",
+            "name": "LockupStream",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Aggregate token balance held by the contract for a given token address.\\nUsed for surplus recovery / accounting reconciliation (Persistent storage).",
+            "name": "AggregateBalance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "NFT token owner, keyed by token ID (Persistent storage).",
+            "name": "TokenOwner",
+            "type_": [
+              "i128"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "NFT stream data mapping token ID to stream type and ID (Persistent storage).",
+            "name": "TokenStreamData",
+            "type_": [
+              "i128"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Number of NFTs owned by an address (Persistent storage).",
+            "name": "NftBalance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Token metadata, e.g., name, symbol, URI (Instance storage).",
+            "name": "TokenMetadata",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Router configuration: Flow contract address.",
+            "name": "FlowContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Router configuration: Lockup contract address.",
+            "name": "LockupContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Router configuration: NFT contract address.",
+            "name": "NftContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Paymaster configuration: list of allowed fee token addresses.",
+            "name": "AllowedFeeTokens"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pending admin address for two-step admin transfer (Instance storage).",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Proposed upgrade WASM hash (Instance storage).",
+            "name": "ProposedUpgrade",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ledger sequence at which a proposed upgrade becomes executable (Instance storage).",
+            "name": "UpgradeUnlockLedger"
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,360 @@
+[
+  {
+    "function_v0": {
+      "doc": "Sweep accumulated fee tokens to a recipient address.\\n\\n# Auth\\nRequires admin authorization.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically collect a token fee from the user and invoke the target\\ncontract function, using the OpenZeppelin fee abstraction helpers.\\n\\nThe user must authorize both the fee transfer and the downstream\\ncontract invocation via Soroban's native auth framework.\\n\\n# Arguments\\n* `user` \\xe2\\x80\\x94 The end user paying the fee and authorizing the call.\\n* `fee_token` \\xe2\\x80\\x94 The SAC/SEP-41 token used for fee payment.\\n* `fee_amount` \\xe2\\x80\\x94 The actual fee amount to transfer from user.\\n* `max_fee_amount` \\xe2\\x80\\x94 The maximum fee the user authorized.\\n* `expiration_ledger` \\xe2\\x80\\x94 The ledger at which the approval expires.\\n* `fee_recipient` \\xe2\\x80\\x94 The address receiving the fee (typically the relayer).\\n* `target_contract` \\xe2\\x80\\x94 The contract to invoke (e.g. Router).\\n* `function_name` \\xe2\\x80\\x94 The function to call on the target contract.\\n* `args` \\xe2\\x80\\x94 Arguments to pass to the target function.\\n\\n# Returns\\nThe raw `Val` result from the target contract invocation.\\n\\n# Errors\\n* `PaymasterError::NotInitialized` \\xe2\\x80\\x94 contract not initialized.\\n* `PaymasterError::TokenNotAl",
+      "name": "forward",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "val"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade the contract WASM bytecode.\\n\\n# Auth\\nRequires admin authorization.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the admin address.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the Paymaster with an admin and an initial list of\\nallowed fee tokens.\\n\\n# Arguments\\n* `admin` \\xe2\\x80\\x94 The admin address (can upgrade and manage token whitelist).\\n* `allowed_fee_tokens` \\xe2\\x80\\x94 Initial list of token addresses accepted\\nfor fee payment.\\n\\n# Errors\\n* `PaymasterError::AlreadyInitialized` \\xe2\\x80\\x94 if called more than once.\\n\\n# Security\\nThe intended admin must authorize the initialization.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed_fee_tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a token to the allowed fee token whitelist.\\n\\n# Auth\\nRequires admin authorization.",
+      "name": "add_fee_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a token from the allowed fee token whitelist.\\n\\n# Auth\\nRequires admin authorization.",
+      "name": "remove_fee_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check if a specific token is in the allowed fee token list.",
+      "name": "is_fee_token_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Backwards-compatible entry point matching the original Paymaster API.\\n\\nThis wraps `forward()` with a simplified interface where the relayer\\naddress is the fee recipient and fee_amount == max_fee.\\n\\n# Note on Expiration\\n\\nThis wrapper sets the expiration to `current_ledger + 1000` (~83 minutes\\nat ~5 sec/ledger). This is NOT \"no expiration\" \\xe2\\x80\\x94 it is a generous but\\nfinite window. For indefinite authorization, use `forward()` directly.",
+      "name": "collect_fee_and_invoke",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "relayer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "val"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are swept from the contract.",
+      "lib": "",
+      "name": "TokensSwept",
+      "prefix_topics": [
+        "tokens_swept"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a fee is collected from a user.",
+      "lib": "",
+      "name": "FeeCollected",
+      "prefix_topics": [
+        "fee_collected"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a call is forwarded to a target contract.",
+      "lib": "",
+      "name": "ForwardExecuted",
+      "prefix_topics": [
+        "forward_executed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "target_contract",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "target_fn",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "target_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a fee token is added or removed from the allowlist.",
+      "lib": "",
+      "name": "FeeTokenAllowlistUpdated",
+      "prefix_topics": [
+        "fee_token_allowlist_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
