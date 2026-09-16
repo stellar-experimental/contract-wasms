@@ -1,0 +1,216 @@
+[
+  {
+    "function_v0": {
+      "doc": "Return the latest stored price. Errors with [`Error::PriceNotInitialized`]\\nif [`update_price`](Self::update_price) has never run successfully.",
+      "name": "get_price",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "StoredPrice"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verify a signed Pyth Lazer update, check it is fresh, and store the\\nlatest price for the configured feed. Rejects the update if its feed\\ntimestamp is not strictly newer than the currently stored price.",
+      "name": "update_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "payload",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Store the deployment-time configuration:\\n\\n- `lazer`: the deployed `pyth-lazer-stellar` verifier contract address.\\n- `feed_id`: which Pyth Lazer price feed this contract tracks.\\n- `freshness_threshold_us`: how far in the past a feed's update timestamp\\nmay lag the ledger time before the update is rejected (microseconds).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lazer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "feed_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "freshness_threshold_us",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "PriceStale",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "FeedMissing",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TimestampMissing",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PriceMissing",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ExponentMissing",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "PriceNotInitialized",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ParseError",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "PriceOutdated",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The deployed `pyth-lazer-stellar` verifier contract address.",
+            "name": "Lazer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pyth Lazer price feed id this contract tracks.",
+            "name": "FeedId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Max age (microseconds) an update may have before it is rejected.",
+            "name": "FreshnessThresholdUs"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Latest stored `StoredPrice`.",
+            "name": "LatestPrice"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Latest verified price for the configured feed.",
+      "lib": "",
+      "name": "StoredPrice",
+      "fields": [
+        {
+          "doc": "",
+          "name": "exponent",
+          "type_": "i32"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i64"
+        },
+        {
+          "doc": "",
+          "name": "timestamp_us",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors returned by [`crate::parse_payload`] when decoding a verified Lazer\\npayload. Declared as a `#[contracterror]` so consumers can propagate it\\ndirectly from their own contract entrypoints.",
+      "lib": "",
+      "name": "ParseError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "TruncatedData",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidPayloadLength",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidPayloadMagic",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidChannel",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidProperty",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidMarketSession",
+          "value": 6
+        }
+      ]
+    }
+  }
+]
