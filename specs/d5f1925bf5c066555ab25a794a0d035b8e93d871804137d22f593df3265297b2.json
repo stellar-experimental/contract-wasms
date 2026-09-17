@@ -1,0 +1,586 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ExecutorError",
+      "cases": [
+        {
+          "doc": "`exec_op` was called with no plan armed. Only a pool, during a flash loan\\nwhose plan this receiver's owner armed, may trigger execution.",
+          "name": "NotArmed",
+          "value": 100
+        },
+        {
+          "doc": "The `caller` Blend passed to `exec_op` is not the armed initiator.",
+          "name": "BadCaller",
+          "value": 101
+        },
+        {
+          "doc": "After running the plan we hold less than the loan plus fee, so the\\ninitiator's repayment would fail. Failing here gives a clear reason\\ninstead of a generic pool error.",
+          "name": "InsufficientRepay",
+          "value": 102
+        },
+        {
+          "doc": "A plan with no steps is almost certainly a bot bug.",
+          "name": "EmptyPlan",
+          "value": 103
+        },
+        {
+          "doc": "A swap step's input token has zero balance here.",
+          "name": "NoInputBalance",
+          "value": 104
+        },
+        {
+          "doc": "An auction fill ended with debt or collateral still on our position.\\nThe fill must repay and withdraw everything it took on, in the same\\ntransaction, or it is not a fill we want.",
+          "name": "PositionLeft",
+          "value": 105
+        },
+        {
+          "doc": "An auction fill netted less of the profit token than `min_profit`.",
+          "name": "UnderFloor",
+          "value": 106
+        },
+        {
+          "doc": "A liquidation percent outside 1..=100.",
+          "name": "BadPercent",
+          "value": 107
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Step",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Soroswap",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SoroswapSwap"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aqua",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AquaSwap"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An Aqua chained swap. `hops` are `(sorted_token_pair, pool_index, token_out)`\\nexactly as `swap_chained` expects; the bot builds them from its quotes.",
+      "lib": "",
+      "name": "AquaSwap",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    {
+                      "vec": {
+                        "element_type": "address"
+                      }
+                    },
+                    {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    },
+                    "address"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A Soroswap multi-hop swap. `amount_in == 0` means \"everything we hold of\\n`path[0]`\", which is how a second step consumes the first step's output\\nwithout the planner having to predict it exactly.",
+      "lib": "",
+      "name": "SoroswapSwap",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A plan armed on a receiver, waiting for the pool's `exec_op` callback.\\n\\n`initiator` is the `from` of the flash loan -- the address Blend will pass as\\n`caller` and the address the receiver hands the funds back to. Recorded at\\narming time by the receiver's owner, because Soroban gives a callee no way to\\nlearn who invoked it.\\n\\nLives in *temporary* storage for the duration of one transaction: written by\\n`set_plan`, consumed by `exec_op`. Soroban executes a transaction\\nsequentially, so nothing can observe or race it in between.",
+      "lib": "",
+      "name": "Plan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pull a balance off a receiver this contract owns, back here. Owner only.\\n\\nA receiver's owner is a contract, and a contract cannot sign, so\\nwithout this any token that ever landed on a receiver -- a mistaken\\ntransfer, a plan cut short -- would have no way out. This contract is\\nthe receiver's owner and its direct invoker here, so the receiver's\\nowner check is met by invoker authorization; `withdraw` then sweeps it\\nthe rest of the way to the account.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirror of Blend's `Request`, declared here so it appears in this contract's\\nown spec. The SDK's type is `export = false`, which leaves clients unable to\\nencode arguments for `flash_execute`. Same fields, same wire encoding.",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Blend's flash-loan callback (`moderc3156::FlashLoan`). Called by the pool\\nafter it has transferred the loan here and before it settles requests.\\n\\nRuns the armed plan, then hands *everything* we hold of `token` back to\\n`caller`, whose `Repay` request the pool collects next. Anything above the\\nloan is profit and lands with the initiator too.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Run a plan against funds this contract already holds. Owner only.\\n\\nCross-venue arbitrage without a flash loan, and the unwind path for a\\nliquidation position.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace this contract's code in place. Owner only.\\n\\nStorage -- the owner and any held balances -- survives, so a fix ships\\nwithout redeploying, re-funding and re-pointing the bot.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Arm the plan that the next `exec_op` will run, and record who the loan's\\n`from` will be. Owner only, single-use.\\n\\nCallable by an initiator contract (owner == initiator, in one\\ntransaction) or by a wallet that owns this receiver directly and starts\\nthe flash loan itself in a following transaction -- Blend's canonical\\npattern, at the cost of a second ledger.",
+      "name": "set_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "initiator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweep funds out. Owner only.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A token and an amount: one repay or withdraw leg of an auction fill.",
+      "lib": "",
+      "name": "TokenAmount",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fill `percent` of `user`'s liquidation auction on `pool` from funds this\\ncontract holds, and come out flat in the same transaction. Owner only.\\n\\nOne `submit` does the whole Blend side: the fill puts the auction's\\nlot (collateral) and bid (debt) on our position; the `repay` legs\\nclear the debt from what we hold (Blend caps repayment at the debt,\\nso over-asking is safe); the `withdraw` legs pull the collateral out\\n(Blend caps a withdrawal at the position, so over-asking is safe\\nthere too). Then `steps` sell the collateral for `profit_token`.\\n\\nTwo guards make it safe to send on a quote: the position must end\\nwith no debt and no collateral, and our `profit_token` balance must\\nhave grown by at least `min_profit`. Either failing reverts the lot.\\nReturns the gain in `profit_token`.",
+      "name": "fill_auction",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "percent",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "repay",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "TokenAmount"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "withdraw",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "TokenAmount"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "profit_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`owner` is the only address that can arm a plan, start a flash loan, run\\na plan from held funds, or withdraw.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Borrow `amount` of `asset` from `pool`, have `receiver` run `steps` with\\nit, then let the pool settle `requests` against us. Owner only.\\n\\nFor a pure arbitrage, `requests` is a single `Repay` of `amount` plus a\\nhair (dToken rounding at non-unit rates; Blend caps repayment at the\\noutstanding debt, so over-asking is safe). For a liquidation it is the\\nauction fill plus repayment of the liquidated debt, and we exit holding a\\nhealthy position to unwind later.\\n\\nReturns the change in our `asset` balance: realised profit.",
+      "name": "flash_execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "requests",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Request"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace a receiver's code. Owner only. The receiver's owner is this\\ncontract, which cannot sign, so this is the only way its code moves.",
+      "name": "upgrade_receiver",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
