@@ -1,0 +1,2304 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "Registry storage keys. Storage-layout stable \\xe2\\x80\\x94\\n`#[contracttype]` enums key by variant name, so never rename a shipped\\nvariant. `Vault`/`VaultShape`/`SwapAsset` are PERSISTENT (per-key, TTL-bumped);\\neverything else is instance storage.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RegAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RegPendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Router"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RebalanceDeltaBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Keeper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "KeeperEnabled"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Vault",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "VaultShape",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SwapAsset",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Oracle"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "keeper",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "router",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the Registry Wasm. Auth: admin (checked BEFORE the swap).\\n\\nThe gen-1 Registry shipped WITHOUT this (\"holds no funds, keep it dumb\")\\nand that immutability backfired: the 2026-08-01 audit fixes touched\\nRegistry code, and with Factory + every Strategy holding this address\\npermanently, the only patch path was discarding the entire fleet. The\\nadmin already controls everything the Registry decides (whitelist,\\nrouter, keeper, fees), so an admin-gated upgrade adds repairability\\nwithout adding power.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`Some` = upsert, `None` = remove. Enforces the two fee caps loudly:\\n`fee_bps \\xe2\\x89\\xa4 MAX_FEE_BPS`, and no non-zero `fee_bps` while the treasury is\\nunset (set the treasury first). Auth: admin.",
+      "name": "set_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "info",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "VaultInfo"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`(treasury, rebalance_delta_bps)` \\xe2\\x80\\x94 the protocol-wide fee config read by\\nevery Strategy on the withdraw/rebalance path.",
+      "name": "fee_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "option": {
+                  "value_type": "address"
+                }
+              },
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set/rotate the fleet-wide keeper address (key rotation in one tx). Auth: admin.",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the Soroswap router (used from T2). Auth: admin.",
+      "name": "set_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read a vault's record (`None` if not whitelisted). Bumps the entry's TTL on\\nread so an ACTIVELY-USED listing can't silently archive and revert new\\ndeposits until re-listed (the Strategy reads this inside every invest, so a\\nvault in active use stays alive; a real tx persists the bump, a bare simulate\\ndoes not).",
+      "name": "vault_info",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "VaultInfo"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a proposed admin rotation, step 2 of 2. Auth: the NOMINEE.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy-time init. Stores `admin`; every other key follows the read-default\\nrule (Router/Treasury/Keeper \\xe2\\x87\\x92 None, RebalanceDeltaBps \\xe2\\x87\\x92 0,\\nKeeperEnabled \\xe2\\x87\\x92 false) and is written only when first set.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The keeper-swap oracle floor config, or `None` while unset (\\xe2\\x87\\x92 keeper cannot swap).",
+      "name": "oracle_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "OracleConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "keeper_enabled",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the protocol-wide treasury + rebalance surcharge. Validates\\n`delta_bps \\xe2\\x89\\xa4 BPS \\xe2\\x88\\x92 MAX_FEE_BPS` so `fee_bps + delta_bps \\xe2\\x89\\xa4 10_000` for every\\nvault by construction. Once set, the treasury stays `Some`. Auth: admin.",
+      "name": "set_fee_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "delta_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Opt `asset` in/out of the set a KEEPER may name as `rebalance_swap`'s\\n`asset_out`. Auth: admin.\\n\\nWhy this exists: `rebalance_swap` takes a caller-supplied path and\\n`amount_out_min` with no on-chain price oracle, and the same keeper can\\ncall `rebalance_withdraw` first in the SAME transaction \\xe2\\x80\\x94 so without a\\nbound the reachable amount is an entire invested position, not the idle\\nfloat. Every hop of the path is checked against this list, not just the\\noutput (an endpoint-only check is trivially routed around via\\n`[allowed, EVIL, allowed]`).\\n\\n**What this does NOT do.** It narrows the total-loss case; it does not\\neliminate it. Allowlisting ASSETS says nothing about pool DEPTH: a\\ncompromised keeper can seed the canonical pair between two allowlisted\\nassets with dust and still dump a whole position into it at\\n`amount_out_min = 1`. The real residual bound is the depth of the\\nshallowest canonical pair among allowlisted assets \\xe2\\x80\\x94 which an attacker can\\ninfluence. Only the T3 oracle floor closes this; do not read this l",
+      "name": "set_swap_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the admin (the 2-of-3 multisig address), step 1 of 2. Auth: current\\nadmin. Nothing changes until the nominee calls `accept_admin`.\\n\\n## Why this is two-step, and was not\\n\\nIt used to be a single `set_admin`, justified in the security model as\\n\"recoverable by the multisig itself\". **That was wrong.** `require_admin`\\ngates `set_admin` AND `upgrade` on whatever `RegAdmin` currently holds, so\\na rotation to an address nobody controls leaves no path back: the Registry\\ncan never be re-administered and never upgraded. User funds stay safe \\xe2\\x80\\x94\\nowners withdraw from their own Strategy, which needs no Registry admin \\xe2\\x80\\x94\\nbut vault listings, fees, router, keeper and oracle freeze permanently and\\nrecovery means deploying a whole new fleet.\\n\\nThe nominee signing step 2 proves the key exists and can sign BEFORE it\\ntakes effect, which is the only thing that makes a typo survivable.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure the price oracle that bounds a KEEPER's `rebalance_swap`. Auth: admin.\\n\\nThis closes the accepted T2 HIGH risk: with no oracle, `amount_out_min` and the\\npath are caller-supplied, so a compromised keeper key could dump a whole position\\ninto a dust pool at `amount_out_min = 1` and the measured-output check would call\\nit a success. With a floor, that swap simply reverts.\\n\\n`decimals` is pinned here rather than read per swap: the Strategy would otherwise\\nspend a second cross-contract call on every rebalance to discover a constant. An\\nadmin who points this at an oracle with different decimals and does not update the\\nfield mis-scales the floor, so the two MUST be set together \\xe2\\x80\\x94 which is why they\\nlive in one struct and one setter.\\n\\nUse an INDEPENDENT oracle, never Soroswap: Soroswap is the venue being bounded,\\nso pricing the bound from it makes the whole check circular.",
+      "name": "set_oracle_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "base",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_slippage_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_price_age",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Global kill-switch \\xe2\\x80\\x94 fleet-wide halt of keeper-driven rebalances. Auth: admin.",
+      "name": "set_keeper_enabled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Is `asset` allowlisted as a keeper-path swap output? Read-default `false`.",
+      "name": "swap_asset_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove the oracle config. Auth: admin.\\n\\nA TARGETED kill-switch: because the floor is fail-closed, clearing it stops\\nevery keeper swap fleet-wide while leaving `rebalance_withdraw` /\\n`rebalance_deposit` \\xe2\\x80\\x94 which are leak-proof by construction \\xe2\\x80\\x94 running. The\\nalternative, `set_keeper_enabled(false)`, is a much bigger hammer: it also\\nhalts every rebalance. If the ORACLE is what misbehaved, this is the\\nproportionate response.",
+      "name": "clear_oracle_config",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AssetStrategySet",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategies",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "StrategyAllocation"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyAllocation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyInvestmentAllocation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "strategy_address",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CurrentAssetInvestmentAllocation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "idle_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "invested_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "strategy_allocations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "StrategyInvestmentAllocation"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotKeeper",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyDeployed",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "WeightsInvalid",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "EmptyAllocations",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "VaultNotWhitelisted",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "SwapRequired",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "UnexpectedSwap",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExceeded",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "SwapFailed",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "BadSwapPath",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "PositionNotFound",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "NothingToWithdraw",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "TooManyVaults",
+          "value": 33
+        },
+        {
+          "doc": "",
+          "name": "AdapterError",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedProtocol",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "Math",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedOutput",
+          "value": 51
+        },
+        {
+          "doc": "",
+          "name": "InactiveVault",
+          "value": 52
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 53
+        },
+        {
+          "doc": "",
+          "name": "TreasuryUnset",
+          "value": 54
+        },
+        {
+          "doc": "",
+          "name": "BadNonce",
+          "value": 55
+        },
+        {
+          "doc": "",
+          "name": "NothingToSwap",
+          "value": 56
+        },
+        {
+          "doc": "",
+          "name": "NothingToDeposit",
+          "value": 57
+        },
+        {
+          "doc": "",
+          "name": "MultiAssetVault",
+          "value": 58
+        },
+        {
+          "doc": "",
+          "name": "TooManyStrategies",
+          "value": 59
+        },
+        {
+          "doc": "",
+          "name": "SweepNotAllowed",
+          "value": 60
+        },
+        {
+          "doc": "",
+          "name": "InvalidReason",
+          "value": 61
+        },
+        {
+          "doc": "",
+          "name": "VaultShapeChanged",
+          "value": 62
+        },
+        {
+          "doc": "",
+          "name": "SwapAssetNotAllowed",
+          "value": 63
+        },
+        {
+          "doc": "",
+          "name": "PositionNotEmpty",
+          "value": 64
+        },
+        {
+          "doc": "",
+          "name": "IntentPending",
+          "value": 65
+        },
+        {
+          "doc": "",
+          "name": "IntentStale",
+          "value": 66
+        },
+        {
+          "doc": "",
+          "name": "IntentLegNotFound",
+          "value": 67
+        },
+        {
+          "doc": "",
+          "name": "IntentExpired",
+          "value": 68
+        },
+        {
+          "doc": "",
+          "name": "DuplicateVault",
+          "value": 69
+        },
+        {
+          "doc": "",
+          "name": "IntentDeadlineInvalid",
+          "value": 70
+        },
+        {
+          "doc": "",
+          "name": "OracleUnset",
+          "value": 71
+        },
+        {
+          "doc": "",
+          "name": "OraclePriceStale",
+          "value": 72
+        },
+        {
+          "doc": "",
+          "name": "OraclePriceUnavailable",
+          "value": 73
+        },
+        {
+          "doc": "",
+          "name": "SlippageFloorBreached",
+          "value": 74
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A funded-but-unfilled deposit. At most ONE per Strategy at a time.",
+      "lib": "",
+      "name": "Intent",
+      "fields": [
+        {
+          "doc": "The asset every leg is denominated in (== each leg vault's underlying).",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Ledger timestamp after which only the OWNER may fill.",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "Monotonic id \\xe2\\x80\\x94 the at-most-once guard and the event-correlation key.",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "UNFILLED legs. A filled leg is REMOVED; when empty the Intent is deleted.\\nLegs are addressed by `vault`, so vaults are unique within one intent.",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "IntentLeg"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single Soroswap swap leg. Full shape frozen at T1; the swap *logic* is\\ndormant in T1 (Router unset \\xe2\\x87\\x92 revert) and activates by config in T2.",
+      "lib": "",
+      "name": "SwapLeg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-vault position + fee-engine accounting.\\n\\nThere is no `banked_fee`: `auto_rebalance` is an immutable create-time choice,\\nso a strategy's fee rate never changes during its life. Rate-period banking\\nexisted only to keep a rate CHANGE non-retroactive; with no change possible it\\nis provably always zero, and the whole mechanism is gone (doc 13).",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "Basis / high-water mark: `profit = max(0, value - deposit_amount)`.",
+          "name": "deposit_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Snapshot of `VaultInfo.fee_bps` at the first deposit into this vault.",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": {
+            "udt": {
+              "name": "Protocol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Underlying-protocol tag stored alongside each whitelisted vault; the Strategy\\ndispatches the right adapter by matching on this (no `_` arm \\xe2\\x80\\x94 adding a\\nprotocol is an exhaustive-match break on purpose). T2 adds `DeFindex`; T3 +1.",
+      "lib": "",
+      "name": "Protocol",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Blend"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DeFindex"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One leg of a funded deposit intent: an EXACT amount of the intent asset\\ndestined for one whitelisted vault.\\n\\nAmounts are ABSOLUTE, computed at `fund` time from the MEASURED post-swap\\nbalance \\xe2\\x80\\x94 never weights re-derived at fill time against a balance that has\\nsince moved.",
+      "lib": "",
+      "name": "IntentLeg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "An optional swap. Semantically `Option<SwapLeg>`, but expressed as a dedicated\\n`#[contracttype]` enum: soroban-sdk 26 cannot derive the (testutils) XDR\\nconversions for an `Option<CustomStruct>` *struct field*, because the\\n`Option<T> -> ScVal` blanket requires `T: Into<ScVal>` (infallible) while a\\n`#[contracttype]` struct is only `TryFrom<_> for ScVal` (fallible). An enum\\ngoes through the Val path and has no such bound.\\n\\nUsed by `fund`, which converts the WHOLE deposit in one hop or not at all.",
+      "lib": "",
+      "name": "MaybeSwap",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "None"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Swap",
+            "type_": [
+              {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One Reflector price sample. `price` is scaled by the oracle's own `decimals()`\\n(14 on mainnet) and denominated in the oracle's `base()` asset \\xe2\\x80\\x94 which for the\\nStellar-asset oracle IS our USDC SAC, so a Backyard swap bound needs ONE feed\\nread, not a two-feed USD derivation.",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix seconds of the sample. Compared against `max_price_age` \\xe2\\x80\\x94 a stale feed\\nmust REVERT, never fall through to an unbounded swap.",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Registry record for one whitelisted vault.",
+      "lib": "",
+      "name": "VaultInfo",
+      "fields": [
+        {
+          "doc": "`false` delists the vault for **new** deposits only; never blocks exits.",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "Base performance fee for this vault (engine `VaultState.feeBps`).\\n`0` = no fee (the T1 default until a % is configured).",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": {
+            "udt": {
+              "name": "Protocol"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One leg of an `invest` allocation.\\n\\nThere is deliberately NO per-leg swap here. `invest` performs ONE swap per\\ndistinct vault underlying (see `strategy/src/invest.rs`), because the\\nper-transaction budget is bound by the number of router calls, not by the\\nnumber of legs. The swap legs travel alongside as a\\n`Map<underlying, SwapLeg>`.",
+      "lib": "",
+      "name": "Allocation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "weight_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Post-state for one deposit leg, carried in the `Deposited` event so the\\nindexer mirrors fee state with no live read.",
+      "lib": "",
+      "name": "DepositLeg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Reflector / SEP-40 asset discriminant. `Stellar(Address)` for a Soroban token,\\n`Other(Symbol)` for an off-chain ticker. Backyard only ever prices Stellar\\nassets, but the enum must match the oracle's ABI exactly or the call traps.",
+      "lib": "",
+      "name": "OracleAsset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "How a withdrawal returns funds. Both variants are handled live by\\n`withdraw.rs::deliver`: `Raw` returns the redeemed underlying as-is, and\\n`Normalize` swaps each redeemed underlying into `asset` via the router. A\\nsame-asset `Normalize` succeeds without a swap; a real cross-asset swap\\nreverts `AdapterError` while the Router is unset (dormant-by-config, not\\nrejected by shape) and activates by config \\xe2\\x80\\x94 the signature never changes.\\n(soroban-sdk `#[contracttype]` enums don't allow named-field variants, so the\\npayload is a one-field wrapper struct.)",
+      "lib": "",
+      "name": "WithdrawOut",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Raw"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Normalize",
+            "type_": [
+              {
+                "udt": {
+                  "name": "NormalizeOut"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-vault weight in a `fund` plan. A dedicated type rather than reusing\\n[`Allocation`], whose per-leg `swap` field is meaningless here: `fund`\\nperforms exactly ONE swap for the whole deposit.",
+      "lib": "",
+      "name": "IntentWeight",
+      "fields": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "weight_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Normalize-out payload: swap each redeemed underlying into `asset` before\\nreturning it to the owner (T2). `swaps` maps source-underlying \\xe2\\x86\\x92 its leg.",
+      "lib": "",
+      "name": "NormalizeOut",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swaps",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": {
+                "udt": {
+                  "name": "SwapLeg"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Registry oracle configuration for the keeper-path swap floor.\\n\\nFail-closed by absence: while this is unset the keeper cannot swap at all,\\nwhich is the same stance the (empty) per-hop allowlist takes.",
+      "lib": "",
+      "name": "OracleConfig",
+      "fields": [
+        {
+          "doc": "The oracle's OWN base asset \\xe2\\x80\\x94 what its prices are denominated in\\n(`base()`; our USDC SAC on mainnet).\\n\\nPinned explicitly rather than inferred. The base has no feed of its own \\xe2\\x80\\x94\\nit is 1:1 by definition \\xe2\\x80\\x94 and an earlier draft inferred \"no feed \\xe2\\x87\\x92 must be\\nthe base\" from the swap allowlist. That was wrong and dangerous: by the\\ntime the floor runs, every hop has ALREADY passed the allowlist, so the\\ninference was always true and any allowlisted asset the oracle could not\\nprice would have been valued 1:1 against the base. Naming it removes the\\nguess.",
+          "name": "base",
+          "type_": "address"
+        },
+        {
+          "doc": "Oracle `decimals()` \\xe2\\x80\\x94 pinned at config time so the Strategy does not spend\\na second cross-contract call per swap discovering it.",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "Max age of a price sample, in seconds. Reflector's `resolution()` is 300 s\\non mainnet, so this should be a small multiple of it.",
+          "name": "max_price_age",
+          "type_": "u64"
+        },
+        {
+          "doc": "How far below the oracle-implied output a keeper swap may land.",
+          "name": "max_slippage_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The owner funded a deposit intent: assets pulled, ONE swap performed, proceeds\\nleft idle, per-vault legs recorded. Nothing is deposited yet.\\n\\nOwner-topic'd like [`Deposited`], so the indexer must key the strategy off the\\nEMITTING contract id (cross-checked against Factory `StrategyDeployed`), never\\noff the `strategy` field in the body \\xe2\\x80\\x94 a foreign contract can emit a look-alike.",
+      "lib": "",
+      "name": "Funded",
+      "prefix_topics": [
+        "funded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "What left the wallet.",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "What the legs are denominated in (== each leg vault's underlying).",
+          "name": "target",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "MEASURED post-swap amount backing the legs (\\xce\\xa3 legs.amount == received).",
+          "name": "received",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "IntentLeg"
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin emergency (`rescue`) \\xe2\\x80\\x94 funds go ONLY to Owner; Position closed; no fee.",
+      "lib": "",
+      "name": "Rescued",
+      "prefix_topics": [
+        "rescued"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`Some` = upsert, `None` = removed.",
+      "lib": "",
+      "name": "VaultSet",
+      "prefix_topics": [
+        "vault_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "info",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "VaultInfo"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposited",
+      "prefix_topics": [
+        "deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "(vault, amount_in, received, deposit_amount_after) \\xe2\\x80\\x94 post-state per leg.",
+          "name": "legs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "DepositLeg"
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`withdraw_all`'s `extra_idle` drain \\xe2\\x80\\x94 one event per idle asset returned RAW\\nto the owner (no engine call, no fee).",
+      "lib": "",
+      "name": "IdleSwept",
+      "prefix_topics": [
+        "idle_swept"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin set/rotated the global keeper (`set_keeper`).",
+      "lib": "",
+      "name": "KeeperSet",
+      "prefix_topics": [
+        "keeper_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Soroswap router updated (used from T2).",
+      "lib": "",
+      "name": "RouterSet",
+      "prefix_topics": [
+        "router_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdrawn",
+      "prefix_topics": [
+        "withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "gross_redeemed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_cash",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "out_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "out_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "`burned == total` \\xe2\\x80\\x94 every share gone, the Position was CLOSED on-chain.\\nThe indexer must key row deletion off THIS, not off `deposit_amount_after\\n== 0`: a partial redeem can zero the basis while shares remain (see\\n`withdraw.rs::settle_one`), and closing the row there would hide a live\\nposition from the UI.",
+          "name": "is_full",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin rotation, step 2: the nominee accepted (`accept_admin`).",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "The contract whose admin rotated \\xe2\\x80\\x94 Strategy, Registry or Factory.",
+          "name": "contract",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Protocol-wide fee config updated (`set_fee_config`).",
+      "lib": "",
+      "name": "FeeConfigSet",
+      "prefix_topics": [
+        "fee_config_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "rebalance_delta_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One intent leg was deposited into its vault. Carries the post-state so the\\nindexer mirrors the basis with no live read.",
+      "lib": "",
+      "name": "IntentFilled",
+      "prefix_topics": [
+        "intent_filled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Legs still unfilled AFTER this one. `0` \\xe2\\x87\\x92 the intent is complete and gone.",
+          "name": "remaining_legs",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Who paid for this transaction. Fills are permissionless, so this is not\\nnecessarily the owner or the Backyard filler.",
+          "name": "filled_by",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin opted an asset in/out of the keeper-path `rebalance_swap` allowlist\\n(`set_swap_asset`). The allowlist ships EMPTY \\xe2\\x80\\x94 a keeper cannot swap until an\\nadmin lists the output asset here.",
+      "lib": "",
+      "name": "SwapAssetSet",
+      "prefix_topics": [
+        "swap_asset_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Hybrid no-op receipt: target breached, no feasible move. `reason` is a\\nCLOSED SET (authoritative): `APY_BREACH | WEIGHT_DRIFT | RISK_BREACH`.",
+      "lib": "",
+      "name": "RebalanceNoOp",
+      "prefix_topics": [
+        "rebalance_no_op"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "observed_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "target_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Owner dropped the bookkeeping row for a vault holding ZERO shares\\n(`close_position`). No funds move; the forfeited fields are carried so the\\nindexer can close its mirror row and explain the basis that went with it.",
+      "lib": "",
+      "name": "PositionClosed",
+      "prefix_topics": [
+        "position_closed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_forfeited",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The owner dropped a pending intent. The funds stay as the Strategy's idle\\nbalance \\xe2\\x80\\x94 recoverable via `withdraw_all`'s `extra_idle` or `rebalance_deposit`.",
+      "lib": "",
+      "name": "IntentCancelled",
+      "prefix_topics": [
+        "intent_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "unfilled",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "IntentLeg"
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin set/updated the keeper-swap oracle floor (`set_oracle_config`).",
+      "lib": "",
+      "name": "OracleConfigSet",
+      "prefix_topics": [
+        "oracle_config_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "base",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "max_slippage_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "max_price_age",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`withdraw_all` terminal receipt (T1). `exited` = vaults fully redeemed,\\n`skipped` = vaults whose `redeem` reverted (frozen protocol). A non-empty\\n`skipped` signals a PARTIAL exit so the indexer marks those positions stuck.",
+      "lib": "",
+      "name": "WithdrawAllDone",
+      "prefix_topics": [
+        "withdraw_all_done"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "exited",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "skipped",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Registry/Factory Wasm replaced (`upgrade`). The Strategy has its own\\n[`Upgraded`] event (kept as-is \\xe2\\x80\\x94 its `strategy` topic is ABI-frozen and the\\nindexer already keys on it); this one covers the two config contracts, where\\nthe emitting contract IS the topic.",
+      "lib": "",
+      "name": "ContractUpgraded",
+      "prefix_topics": [
+        "contract_upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Admin global kill-switch (`set_keeper_enabled`).",
+      "lib": "",
+      "name": "KeeperEnabledSet",
+      "prefix_topics": [
+        "keeper_enabled_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RebalanceSwapped",
+      "prefix_topics": [
+        "rebalance_swapped"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "spent",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyDeployed",
+      "prefix_topics": [
+        "strategy_deployed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "The IMMUTABLE create-time auto-rebalance choice. Carried here so the\\nindexer learns it at ingest \\xe2\\x80\\x94 there is no toggle event any more.",
+          "name": "auto_rebalance",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RebalanceDeposited",
+      "prefix_topics": [
+        "rebalance_deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "received",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RebalanceWithdrawn",
+      "prefix_topics": [
+        "rebalance_withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "gross",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_paid",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "net_kept",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_amount_after",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "`burned == total` \\xe2\\x80\\x94 the source Position was CLOSED. See `Withdrawn.is_full`.",
+          "name": "is_full",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ts",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Strategy admin rotation, step 1: current admin nominates a successor\\n(`transfer_admin`). Not yet in force \\xe2\\x80\\x94 the nominee must `accept_admin`.",
+      "lib": "",
+      "name": "AdminTransferProposed",
+      "prefix_topics": [
+        "admin_transfer_proposed"
+      ],
+      "params": [
+        {
+          "doc": "The contract whose admin is being rotated \\xe2\\x80\\x94 Strategy, Registry or Factory.\\nNamed `contract`, not `strategy`: all three emit this now that the config\\ncontracts also rotate in two steps.",
+          "name": "contract",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
