@@ -1,0 +1,667 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OraclePK"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OracleAddr"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OracleEd25519"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DrandPK"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "G2Generator"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DrandGenesis"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DrandPeriod"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RoundOffset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Counter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RequestContext",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Requester",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RequestRound",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Refunded",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CallbackContract",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CallbackFn",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Proof",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Fulfilled",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Transient re-entrancy guard: set true while callback is in-flight.\\nPrevents a malicious callback from re-entering fulfill().",
+            "name": "Fulfilling",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SAC token address used for per-request fees.",
+            "name": "FeeToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Fee amount (i128) charged per VRF request.",
+            "name": "FeeAmount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BlsVrfProof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "alpha_seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "beta_output",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gamma_point",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the VRF Oracle contract.\\n\\n# Parameters\\n- `fee_token`: SAC token address used to charge per-request fees.\\n- `fee_amount`: Amount of `fee_token` charged per VRF request (transferred\\nfrom requester to oracle). Set to 0 for fee-free operation.",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "oracle_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_ed25519_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "g2_generator",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_genesis_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_period",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "round_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fulfill a VRF request with a BLS proof and oracle Ed25519 signature.\\n\\n# Checks-Effects-Interactions (CEI) pattern\\n1. **Checks**: validate oracle identity, proof, alpha seed, BLS signatures.\\n2. **Effects**: write `Fulfilled = true` and store proof BEFORE any external call.\\n3. **Interactions**: invoke consumer callback (if registered) only AFTER state\\nis fully committed, with a re-entrancy guard to block nested `fulfill()` calls.\\n\\n# Re-entrancy protection\\n`DataKey::Fulfilling(request_id)` is set to `true` before callback invocation\\nand cleared after. Any re-entrant call to `fulfill()` for the same request_id\\nwill see `Fulfilling = true` and panic with \"fulfill already in progress\".\\nThis provides defense-in-depth alongside the `Fulfilled = true` check.",
+      "name": "fulfill",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "BlsVrfProof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "BlsVrfProof"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "oracle_pk",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 192
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "callback_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "symbol"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_context",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bytes"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_refunded",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_fulfilled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "requester_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Allows the requester (or oracle) to remove proof data for a fulfilled request,\\nreclaiming the associated storage rent. The fulfillment flag is preserved.\\n\\n# TTL edge case\\nAfter cleanup, `DataKey::Proof` is removed but `DataKey::Fulfilled` is kept.\\nCallers relying on `is_fulfilled()` will continue to get `true`.\\nCallers calling `get_proof()` or `derive_random()` after cleanup will panic \\xe2\\x80\\x94\\nconsumers must call `derive_random()` before cleanup or cache the result.",
+      "name": "cleanup_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "derive_random",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "request_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "oracle_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "timeout_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "timeout_rounds",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the drand public key used to verify BLS beacon signatures.\\n\\nThis is required when the drand network performs a key rotation or when\\nswitching to a different drand chain (e.g., quicknet \\xe2\\x86\\x92 a future chain).\\n\\n# Authorization model\\nThe current oracle must authorize this call.",
+      "name": "rotate_drand_pk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_drand_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the oracle's BLS public key, Stellar address, and Ed25519 signing key.\\n\\n# Authorization model\\nThe **current** oracle address must authorize this call. This prevents an\\nattacker who obtains a new keypair from hijacking the oracle role.\\n\\n# Security note\\nPending requests are **not** locked to the oracle key that was active at\\nrequest time. At fulfillment, `fulfill()` checks the **currently configured**\\noracle key in instance storage. This means:\\n- The **new** oracle can fulfill requests created before rotation.\\n- The **old** oracle (or an attacker with old keys) cannot fulfill after rotation.\\n\\nBest practice: rotate keys only after the new oracle node is running and\\nready to fulfill requests, to avoid a gap where no oracle is active.",
+      "name": "rotate_oracle_keys",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_oracle_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_oracle_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_oracle_ed25519_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Request verifiable randomness with an on-chain callback.\\n\\n# Confused-Deputy Security Model\\n- `callback_contract` must equal `requester`: only contracts requesting\\nrandomness for themselves may receive callbacks.\\n- `callback_contract.require_auth()` is enforced to ensure authorization.\\n- `callback_fn` is restricted to `on_vrf` to prevent arbitrary dispatch.",
+      "name": "request_with_callback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "callback_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "callback_fn",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Derives a random u64 in the range [0, max) with no modulo bias.\\nUses iterative hashing (rejection sampling variant) to ensure uniform distribution.\\nWorst-case bounded at 10 iterations (p < 2^-640 of exceeding).",
+      "name": "derive_random_in_range",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "max",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  }
+]
