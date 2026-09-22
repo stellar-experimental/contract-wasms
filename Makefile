@@ -6,6 +6,7 @@ check:
 	cargo check --manifest-path .scripts/spec-analysis/Cargo.toml
 	cargo check --manifest-path .scripts/wikigen/Cargo.toml
 	cargo check --manifest-path .scripts/optimize-analysis/Cargo.toml
+	cargo check --manifest-path .scripts/find-get-ledger-timestamp/Cargo.toml
 
 fmt:
 	cargo fmt --manifest-path .scripts/list-buckets/Cargo.toml
@@ -13,6 +14,7 @@ fmt:
 	cargo fmt --manifest-path .scripts/spec-analysis/Cargo.toml
 	cargo fmt --manifest-path .scripts/wikigen/Cargo.toml
 	cargo fmt --manifest-path .scripts/optimize-analysis/Cargo.toml
+	cargo fmt --manifest-path .scripts/find-get-ledger-timestamp/Cargo.toml
 
 wiki:
 	cargo run --manifest-path .scripts/wikigen/Cargo.toml -- \
