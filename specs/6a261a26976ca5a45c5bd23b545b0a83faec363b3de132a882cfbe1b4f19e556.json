@@ -1,0 +1,697 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OraclePK"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OracleAddr"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OracleEd25519"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DrandPK"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DrandGenesis"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DrandPeriod"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RoundOffset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Counter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RequestContext",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Requester",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RequestRound",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Refunded",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CallbackContract",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "CallbackFn",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Full proof (~450 bytes). Removable with `cleanup_proof()`.",
+            "name": "Proof",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Verified 32-byte VRF output. Written at fulfillment and **kept** by\\n`cleanup_proof()`, so `get_beta()` / `derive_*()` keep working after the\\nbulky proof is gone. Subject to normal persistent-storage TTL.",
+            "name": "Beta",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Fulfilled",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Transient re-entrancy guard: set true while callback is in-flight.\\nPrevents a malicious callback from re-entering fulfill().",
+            "name": "Fulfilling",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SAC token address used for per-request fees.",
+            "name": "FeeToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Fee amount (i128) charged per VRF request.",
+            "name": "FeeAmount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BlsVrfProof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "alpha_seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "beta_output",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gamma_point",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fulfill a VRF request with a BLS proof and oracle Ed25519 signature.\\n\\n# Checks-Effects-Interactions (CEI) pattern\\n1. **Checks**: validate oracle identity, proof, alpha seed, BLS signatures.\\n2. **Effects**: write `Fulfilled = true` and store proof BEFORE any external call.\\n3. **Interactions**: invoke consumer callback (if registered) only AFTER state\\nis fully committed, with a re-entrancy guard to block nested `fulfill()` calls.\\n\\n# Re-entrancy protection\\n`DataKey::Fulfilling(request_id)` is set to `true` before callback invocation\\nand cleared after. Any re-entrant call to `fulfill()` for the same request_id\\nwill see `Fulfilling = true` and panic with \"fulfill already in progress\".\\nThis provides defense-in-depth alongside the `Fulfilled = true` check.\\n\\n# Resource budget\\nThe **VRF core** (checks + effects + fee transfer, i.e. everything except\\nthe consumer callback) targets \\xe2\\x89\\xa4 75M CPU instructions (measured ~58M on\\nMainnet). That target **excludes** the callback. The callback runs in the\\nsame transaction and ad",
+      "name": "fulfill",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "BlsVrfProof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "request",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The verified 32-byte VRF output (`beta`) of a fulfilled request.\\n\\nStored separately from the full proof and **retained** by\\n`cleanup_proof()`, so this keeps working after cleanup (until the entry's\\nstorage TTL lapses; reads extend it).",
+      "name": "get_beta",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "BlsVrfProof"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "oracle_pk",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 192
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "callback_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "symbol"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_context",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bytes"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_refunded",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_fulfilled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "requester_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomic constructor (Soroban Protocol 22+). Runs exactly once, inside the\\nsame host call that creates the contract instance.\\n\\n# Why a constructor instead of `init()`\\nEarlier versions had a public `init()` guarded only by\\n\"already initialized\". Deploy and init were two transactions, so anyone\\nwatching the deploy could call `init()` first with an oracle address they\\ncontrolled (front-running). There is now **no** initialization\\nentrypoint: configuration can only be supplied by whoever creates the\\ninstance (`createCustomContract` with constructor args, or\\n`env.register(.., args)` in tests), and the host refuses to run a\\nconstructor twice.\\n\\n`oracle_address.require_auth()` is kept so the oracle account must also\\nsign the deployment: nobody can deploy an instance that names someone\\nelse's account as its oracle.\\n\\n# Validation (fail closed)\\nEvery key is checked before anything is stored, so a misconfiguration\\naborts the deployment instead of producing a contract whose every\\n`fulfill()` fails. See `validate_g2_public_k",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "oracle_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_ed25519_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "drand_genesis_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drand_period",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "round_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lets the requester (or oracle) remove bulky data for a fulfilled request\\nto reclaim storage rent.\\n\\nRemoved: `Proof` (~450 bytes), `RequestContext`, callback metadata.\\n**Kept:** `Fulfilled` and the 32-byte `Beta`, so `is_fulfilled()`,\\n`get_beta()`, `derive_random()`, `derive_random_in_range()` and\\n`derive_range_for_domain()` keep working. Only `get_proof()` (the full\\nproof, needed for independent re-verification) fails after cleanup.\\nRe-verifiers should fetch the proof from the `fulfill` transaction or\\ncall `get_proof()` before cleanup. All entries remain subject to\\nSoroban storage TTL.",
+      "name": "cleanup_proof",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A uniformly random `u64` derived from the request's verified output.\\n\\n`sha256(\"VREP_DERIVE_V2\" \\xe2\\x80\\x96 0x01 \\xe2\\x80\\x96 request_id_be \\xe2\\x80\\x96 beta)[0..8]`.\\n\\n# No caller-chosen input\\nThe only inputs are fixed before the result is known: the request id and\\nthe verified beta. Earlier versions also took a `context: Bytes` argument\\nhere. Because the caller picked it **after** seeing beta, it let anyone\\ngrind over contexts until they liked the output. Bind application data\\nto the request via the `context` given to `request()` instead: that\\nvalue is committed before the drand round is public and already feeds\\nalpha (and so beta).",
+      "name": "derive_random",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "request_round",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "oracle_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "timeout_refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "timeout_rounds",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the drand public key used to verify BLS beacon signatures.\\n\\nUse this when the configured drand chain rotates its group key. It is\\n**not** a chain migration: `DrandGenesis`, `DrandPeriod` and the signature\\nDST (quicknet, G1, unchained) are fixed at construction or compiled in, and the\\ncontract has no upgrade entrypoint. Moving to a different drand chain\\nrequires deploying a new contract instance.\\n\\n# Authorization model\\nThe current oracle must authorize this call.\\n\\n# Security note\\nThis key is what makes alpha unpredictable to the oracle. A holder of the\\noracle account who installs a key it controls can sign any \"beacon\" and\\ntherefore choose outputs, including for pending requests. Treat every\\n`rotate_dk` event as security-relevant.",
+      "name": "rotate_drand_pk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_drand_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the oracle's BLS public key, Stellar address, and Ed25519 signing key.\\n\\n# Authorization model\\nThe **current** oracle address must authorize this call. This prevents an\\nattacker who obtains a new keypair from hijacking the oracle role.\\n\\nThe **new** oracle address must authorize it too, in the same\\ntransaction. Otherwise a typo or wrong account would install an oracle\\nthat can never sign `fulfill()`, and the old oracle would already have\\nlost the role. Every pending request would then be stranded until\\n`timeout_refund()`. Requiring both signatures proves the new account\\nis controlled before the switch. When the address is unchanged (key-only\\nrotation), one signature covers both.\\n\\n# Security note\\nPending requests are **not** locked to the oracle key that was active at\\nrequest time. At fulfillment, `fulfill()` checks the **currently configured**\\noracle key in instance storage. This means:\\n- The **new** oracle can fulfill requests created before rotation.\\n- The **old** oracle (or an attacker with old keys) ",
+      "name": "rotate_oracle_keys",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_oracle_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_oracle_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_oracle_ed25519_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Request verifiable randomness with an on-chain callback.\\n\\n# Confused-Deputy Security Model\\n- `callback_contract` must equal `requester`: only contracts requesting\\nrandomness for themselves may receive callbacks.\\n- `callback_contract.require_auth()` is enforced to ensure authorization.\\n- `callback_fn` is restricted to `on_vrf` to prevent arbitrary dispatch.",
+      "name": "request_with_callback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "callback_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "callback_fn",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "An **exactly uniform** value in `[0, max)` derived from the request's\\nverified output.\\n\\n# Method: bounded rejection sampling over two 128-bit candidates\\n`h = sha256(\"VREP_DERIVE_V2\" \\xe2\\x80\\x96 0x02 \\xe2\\x80\\x96 request_id_be \\xe2\\x80\\x96 max_be \\xe2\\x80\\x96 beta)`,\\n`c1 = h[0..16]`, `c2 = h[16..32]` (big-endian `u128`),\\n`limit = 2^128 \\xe2\\x88\\x92 (2^128 mod max)` (the largest multiple of `max` \\xe2\\x89\\xa4 2^128).\\n\\n- if `c1 < limit` \\xe2\\x86\\x92 `c1 mod max`\\n- else if `c2 < limit` \\xe2\\x86\\x92 `c2 mod max`\\n- else \\xe2\\x86\\x92 panic `\"range derivation failed: both candidates rejected\"`\\n\\nConditioned on returning, `c mod max` is **exactly** uniform: `[0, limit)`\\nsplits into `limit / max` complete residue cycles, so there is no modulo\\nbias at all (the previous 128-bit version had bias \\xe2\\x89\\xa4 2^-64, small but\\nnot zero). There is no biased fallback. When both candidates are\\nrejected the call fails explicitly, with probability\\n`((2^128 mod max) / 2^128)^2 < (max / 2^128)^2 \\xe2\\x89\\xa4 2^-128` for any\\n`max < 2^64`. Cost is constant: one sha256, no loop.\\n\\n# No caller-chosen input\\nInputs are the request id,",
+      "name": "derive_random_in_range",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Like [`Self::derive_random_in_range`], plus a short **domain separator**\\nso one request can feed several independent draws (for example\\n`b\"card-1\"`, `b\"card-2\"`).\\n\\n# \\xe2\\x9a\\xa0 The domain MUST be fixed before fulfillment\\nThe output is a deterministic function of `(request, domain, max)`. If a\\nparty can pick `domain` **after** the randomness is revealed, it can try\\n`A`, `B`, `C`, \\xe2\\x80\\xa6 and keep whichever result suits it, which is grinding\\nover derived outputs. Only use constants from your contract's code, or\\nvalues your contract stored before calling `request()`. Never forward a\\nuser-supplied value here. The contract cannot enforce this: it has no\\nway to know when your domain was chosen.\\n\\nThe domain is length-prefixed in the hash input (no ambiguity between,\\nfor example, `(\"ab\", max)` and `(\"a\", ...)`), and is capped at\\n[`MAX_DERIVE_DOMAIN_LEN`] bytes.",
+      "name": "derive_range_for_domain",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "request_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "domain",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "max",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  }
+]
