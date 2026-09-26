@@ -1,0 +1,1173 @@
+[
+  {
+    "function_v0": {
+      "doc": "One-time constructor, run atomically at deploy\\n(`stellar contract deploy \\xe2\\x80\\xa6 -- --admin \\xe2\\x80\\xa6 --usdc_token \\xe2\\x80\\xa6`). There is no\\nseparate `initialize` call and thus no uninitialized window; the config\\nis guaranteed present the instant the contract exists.\\n\\n`quote_signer` is the raw ed25519 public key of the off-chain quote\\nsigner. `network_id` binds quotes to this deployment's network\\n(testnet = 1, mainnet = 2).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "attester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote_signer",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "default_ttl_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "network_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sole entry point for user payments. Validates the backend-signed\\nquote, pulls `amount` USDC from the payer into escrow, and creates the\\norder in `Paid` status.\\n\\nValidation runs in a fixed order, so the first failing condition\\ndetermines the error surfaced:\\npaused -> denylist -> treasury/enabled -> amount -> quote expiry ->\\nsignature -> duplicate intent -> balance/allowance.\\n\\nToken movement uses SEP-41 `transfer_from` with the router as spender,\\nwhich is why the payer must have `approve`d the router beforehand.",
+      "name": "pay_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "quote_expires_at_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Attester confirms off-chain fulfillment. Releases escrowed USDC to the\\nservice treasury and stores the opaque `fulfillment_ref_hash`.\\n\\nRemains callable while paused, after the refund TTL (as long as the\\norder is still `Paid`), and for disabled\\nservices (disabling only blocks *new* payments).",
+      "name": "attest_fulfillment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fulfillment_ref_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns escrowed USDC to the payer.\\n\\nUntil `expires_at_ledger + REFUND_GRACE_LEDGERS`, only the attester may\\nrefund (`AttesterInitiated`). On or after that point the call is\\npermissionless (`TtlExpired`) \\xe2\\x80\\x94 no auth is required from anyone. The\\ngrace window past the nominal TTL gives the attester an exclusive\\nsettlement buffer so a slightly-late `attest_fulfillment` cannot be\\nfront-run by a permissionless refund. Remains callable while paused.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Full order record. Errors with `OrderNotFound` if unknown.",
+      "name": "get_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Order lifecycle status. Errors with `OrderNotFound` if unknown.",
+      "name": "get_order_status",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "OrderStatus"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Global configuration.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Treasury configuration for a service type.",
+      "name": "get_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "TreasuryConfig"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether an address is denylisted.",
+      "name": "is_denied",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer the admin role. Emits `config_updated` attributed to the\\nacting (outgoing) admin.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the attester.",
+      "name": "set_attester",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_attester",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the quote signer (raw ed25519 public key).",
+      "name": "set_quote_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_signer",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure a service treasury. Must be called for a `ServiceType`\\nbefore that service accepts payments.\\n\\nRouting is by `service_type`, resolved at settlement time: an `Order`\\nstores only its service, not a treasury snapshot. Changing a service's\\n`treasury_address` therefore redirects settlement of already-`Paid`\\norders for that service to the new address (see the\\n`set_treasury_rotation_redirects_settlement` test). Rotate with that in\\nmind, or drain in-flight orders first.",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "treasury_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "ttl_ledgers",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency pause. Blocks `pay_order` only; `attest_fulfillment` and\\n`refund` remain callable for existing `Paid` orders.",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the default refund window. Affects only orders paid after the\\nchange; existing orders keep their recorded `expires_at_ledger`.",
+      "name": "set_default_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Block an address from calling `pay_order`. Does not affect refunds of\\nexisting escrow (the payer must always be refundable).",
+      "name": "add_to_denylist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unblock an address.",
+      "name": "remove_from_denylist",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Config not set (reserved: the deploy-time constructor guarantees config\\nexists, so this is unreachable in practice).",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Double init (reserved: the constructor runs exactly once at deploy, so\\nre-initialization is impossible).",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Caller lacks required role (reserved; see module docs).",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "Unknown `intent_id`.",
+          "name": "OrderNotFound",
+          "value": 4
+        },
+        {
+          "doc": "Duplicate `intent_id` on `pay_order`.",
+          "name": "OrderAlreadyExists",
+          "value": 5
+        },
+        {
+          "doc": "Operation not allowed in current status.",
+          "name": "InvalidStatus",
+          "value": 6
+        },
+        {
+          "doc": "Quote signature verification failed (reserved; see module docs).",
+          "name": "InvalidSignature",
+          "value": 7
+        },
+        {
+          "doc": "Past `quote_expires_at_ledger`.",
+          "name": "QuoteExpired",
+          "value": 8
+        },
+        {
+          "doc": "Service type not enabled.",
+          "name": "ServiceDisabled",
+          "value": 9
+        },
+        {
+          "doc": "No treasury for service type.",
+          "name": "TreasuryNotConfigured",
+          "value": 10
+        },
+        {
+          "doc": "Payer is denylisted.",
+          "name": "Denylisted",
+          "value": 11
+        },
+        {
+          "doc": "Contract paused.",
+          "name": "Paused",
+          "value": 12
+        },
+        {
+          "doc": "Token allowance too low.",
+          "name": "InsufficientAllowance",
+          "value": 13
+        },
+        {
+          "doc": "Payer balance too low.",
+          "name": "InsufficientBalance",
+          "value": 14
+        },
+        {
+          "doc": "Refund preconditions not met (order not in `Paid` status).",
+          "name": "RefundNotAllowed",
+          "value": 15
+        },
+        {
+          "doc": "Amount <= 0.",
+          "name": "InvalidAmount",
+          "value": 16
+        },
+        {
+          "doc": "Unknown enum variant (reserved; see module docs).",
+          "name": "InvalidServiceType",
+          "value": 17
+        },
+        {
+          "doc": "Refund-window TTL outside the allowed band: zero (would make escrow\\npermissionlessly refundable in the same ledger it is paid) or above\\n`MAX_TTL_LEDGERS`. Extends the original error set (codes 1\\xe2\\x80\\x9317).",
+          "name": "InvalidTtl",
+          "value": 18
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`order_paid`. Subscribers begin off-chain fulfillment.\\n\\nThe struct name provides the fixed `\"order_paid\"` topic (snake_case of the\\ntype), `#[topic]` adds `intent_id` as a second topic, and the remaining\\nfields form the data payload. `data_format = \"vec\"` keeps the payload a\\npositional tuple/vec (the wire layout consumers rely on).",
+      "lib": "",
+      "name": "OrderPaid",
+      "prefix_topics": [
+        "order_paid"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "paid_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`order_settled`. Subscribers mark the order complete.",
+      "lib": "",
+      "name": "OrderSettled",
+      "prefix_topics": [
+        "order_settled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fulfillment_ref_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`order_refunded`.",
+      "lib": "",
+      "name": "OrderRefunded",
+      "prefix_topics": [
+        "order_refunded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": {
+            "udt": {
+              "name": "RefundReason"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`config_updated`, emitted for scalar config fields\\n(`admin`, `attester`, `quote_signer`, `paused`, `default_ttl`).\\n\\nTreasury and denylist changes carry extra detail, so they get their own\\ntyped events ([`TreasuryConfigured`], [`DenylistChanged`]) rather than this\\ncoarse one \\xe2\\x80\\x94 a refinement of the original single `config_updated` event.\\n\\nThe mutated field is a dynamic second topic (`Symbol`), and the acting\\nadmin is the sole data value \\xe2\\x80\\x94 hence `data_format = \"single-value\"`.",
+      "lib": "",
+      "name": "ConfigUpdated",
+      "prefix_topics": [
+        "config_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "field",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`treasury_configured`: emitted by `set_treasury`. Carries which service was\\n(re)configured, its treasury address, and whether it is enabled, so\\nindexers can track routing changes without re-reading contract state.",
+      "lib": "",
+      "name": "TreasuryConfigured",
+      "prefix_topics": [
+        "treasury_configured"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "treasury_address",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`denylist_changed`: emitted by `add_to_denylist` / `remove_from_denylist`.\\nThe affected address is an indexed topic; `denied` gives the new state.",
+      "lib": "",
+      "name": "DenylistChanged",
+      "prefix_topics": [
+        "denylist_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "denied",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for all contract data.\\n\\n- `Config` and `Treasury(_)` live in **instance** storage (small, bounded\\nset: one config + at most eight treasuries).\\n- `Order(_)` and `Denylist(_)` live in **persistent** storage (unbounded).",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Global configuration.",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-service treasury configuration.",
+            "name": "Treasury",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ServiceType"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Order record keyed by `intent_id`.",
+            "name": "Order",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Denylist entry. Presence with `true` means denied.",
+            "name": "Denylist",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Global configuration.\\n\\nTwo fields differ from a plain config, both required by Soroban primitives:\\n- `quote_signer` is stored as the raw 32-byte ed25519 public key\\n(`BytesN<32>`) rather than an `Address`, because\\n`env.crypto().ed25519_verify` operates on raw keys.\\n- `network_id` (u32; testnet = 1, mainnet = 2) is stored so the contract\\ncan bind quote hashes to the network (preventing cross-network replay).",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Contract administrator.",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "May call `attest_fulfillment` and `refund` (before TTL).",
+          "name": "attester",
+          "type_": "address"
+        },
+        {
+          "doc": "Refund window after payment, in ledgers.",
+          "name": "default_ttl_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "Network identifier bound into quote hashes (testnet = 1, mainnet = 2).",
+          "name": "network_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "When true, new payments are blocked.",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "Ed25519 public key used to verify quote signatures.",
+          "name": "quote_signer",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "USDC Stellar Asset Contract address.",
+          "name": "usdc_token",
+          "type_": "address"
+        },
+        {
+          "doc": "Contract version.",
+          "name": "version",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-service treasury configuration.",
+      "lib": "",
+      "name": "TreasuryConfig",
+      "fields": [
+        {
+          "doc": "Whether new orders for this service are accepted.",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Receives USDC on settlement.",
+          "name": "treasury_address",
+          "type_": "address"
+        },
+        {
+          "doc": "Per-service TTL override; falls back to `default_ttl_ledgers`.",
+          "name": "ttl_ledgers",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Order record. Created atomically on the first successful `pay_order`; there\\nis no pre-payment registration step.",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "USDC in stroops (7 decimals).",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Nominal refund deadline (`paid_ledger + ttl`). The permissionless refund\\npath opens `REFUND_GRACE_LEDGERS` after this; before then only the\\nattester may refund.",
+          "name": "expires_at_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Set on settlement; opaque hash supplied by the attester.",
+          "name": "fulfillment_ref_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Unique order identifier supplied by integrators.",
+          "name": "intent_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger when payment was received.",
+          "name": "paid_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Wallet that paid.",
+          "name": "payer",
+          "type_": "address"
+        },
+        {
+          "doc": "Service category.",
+          "name": "service_type",
+          "type_": {
+            "udt": {
+              "name": "ServiceType"
+            }
+          }
+        },
+        {
+          "doc": "Current lifecycle state.",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "OrderStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Service categories. The contract treats these purely as routing keys for\\ntreasury selection and TTL configuration.",
+      "lib": "",
+      "name": "ServiceType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Airtime",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "MobileData",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Betting",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "UtilitiesElectricity",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "UtilitiesWater",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "CableTv",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Evoucher",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Transfer",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Order lifecycle states. An order exists only after payment. `Settled` and\\n`Refunded` are terminal.",
+      "lib": "",
+      "name": "OrderStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Paid",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Settled",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Refunded",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Reason attached to `order_refunded` events.",
+      "lib": "",
+      "name": "RefundReason",
+      "cases": [
+        {
+          "doc": "Attester called `refund` before the permissionless (grace) boundary.",
+          "name": "AttesterInitiated",
+          "value": 0
+        },
+        {
+          "doc": "Any address called `refund` on or after\\n`expires_at_ledger + REFUND_GRACE_LEDGERS`.",
+          "name": "TtlExpired",
+          "value": 1
+        }
+      ]
+    }
+  }
+]
