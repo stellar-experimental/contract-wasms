@@ -1,0 +1,317 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Authorized writer set (`Vec<Address>`).",
+            "name": "Auths"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-gem record keyed by gemID (`Gem`).",
+            "name": "Gem",
+            "type_": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Gem",
+      "fields": [
+        {
+          "doc": "Stage name \\xe2\\x86\\x92 SHA-256 (32 bytes) of the off-chain data for that stage.",
+          "name": "hashes",
+          "type_": {
+            "map": {
+              "key_type": "string",
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "StageAlreadySet",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidStage",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "GemIdTooLong",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "GemIdEmpty",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time bootstrap. The `admin` address must sign the init tx, which\\ncloses the front-running window between deploy and first call.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add a new authorized writer. Caller must be in the auth set and sign.",
+      "name": "add_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove an authorized writer. Caller must be in the auth set and sign.\\nRefuses to empty the auth set so the contract never becomes orphaned.",
+      "name": "remove_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public read of the current authorized writer set.",
+      "name": "get_authorized",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record the SHA-256 hash for one stage of a gem. Append-only:\\nre-setting an existing stage panics with `StageAlreadySet`. To correct\\na mistake, deploy a new gem record under a new gemID.",
+      "name": "set_gem_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "stage",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record several stage hashes in one transaction. Each entry is subject\\nto the same append-only and whitelist rules as `set_gem_hash`. If any\\nentry violates a rule, the whole call reverts.",
+      "name": "set_gem_hashes",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "hashes_to_set",
+          "type_": {
+            "map": {
+              "key_type": "string",
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend the storage TTL of a gem's on-chain record WITHOUT modifying it.\\n\\nPersistent entries are archived once their TTL runs out, after which the\\nanchored hashes can't be read without a costly restore. Because the\\ncontract is append-only, an existing stage can never be re-written to\\npiggy-back a TTL bump \\xe2\\x80\\x94 so this dedicated keeper entrypoint is the only\\nway to keep a gem's provenance alive indefinitely.\\n\\nPermissionless by design: extending TTL only prolongs storage (the\\ncaller pays the fee) and can't alter or reveal anything, so anyone who\\ncares about a gem's longevity may keep it alive. No-op if the gem has no\\nrecord on-chain, so keepers can call it blindly over a batch of IDs.",
+      "name": "bump_gem_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the recorded hash for one (gem, stage) pair. None if not set.",
+      "name": "get_gem_stage_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "stage",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read every stage hash recorded for a gem. None if the gem has no\\nrecord on-chain at all.",
+      "name": "get_gem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "map": {
+                "key_type": "string",
+                "value_type": {
+                  "bytes_n": {
+                    "n": 32
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Convenience read: which stages exist for a gem.",
+      "name": "list_gem_stages",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "string"
+          }
+        }
+      ]
+    }
+  }
+]

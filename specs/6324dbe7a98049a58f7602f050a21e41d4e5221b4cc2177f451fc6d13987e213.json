@@ -1,0 +1,385 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "mode",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "DepositMode"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pool",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "usdc",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdapterError",
+      "cases": [
+        {
+          "doc": "Not a CCTP v2 burn message.",
+          "name": "MalformedMessage",
+          "value": 1
+        },
+        {
+          "doc": "`destinationCaller` is not this adapter.",
+          "name": "WrongDestinationCaller",
+          "value": 2
+        },
+        {
+          "doc": "`mintRecipient` is not this adapter.",
+          "name": "WrongMintRecipient",
+          "value": 3
+        },
+        {
+          "doc": "The source chain is not a supported home chain.",
+          "name": "UnsupportedDomain",
+          "value": 4
+        },
+        {
+          "doc": "The burner address is not valid for its chain.",
+          "name": "UnsupportedSender",
+          "value": 5
+        },
+        {
+          "doc": "Circle's `receive_message` returned false.",
+          "name": "ReceiveFailed",
+          "value": 6
+        },
+        {
+          "doc": "The message minted nothing to this adapter.",
+          "name": "NothingMinted",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "messenger",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintForwarded",
+      "prefix_topics": [
+        "mint_forwarded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "source_domain",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL extension.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccountCreated",
+      "prefix_topics": [
+        "account_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "home_domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": {
+            "udt": {
+              "name": "OwnerKey"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transmitter",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`transmitter` = Circle MessageTransmitterV2, `messenger` = Circle\\nTokenMessengerMinterV2 (passed on to each account for outbound burns),\\n`usdc` = the USDC SAC CCTP mints, `pool` = SAFU protection-pool,\\n`account_wasm` = the uploaded `safu-account` WASM hash, `mode` = what\\ndeposits through this adapter are for.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "transmitter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account_wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "DepositMode"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner_bytes32",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": {
+            "udt": {
+              "name": "OwnerKey"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Completes a CCTP burn into the burner's SAFU account and stakes it.\\nReturns the account address.",
+      "name": "mint_and_stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "message",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "attestation",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "AdapterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The account address for a home-chain owner, deployed or not. The\\nfrontend shows it before the user burns.",
+      "name": "account_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "home_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": {
+            "udt": {
+              "name": "OwnerKey"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The account address for a raw CCTP `messageSender`, if valid.",
+      "name": "account_for_sender",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "home_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Who owns a SAFU CCTP account: the key that burned USDC on the home chain.",
+      "lib": "",
+      "name": "OwnerKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "20-byte EVM address (checked by secp256k1 recovery).",
+            "name": "Evm",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "32-byte Solana Ed25519 public key.",
+            "name": "Solana",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What an arriving deposit is for. Fixed per adapter at deploy: SAFU runs\\none adapter per mode, and the user's burn names the adapter, so the intent\\nis chosen by the user's own signed burn and cannot be switched by a relayer.",
+      "lib": "",
+      "name": "DepositMode",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Stake into the pool (coverage for the staker's wallets).",
+            "name": "Stake"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Back the pool (seed capital, last line of defence).",
+            "name": "Back"
+          }
+        }
+      ]
+    }
+  }
+]

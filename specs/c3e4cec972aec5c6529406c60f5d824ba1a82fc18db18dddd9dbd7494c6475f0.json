@@ -1,0 +1,298 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Registration",
+      "fields": [
+        {
+          "doc": "Ledger timestamp of registration. The backend's claim rules use it\\n(registered at least 7 days before the hack).",
+          "name": "registered_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RegistryError",
+      "cases": [
+        {
+          "doc": "This staker already registered this wallet.",
+          "name": "AlreadyRegistered",
+          "value": 1
+        },
+        {
+          "doc": "Another staker registered this wallet. Registrations are permanent.",
+          "name": "WalletTakenByOtherStaker",
+          "value": 2
+        },
+        {
+          "doc": "The staker already has `MAX_WALLETS_PER_STAKER` wallets.",
+          "name": "StakerLimitReached",
+          "value": 3
+        },
+        {
+          "doc": "Nothing registered under this wallet hash.",
+          "name": "NotRegistered",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WriterChanged",
+      "prefix_topics": [
+        "writer_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_writer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_writer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_pool",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Writer only. Binds `wallet_hash` to `staker` permanently.",
+      "name": "register",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WalletRegistered",
+      "prefix_topics": [
+        "wallet_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "wallet_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "registered_at",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless: keep a registration and its staker's list from being\\narchived. Archived entries are restorable, never deleted, but this\\nkeeps reads cheap.",
+      "name": "extend_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_writer",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registered AND its staker has a live stake (`pool.is_eligible`).",
+      "name": "is_covered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pool only: called by the pool's governance when a writer change\\nexecutes (`GovChange::RegistryWriter`).",
+      "name": "set_writer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_writer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_wallets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "staker",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`pool` is fixed for the life of this registry.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "writer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_registration",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Registration"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

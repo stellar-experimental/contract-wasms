@@ -1,0 +1,447 @@
+[
+  {
+    "function_v0": {
+      "doc": "Executes `calls` in order and returns each call's raw return value, in\\ncall order.\\n\\nAny failing call traps the whole invocation, so either every call\\nlands or none does.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The `Call` sequence, executed front to back.",
+      "name": "multicall",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Executes `calls` in order, isolates each call's failure, and returns\\none raw outcome per call, in call order. An outcome is the call's raw\\nreturn value when it lands, or the failure as a host `Error` value\\nwhen it does not.\\n\\nA call that fails with a recoverable error rolls back its own effects,\\nand the batch continues with the next call. A budget or\\nstorage-footprint limit aborts the whole transaction. The two outcome\\nkinds cannot collide, because the host turns an error-tagged return\\ninto a failure.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The `Call` sequence, executed front to back.",
+      "name": "multicall_try",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs a create-and-fill batch strictly, fills `calls[0]`, and returns\\nthe `N` batch results with the fill payout appended (length `N + 1`).\\nThe payout is an `i128` (token-dec).\\n\\nBy convention, `calls[0]` is the order to fill, and it targets the\\nmarket contract (`calls[0].contract`). Its `u32` return value is the\\norder id handed to the fill. A failing fill unwinds the whole batch,\\nso nothing rests.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The batch, executed like `multicall`. The router does not\\ncheck the shape of `calls[0]`, and later calls are never filled.\\n* `user` - The trader who owns the order, passed to `execute_order`.\\nIt is an explicit argument, not decoded from `calls[0]`.\\n* `keeper` - The fill-reward recipient. With `keeper = user` the fill\\nreward returns to the trader.\\n* `price` - The serialized price update for the fill.\\n\\n# Notes\\n\\n* Traps on empty `calls`: there is no first call to fill.\\n* Traps when `calls[0]` returns anything but a `u32` order id.",
+      "name": "create_and_fill",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects a relayer fee from `user`, then acts as `multicall`, returning\\nits results. A failing call also reverts the fee. With empty `calls`,\\nthe fee is still collected.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The batch.\\n* `user` - The fee payer.\\n* `fee_token` - The fee token.\\n* `max_fee_amount` - The fee cap (token-dec).\\n* `fee_expiration` - The allowance's live-until ledger, at or after\\nexecution.\\n* `fee_amount` - The fee (token-dec). `0` skips it.\\n* `fee_recipient` - The fee payee.\\n\\n# Errors\\n\\n* `FeeAbstractionError::InvalidFeeBounds` - If `fee_amount` is negative\\nor above `max_fee_amount`.\\n* `FeeAbstractionError::InvalidUser` - If `user` is the router.\\n\\n# Events\\n\\n* topics - `[\"fee_collected\", user: Address, recipient: Address]`\\n* data - `[token: Address, amount: i128]`\\n\\n# Notes\\n\\n* Authorization for `user` is required over `(calls, fee_token,\\nmax_fee_amount, fee_expiration)`. Inner call auths nest under it. The\\nsubmitter sets `fee_amount` and `fee_recipient`.",
+      "name": "multicall_with_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_expiration",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs a create-and-fill batch strictly, then attempts an immediate\\nfill, and returns the `N` batch results with the isolated fill outcome\\nappended (length `N + 1`). The outcome is encoded like\\n`multicall_try`: the payout (`i128`, token-dec) on a landed fill, or\\nthe failure as a host `Error` value when it rests.\\n\\nThe batch follows the first-call convention of `create_and_fill`. A\\nfill that fails with a recoverable error leaves the orders still\\nstanding after the batch available for a later keeper fill. A budget\\nor storage-footprint limit in the fill aborts the whole transaction.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The create-and-fill batch. `calls[0]` is the order to\\nfill.\\n* `user` - The trader who owns the order, passed to the fill.\\n* `keeper` - The fill-reward recipient.\\n* `price` - The serialized price update for the fill.\\n\\n# Notes\\n\\n* Traps on empty `calls`: there is no first call to fill.\\n* Traps when `calls[0]` returns anything but a `u32` order id.",
+      "name": "create_and_try_fill",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects a relayer fee from `user`, then acts as `create_and_fill`,\\nreturning its results. A failing fill also unwinds the fee.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The batch.\\n* `user` - The trader and fee payer.\\n* `fee_token` - The fee token.\\n* `max_fee_amount` - The fee cap (token-dec).\\n* `fee_expiration` - The allowance's live-until ledger.\\n* `fee_amount` - The fee (token-dec). `0` skips it.\\n* `fee_recipient` - The fee payee.\\n* `keeper` - The fill-reward recipient.\\n* `price` - The price update.\\n\\n# Errors\\n\\n* `FeeAbstractionError::InvalidFeeBounds` - If `fee_amount` is negative\\nor above `max_fee_amount`.\\n* `FeeAbstractionError::InvalidUser` - If `user` is the router.\\n\\n# Events\\n\\n* topics - `[\"fee_collected\", user: Address, recipient: Address]`\\n* data - `[token: Address, amount: i128]`\\n\\n# Notes\\n\\n* Authorization for `user` is required over `(calls, fee_token,\\nmax_fee_amount, fee_expiration)`. Inner call auths nest under it.\\n* Traps on empty `calls` or a non-`u32` first result.",
+      "name": "create_and_fill_with_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_expiration",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects a relayer fee from `user`, then acts as `create_and_try_fill`,\\nreturning its results. A resting fill keeps the fee.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `calls` - The batch.\\n* `user` - The trader and fee payer.\\n* `fee_token` - The fee token.\\n* `max_fee_amount` - The fee cap (token-dec).\\n* `fee_expiration` - The allowance's live-until ledger.\\n* `fee_amount` - The fee (token-dec). `0` skips it.\\n* `fee_recipient` - The fee payee.\\n* `keeper` - The fill-reward recipient.\\n* `price` - The price update.\\n\\n# Errors\\n\\n* `FeeAbstractionError::InvalidFeeBounds` - If `fee_amount` is negative\\nor above `max_fee_amount`.\\n* `FeeAbstractionError::InvalidUser` - If `user` is the router.\\n\\n# Events\\n\\n* topics - `[\"fee_collected\", user: Address, recipient: Address]`\\n* data - `[token: Address, amount: i128]`\\n\\n# Notes\\n\\n* Authorization for `user` is required over `(calls, fee_token,\\nmax_fee_amount, fee_expiration)`. Inner call auths nest under it.\\n* Traps on empty `calls` or a non-`u32` first result.",
+      "name": "create_and_try_fill_with_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_expiration",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "val"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One contract invocation in a batch.",
+      "lib": "",
+      "name": "Call",
+      "fields": [
+        {
+          "doc": "The positional arguments, host-encoded.",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "The target contract.",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "The entry-point name.",
+          "name": "func",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a fee is collected from a user.",
+      "lib": "",
+      "name": "FeeCollected",
+      "prefix_topics": [
+        "fee_collected"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur in fee abstraction operations.",
+      "lib": "",
+      "name": "FeeAbstractionError",
+      "cases": [
+        {
+          "doc": "The fee token is not allowed",
+          "name": "FeeTokenNotAllowed",
+          "value": 5000
+        },
+        {
+          "doc": "The fee token has been already allowed",
+          "name": "FeeTokenAlreadyAllowed",
+          "value": 5001
+        },
+        {
+          "doc": "The amount of allowed tokens reached `u32::MAX`",
+          "name": "TokenCountOverflow",
+          "value": 5002
+        },
+        {
+          "doc": "The fee amount exceeds the maximum allowed",
+          "name": "InvalidFeeBounds",
+          "value": 5003
+        },
+        {
+          "doc": "No tokens available to sweep",
+          "name": "NoTokensToSweep",
+          "value": 5004
+        },
+        {
+          "doc": "User address is current contract",
+          "name": "InvalidUser",
+          "value": 5005
+        },
+        {
+          "doc": "Expiration ledger is passed",
+          "name": "InvalidExpirationLedger",
+          "value": 5006
+        }
+      ]
+    }
+  }
+]

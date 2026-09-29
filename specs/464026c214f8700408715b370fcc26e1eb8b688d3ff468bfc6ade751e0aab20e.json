@@ -1,0 +1,730 @@
+[
+  {
+    "event_v0": {
+      "doc": "The strategy withdrew assets from the vault through `strategy_withdraw`.",
+      "lib": "",
+      "name": "StrategyWithdraw",
+      "prefix_topics": [
+        "strategy_withdraw"
+      ],
+      "params": [
+        {
+          "doc": "The registered strategy that took the assets.",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "The assets withdrawn (token-dec).",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyVaultError",
+      "cases": [
+        {
+          "doc": "An amount argument is negative, or zero where a positive value is\\nrequired.",
+          "name": "InvalidAmount",
+          "value": 800
+        },
+        {
+          "doc": "The pending trader profit exceeds the vault's asset balance.",
+          "name": "PnlExceedsAssets",
+          "value": 801
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the name for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the symbol for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the amount of tokens a `spender` is allowed to spend on behalf of\\nan `owner`. Overrides any existing allowance set between `spender` and\\n`owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.\\n* `amount` - The amount of tokens made available to `spender`.\\n* `live_until_ledger` - The ledger number at which the allowance\\nexpires.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InvalidLiveUntilLedger`] - Occurs when\\nattempting to set `live_until_ledger` that is less than the current\\nledger number and greater than `0`.\\n* [`FungibleTokenError::LessThanZero`] - Occurs when `amount < 0`.\\n\\n# Events\\n\\n* topics - `[\"approve\", from: Address, spender: Address]`\\n* data - `[amount: i128, live_until_ledger: u32]`",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens held by `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The address for which the balance is being queried.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of decimals used to represent amounts of this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `amount` of tokens from `from` to `to`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `from` - The address holding the tokens.\\n* `to` - The address receiving the transferred tokens.\\n* `amount` - The amount of tokens to be transferred.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InsufficientBalance`] - When attempting to\\ntransfer more tokens than `from` current balance.\\n* [`FungibleTokenError::LessThanZero`] - When `amount < 0`.\\n\\n# Events\\n\\n* topics - `[\"transfer\", from: Address, to: Address]`\\n* data - `[to_muxed_id: Option<u64>, amount: i128]`",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "muxed_address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens a `spender` is allowed to spend on behalf\\nof an `owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the underlying asset the vault manages.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "query_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the registered strategy, the market contract.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "get_strategy",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the vault's raw balance of the underlying asset (token-dec),\\nbefore any pending-PnL mark.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "total_assets",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total amount of tokens in circulation.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the vault with its underlying asset, share metadata, and\\nstrategy address.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `name` - The share token's name.\\n* `symbol` - The share token's symbol.\\n* `asset` - The underlying collateral token.\\n* `decimals_offset` - Extra share decimals on top of `asset.decimals()`,\\nthe ERC-4626 inflation-attack mitigation.\\n* `strategy` - The market contract, the only address that may deposit,\\nredeem, or withdraw. Immutable.\\n\\n# Errors\\n\\n* `VaultTokenError::VaultMaxDecimalsOffsetExceeded` - If\\n`decimals_offset` is above 10.\\n* `VaultTokenError::MathOverflow` - If the asset's decimals plus\\n`decimals_offset` overflow.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "decimals_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `amount` of tokens from `from` to `to` using the\\nallowance mechanism. `amount` is then deducted from `spender`\\nallowance.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `spender` - The address authorizing the transfer, and having its\\nallowance consumed during the transfer.\\n* `from` - The address holding the tokens which will be transferred.\\n* `to` - The address receiving the transferred tokens.\\n* `amount` - The amount of tokens to be transferred.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InsufficientBalance`] - When attempting to\\ntransfer more tokens than `from` current balance.\\n* [`FungibleTokenError::LessThanZero`] - When `amount < 0`.\\n* [`FungibleTokenError::InsufficientAllowance`] - When attempting to\\ntransfer more tokens than `spender` current allowance.\\n\\n# Events\\n\\n* topics - `[\"transfer\", from: Address, to: Address]`\\n* data - `[amount: i128]`",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the assets (token-dec) a redemption of `shares` would pay at\\nthe uPnL-marked share price, rounded down.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `shares` - The shares to quote (share decimals).\\n* `net_pnl` - Signed pending trader PnL marked against the vault\\n(token-dec).\\n\\n# Errors\\n\\n* `StrategyVaultError::InvalidAmount` - If `shares` is negative.\\n* `StrategyVaultError::PnlExceedsAssets` - If the pending profit\\nexceeds the asset balance.",
+      "name": "preview_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "net_pnl",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the shares (share decimals) a deposit of `assets` would mint\\nat the uPnL-marked share price, rounded down.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `assets` - The assets to quote (token-dec).\\n* `net_pnl` - Signed pending trader PnL marked against the vault\\n(token-dec).\\n\\n# Errors\\n\\n* `StrategyVaultError::InvalidAmount` - If `assets` is negative.\\n* `StrategyVaultError::PnlExceedsAssets` - If the pending profit\\nexceeds the asset balance.",
+      "name": "preview_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "net_pnl",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Redeems `shares` from `owner`, pays their uPnL-priced assets to\\n`receiver`, and returns the assets paid (token-dec), rounded down in\\nthe vault's favor.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `shares` - The shares to burn (share decimals).\\n* `receiver` - The asset recipient.\\n* `owner` - The share holder.\\n* `net_pnl` - Signed pending trader PnL marked against the vault\\n(token-dec). Positive is profit the vault owes.\\n\\n# Errors\\n\\n* `StrategyVaultError::InvalidAmount` - If `shares` is not positive.\\n* `StrategyVaultError::PnlExceedsAssets` - If the pending profit\\nexceeds the asset balance.\\n* `FungibleTokenError::InsufficientAllowance` - If `owner` is not the\\nstrategy and approved it for fewer than `shares`.\\n* `FungibleTokenError::InsufficientBalance` - If `owner` holds fewer\\nthan `shares`.\\n\\n# Events\\n\\n* topics - `[\"withdraw\", operator: Address, receiver: Address, owner:\\nAddress]`\\n* data - `[assets: i128, shares: i128]`\\n\\n# Notes\\n\\n* Authorization for the strategy is required.",
+      "name": "strategy_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "net_pnl",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits `assets` from `from`, mints their uPnL-priced shares to\\n`receiver`, and returns the shares minted (share decimals). Shares\\nround down, in the vault's favor.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `assets` - The assets to deposit (token-dec).\\n* `receiver` - The share recipient.\\n* `from` - The asset provider. Unless it is the strategy, it must have\\napproved the strategy on the asset.\\n* `net_pnl` - Signed pending trader PnL marked against the vault\\n(token-dec). Positive is profit the vault owes.\\n\\n# Errors\\n\\n* `StrategyVaultError::InvalidAmount` - If `assets` is not positive.\\n* `StrategyVaultError::PnlExceedsAssets` - If the pending profit\\nexceeds the asset balance.\\n* `FungibleTokenError::MathOverflow` - If the share supply would\\noverflow `i128`.\\n\\n# Events\\n\\n* topics - `[\"deposit\", operator: Address, from: Address, receiver:\\nAddress]`\\n* data - `[assets: i128, shares: i128]`\\n\\n# Notes\\n\\n* Authorization for the strategy is required.",
+      "name": "strategy_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "net_pnl",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws `amount` of the asset to the strategy, which uses it to pay\\nwinning positions. This lowers `total_assets` and therefore the share\\nprice.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `amount` - The assets to withdraw to the strategy (token-dec).\\n\\n# Errors\\n\\n* `StrategyVaultError::InvalidAmount` - If `amount` is not positive.\\n\\n# Events\\n\\n* topics - `[\"strategy_withdraw\", strategy: Address]`\\n* data - `[amount: i128]`\\n\\n# Notes\\n\\n* Authorization for the strategy is required.",
+      "name": "strategy_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when underlying assets are deposited into the vault.",
+      "lib": "",
+      "name": "Deposit",
+      "prefix_topics": [
+        "deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when shares are exchanged back for underlying assets.",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultTokenError",
+      "cases": [
+        {
+          "doc": "Indicates access to uninitialized vault asset address.",
+          "name": "VaultAssetAddressNotSet",
+          "value": 400
+        },
+        {
+          "doc": "Indicates that vault asset address is already set.",
+          "name": "VaultAssetAddressAlreadySet",
+          "value": 401
+        },
+        {
+          "doc": "Indicates that vault virtual decimals offset is already set.",
+          "name": "VaultVirtualDecimalsOffsetAlreadySet",
+          "value": 402
+        },
+        {
+          "doc": "Indicates the amount is not a valid vault assets value.",
+          "name": "VaultInvalidAssetsAmount",
+          "value": 403
+        },
+        {
+          "doc": "Indicates the amount is not a valid vault shares value.",
+          "name": "VaultInvalidSharesAmount",
+          "value": 404
+        },
+        {
+          "doc": "Attempted to deposit more assets than the max amount for address.",
+          "name": "VaultExceededMaxDeposit",
+          "value": 405
+        },
+        {
+          "doc": "Attempted to mint more shares than the max amount for address.",
+          "name": "VaultExceededMaxMint",
+          "value": 406
+        },
+        {
+          "doc": "Attempted to withdraw more assets than the max amount for address.",
+          "name": "VaultExceededMaxWithdraw",
+          "value": 407
+        },
+        {
+          "doc": "Attempted to redeem more shares than the max amount for address.",
+          "name": "VaultExceededMaxRedeem",
+          "value": 408
+        },
+        {
+          "doc": "Maximum number of decimals offset exceeded",
+          "name": "VaultMaxDecimalsOffsetExceeded",
+          "value": 409
+        },
+        {
+          "doc": "Indicates overflow due to mathematical operations",
+          "name": "MathOverflow",
+          "value": 410
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an allowance is approved.",
+      "lib": "",
+      "name": "Approve",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred between addresses without a\\nmuxed destination.\\n\\nPer SEP-41, the event data is a bare `i128` when no muxed address is\\ninvolved. The `data_format = \"single-value\"` attribute ensures the\\n`amount` field is serialized as a bare value rather than a map.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred to a muxed address.\\n\\nPer SEP-41, when the destination is a [`MuxedAddress`] the event data\\ncarries both the amount and the muxed identifier so that off-chain\\nconsumers can attribute the transfer to the correct sub-account.\\n\\nUses `topics = [\"transfer\"]` so that both [`Transfer`] and\\n[`MuxedTransfer`] share the same `\"transfer\"` event symbol, as required\\nby SEP-41.",
+      "lib": "",
+      "name": "MuxedTransfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FungibleTokenError",
+      "cases": [
+        {
+          "doc": "Indicates an error related to the current balance of account from which\\ntokens are expected to be transferred.",
+          "name": "InsufficientBalance",
+          "value": 100
+        },
+        {
+          "doc": "Indicates a failure with the allowance mechanism when a given spender\\ndoesn't have enough allowance.",
+          "name": "InsufficientAllowance",
+          "value": 101
+        },
+        {
+          "doc": "Indicates an invalid value for `live_until_ledger` when setting an\\nallowance.",
+          "name": "InvalidLiveUntilLedger",
+          "value": 102
+        },
+        {
+          "doc": "Indicates an error when an input that must be >= 0",
+          "name": "LessThanZero",
+          "value": 103
+        },
+        {
+          "doc": "Indicates overflow when adding two values",
+          "name": "MathOverflow",
+          "value": 104
+        },
+        {
+          "doc": "Indicates access to uninitialized metadata",
+          "name": "UnsetMetadata",
+          "value": 105
+        },
+        {
+          "doc": "Indicates that the operation would have caused `total_supply` to exceed\\nthe `cap`.",
+          "name": "ExceededCap",
+          "value": 106
+        },
+        {
+          "doc": "Indicates the supplied `cap` is not a valid cap value.",
+          "name": "InvalidCap",
+          "value": 107
+        },
+        {
+          "doc": "Indicates the Cap was not set.",
+          "name": "CapNotSet",
+          "value": 108
+        },
+        {
+          "doc": "Indicates the SAC address was not set.",
+          "name": "SACNotSet",
+          "value": 109
+        },
+        {
+          "doc": "Indicates a SAC address different than expected.",
+          "name": "SACAddressMismatch",
+          "value": 110
+        },
+        {
+          "doc": "Indicates a missing function parameter in the SAC contract context.",
+          "name": "SACMissingFnParam",
+          "value": 111
+        },
+        {
+          "doc": "Indicates an invalid function parameter in the SAC contract context.",
+          "name": "SACInvalidFnParam",
+          "value": 112
+        },
+        {
+          "doc": "The user is not allowed to perform this operation",
+          "name": "UserNotAllowed",
+          "value": 113
+        },
+        {
+          "doc": "The user is blocked and cannot perform this operation",
+          "name": "UserBlocked",
+          "value": 114
+        }
+      ]
+    }
+  }
+]

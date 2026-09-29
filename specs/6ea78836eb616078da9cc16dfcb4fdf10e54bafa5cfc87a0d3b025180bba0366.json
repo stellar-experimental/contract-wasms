@@ -1,0 +1,702 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Held",
+      "prefix_topics": [
+        "held"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SentHome",
+      "prefix_topics": [
+        "sent_home"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "home_domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccountError",
+      "cases": [
+        {
+          "doc": "Signature type does not match the owner's chain.",
+          "name": "WrongSignatureKind",
+          "value": 1
+        },
+        {
+          "doc": "The signature is not the owner's.",
+          "name": "NotOwner",
+          "value": 2
+        },
+        {
+          "doc": "The signed call is not one this account allows.",
+          "name": "ContextNotAllowed",
+          "value": 3
+        },
+        {
+          "doc": "Nothing bridgeable to send (below one canonical unit).",
+          "name": "NothingToSend",
+          "value": 4
+        },
+        {
+          "doc": "Solana owner: no deposit has carried a valid USDC token account yet.\\nAny later deposit with one (even a small one) unlocks sending home.",
+          "name": "PayoutAccountMissing",
+          "value": 5
+        },
+        {
+          "doc": "EVM `v` is not 27/28 (or 0/1).",
+          "name": "BadRecoveryId",
+          "value": 7
+        },
+        {
+          "doc": "Circle has no decimal config for the pool's USDC.",
+          "name": "DecimalConfigMissing",
+          "value": 8
+        },
+        {
+          "doc": "Amount must be positive.",
+          "name": "AmountNotPositive",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnerSignature",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "r || s || v, v in {27, 28} (or {0, 1}).",
+            "name": "Evm",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Solana",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BackedFromMint",
+      "prefix_topics": [
+        "backed_from_mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakedFromMint",
+      "prefix_topics": [
+        "staked_from_mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "mode",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "DepositMode"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Circle's TokenMessengerMinterV2 decimal config (fields match Circle's).",
+      "lib": "",
+      "name": "TokenDecimalConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "canonical_decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "local_decimals",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "OwnerKey"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PayoutAccountSaved",
+      "prefix_topics": [
+        "payout_account_saved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "payout_account",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "adapter",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adapter only: stake (or back, per mode) everything the account holds,\\nor hold it if the pool refuses. Never fails because of the pool, so a\\nmint is never reverted. `payout_account` is already checked by the\\nadapter to be the Solana owner's own USDC token account; the first one\\nis kept for good, later ones are ignored.",
+      "name": "on_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "payout_account",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: back the pool with `amount` of held USDC. Fails if the pool\\nrefuses.",
+      "name": "back_held",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: emergency exit from the pool and send everything home.",
+      "name": "exit_home",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: send everything the account holds home.",
+      "name": "send_home",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: pull what has vested on a claim and send everything home.",
+      "name": "claim_home",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "claim_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL extension.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: stake `amount` of held USDC. Fails if the pool refuses.",
+      "name": "stake_held",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "home_domain",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "udt": {
+              "name": "OwnerSignature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deployed by the CCTP adapter on the owner's first deposit.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": {
+            "udt": {
+              "name": "OwnerKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "home_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "DepositMode"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: withdraw the stake and send everything home.",
+      "name": "withdraw_home",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Solana owners: the saved USDC token account payouts go to.",
+      "name": "payout_account",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "r3 (2026-09-29): owner: take the stake's yield, keep the stake, and\\nsend everything home.",
+      "name": "claim_yield_home",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: cancel a pending backer withdrawal.",
+      "name": "cancel_back_withdrawal",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "r3 (2026-09-29): owner: take backer yield, keep the backing, and send\\neverything home.",
+      "name": "claim_backer_yield_home",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: start the pool's backer notice period for `amount`. Returns\\nthe earliest completion timestamp.",
+      "name": "request_back_withdrawal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: complete a backer withdrawal after the notice period and send\\neverything home.",
+      "name": "complete_back_withdrawal_home",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Who owns a SAFU CCTP account: the key that burned USDC on the home chain.",
+      "lib": "",
+      "name": "OwnerKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "20-byte EVM address (checked by secp256k1 recovery).",
+            "name": "Evm",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "32-byte Solana Ed25519 public key.",
+            "name": "Solana",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What an arriving deposit is for. Fixed per adapter at deploy: SAFU runs\\none adapter per mode, and the user's burn names the adapter, so the intent\\nis chosen by the user's own signed burn and cannot be switched by a relayer.",
+      "lib": "",
+      "name": "DepositMode",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Stake into the pool (coverage for the staker's wallets).",
+            "name": "Stake"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Back the pool (seed capital, last line of defence).",
+            "name": "Back"
+          }
+        }
+      ]
+    }
+  }
+]
