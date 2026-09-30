@@ -1,0 +1,506 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One hop of a route. `venue_id` selects the adapter (liquidity source);\\n`token_in`/`token_out` are the swap direction at that venue; `data` is an\\nopaque per-venue hint (e.g. an Aquarius pool index) forwarded verbatim to\\nthe adapter \\xe2\\x80\\x94 empty when unused. (XDR encodes structs as name-sorted maps,\\nso the declared field order is cosmetic.)",
+      "lib": "",
+      "name": "Leg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An optional position-venue step around a plan. `venue_id` resolves a\\n[`WrapAdapter`]-shaped contract through the SAME registry as swap legs;\\n`token` must equal the plan's input token (pre-hook: `unwrap` funds the\\nplan) or output token (post-hook: `wrap` deposits `min_out` of it); `data`\\nis an opaque per-venue hint, empty when unused.",
+      "lib": "",
+      "name": "Hook",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One parallel route in a split plan: a sequential `route` (leg-chain) that\\nconsumes `amount_in` of the plan's input token. A plan is a `Vec<SplitRoute>`;\\nevery route shares the same first `token_in` and last `token_out`, and their\\n`amount_in`s sum to the total the caller approves. A non-split swap is just a\\n1-element plan.",
+      "lib": "",
+      "name": "SplitRoute",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "route",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Leg"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a swap `plan` \\xe2\\x80\\x94 one or more parallel routes that each consume\\ntheir own `amount_in` of the shared input token and converge on the shared\\noutput token. The Router pulls the total input once (or `unwrap`s it out\\nof the caller's position via `pre_hook`), threads each route's amount\\nthrough its legs, measures the combined output as its own balance delta,\\nrequires it to be \\xe2\\x89\\xa5 `min_out`, and delivers it to `to` \\xe2\\x80\\x94 either directly\\nor, via `post_hook`, by `wrap`ping exactly `min_out` into a position for\\n`to` and paying the surplus to `caller` as the underlying. Reverts (atomically) if\\nthe deadline has passed, the plan is malformed, `to` is the Router,\\na venue is unregistered, any leg fails, a hook misbehaves, or the\\ncombined output falls short. A non-split swap is a 1-element plan.",
+      "name": "swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pre_hook",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "Hook"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "plan",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SplitRoute"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "post_hook",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "Hook"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Expected combined output for a `plan`. No auth, no transfers. Sums each\\nroute's chained `quote_leg`; the API simulates this to certify the number\\nit returns. Each route is quoted against the *current* state, so a plan\\nwhose routes share a pool quotes optimistically \\xe2\\x80\\x94 execution is\\nsequential and later routes see earlier routes' price impact.",
+      "name": "quote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "plan",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SplitRoute"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current admin (registry owner), or `None` if ownership was renounced.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Expected position shares for wrapping `amount` through `hook` \\xe2\\x80\\x94 proxies\\nthe wrap adapter's `quote_wrap`. No auth, no transfers; the API simulates\\nthis to price a post-hook (`amount = min_out`).",
+      "name": "quote_hook",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hook",
+          "type_": {
+            "udt": {
+              "name": "Hook"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adapter registered for `venue_id`, or `None`.",
+      "name": "get_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin transfer (proposed admin's auth required).",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy-time setup (atomic with deployment \\xe2\\x80\\x94 there is no window in which\\nan unowned Router exists). `admin` owns the adapter registry.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin a two-step admin transfer. `live_until_ledger = 0` cancels.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register (or replace) the adapter for `venue_id`. Admin-only \\xe2\\x80\\x94 this is\\nthe allowlist that bounds which contracts the Router will ever call.\\n`venue_id` 0 is reserved (it means \"no hook\" in `RouteSwap` events).",
+      "name": "register_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove the adapter for `venue_id`; subsequent plans naming it revert\\nwith `VenueNotRegistered`. Admin-only. The explicit kill switch for a\\ncompromised or retired venue.",
+      "name": "unregister_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RouteSwap",
+      "prefix_topics": [
+        "route_swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "legs",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pre_hook_venue",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "post_hook_venue",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "wrapped_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdapterRegistered",
+      "prefix_topics": [
+        "adapter_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdapterUnregistered",
+      "prefix_topics": [
+        "adapter_unregistered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "venue_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

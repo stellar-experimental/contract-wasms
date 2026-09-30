@@ -1,0 +1,299 @@
+[
+  {
+    "function_v0": {
+      "doc": "Current admin, or `None` if ownership was renounced.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only quote for one leg (no auth, no transfers). `data` is the\\n32-byte Aquarius `pool_index`, as in `execute_leg`.",
+      "name": "quote_leg",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The Batching Router allowed to drive this adapter.",
+      "name": "get_router",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Re-point the adapter at a new Router. Admin-only; evented.",
+      "name": "set_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute one swap leg through the wrapped Aquarius pool. Router-only.\\n\\nPrecondition: the caller (Batching Router) has already transferred\\n`amount_in` of `token_in` to this adapter. The resulting `token_out` is\\nsent to `recipient`. `min_out` is a per-leg floor (the Batching Router\\npasses 0 and enforces the overall minimum itself). `data` is the\\n32-byte Aquarius `pool_index` selecting one pool of the pair's set.",
+      "name": "execute_leg",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a pending admin transfer (proposed admin's auth required).",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy-time setup (atomic with deployment). `admin` owns the adapter\\n(can re-point the venue and the router); `aqua_router` is the Aquarius AMM Router this adapter wraps; `router` is the\\nonly caller allowed to drive this adapter's fund-moving entry points.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin a two-step admin transfer. `live_until_ledger = 0` cancels.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The Aquarius AMM Router this adapter wraps.",
+      "name": "get_aqua_router",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Re-point the adapter at a new aqua router (Aquarius upgrades in place,\\nbut a registry move stays survivable). Admin-only; evented.",
+      "name": "set_aqua_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "aqua_router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The adapter's venue handle (cluster / AMM router / pool) was re-pointed.",
+      "lib": "",
+      "name": "VenueUpdated",
+      "prefix_topics": [
+        "venue_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The Router this adapter serves was re-pointed.",
+      "lib": "",
+      "name": "RouterUpdated",
+      "prefix_topics": [
+        "router_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
