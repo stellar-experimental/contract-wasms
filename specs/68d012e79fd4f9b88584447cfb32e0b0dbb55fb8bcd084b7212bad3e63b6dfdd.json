@@ -1,0 +1,214 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "E",
+      "cases": [
+        {
+          "doc": "",
+          "name": "PrimeTarget",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AddressNotAllowed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Uncheckable",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "WaitTooShort",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotScheduled",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotRunnable",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotACanceller",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotWhereAgreed",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Call",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "What the callee may do as this contract. Checked like everything else.",
+          "name": "executor_authorizations",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "InvokerContractAuthEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "function_name",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Run a stored batch whose wait is over. Anyone may: what runs was fixed\\nwhen the Prime approved it, so the caller chooses only when, within the\\nwindow.\\n\\nTHE PRIME APPROVES THE RUN, THROUGH A RULE THIS ADAPTER SIGNS. A venue\\nthat asks the Prime for authorization mid-batch - Blend's `submit` -\\nis answered by a rule whose signer is this adapter, and the smart\\naccount checks a contract signer with `require_auth_for_args`, which a\\ncontract passes only when it is the one that asked the Prime. At once,\\n`execute` asks, and the venue's request sits inside that approval. Here\\nnobody would have asked first, the venue would be asking, and the\\nadapter's signature would fail (measured on testnet:\\n`Error(Auth, InvalidAction)`). So `run` asks, for `(id)`, and the Prime\\nanswers it with a rule scoped to this adapter, signed by it, whose\\npredicate permits `run` and nothing else. No key signs; any submitter\\ncan build the entry. The predicate is what keeps that rule from\\napproving an immediate `execute` or a `cancel` the same way.",
+      "name": "run",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Drop a stored batch, waiting or ready, before it runs. `by` is the\\nPrime or the custody the current gate answers to, and must approve.\\nA lapsed batch can be dropped the same way, to tidy it away; a number\\nwith nothing stored under it is left as it was.",
+      "name": "cancel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Point this contract at a successor gate. Authorised by the custody the\\nCURRENT gate answers to, which is the only party whose money is at\\nstake. After this the address no longer derives from the binding; the\\nderivation was only ever how custody found this contract before it\\nexisted, and what the gate actually checks is caller and code.\\n\\nTHE SUCCESSOR IS ASKED WHO IT ANSWERS TO BEFORE THE BINDING MOVES, and\\nthat one call is what keeps this reversible. An address that cannot\\nanswer `custody` could never be rebound away from either, so a single\\nmistyped argument left the adapter unusable AND unrebindable. Recovery\\nmeans abandoning it for a whole new gate generation, and every rule\\nscoped to the old adapter address dies with it. Measured on testnet:\\nrebound to a\\nSAC, both `execute` and the next `rebind` failed\\n`Error(Value, InvalidInput)` for good. Checking `allowed` too would buy\\nnothing: a successor missing THAT is merely unusable, and custody can\\nstill rebind away from it.",
+      "name": "rebind",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "gate",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Run the batch now (`wait` zero) or store it to run once `wait` more\\nledgers have closed, returning its number.\\n\\nThe Prime approves `(calls, grants, wait)`: the batch keeps the first\\ntwo argument positions it has always had, so every rule's paths into it\\nare unchanged, and the wait is covered by the same approval.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "calls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Call"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "grants",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "InvokerContractAuthEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wait",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`min_wait` is the fewest ledgers any batch waits, zero allowing none.\\n`run_window` is how many ledgers after its wait a batch may still run:\\na move that sat unrun for longer was approved against a market that\\nhas since moved, and perhaps by an agent since revoked, so it lapses.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "prime",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "gate",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_wait",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "run_window",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
