@@ -1,0 +1,82 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "`sac` is not a built-in Stellar Asset Contract (CAP-68 check).",
+          "name": "NotSac",
+          "value": 1
+        },
+        {
+          "doc": "CAP-73 `trust()` failed (reserve, missing account, native asset,\\nissuer as holder, \\xe2\\x80\\xa6).",
+          "name": "TrustFailed",
+          "value": 2
+        },
+        {
+          "doc": "The asset's authorizer (SAC admin) REJECTED the holder (typed error).",
+          "name": "AuthorizationRefused",
+          "value": 3
+        },
+        {
+          "doc": "The authorizer reported success but the holder is not authorized.",
+          "name": "NotAuthorized",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Outcome of `onboard`, reported truthfully from on-chain state.",
+      "lib": "",
+      "name": "OnboardStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Trustline exists and is authorized \\xe2\\x80\\x94 the holder can receive the asset.",
+            "name": "Authorized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Trustline exists but is not authorized: the asset is AUTH_REQUIRED and\\nits SAC admin offers no one-step `authorize_trustline` interface \\xe2\\x80\\x94 the\\nissuer authorizes off-platform (manual path).",
+            "name": "TrustlineOnly"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create the holder's trustline and, when the asset's SAC admin is a\\ncontract exposing `authorize_trustline`, authorize it \\xe2\\x80\\x94 all under one\\nholder signature. The asset's capability is DISCOVERED on-chain\\n(CAP-68 `get_address_executable` + `SAC.admin()`), not configured.\\n\\nReturns `Authorized` when the trustline is usable, `TrustlineOnly`\\nwhen the asset is AUTH_REQUIRED with no one-step authorizer (the\\ntrustline is kept; the issuer authorizes off-platform).\\n\\n**Atomic on rejection:** if the discovered authorizer rejects the\\nholder with a typed contract error, the WHOLE transaction (including\\nthe trustline creation) is rolled back.\\n\\n**Immutable by design:** no admin or upgrade entrypoint; fixing a bug\\nmeans deploying a new instance and updating the pinned router id.\\n\\n# Security\\n\\nThe discovered admin is a contract CHOSEN BY THE ASSET, executed under\\nthe holder's signed authorization tree: in recording-mode simulation,\\nany nested `holder.require_auth()` the admin triggers is folded into\\nthe single root auth entry th",
+      "name": "onboard",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sac",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "holder",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "OnboardStatus"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
