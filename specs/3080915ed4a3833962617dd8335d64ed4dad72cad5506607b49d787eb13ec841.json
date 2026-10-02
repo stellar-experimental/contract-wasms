@@ -1,0 +1,1456 @@
+[
+  {
+    "function_v0": {
+      "doc": "Folds `account.receiving_balance` into `account.spendable_balance`\\nand resets the receiving storage entry to the identity.\\n\\nNo proof is required; correctness follows from the homomorphic\\nproperty of Pedersen commitments. Only the account holder can\\nauthorize a merge \\xe2\\x80\\x94 third parties cannot weaponize it.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The owner address.\\n\\n# Errors\\n\\n* refer to [`storage::merge`] errors.\\n\\n# Events\\n\\n* topics - `[\"merge\", account: Address]`\\n* data - `[]`",
+      "name": "merge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Marks `account` as frozen. Owner-gated.\\n\\nFreeze stops an already-registered account from transacting; it does\\n**not** stop `register` (the module gates registration by policy only).\\nRemoving an address from the policy is the complete exclusion path.",
+      "name": "freeze",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits `amount` units of the underlying SEP-41 token from `from`\\ninto `to`'s confidential receiving balance.\\n\\nNo proof is required. The deposit commitment is `a \\xc2\\xb7 G` with zero\\nblinding, added homomorphically to `to.receiving_balance`. The\\ndepositor `from` does not need a registered confidential account;\\nonly `to` does.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `from` - The depositor (SEP-41 holder).\\n* `to` - The confidential recipient.\\n* `amount` - The non-negative deposit amount.\\n\\n# Errors\\n\\n* refer to [`storage::deposit`] errors.\\n\\n# Events\\n\\n* topics - `[\"deposit\", from: Address, to: Address]`\\n* data - `[amount: i128]`",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registers a confidential account under `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The owner address being registered.\\n* `auditor_id` - The auditor key index this account commits to.\\n* `data` - XDR-encoded [`RegisterData`].\\n\\n# Errors\\n\\n* refer to [`storage::decode_data`] errors.\\n* refer to [`storage::register`] errors.\\n\\n# Events\\n\\n* topics - `[\"register\", account: Address]`\\n* data - `[auditor_id: u32]`",
+      "name": "register",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "auditor_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Clears the frozen flag on `account`. Owner-gated.",
+      "name": "unfreeze",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws `amount` units to the public SEP-41 address `to` from the\\nconfidential spendable balance of `from`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `from` - The confidential account spending the funds.\\n* `to` - The SEP-41 recipient.\\n* `amount` - The non-negative withdrawal amount.\\n* `data` - XDR-encoded [`WithdrawData`].\\n\\n# Errors\\n\\n* refer to [`storage::decode_data`] errors.\\n* refer to [`storage::withdraw`] errors.\\n\\n# Events\\n\\n* topics - `[\"withdraw\", from: Address, to: Address]`\\n* data - `[amount: i128, r_e: BytesN<64>, sigma: BytesN<32>, b_tilde:\\nBytesN<32>, b_aud_s: BytesN<32>]`",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns `Some(Address)` if ownership is set, or `None` if ownership has\\nbeen renounced.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns whether `account` is currently frozen. Returns `false` when\\ncompliance has not been configured.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The address to check.",
+      "name": "is_frozen",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns `true` iff a delegation exists for `(account, spender)`\\nand is still live (`ledger.sequence() <= live_until_ledger`).\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The delegating account.\\n* `spender` - The delegated spender.",
+      "name": "is_spender",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Escrows an allowance from `account`'s spendable balance and delegates it\\nto `spender`. Reverts if a delegation already exists for the `(account,\\nspender)` pair.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The delegating owner.\\n* `spender` - The delegated spender. Must be a registered confidential\\naccount so its spending key is available for the `dvk` escrow ECDH.\\n* `live_until_ledger` - The ledger number at which the delegation\\nexpires. Spending is authorized while `ledger.sequence() <=\\nlive_until_ledger`. The escrowed value persists until\\n`revoke_spender`.\\n* `data` - XDR-encoded [`SetSpenderData`].\\n\\n# Errors\\n\\n* refer to [`storage::decode_data`] errors.\\n* refer to [`storage::set_spender`] errors.\\n\\n# Events\\n\\n* topics - `[\"set_spender\", account: Address, spender: Address]`\\n* data - `[live_until_ledger: u32, r_e, sigma, b_tilde, v_aud_s,\\nb_aud_s]`",
+      "name": "set_spender",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Binds the underlying SEP-41 asset, the verifier registry and the auditor\\nregistry, freezes the contract's address-as-field value used to\\ndomain-separate every account's viewing key, sets the compliance\\n`owner`, and activates compliance against `policy`.\\n\\n* `owner` \\xe2\\x80\\x94 the key authorized to `freeze` / `unfreeze` and to rotate the\\ncompliance config. Ops custody; never the application's key.\\n* `policy` \\xe2\\x80\\x94 the allowlist registry. Required: a token deployed without\\none is an ungated token, and writing the config at construction is\\nwhat makes compliance active at all (the hooks short-circuit to a\\nno-op whenever no config is stored).\\n\\nFinally it raises this contract's instance TTL to the network maximum\\n(`maxEntryTTL`, read off the ledger \\xe2\\x80\\x94 never a literal, because testnet\\nand pubnet disagree on every other archival setting). A lapsed token\\ninstance would take the whole deployment down; the rent is ~0.11 XLM.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "verifier",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "auditor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Revokes the `(account, spender)` delegation and folds the\\nremaining escrowed allowance back into `account`'s spendable balance.\\nWorks for both active and expired-but-not-revoked delegations.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The owner reclaiming the allowance.\\n* `spender` - The previously-delegated spender.\\n* `data` - XDR-encoded [`RevokeSpenderData`].\\n\\n# Errors\\n\\n* refer to [`storage::decode_data`] errors.\\n* refer to [`storage::revoke_spender`] errors.\\n\\n# Events\\n\\n* topics - `[\"revoke_spender\", account: Address, spender: Address]`\\n* data - `[r_e, sigma, b_tilde, v_aud_s, b_aud_s]`",
+      "name": "revoke_spender",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accepts a pending ownership transfer.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Errors\\n\\n* [`crate::role_transfer::RoleTransferError::NoPendingTransfer`] - If\\nthere is no pending transfer to accept.\\n\\n# Events\\n\\n* topics - `[\"ownership_transfer_completed\"]`\\n* data - `[new_owner: Address]`",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the active [`ComplianceConfig`], or `None` when compliance\\nhas not been configured.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "compliance_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ComplianceConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renounces ownership of the contract.\\n\\nPermanently removes the owner, disabling all functions gated by\\n`#[only_owner]`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Errors\\n\\n* [`OwnableError::TransferInProgress`] - If there is a pending ownership\\ntransfer.\\n* [`OwnableError::OwnerNotSet`] - If the owner is not set.\\n\\n# Notes\\n\\n* Authorization for the current owner is required.",
+      "name": "renounce_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initiates a 2-step ownership transfer to a new address.\\n\\nRequires authorization from the current owner. The new owner must later\\ncall `accept_ownership()` to complete the transfer.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `new_owner` - The proposed new owner.\\n* `live_until_ledger` - Ledger number until which the new owner can\\naccept. A value of `0` cancels any pending transfer.\\n\\n# Errors\\n\\n* [`OwnableError::OwnerNotSet`] - If the owner is not set.\\n* [`crate::role_transfer::RoleTransferError::NoPendingTransfer`] - If\\ntrying to cancel a transfer that doesn't exist.\\n* [`crate::role_transfer::RoleTransferError::InvalidLiveUntilLedger`] -\\nIf the specified ledger is in the past.\\n* [`crate::role_transfer::RoleTransferError::InvalidPendingAccount`] -\\nIf the specified pending account is not the same as the provided `new`\\naddress.\\n\\n# Notes\\n\\n* Authorization for the current owner is required.",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the [`ConfidentialAccount`] stored under `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The owner address.\\n\\n# Errors\\n\\n* refer to [`storage::get_account`] errors.",
+      "name": "confidential_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ConfidentialAccount"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sends a confidential transfer from `from` to `to`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `from` - The sender.\\n* `to` - The recipient.\\n* `data` - XDR-encoded [`TransferData`].\\n\\n# Errors\\n\\n* refer to [`storage::decode_data`] errors.\\n* refer to [`storage::confidential_transfer`] errors.\\n\\n# Events\\n\\n* topics - `[\"transfer\", from: Address, to: Address]`\\n* data - `[r_e, v_tilde, sigma, b_tilde, v_aud_r, r_aud_r, v_aud_s,\\nb_aud_s]`",
+      "name": "confidential_transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically replaces the compliance configuration \\xe2\\x80\\x94 rotate the policy, or\\nswitch the gate off entirely. Owner-gated; ops break-glass.",
+      "name": "set_compliance_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "ComplianceConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the [`SpenderDelegation`] stored under `(account,\\nspender)`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The delegating account.\\n* `spender` - The delegated spender.\\n\\n# Errors\\n\\n* refer to [`storage::get_spender_delegation`] errors.",
+      "name": "get_spender_delegation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SpenderDelegation"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Spends from `from`'s allowance escrowed to `spender`, transferring\\nconfidentially to `to`. The owner's authorization was\\ngranted at `set_spender` and persists in the on-chain delegation\\nentry; only the spender authorizes this call.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `spender` - The delegated spender (the auth principal).\\n* `from` - The owner whose allowance is being spent.\\n* `to` - The recipient.\\n* `data` - XDR-encoded [`SpenderTransferData`].\\n\\n# Errors\\n\\n* refer to [`storage::decode_data`] errors.\\n* refer to [`storage::confidential_transfer_from`] errors.\\n\\n# Events\\n\\n* topics - `[\"spender_transfer\", spender: Address, from: Address, to:\\nAddress]`\\n* data - `[r_e, v_tilde, sigma_a, v_aud_r, r_aud_r, v_aud_s, a_aud_s]`",
+      "name": "confidential_transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        },
+        {
+          "doc": "",
+          "name": "TransferExpired",
+          "value": 2203
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an account is frozen.",
+      "lib": "",
+      "name": "Frozen",
+      "prefix_topics": [
+        "frozen"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an account is unfrozen.",
+      "lib": "",
+      "name": "Unfrozen",
+      "prefix_topics": [
+        "unfrozen"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ComplianceError",
+      "cases": [
+        {
+          "doc": "Indicates an admin operation was invoked before\\n[`storage::set_compliance_config`] established a configuration.",
+          "name": "NotConfigured",
+          "value": 3600
+        },
+        {
+          "doc": "Indicates the target account is frozen.",
+          "name": "AccountFrozen",
+          "value": 3601
+        },
+        {
+          "doc": "Indicates the configured policy returned `false` for the target\\naccount.",
+          "name": "NotAuthorizedByPolicy",
+          "value": 3602
+        },
+        {
+          "doc": "Indicates the underlying SAC's `authorized()` view returned `false`\\nfor the target account (only reachable when `sac_passthrough` is\\nenabled).",
+          "name": "NotAuthorizedBySac",
+          "value": 3603
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the compliance configuration is set or rotated.",
+      "lib": "",
+      "name": "ComplianceConfigChanged",
+      "prefix_topics": [
+        "compliance_config_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sac_passthrough",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Compliance configuration written once at construction and rotatable under\\nadmin auth thereafter. Stored as an instance storage entry.",
+      "lib": "",
+      "name": "ComplianceConfig",
+      "fields": [
+        {
+          "doc": "Optional external authorization policy (see\\n[`crate::confidential::compliance::Policy`]). `None` disables the\\npolicy gate.",
+          "name": "policy",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "When `true`, the gates additionally consult the underlying SAC's\\n`authorized()` view.",
+          "name": "sac_passthrough",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a confidential account merges its receiving balance\\ninto its spendable balance.",
+      "lib": "",
+      "name": "Merge",
+      "prefix_topics": [
+        "merge"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a deposit moves SEP-41 tokens into a confidential\\nreceiving balance.",
+      "lib": "",
+      "name": "Deposit",
+      "prefix_topics": [
+        "deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a confidential account is registered.",
+      "lib": "",
+      "name": "Register",
+      "prefix_topics": [
+        "register"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "auditor_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted on a confidential transfer.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "r_e",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_tilde",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sigma",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_tilde",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_aud_r",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "r_aud_r",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted on a confidential withdrawal.",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "r_e",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sigma",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_tilde",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the auditor registry contract address is set or\\nrotated. May fire more than once over the lifetime of the contract.",
+      "lib": "",
+      "name": "AuditorSet",
+      "prefix_topics": [
+        "auditor_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "auditor",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an spender is set up.",
+      "lib": "",
+      "name": "SetSpender",
+      "prefix_topics": [
+        "set_spender"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "r_e",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sigma",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_tilde",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the verifier registry contract address is set or\\nrotated. May fire more than once over the lifetime of the contract.",
+      "lib": "",
+      "name": "VerifierSet",
+      "prefix_topics": [
+        "verifier_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "verifier",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an spender is revoked.",
+      "lib": "",
+      "name": "RevokeSpender",
+      "prefix_topics": [
+        "revoke_spender"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "r_e",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sigma",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_tilde",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "b_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted on an spender transfer.",
+      "lib": "",
+      "name": "SpenderTransfer",
+      "prefix_topics": [
+        "spender_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "r_e",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_tilde",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "sigma_a",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_aud_r",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "r_aud_r",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "v_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "a_aud_s",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the contract's compressed `addr_f` field is computed and\\nstored. Expected to fire exactly once, from the contract's constructor.",
+      "lib": "",
+      "name": "AddressAsFieldSet",
+      "prefix_topics": [
+        "address_as_field_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "address_as_field",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the SEP-41 token address is set. Expected to fire\\nexactly once, from the contract's constructor.",
+      "lib": "",
+      "name": "UnderlyingAssetSet",
+      "prefix_topics": [
+        "underlying_asset_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "underlying_asset",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ConfidentialTokenError",
+      "cases": [
+        {
+          "doc": "Indicates `account` already has a confidential account registered.",
+          "name": "AccountAlreadyRegistered",
+          "value": 3500
+        },
+        {
+          "doc": "Indicates the target account is not registered.",
+          "name": "AccountNotRegistered",
+          "value": 3501
+        },
+        {
+          "doc": "Indicates a public amount argument is negative.",
+          "name": "NegativeAmount",
+          "value": 3502
+        },
+        {
+          "doc": "Indicates a delegation already exists for `(account, spender)`.",
+          "name": "DelegationAlreadyExists",
+          "value": 3503
+        },
+        {
+          "doc": "Indicates no delegation exists for `(account, spender)`.",
+          "name": "DelegationNotFound",
+          "value": 3504
+        },
+        {
+          "doc": "Indicates the delegation has expired\\n(`ledger.sequence() > live_until_ledger`).",
+          "name": "DelegationExpired",
+          "value": 3505
+        },
+        {
+          "doc": "Indicates the verifier rejected the accompanying proof.",
+          "name": "InvalidProof",
+          "value": 3506
+        },
+        {
+          "doc": "Indicates the `data` payload could not be decoded into the expected\\n`\\xe2\\x80\\xa6Payload` struct.",
+          "name": "InvalidData",
+          "value": 3507
+        },
+        {
+          "doc": "Indicates the contract has not been constructed: the SEP-41 token\\naddress is missing.",
+          "name": "UnderlyingAssetNotSet",
+          "value": 3508
+        },
+        {
+          "doc": "Indicates the contract has not been constructed: the verifier\\naddress is missing.",
+          "name": "VerifierNotSet",
+          "value": 3509
+        },
+        {
+          "doc": "Indicates the contract has not been constructed: the auditor\\nregistry address is missing.",
+          "name": "AuditorNotSet",
+          "value": 3510
+        },
+        {
+          "doc": "Indicates the contract has not been constructed: the `addr_f` field is\\nmissing.",
+          "name": "AddressAsFieldNotSet",
+          "value": 3511
+        },
+        {
+          "doc": "Indicates the `addr_f` field has already been set; re-initialization is\\nforbidden.",
+          "name": "AddressAsFieldAlreadySet",
+          "value": 3512
+        },
+        {
+          "doc": "Indicates the SEP-41 token address has already been set;\\nre-initialization is forbidden.",
+          "name": "UnderlyingAssetAlreadySet",
+          "value": 3513
+        },
+        {
+          "doc": "Indicates a prover-supplied 32-byte field representative or Grumpkin\\ncoordinate is not a canonical `Bn254Fr` value (`\\xe2\\x89\\xa5 r`). The Soroban\\nhost's `bn254_fr_*` deserialiser silently reduces non-canonical\\nencodings, so the contract enforces canonicality at the verifier\\nboundary to keep stored state and emitted events byte-unique per\\nlogical value.",
+          "name": "NonCanonicalEncoding",
+          "value": 3514
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "On-chain spender delegation record.",
+      "lib": "",
+      "name": "SpenderDelegation",
+      "fields": [
+        {
+          "doc": "Allowance commitment `C_a = Com(v_a, r_a)`.",
+          "name": "allowance_commitment",
+          "type_": {
+            "udt": {
+              "name": "Point"
+            }
+          }
+        },
+        {
+          "doc": "Per-delegation salt `\\xcf\\x83_a`.",
+          "name": "allowance_salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Poseidon-encrypted allowance scalar `\\xc3\\xa3`.",
+          "name": "encrypted_allowance",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "ECDH escrow of `dvk_i` under the spender's spending key.",
+          "name": "escrowed_dvk",
+          "type_": {
+            "udt": {
+              "name": "Point"
+            }
+          }
+        },
+        {
+          "doc": "The ledger number at which the delegation expires. Spending is\\nauthorized while `ledger.sequence() <= live_until_ledger`.",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "On-chain confidential account record.",
+      "lib": "",
+      "name": "ConfidentialAccount",
+      "fields": [
+        {
+          "doc": "Index of the auditor key in the auditor registry.",
+          "name": "auditor_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Receiving balance commitment `C_receive`.",
+          "name": "receiving_balance",
+          "type_": {
+            "udt": {
+              "name": "Point"
+            }
+          }
+        },
+        {
+          "doc": "Spendable balance commitment `C_spend`.",
+          "name": "spendable_balance",
+          "type_": {
+            "udt": {
+              "name": "Point"
+            }
+          }
+        },
+        {
+          "doc": "`Y = sk \\xc2\\xb7 H`, the Grumpkin spending public key.",
+          "name": "spending_key",
+          "type_": {
+            "udt": {
+              "name": "Point"
+            }
+          }
+        },
+        {
+          "doc": "`PVK = vk \\xc2\\xb7 H`, the Grumpkin viewing public key.",
+          "name": "viewing_public_key",
+          "type_": {
+            "udt": {
+              "name": "Point"
+            }
+          }
+        }
+      ]
+    }
+  }
+]
