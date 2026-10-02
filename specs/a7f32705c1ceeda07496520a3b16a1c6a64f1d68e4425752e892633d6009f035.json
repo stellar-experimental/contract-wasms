@@ -1,0 +1,116 @@
+[
+  {
+    "function_v0": {
+      "doc": "Deploys a wallet with `(signers, policies)` as its constructor\\narguments and returns its address. The salt is the SHA-256 of their\\nXDR, so the address commits to the wallet's signers: anyone may call\\nthis, and a second deploy of the same arguments fails.",
+      "name": "deploy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policies",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pins the smart-account wasm, which must already be uploaded. There is\\nno way to change it: a new wasm is a new factory.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the address `deploy` creates for these arguments, whether or\\nnot the wallet exists yet.",
+      "name": "predict_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policies",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents different types of signers in the smart account system.",
+      "lib": "",
+      "name": "Signer",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "A delegated signer, any contract or account address, authenticated\\nthrough `require_auth_for_args((preimage,))`. Transaction simulation\\ndoes not return this nested authorization entry, because the call\\nhappens inside `__check_auth`. Clients add it manually: an entry for\\nthe delegated address whose root invocation is `__check_auth` on the\\nsmart account with the [`AuthDigestPreimage`] as its single argument.\\nSee `src/smart_account/test/auth_entries.rs` for a reference\\nconstruction.",
+            "name": "Delegated",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "An external signer with custom verification logic.\\nContains the verifier contract address and the public key data.",
+            "name": "External",
+            "type_": [
+              "address",
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

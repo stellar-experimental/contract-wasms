@@ -1,0 +1,222 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeForwarderError",
+      "cases": [
+        {
+          "doc": "`target_fn` is `transfer_from` or `burn_from`, which spend an\\nallowance.",
+          "name": "TargetNotAllowed",
+          "value": 6001
+        },
+        {
+          "doc": "`fee_recipient` is the forwarder, which could never pass the fee on.",
+          "name": "InvalidRecipient",
+          "value": 6002
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects `fee_amount` of `fee_token` from `user` to `fee_recipient`,\\nthen calls `target_contract.target_fn(target_args)` and returns its\\nresult. A failing target also reverts the fee.\\n\\n`user` authorizes `(fee_token, max_fee_amount, expiration_ledger,\\nfee_recipient, target_contract, target_fn, target_args)`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `fee_token` - The token the fee is paid in.\\n* `fee_amount` - The fee, above zero and at most `max_fee_amount`.\\n* `max_fee_amount` - The fee cap the user signs.\\n* `expiration_ledger` - The fee allowance's live-until ledger, at or\\nafter execution.\\n* `target_contract`, `target_fn`, `target_args` - The call to make.\\n* `user` - The fee payer.\\n* `fee_recipient` - The fee payee.\\n\\nErrors and events: see README.md.",
+      "name": "forward",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "target_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target_fn",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "target_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "val"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Acts as [`Self::forward`], but the user's authorization leaves out\\n`target_args`, so the relayer can refresh them after signing.\\n\\n# Arguments\\n\\n* Refer to [`Self::forward`].\\n\\n# Errors and events\\n\\n* See README.md, the same as [`Self::forward`].\\n\\n# Notes\\n\\n* Authorization for `user` is required over `(fee_token,\\nmax_fee_amount, expiration_ledger, fee_recipient, target_contract,\\ntarget_fn)`.\\n* The target flow must require the user's own authorization on every\\ncall that moves the user's funds. Otherwise a relayer can supply\\narbitrary `target_args` and still collect the fee.",
+      "name": "forward_dynamic",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "target_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target_fn",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "target_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "val"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a fee is collected from a user.",
+      "lib": "",
+      "name": "FeeCollected",
+      "prefix_topics": [
+        "fee_collected"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors that can occur in fee abstraction operations.",
+      "lib": "",
+      "name": "FeeAbstractionError",
+      "cases": [
+        {
+          "doc": "The fee token is not allowed",
+          "name": "FeeTokenNotAllowed",
+          "value": 5000
+        },
+        {
+          "doc": "The fee token has been already allowed",
+          "name": "FeeTokenAlreadyAllowed",
+          "value": 5001
+        },
+        {
+          "doc": "The amount of allowed tokens reached `u32::MAX`",
+          "name": "TokenCountOverflow",
+          "value": 5002
+        },
+        {
+          "doc": "The fee amount exceeds the maximum allowed",
+          "name": "InvalidFeeBounds",
+          "value": 5003
+        },
+        {
+          "doc": "No tokens available to sweep",
+          "name": "NoTokensToSweep",
+          "value": 5004
+        },
+        {
+          "doc": "User address is current contract",
+          "name": "InvalidUser",
+          "value": 5005
+        },
+        {
+          "doc": "Expiration ledger is passed",
+          "name": "InvalidExpirationLedger",
+          "value": 5006
+        }
+      ]
+    }
+  }
+]
