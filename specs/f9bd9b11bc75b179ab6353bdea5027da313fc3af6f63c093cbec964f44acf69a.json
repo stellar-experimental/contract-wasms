@@ -1,0 +1,612 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors returned by the production pull-mode entrypoint and admin calls.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "BatchLengthMismatch",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "UnknownPublisher",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "StalePrice",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidQuorum",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "DuplicatePublisher",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "QuorumNotMet",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidPrice",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Arithmetic mean of the last min(records, stored) ring prices. This is\\na simple mean over stored ROUNDS, not a time-weighted average \\xe2\\x80\\x94\\nadequate for a consumer's median-of-last-k / smoothing eligibility\\nchecks, not for interval-exact TWAP accounting. `None` when the asset\\nhas no history or `records` is 0.",
+      "name": "twap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "bytes_n": {
+              "n": 8
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "records",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Publishers"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PriceTemp",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 8
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PricePers",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 8
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Quorum"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PriceRing",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 8
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The last `records` rounds from the asset's history ring, latest-first.\\nReturns up to min(records, stored) entries; `None` when the asset has\\nno history at all (a `records` of 0 with history is an empty page).",
+      "name": "prices",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "bytes_n": {
+              "n": 8
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "records",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "vec": {
+                "element_type": {
+                  "udt": {
+                    "name": "PriceEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swap the running contract's WASM for an already-uploaded blob.\\nAdmin-authenticated (same gate as `set_publishers`). Shipping this is\\ndeliberately the LAST forced redeploy: every future contract change\\ncan land through `upgrade` instead of a fresh deploy + init ceremony +\\nconsumer repoint (shim / router / keeper env).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "bytes_n": {
+              "n": 8
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PriceEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current quorum threshold (1 when never configured).",
+      "name": "get_quorum",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the minimum number of distinct registered publishers whose signed\\nrounds `update_quorum_ed25519_persistent` must carry. Admin-\\nauthenticated. Must satisfy 1 <= quorum <= publishers.len() at set\\ntime; an unset quorum behaves as 1, so existing single-publisher\\ndeployments are unchanged until the admin raises the bar. (A later\\n`set_publishers` may shrink the key set below this threshold \\xe2\\x80\\x94 the\\nquorum path then cannot meet quorum until the admin re-syncs.)",
+      "name": "set_quorum",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "quorum",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One publisher's signed contribution to a quorum submission: `prices[i]`\\nand `sigs[i]` align with the shared `assets` vector of the call. Rounds\\nare transient call data \\xe2\\x80\\x94 only the per-asset median is ever stored.",
+      "lib": "",
+      "name": "PublisherRound",
+      "fields": [
+        {
+          "doc": "",
+          "name": "prices",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sigs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy-time setup: record the admin Address and the initial publisher\\nEd25519 key set. Runs atomically inside the deploy transaction, so a\\nfresh instance can never be claimed by a third party (ALX-1: the\\nformer separate `init` entrypoint left a front-run window between\\ndeploy and initialization; it has been removed outright). The admin\\nmust still authorize, so a deployer cannot install someone ELSE as\\nadmin without their signature.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "publishers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_price_pers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "bytes_n": {
+              "n": 8
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PriceEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the publisher Ed25519 key set. Admin-authenticated.",
+      "name": "set_publishers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "publishers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_batch_ed25519_args",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 8
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "prices",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sigs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_batch_ed25519_persistent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 8
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "prices",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sigs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_quorum_ed25519_persistent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 8
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "round_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "rounds",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "PublisherRound"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

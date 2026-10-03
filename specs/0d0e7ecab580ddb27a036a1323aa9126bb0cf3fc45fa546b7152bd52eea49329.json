@@ -1,0 +1,2945 @@
+[
+  {
+    "function_v0": {
+      "doc": "Two-tier pause (L0-15). mode 1 = halt-open: opens and non-reduce-only\\norder placement are blocked (#4), but closes, liquidations, stops and\\ncross deposit/withdraw still work \\xe2\\x80\\x94 traders can always de-risk and exit.\\nmode 2 = full-freeze: even those are blocked symmetrically (#90); only\\ncancel_order works, and it auto-degrades to mode 1 after 72h. mode must\\nbe 1 or 2 (use unpause for 0).",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resume fully (mode 0).",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swap the running WASM in place; all storage (positions, orders,\\ncross balances) is preserved across the upgrade.\\n\\n\\xe2\\x9a\\xa0\\xef\\xb8\\x8f When the new wasm's `MarketConfig` has MORE fields than the stored\\none, every config-reading entry point traps until `migrate_config`\\nrewrites it (Soroban decodes structs by exact field set). Pause \\xe2\\x86\\x92\\nupgrade \\xe2\\x86\\x92 migrate_config \\xe2\\x86\\x92 unpause. See `migrate_config`.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Force-realize a winning position at the oracle mark while ADL is\\nactive for its asset (L0-1). Permissionless \\xe2\\x80\\x94 the on-chain gates\\n(flag active + net winner) are the consensus; the keeper's ranking\\nwalk is advisory ordering. Pause-exempt (same class as liquidate).\\nThe trader is paid in full through the normal close settlement and\\noptionally compensated from the buffer (adl_compensation_bps).",
+      "name": "adl_close",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a specific order by ID.",
+      "name": "get_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Order"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Liquidate an underwater position.\\nCallable by anyone (keeper). Keeper receives liquidation reward.\\n\\n# Arguments\\n* `keeper` - Address executing the liquidation (receives reward)\\n* `position_id` - ID of position to liquidate\\n\\n# Returns\\nKeeper reward amount\\n\\n# Flow\\n1. Verify position is liquidatable\\n2. Calculate remaining equity and keeper reward\\n3. Pay keeper their reward\\n4. Transfer remaining collateral to Vault\\n5. Update Vault accounting",
+      "name": "liquidate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the admin (R-11: the multisig migration path). Both current\\nand new admin must sign \\xe2\\x80\\x94 a one-sided rotation to a mistyped\\naddress would brick every admin power forever.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle_adapter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "MarketConfig"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel a pending order.\\nFor limit orders, refunds the locked collateral.\\n\\n# Arguments\\n* `trader` - Address of the trader (must own order)\\n* `order_id` - ID of the order to cancel",
+      "name": "cancel_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get a position by ID.",
+      "name": "get_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Position"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L1-18: wire the referral registry. Every fee-bearing open then\\ntry-invokes referral.record_trade for the discount/payout split;\\nunset (or a broken registry) is a silent no-op \\xe2\\x80\\x94 fail-open, trading\\nnever blocks on referrals.",
+      "name": "set_referral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "referral",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Apply funding to all positions (can be called periodically).\\nFunding balances long/short interest:\\n- If more longs than shorts: longs pay shorts\\n- If more shorts than longs: shorts pay longs\\nApply per-market funding (L0-13). Permissionless, same no-arg\\nsignature the keeper already calls. Loops every listed pair and\\naccrues each asset's own SIP-279 velocity-based rate (clamped),\\ndriven by that asset's TIME-WEIGHTED skew \\xe2\\x80\\x94 so a quiet pair cannot\\ncollect carry off another pair's imbalance, and a keeper outage\\nunder-accrues (the dt cap kills the M-7 retroactive window) rather\\nthan pricing hours at one instant's skew. Returns\\nFundingIntervalNotElapsed (#55) only when NOTHING was due, preserving\\nthe keeper's applied|not-due tri-state.",
+      "name": "apply_funding",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a triggered order (called by keeper).\\nChecks if price condition is met and executes the order.\\nKeeper receives a fee for successful execution.\\n\\n# Arguments\\n* `keeper` - Address of the keeper executing the order\\n* `order_id` - ID of the order to execute\\n\\n# Returns\\nKeeper reward amount",
+      "name": "execute_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether ADL is active for an asset.",
+      "name": "is_adl_active",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a new leveraged position.\\n\\n# Arguments\\n* `trader` - Address of the trader\\n* `asset` - Asset symbol (e.g., \"XLM\")\\n* `collateral` - USDC collateral amount (7 decimals)\\n* `leverage` - Leverage multiplier (1-10)\\n* `direction` - Long or Short\\n\\n# Returns\\nThe created Position\\n\\n# Flow\\n1. Validate parameters\\n2. Check Vault liquidity for potential payout\\n3. Fetch price from oracle\\n4. Calculate position size and liquidation price\\n5. Transfer collateral from trader\\n6. Deduct trading fee\\n7. Store position",
+      "name": "open_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "acceptable_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Position"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Route a share of trading fees to a treasury address (insurance /\\noperations funding). bps is the protocol share in basis points,\\ncapped at 50%.",
+      "name": "set_fee_split",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a stop-loss order on an existing position.\\nAutomatically closes the position when price reaches trigger to limit losses.\\n\\n# Arguments\\n* `trader` - Address of the trader (must own position)\\n* `position_id` - ID of the position to protect\\n* `trigger_price` - Price at which to close (7 decimals)\\n* `slippage_tolerance_bps` - Max allowed slippage in basis points",
+      "name": "set_stop_loss",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "trigger_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "slippage_tolerance_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add collateral to an isolated position (L0-6), moving its liquidation\\nprice further away. Risk-REDUCING \\xe2\\x80\\x94 deliberately NOT pause-gated\\n(exit-only-pause philosophy, L0-15). Cross uses deposit_cross_margin.",
+      "name": "add_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close an existing position.\\n\\n# Arguments\\n* `trader` - Address of the trader (must own position)\\n* `position_id` - ID of position to close\\n\\n# Returns\\nFinal PnL amount (positive = profit, negative = loss)\\n\\n# Flow\\n1. Verify ownership\\n2. Apply any pending funding\\n3. Calculate PnL at current price\\n4. Settle with vault (handles fund transfer for wins)\\n5. Transfer loss to vault if trader lost\\n6. Return collateral +/- PnL to trader",
+      "name": "close_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "acceptable_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Per-market risk params for an asset (L0-12) \\xe2\\x80\\x94 the single source of\\ntruth the keeper (simulate) and gateway (contractReader) read.",
+      "name": "get_asset_risk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "AssetRiskParams"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Overwrite the stored `MarketConfig` WITHOUT reading the old value.\\n\\nA Soroban struct is stored as an exact field map, so after an\\n`upgrade` that adds config fields the old value no longer decodes:\\n`get_config` traps with `UnexpectedSize` and the market is bricked\\nuntil this runs. This entry point never reads the old config, so it\\nis callable in that state \\xe2\\x80\\x94 the one-way door out of a config-shape\\nupgrade. Admin-only; validated like `initialize`.",
+      "name": "migrate_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "MarketConfig"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency admin tool (2026-08 funding-counterparty upgrade): reset the\\nfunding baseline of the given positions to the current per-asset\\nindex, voiding their pending funding. Refuses unless the market is in\\nfull-freeze (mode 2) so nothing settles mid-reseed. Unknown ids are\\nskipped; returns the number of positions touched.",
+      "name": "reseed_funding",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": "u64"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L1-24: halt/resume trading in ONE market (admin). While halted, risk-\\nincreasing ops on the asset revert #92; closing/liquidating/cancelling\\nstill works \\xe2\\x80\\x94 one broken feed no longer forces a whole-venue pause.",
+      "name": "set_asset_halt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "halted",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set per-market risk params (L0-12). Admin-only. The asset must be a\\nlisted pair and params must satisfy the MM=IM/2 ladder invariant.\\nThe first successful call stamps RiskEpochTs, activating the ladder:\\nfrom then on risk-increasing ops on UNconfigured assets fail #88,\\nwhile positions opened before the stamp keep the legacy MM.",
+      "name": "set_asset_risk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "AssetRiskParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless NAV freshener: recompute one asset's unrealized\\ntrader PnL at the current oracle price and push it to the vault,\\nso NOE pricing tracks the market between trades. Returns the\\npushed value.",
+      "name": "sync_asset_pnl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current pause state as (mode, since). mode reflects the 72h auto-degrade\\nlogically (read-only, no persist).",
+      "name": "get_pause_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u32",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L1-24 view: whether one market is halted.",
+      "name": "is_asset_halted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Migrate the single global funding index into per-asset indices\\n(L0-13). Admin-only, run inside the upgrade pause window after\\nmigrate_config + set_asset_risk. Seeds every pair's index at the\\nlegacy global cumulative value so every open position's pending\\nfunding is preserved by delta-continuity \\xe2\\x80\\x94 no per-position writes.",
+      "name": "migrate_funding",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a take-profit order on an existing position.\\nAutomatically closes the position when price reaches trigger to lock in profits.\\n\\n# Arguments\\n* `trader` - Address of the trader (must own position)\\n* `position_id` - ID of the position\\n* `trigger_price` - Price at which to close (7 decimals)\\n* `slippage_tolerance_bps` - Max allowed slippage in basis points",
+      "name": "set_take_profit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "trigger_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "slippage_tolerance_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-shot bootstrap of the live counters for a market upgraded in\\nplace: the counter keys do not exist in pre-upgrade storage, so\\ndecrements would saturate at zero and the counts would under-report\\nforever. Admin derives the true open totals (a ledger-entry walk of\\nPosition/Order ids \\xe2\\x80\\x94 the same walk the keeper runs) and writes them\\nhere, exactly once. The latch is a DEDICATED marker, NOT the counter\\nkey: closes and liquidations run even while paused and their\\nsaturating decrement CREATES the counter key at zero, which must not\\nlock the admin out of seeding. Seeding overwrites whatever phantom\\nvalue such an early transaction left behind. initialize() sets the\\nmarker, so a freshly deployed market can never be re-seeded.",
+      "name": "seed_open_counts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "positions",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "orders",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless solvency check: flips the asset's ADL flag on when\\npool coverage (buffer + LP USDC) falls under adl_trigger_ratio_bps\\nof the payable winner uPnL, and off again above the clear ratio\\n(hysteresis). Returns the flag. Pause-exempt, lenient price read \\xe2\\x80\\x94\\nit must work in exactly the stress states it exists for.",
+      "name": "check_adl_trigger",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L1-18: rolling 14-day traded volume for a trader \\xe2\\x80\\x94 the referral\\nregistry's create_code gate cross-reads this (min_code_volume).\\nRead-only local window rotation, nothing persisted.",
+      "name": "get_trader_volume",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Place a limit entry order.\\nCollateral is locked immediately when the order is placed.\\nOrder executes when price reaches trigger_price (based on trigger_condition).\\n\\n# Arguments\\n* `trader` - Address of the trader\\n* `asset` - Asset symbol (e.g., \"BTC\", \"ETH\", \"XLM\")\\n* `direction` - Long or Short\\n* `collateral` - USDC collateral to lock (7 decimals)\\n* `leverage` - Leverage multiplier (1-10)\\n* `trigger_price` - Price at which to execute (7 decimals)\\n* `trigger_above` - true = execute when price >= trigger, false = when price <= trigger\\n* `slippage_tolerance_bps` - Max allowed slippage in basis points (e.g., 100 = 1%)\\n\\n# Returns\\nThe created Order\\nPlace a limit order.\\n\\n# Time-in-Force (`time_in_force` parameter)\\n- `0` = GTC (Good Till Cancel) \\xe2\\x80\\x94 stays open until triggered or cancelled\\n- `1` = IOC (Immediate Or Cancel) \\xe2\\x80\\x94 executes immediately if conditions met, else cancelled\\n- `2` = Post Only \\xe2\\x80\\x94 rejected if it would execute immediately (guarantees maker fee)\\n\\n# Reduce Only (bit 8 of `time_in_force`)\\nIf `time_in_",
+      "name": "place_limit_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "trigger_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "trigger_above",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "slippage_tolerance_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "time_in_force",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove collateral from an isolated position (L0-6). Risk-INCREASING \\xe2\\x80\\x94\\npause-gated, IM-floor gated, and gated on a STRICT (fresh) oracle\\nread so a stale/deviant print can't authorize margin extraction.",
+      "name": "remove_collateral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L1-30: proceeds a full isolated close/liquidation paid the trader, keyed\\nby position_id (temporary storage; 0 if unknown/expired). A vault_factory\\nowner reads this to reconcile a keeper-executed protective close.",
+      "name": "get_closed_proceeds",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mark-to-market equity of one position (L0-20), for vault_factory NAV:\\nmax(0, collateral + uPnL \\xe2\\x88\\x92 pending funding) at the lenient close price.\\nFail-closed \\xe2\\x80\\x94 a missing position (#20) or an oracle failure propagates\\nso the factory reverts (ValuationUnavailable) rather than mispricing.",
+      "name": "get_position_equity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Trader's live fee-tier standing (C2 restore \\xe2\\x80\\x94 the 128 KB WASM limit\\ngives the view room again; the OrderPanel fee preview reads it\\ndirectly instead of estimating from the gateway). Read-only: the\\nrolling window rotates on a LOCAL copy, nothing is persisted.",
+      "name": "get_trader_fee_info",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TraderFeeInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a cross-margin position. Single transaction: if pool balance is\\ninsufficient, automatically transfers the shortfall from trader's wallet.\\nWorks like Binance cross-margin: no separate deposit step needed.",
+      "name": "open_position_cross",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "acceptable_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Position"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Place a trailing stop order attached to a position.\\nTracks peak price, triggers when price drops trailing_percent from peak.",
+      "name": "place_trailing_stop",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "trailing_percent_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slippage_tolerance_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close a cross-margin position. PnL returns to cross-margin pool, not trader wallet.",
+      "name": "close_position_cross",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "acceptable_price",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit USDC into cross-margin pool.\\nFunds are held by the Market contract and shared across all cross positions.",
+      "name": "deposit_cross_margin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update trailing stop peak price for a specific order.\\nCalled by keeper for each trailing stop order per cycle.",
+      "name": "update_trailing_peak",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw USDC from cross-margin pool.\\nOnly withdrawable if free margin remains sufficient after withdrawal.",
+      "name": "withdraw_cross_margin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close part of an isolated position (L0-6). close_size is NOTIONAL USD\\n(same unit as Position.size). Settles only the closed portion's\\npnl + funding, refunds its pro-rata collateral (minus the closed\\nportion's loss), releases its OI reservation, and shrinks the\\nposition in place \\xe2\\x80\\x94 the collateral/size ratio is preserved so the\\nstored liquidation_price stays valid and entry_cumulative_funding is\\nuntouched (only the closed portion's funding settled). Returns pnl on\\nthe closed portion. A full-size close delegates to close_position.",
+      "name": "close_position_partial",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "close_size",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Place a stop-limit order.\\nPhase 1: waits for price to hit trigger_price (stop).\\nPhase 2: once triggered, acts as limit order at limit_price.\\nPlace a stop-limit order with optional time-in-force and reduce-only flags.\\nSee `place_limit_order` for `time_in_force` encoding details.\\nNote: IOC and PostOnly apply to the limit phase (phase 1), not the stop phase.",
+      "name": "place_stop_limit_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "trigger_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "limit_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "trigger_above",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "slippage_tolerance_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "time_in_force",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A trader's open position ids \\xe2\\x80\\x94 the per-trader index the contract\\nkeeps anyway for cross-margin aggregation. This is the point-read\\nreplacement for the deleted global scan: a wallet lists ITS\\npositions in one bounded call (MAX_OPEN_POSITIONS_PER_TRADER)\\ninstead of walking every id on the market, and it works against any\\nmarket without a gateway in the middle.",
+      "name": "get_trader_position_ids",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Liquidate a cross-margin account. Closes ALL cross positions.\\nCalled by keeper when account equity < maintenance margin.",
+      "name": "liquidate_cross_account",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "NoetherError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get cross-margin balance for a trader (pool balance only).",
+      "name": "get_cross_margin_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get cross-margin position IDs for a trader.",
+      "name": "get_cross_margin_positions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Admin address",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Oracle adapter contract address",
+            "name": "OracleAdapter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Vault contract address",
+            "name": "Vault"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "USDC token contract address",
+            "name": "UsdcToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Market configuration",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Position counter (for ID generation)",
+            "name": "PositionCounter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total long position size",
+            "name": "TotalLongSize"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Total short position size",
+            "name": "TotalShortSize"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Last funding time",
+            "name": "LastFundingTime"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Current funding rate (latest hourly rate)",
+            "name": "CurrentFundingRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Cumulative funding rate (accumulated over time for accurate per-position funding)",
+            "name": "CumulativeFundingRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether initialized",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Whether paused (LEGACY bool \\xe2\\x80\\x94 left unread after the L0-15 upgrade;\\nsuperseded by PauseState. Kept so old stored value doesn't break decode)",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Two-tier pause (L0-15): (mode, since) where mode 0=live, 1=halt-open,\\n2=full-freeze; since = ledger seconds the current mode began.",
+            "name": "PauseState"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "L1-24: per-asset trading halt (persistent bool, unwrap_or false). When\\ntrue, risk-INCREASING ops on the asset revert #92; closing/liquidating\\nstill works \\xe2\\x80\\x94 one broken feed no longer forces a whole-venue pause.",
+            "name": "AssetHalted",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "L1-30: proceeds (USDC to trader) from a full isolated close, keyed by\\nposition_id, in TEMPORARY storage. Lets a vault_factory owner reconcile\\na keeper-executed protective close to the exact amount that landed at\\nthe factory (no factory call fires on a keeper execution).",
+            "name": "ClosedProceeds",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Position by ID",
+            "name": "Position",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Position IDs for a trader",
+            "name": "TraderPositions",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Count of live Position rows (u32). Replaces the AllPositions Vec:\\nthe global index was rewritten in full on every open and close, so a\\nbusy market paid O(open positions) per trade and every transaction\\nraced every other on one shared entry. Off-chain discovery walks\\nPosition(id) ledger entries directly and uses this count as its\\ncompleteness checksum. Unit key \\xe2\\x80\\x94 encodes as scvVec([scvSymbol]).",
+            "name": "OpenPositionCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Order by ID",
+            "name": "Order",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Order counter (for ID generation)",
+            "name": "OrderCounter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Count of Pending Order rows (u32). Replaces the AllOrders Vec \\xe2\\x80\\x94 same\\nstory as OpenPositionCount. Orders are status updated rather than\\ndeleted, so \"counted\" means status == Pending, and the off-chain walk\\ntreats any terminal status as absent.",
+            "name": "OpenOrderCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Count of Pending orders per trader (u32). Replaces the TraderOrders\\nVec, which existed only to bound MAX_OPEN_ORDERS_PER_TRADER \\xe2\\x80\\x94 nothing\\non or off chain ever enumerated it.",
+            "name": "OrderCountOf",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "One-shot latch for seed_open_counts. A DEDICATED marker rather than\\n\"does OpenPositionCount exist\": liquidations run even while paused,\\nand the very first close/liquidation after an in-place upgrade\\nCREATES the counter key (saturating 0), which would slam a\\npresence-based latch shut before the admin ever seeded.",
+            "name": "OpenCountsSeeded"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Stop-loss order ID attached to a position",
+            "name": "PositionStopLoss",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Take-profit order ID attached to a position",
+            "name": "PositionTakeProfit",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-trader 14-day rolling volume record",
+            "name": "TraderVolume",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Fee tier configuration (Vec<FeeTier>)",
+            "name": "FeeTiers"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Cross-margin balance per trader (i128)",
+            "name": "CrossMarginBalance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Cross-margin position IDs per trader (Vec<u64>)",
+            "name": "CrossMarginPositions",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Peak price tracked for trailing stop orders (order_id -> i128)",
+            "name": "TrailingStopPeak",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Trailing-stop order ID attached to a position",
+            "name": "PositionTrailingStop",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Last accepted fresh oracle price + timestamp per asset (deviation guard)",
+            "name": "LastGoodPrice",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Treasury address receiving the protocol's share of trading fees",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "L1-18: the referral registry the fee path try-invokes. Unset = no-op.",
+            "name": "Referral"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Protocol share of trading fees in bps (default 2000 = 20%)",
+            "name": "ProtocolFeeBps"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset aggregate exposure (long_k, long_size, short_k, short_size)\\nwhere k = sum of size*PRECISION/entry \\xe2\\x80\\x94 lets unrealized PnL at mark P\\nbe computed incrementally without iterating positions",
+            "name": "AssetExposure",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Ledger timestamp of the last partial liquidation of a position\\n(T3-D4 grace period). Removed with the position.",
+            "name": "PartialLiqTs",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Ledger timestamp of the last STAGED cross-account liquidation round\\n(L0-5 grace period) \\xe2\\x80\\x94 account-scoped, cleared on full close.",
+            "name": "CrossPartialLiqTs",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "ADL solvency flag per asset (L0-1): while set, new opens are\\nrejected and adl_close may force-realize winners at mark.",
+            "name": "AdlActive",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-market risk params (L0-12): leverage cap, IM/MM/close-out,\\nmax size, funding velocity/clamp, skew scale. Unset = ladder\\ninactive for the asset (risk-increasing ops fail #88).",
+            "name": "AssetRisk",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ledger timestamp the ladder went live (L0-12), stamped once by the\\nfirst set_asset_risk. Positions opened before it keep the legacy\\nmaintenance margin so an in-place upgrade liquidates nobody.",
+            "name": "RiskEpochTs"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset funding state (L0-13): (cumulative_index, current_rate,\\nlast_ts), all fraction-units/h (1e7 = 100%/h) except last_ts.\\nReplaces the single global CumulativeFundingRate for per-market\\nfunding. Absent = (0, 0, 0).",
+            "name": "FundingState",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset time-weighted skew integral (L0-13, M-7 kill):\\n(integral [notional\\xc3\\x97seconds], last_touch_ts). Accumulated in\\nadjust_oi, drained by apply_funding.",
+            "name": "SkewIntegral",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A conditional order (limit entry, stop-loss, take-profit, stop-limit, trailing stop)",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "Trading asset symbol (e.g., \"BTC\", \"ETH\", \"XLM\")",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "USDC collateral locked (for LimitEntry/StopLimit orders)",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "Timestamp when order was created (Unix seconds)",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Direction for the position (Long or Short) - used for LimitEntry",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "Whether this order is attached to a position",
+          "name": "has_position",
+          "type_": "bool"
+        },
+        {
+          "doc": "Unique order identifier",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "Leverage multiplier (for LimitEntry/StopLimit orders)",
+          "name": "leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "Limit price for StopLimit orders (7 decimals). 0 = not applicable.",
+          "name": "limit_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Type of order (LimitEntry, StopLoss, TakeProfit, StopLimit, TrailingStop)",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "Position ID this order is attached to (for SL/TP/TrailingStop orders)",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "Maximum allowed slippage in basis points (e.g., 100 = 1%)",
+          "name": "slippage_tolerance_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Current status of the order",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "OrderStatus"
+            }
+          }
+        },
+        {
+          "doc": "StopLimit phase: 0=WaitingForStop, 1=LimitActive",
+          "name": "stop_limit_phase",
+          "type_": "u32"
+        },
+        {
+          "doc": "Time-in-force: 0=GTC (default), 1=IOC, 2=PostOnly",
+          "name": "time_in_force",
+          "type_": "u32"
+        },
+        {
+          "doc": "Address of the trader who placed this order",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "Trailing percentage in basis points for TrailingStop (e.g., 200 = 2%). 0 = not applicable.",
+          "name": "trailing_percent_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Trigger condition (Above or Below)",
+          "name": "trigger_condition",
+          "type_": {
+            "udt": {
+              "name": "TriggerCondition"
+            }
+          }
+        },
+        {
+          "doc": "Price at which to trigger the order (7 decimals)",
+          "name": "trigger_price",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A volume-based fee tier.\\nUsers with higher 14-day rolling volume get lower fees.\\nFee rates use deci-bps (0.1 bps = 0.001%) for sub-basis-point precision.\\nExample: maker_fee_bps=15 means 1.5 bps = 0.015%.\\nDivide by FEE_PRECISION (100_000) when calculating fee amounts.",
+      "lib": "",
+      "name": "FeeTier",
+      "fields": [
+        {
+          "doc": "Maker fee rate in deci-bps (1 unit = 0.001%)",
+          "name": "maker_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Minimum 14-day rolling volume to qualify for this tier (7 decimals)",
+          "name": "min_volume",
+          "type_": "i128"
+        },
+        {
+          "doc": "Taker fee rate in deci-bps (1 unit = 0.001%)",
+          "name": "taker_fee_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Vault/Pool information snapshot",
+      "lib": "",
+      "name": "PoolInfo",
+      "fields": [
+        {
+          "doc": "Assets Under Management (7 decimals)\\nAUM = total_usdc - unrealized_trader_pnl",
+          "name": "aum",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total fees collected (7 decimals)",
+          "name": "total_fees",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total GLP tokens minted (7 decimals)",
+          "name": "total_glp",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total USDC deposited in the pool (7 decimals)",
+          "name": "total_usdc",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unrealized PnL of all open positions (7 decimals)\\nPositive = traders are winning (bad for LPs)\\nNegative = traders are losing (good for LPs)",
+          "name": "unrealized_pnl",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A trader's leveraged position",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "Trading asset symbol (e.g., \"XLM\")",
+          "name": "asset",
+          "type_": "symbol"
+        },
+        {
+          "doc": "USDC collateral deposited as margin (7 decimals)",
+          "name": "collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "Position direction (Long or Short)",
+          "name": "direction",
+          "type_": {
+            "udt": {
+              "name": "Direction"
+            }
+          }
+        },
+        {
+          "doc": "Cumulative funding rate at position open (for accurate funding calc)",
+          "name": "entry_cumulative_funding",
+          "type_": "i128"
+        },
+        {
+          "doc": "Price when position was opened (7 decimals)",
+          "name": "entry_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unique position identifier",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "Leverage multiplier (1-10)",
+          "name": "leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "Price at which position will be liquidated (7 decimals)\\nFor cross-margin positions, this is 0 (liquidation is account-level)",
+          "name": "liquidation_price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Margin mode: 0 = Isolated, 1 = Cross",
+          "name": "margin_mode",
+          "type_": "u32"
+        },
+        {
+          "doc": "Position size in USD value (7 decimals)\\nsize = collateral * leverage",
+          "name": "size",
+          "type_": "i128"
+        },
+        {
+          "doc": "Timestamp when position was opened (Unix seconds)",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "Address of the trader who owns this position",
+          "name": "trader",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Asset type for oracle price queries (SEP-0040 compatible)",
+      "lib": "",
+      "name": "AssetType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Stellar native asset (XLM)",
+            "name": "Stellar"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Other assets identified by symbol string",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Direction of a trading position",
+      "lib": "",
+      "name": "Direction",
+      "cases": [
+        {
+          "doc": "Long position - profits when price goes UP",
+          "name": "Long",
+          "value": 0
+        },
+        {
+          "doc": "Short position - profits when price goes DOWN",
+          "name": "Short",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Type of conditional order",
+      "lib": "",
+      "name": "OrderType",
+      "cases": [
+        {
+          "doc": "Limit entry order - open a new position when price reaches trigger",
+          "name": "LimitEntry",
+          "value": 0
+        },
+        {
+          "doc": "Stop-loss order - close position to limit losses",
+          "name": "StopLoss",
+          "value": 1
+        },
+        {
+          "doc": "Take-profit order - close position to lock in profits",
+          "name": "TakeProfit",
+          "value": 2
+        },
+        {
+          "doc": "Stop-limit: when stop price triggers, place a limit order at limit_price",
+          "name": "StopLimit",
+          "value": 3
+        },
+        {
+          "doc": "Trailing stop: dynamic stop that follows peak price by trailing_percent",
+          "name": "TrailingStop",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Price data from oracles",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "Asset price with 7 decimal places",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix timestamp when price was fetched",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Margin mode for a position",
+      "lib": "",
+      "name": "MarginMode",
+      "cases": [
+        {
+          "doc": "Isolated margin - each position has its own collateral (default)",
+          "name": "Isolated",
+          "value": 0
+        },
+        {
+          "doc": "Cross margin - shares collateral pool across all cross positions",
+          "name": "Cross",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Market statistics",
+      "lib": "",
+      "name": "MarketStats",
+      "fields": [
+        {
+          "doc": "Current funding rate (basis points per hour)\\nPositive = longs pay shorts\\nNegative = shorts pay longs",
+          "name": "funding_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last time funding was applied",
+          "name": "last_funding_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Total number of open positions",
+          "name": "open_position_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "Total value of all long positions (7 decimals)",
+          "name": "total_long_size",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total value of all short positions (7 decimals)",
+          "name": "total_short_size",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Status of an order",
+      "lib": "",
+      "name": "OrderStatus",
+      "cases": [
+        {
+          "doc": "Order is pending execution",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "Order was executed successfully",
+          "name": "Executed",
+          "value": 1
+        },
+        {
+          "doc": "Order was cancelled by trader",
+          "name": "Cancelled",
+          "value": 2
+        },
+        {
+          "doc": "Order was cancelled due to slippage exceeded",
+          "name": "CancelledSlippage",
+          "value": 3
+        },
+        {
+          "doc": "Order expired (for future use)",
+          "name": "Expired",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Configuration for the Market contract",
+      "lib": "",
+      "name": "MarketConfig",
+      "fields": [
+        {
+          "doc": "Hysteresis: the ADL flag clears only once coverage \\xe2\\x89\\xa5 this ratio of\\npayable uPnL (bps; must be \\xe2\\x89\\xa5 the trigger ratio) (L0-1).",
+          "name": "adl_clear_ratio_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Optional better-than-mark compensation paid from the buffer to an\\nADL'd winner, bps of closed notional (0 = disabled) (L0-1).",
+          "name": "adl_compensation_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "ADL trips when payable winner uPnL \\xc3\\x97 this ratio (bps) exceeds the\\npool's coverage (buffer + LP USDC): 12_500 = trigger when coverage\\n< 1.25\\xc3\\x97 payable uPnL (L0-1).",
+          "name": "adl_trigger_ratio_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Base funding rate in basis points per hour",
+          "name": "base_funding_rate_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Base maker fee in basis points (e.g., 2 = 0.02%)\\nMaker = limit orders resting on the order book",
+          "name": "base_maker_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Base taker fee in basis points (e.g., 5 = 0.05%)\\nTaker = market orders, immediate fills",
+          "name": "base_taker_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Below this share of aggregate MM (bps; 6_667 = 2/3 MM) a cross\\naccount is closed out in full instead of staged (L0-5).",
+          "name": "cross_close_out_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Staged cross liquidation stops once equity \\xe2\\x89\\xa5 this share of the\\naggregate maintenance margin (bps of MM; 15_000 = 1.5\\xc3\\x97 MM) (L0-5).",
+          "name": "cross_liq_restore_target_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Share of liquidation proceeds routed to the vault's insurance\\nbuffer instead of LP value (bps).",
+          "name": "insurance_buffer_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Keeper execution fee: flat base (7-dec USDC) + per-size deci-bps\\n(divisor FEE_PRECISION) (L1-21). Defaults keep maker+keeper \\xe2\\x89\\xa4 taker.",
+          "name": "keeper_fee_base",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "keeper_fee_deci_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Max lenient-read clamp vs last-good on settlement, in bps (0 disables)\\n(L1-26). Bounds a single deviant print reaching a close/liquidation.",
+          "name": "lenient_clamp_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Liquidation fee in basis points (e.g., 500 = 5%)",
+          "name": "liquidation_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Liquidation penalty as bps of the notional CLOSED in the call\\n(L0-4). Charged only on non-bankrupt liquidations; the residual\\nequity above the penalty refunds to the trader.",
+          "name": "liquidation_penalty_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maintenance margin in basis points (e.g., 100 = 1%)",
+          "name": "maintenance_margin_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum leverage allowed (1-10)",
+          "name": "max_leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum allowed oracle deviation in basis points",
+          "name": "max_oracle_deviation_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum position size in USD (7 decimals)",
+          "name": "max_position_size",
+          "type_": "i128"
+        },
+        {
+          "doc": "Oracle staleness threshold in seconds",
+          "name": "max_price_staleness",
+          "type_": "u64"
+        },
+        {
+          "doc": "Minimum collateral required to open a position (7 decimals)",
+          "name": "min_collateral",
+          "type_": "i128"
+        },
+        {
+          "doc": "Flat keeper bounty floor for bankrupt/small liquidations, paid from the\\ninsurance buffer (7-dec USDC, 0 disables) (L1-23).",
+          "name": "min_liq_bounty",
+          "type_": "i128"
+        },
+        {
+          "doc": "Grace period after a partial liquidation during which further\\nliquidation of that position is blocked (seconds). Bankruptcy\\n(equity <= 0) overrides the grace period.",
+          "name": "partial_liq_cooldown_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "Partial liquidation (T3-D4): isolated positions with entry notional\\nabove this get a tranche closed first instead of a full liquidation\\n(7 decimals). 0 disables partial liquidation entirely.",
+          "name": "partial_liq_min_notional",
+          "type_": "i128"
+        },
+        {
+          "doc": "Fraction of position size closed per partial-liquidation round (bps).",
+          "name": "partial_liq_tranche_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Keeper's share of the liquidation penalty (bps); the remainder\\nfunds the insurance buffer (L0-4).",
+          "name": "penalty_keeper_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Trading fee in basis points (e.g., 10 = 0.1%)\\nDEPRECATED: Use base_maker_fee_bps / base_taker_fee_bps instead.\\nKept for backward compatibility with existing deployments.",
+          "name": "trading_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "L0-9: reject the smoothed mark when the ring's newest entry is older\\nthan this many seconds (degrades to spot-only, never blocks).",
+          "name": "twap_max_age_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "L0-9: ring entries in the smoothed liquidation/trigger mark.\\n0 disables the smoothed leg entirely \\xe2\\x80\\x94 the launch-safe kill switch.",
+          "name": "twap_records",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-trader 14-day rolling volume record.\\nUses a fixed 14-slot circular buffer, one slot per day.",
+      "lib": "",
+      "name": "VolumeRecord",
+      "fields": [
+        {
+          "doc": "Daily volume for each of the last 14 days (7 decimals each)",
+          "name": "daily_volumes",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "The day number (unix_timestamp / 86400) when this record was last updated",
+          "name": "last_update_day",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Fee information for a specific trader (view return type)",
+      "lib": "",
+      "name": "TraderFeeInfo",
+      "fields": [
+        {
+          "doc": "Maker fee rate in deci-bps (1 unit = 0.001%). E.g., 15 = 1.5 bps = 0.015%",
+          "name": "maker_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Volume needed to reach next tier (7 decimals, 0 if already max tier)",
+          "name": "next_tier_volume",
+          "type_": "i128"
+        },
+        {
+          "doc": "Taker fee rate in deci-bps (1 unit = 0.001%). E.g., 50 = 5.0 bps = 0.050%",
+          "name": "taker_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Current fee tier index (0-3)",
+          "name": "tier",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total 14-day rolling volume (7 decimals)",
+          "name": "volume_14d",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Status of a position",
+      "lib": "",
+      "name": "PositionStatus",
+      "cases": [
+        {
+          "doc": "Position is active and open",
+          "name": "Open",
+          "value": 0
+        },
+        {
+          "doc": "Position was closed by the trader",
+          "name": "Closed",
+          "value": 1
+        },
+        {
+          "doc": "Position was liquidated",
+          "name": "Liquidated",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Per-market risk parameters (L0-12). Stored per asset in market storage\\n(DataKey::AssetRisk) and read on the hot path \\xe2\\x80\\x94 no cross-contract call.\\nInvariant mm_bps == im_bps/2 (P5-2), enforced by is_valid() at the\\nadmin setter. The `close_out_bps` and funding/skew fields are consumed\\nby L0-5 / L0-13 / L0-14 respectively but MUST be in the day-one layout:\\nSoroban decodes structs by exact field set, so adding a field later\\nre-bricks every stored entry.",
+      "lib": "",
+      "name": "AssetRiskParams",
+      "fields": [
+        {
+          "doc": "Full-close band, bps of notional (< mm_bps) \\xe2\\x80\\x94 consumed by L0-5.",
+          "name": "close_out_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Funding rate ceiling, bps/HOUR \\xe2\\x80\\x94 consumed by L0-13.",
+          "name": "funding_clamp_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Initial margin, bps of notional (400 = 4% = 25x implied).",
+          "name": "im_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Funding velocity ceiling, bps/DAY \\xe2\\x80\\x94 consumed by L0-13.",
+          "name": "max_funding_velocity_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Explicit leverage cap; may sit BELOW 10000/im_bps (launch policy).",
+          "name": "max_leverage",
+          "type_": "u32"
+        },
+        {
+          "doc": "Max position size, 7-decimal USD notional.",
+          "name": "max_position_size",
+          "type_": "i128"
+        },
+        {
+          "doc": "Maintenance margin, bps; invariant mm == im/2.",
+          "name": "mm_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "SIP-279 skew scale, 7-decimal USD notional (\\xe2\\x89\\x88 2\\xc3\\x97 the OI cap) \\xe2\\x80\\x94 L0-13.",
+          "name": "skew_scale",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Cross-margin account info (view return type)",
+      "lib": "",
+      "name": "CrossMarginInfo",
+      "fields": [
+        {
+          "doc": "Total balance in cross-margin pool (7 decimals)",
+          "name": "balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "Account equity = balance + sum(unrealized PnL) - sum(funding) (7 decimals)",
+          "name": "equity",
+          "type_": "i128"
+        },
+        {
+          "doc": "Free margin available = equity - used_margin (7 decimals)",
+          "name": "free_margin",
+          "type_": "i128"
+        },
+        {
+          "doc": "Margin ratio = equity / used_margin * 10000 (basis points)",
+          "name": "margin_ratio_bps",
+          "type_": "i128"
+        },
+        {
+          "doc": "Number of open cross-margin positions",
+          "name": "position_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total initial margin used by cross positions (7 decimals)",
+          "name": "used_margin",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Trigger condition for order execution",
+      "lib": "",
+      "name": "TriggerCondition",
+      "cases": [
+        {
+          "doc": "Execute when price >= trigger_price",
+          "name": "Above",
+          "value": 0
+        },
+        {
+          "doc": "Execute when price <= trigger_price",
+          "name": "Below",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Noether protocol errors",
+      "lib": "",
+      "name": "NoetherError",
+      "cases": [
+        {
+          "doc": "Contract has not been initialized",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "Contract has already been initialized",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Caller is not authorized for this operation",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "Operation is currently paused",
+          "name": "Paused",
+          "value": 4
+        },
+        {
+          "doc": "Invalid input parameter",
+          "name": "InvalidParameter",
+          "value": 5
+        },
+        {
+          "doc": "Arithmetic overflow occurred",
+          "name": "Overflow",
+          "value": 6
+        },
+        {
+          "doc": "Division by zero attempted",
+          "name": "DivisionByZero",
+          "value": 7
+        },
+        {
+          "doc": "Position with given ID does not exist",
+          "name": "PositionNotFound",
+          "value": 20
+        },
+        {
+          "doc": "Leverage must be between 1 and max_leverage (typically 10)",
+          "name": "InvalidLeverage",
+          "value": 21
+        },
+        {
+          "doc": "Collateral amount is below minimum required",
+          "name": "InsufficientCollateral",
+          "value": 22
+        },
+        {
+          "doc": "Position size exceeds maximum allowed",
+          "name": "PositionTooLarge",
+          "value": 23
+        },
+        {
+          "doc": "Caller does not own this position",
+          "name": "NotPositionOwner",
+          "value": 24
+        },
+        {
+          "doc": "Position has insufficient margin for operation",
+          "name": "InsufficientMargin",
+          "value": 25
+        },
+        {
+          "doc": "A partial close / reduce-only would leave a residual position below\\nthe minimum collateral floor (L0-6). Close the whole position instead.",
+          "name": "PositionTooSmall",
+          "value": 27
+        },
+        {
+          "doc": "Oracle price is older than max staleness threshold",
+          "name": "PriceStale",
+          "value": 30
+        },
+        {
+          "doc": "Invalid price returned (zero or negative)",
+          "name": "InvalidPrice",
+          "value": 31
+        },
+        {
+          "doc": "Oracle is not responding or unavailable",
+          "name": "OracleUnavailable",
+          "value": 32
+        },
+        {
+          "doc": "Insufficient USDC liquidity in vault",
+          "name": "InsufficientLiquidity",
+          "value": 40
+        },
+        {
+          "doc": "Amount must be positive",
+          "name": "InvalidAmount",
+          "value": 41
+        },
+        {
+          "doc": "Insufficient balance for operation",
+          "name": "InsufficientBalance",
+          "value": 42
+        },
+        {
+          "doc": "Deposit would exceed the per-account guarded-launch cap",
+          "name": "DepositCapExceeded",
+          "value": 43
+        },
+        {
+          "doc": "Position is healthy and cannot be liquidated",
+          "name": "NotLiquidatable",
+          "value": 50
+        },
+        {
+          "doc": "Funding interval not elapsed",
+          "name": "FundingIntervalNotElapsed",
+          "value": 55
+        },
+        {
+          "doc": "Order with given ID does not exist",
+          "name": "OrderNotFound",
+          "value": 60
+        },
+        {
+          "doc": "Order has already been executed or cancelled",
+          "name": "OrderNotPending",
+          "value": 61
+        },
+        {
+          "doc": "Order trigger condition not met (price hasn't reached trigger)",
+          "name": "OrderNotTriggered",
+          "value": 62
+        },
+        {
+          "doc": "Caller does not own this order",
+          "name": "NotOrderOwner",
+          "value": 64
+        },
+        {
+          "doc": "Invalid trigger price (e.g., stop-loss above entry for long)",
+          "name": "InvalidTriggerPrice",
+          "value": 65
+        },
+        {
+          "doc": "Invalid slippage tolerance (must be > 0 and <= 10000 bps)",
+          "name": "InvalidSlippageTolerance",
+          "value": 66
+        },
+        {
+          "doc": "Position already has this type of order attached",
+          "name": "OrderAlreadyExists",
+          "value": 67
+        },
+        {
+          "doc": "Invalid trailing percentage (must be 1-5000 bps = 0.01%-50%)",
+          "name": "InvalidTrailingPercent",
+          "value": 69
+        },
+        {
+          "doc": "Post-only order would execute immediately (rejected)",
+          "name": "PostOnlyViolation",
+          "value": 70
+        },
+        {
+          "doc": "Cross-margin pool has insufficient balance for operation",
+          "name": "CrossMarginInsufficientBalance",
+          "value": 76
+        },
+        {
+          "doc": "Cannot withdraw: would leave insufficient free margin",
+          "name": "CrossMarginInsufficientFreeMargin",
+          "value": 77
+        },
+        {
+          "doc": "Cross-margin account is not liquidatable",
+          "name": "CrossMarginNotLiquidatable",
+          "value": 78
+        },
+        {
+          "doc": "No cross-margin positions found for this trader",
+          "name": "CrossMarginNoPositions",
+          "value": 79
+        },
+        {
+          "doc": "SL/TP/trailing-stop orders are not supported on cross-margin\\npositions (they would execute via the isolated path and pay\\nout of the shared pool)",
+          "name": "CrossMarginOrderNotSupported",
+          "value": 80
+        },
+        {
+          "doc": "Oracle price moved beyond max_oracle_deviation_bps vs the stored\\nlast-good price (opens halt; closes/liquidations stay allowed)",
+          "name": "PriceDeviationTooHigh",
+          "value": 81
+        },
+        {
+          "doc": "Open would exceed the per-asset-side OI cap or the aggregate\\npayout-reservation cap (both sized against vault AUM)",
+          "name": "OpenInterestCapExceeded",
+          "value": 82
+        },
+        {
+          "doc": "A partial liquidation ran recently: this position is inside its\\ngrace period and cannot be liquidated again yet (bankruptcy\\noverrides the grace period)",
+          "name": "LiquidationCooldown",
+          "value": 83
+        },
+        {
+          "doc": "adl_close called while ADL is not active for the position's asset\\n(L0-1; check_adl_trigger or a shortfall settle flips the flag)",
+          "name": "AdlNotActive",
+          "value": 84
+        },
+        {
+          "doc": "adl_close target is not a net winner at the current mark \\xe2\\x80\\x94 only\\npositive-uPnL positions are ADL candidates (L0-1)",
+          "name": "AdlNotEligible",
+          "value": 85
+        },
+        {
+          "doc": "Liquidation eligible on the fresh spot but NOT yet confirmed by the\\nsmoothed (TWAP) mark (L0-9). Bankruptcy overrides \\xe2\\x80\\x94 a genuinely\\nunderwater position never waits. Retry next keeper cycle.",
+          "name": "LiquidationNotConfirmed",
+          "value": 86
+        },
+        {
+          "doc": "A market open/close filled worse than the trader's acceptable_price\\nbound (L0-10). The tx reverts; resubmit with 0 to fill unbounded.",
+          "name": "AcceptablePriceExceeded",
+          "value": 87
+        },
+        {
+          "doc": "A risk-increasing op (open / limit / stop-limit placement) hit an\\nasset with no per-market risk params configured \\xe2\\x80\\x94 fail-closed\\n(L0-12). Risk-reducing paths fall back to the legacy MM instead.",
+          "name": "AssetRiskNotConfigured",
+          "value": 88
+        },
+        {
+          "doc": "An open would push the asset's net long-short skew past its cap and\\nmake it MORE imbalanced (L0-14). Skew-reducing opens always pass.",
+          "name": "SkewCapExceeded",
+          "value": 89
+        },
+        {
+          "doc": "Full-freeze pause (mode 2): even risk-reducing ops \\xe2\\x80\\x94 closes,\\nliquidations, cross deposits/withdrawals, stops, funding \\xe2\\x80\\x94 are halted\\nsymmetrically (L0-15). Only cancel_order works; auto-degrades to\\nhalt-open (closes/liquidations allowed) after 72h.",
+          "name": "Frozen",
+          "value": 90
+        },
+        {
+          "doc": "An open auto-nets to zero or beyond against the trader's opposite\\nsame-asset positions \\xe2\\x80\\x94 gross opposite >= requested size, too many\\nopposing legs, or a sub-min remainder (L1-3). Reductions and flips\\ngo through the close/reduce-only paths, never a one-tx flip.",
+          "name": "NetsToZero",
+          "value": 91
+        },
+        {
+          "doc": "Trading in this specific market is temporarily halted by admin (L1-24).\\nRisk-increasing paths only \\xe2\\x80\\x94 closing/liquidating a position still works.",
+          "name": "AssetHalted",
+          "value": 92
+        },
+        {
+          "doc": "LP withdrawal is inside the post-deposit cooldown window (L1-28) \\xe2\\x80\\x94 an\\nanti-JIT/NAV-sniping delay after each deposit. Everything else is instant.",
+          "name": "WithdrawCooldownActive",
+          "value": 93
+        }
+      ]
+    }
+  }
+]
