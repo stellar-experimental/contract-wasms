@@ -1,0 +1,664 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "A job, stored under its id. Job ids are single-use, which is what makes\\nfulfillment non-replayable.",
+      "lib": "",
+      "name": "Job",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "artifact_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "challenge_bond",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "client",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "condition_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deliver_by",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "opened_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reason_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "State"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyUsed",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "WrongState",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "WindowClosed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyAdjudicated",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TooLate",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Job lifecycle. `Released` and `Settled` are terminal \\xe2\\x80\\x94 and that is the\\nentire point of the product.",
+      "lib": "",
+      "name": "State",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Funded, awaiting delivery.",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Terminal. Funds moved to the freelancer and are not recoverable.",
+            "name": "Released"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The client has posted a bond to contest delivery.",
+            "name": "Challenged"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Terminal. A challenge was resolved.",
+            "name": "Settled"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "JobOpened",
+      "prefix_topics": [
+        "job_opened"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "job",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "client",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FundsReleased",
+      "prefix_topics": [
+        "funds_released"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "job",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Always true. There is no code path that sets this false.",
+          "name": "irreversible",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`outcome`: 0 = freelancer performed, 1 = freelancer did not perform,\\n2 = nothing ever delivered. In every case the money has already moved by the\\ntime this is emitted.",
+      "lib": "",
+      "name": "ChallengeResolved",
+      "prefix_topics": [
+        "challenge_resolved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "job",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "outcome",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "bond",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeliveryChallenged",
+      "prefix_topics": [
+        "delivery_challenged"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "job",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "challenger",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "bond",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read a job. The entire read model for the app and the proof page \\xe2\\x80\\x94 both\\nrender from this and nothing else.",
+      "name": "job",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Job"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fund a job. Both parties authorise in one transaction: the client puts up\\nthe full amount, the freelancer puts up whatever their reputation charges\\nthem. Neither can fund and walk away.",
+      "name": "open",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "client",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "condition_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deliver_by",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lifecycle state as a number, so the invariant is checkable in one call.\\n0 = absent, 1 = open, 2 = released (terminal), 3 = challenged, 4 = settled.",
+      "name": "state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweep a job where nothing was ever delivered. The client's money returns\\nand the freelancer's stake is forfeited. Thirty seconds, not fourteen\\ndays.",
+      "name": "expire",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit the delivered artifact.\\n\\nA matching artifact settles **inside this same transaction**, whether or\\nnot a challenge is already open: verification outranks adjudication,\\nbecause there is nothing left to adjudicate. An unmatched artifact leaves\\nthe job open for the client to contest.\\n\\nThere is no window in which approved work can be charged back \\xe2\\x80\\x94 that\\nabsence is the product.",
+      "name": "submit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "artifact_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolve a challenge. Fully deterministic and fully on-chain: the contract\\ncompares the artifact the freelancer submitted against the commitment the\\nclient signed at funding. No external input decides this.",
+      "name": "confirm",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Precision of the settlement asset, as reported by the token itself.",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "True once the money has moved and can never be moved back.",
+      "name": "is_final",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Contest delivery. The client posts a bond proportional to the amount.\\n\\nThis is where the invariant lives: a job that has already released is not\\n`Open`, so it cannot be challenged, and no other entry point moves funds\\nout of a released job. Money that cleared a verified release is gone.",
+      "name": "challenge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "reason_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The stake this freelancer must lock to be funded upfront, in basis\\npoints. `completed = 0` -> 300. `20` -> 150. `200` -> 27.",
+      "name": "stake_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The stake, in strops, for a job of `amount`. Zero when it would fall\\nbelow `MIN_STAKE`.",
+      "name": "stake_for",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Delivery counters: `(completed, on_time, disputes_lost, disputes_won)`.\\nCounters, not a score. The account carrying them belongs to the\\nfreelancer, which is the whole portability claim.",
+      "name": "reputation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u64",
+              "u64",
+              "u64",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Portable proof: `(freelancer, amount, delivered, state)`. Derived from\\nchain state only \\xe2\\x80\\x94 no server, no database, no account, no login. This is\\nwhat the public proof page renders.",
+      "name": "attestation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "i128",
+                  "bool",
+                  "u32"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The settlement asset. Immutable \\xe2\\x80\\x94 this contract has no admin key and no\\nupgrade path, deliberately. A settlement primitive that can be rewritten\\nafter funds are in it is not a settlement primitive.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The minimum challenge bond for a job of `amount`, in strops. Proportional\\nso it scales with the money at stake, floored so griefing costs more than\\nthe gas it burns. This is the number that used to be $337.50 flat.",
+      "name": "challenge_bond_for",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]

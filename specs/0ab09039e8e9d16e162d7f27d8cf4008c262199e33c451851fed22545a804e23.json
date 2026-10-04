@@ -1,0 +1,1164 @@
+[
+  {
+    "function_v0": {
+      "doc": "Move the full milestone total into escrow.\\n\\nAll-or-nothing on purpose: partial funding would let a sponsor advertise\\nthree milestones while only backing one, which is exactly the ambiguity\\nSprintOS exists to remove.",
+      "name": "fund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Send the milestone back for revision. The builder may resubmit.",
+      "name": "hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Let the builder recover an already-approved payment if the reviewer\\ncannot return for the second signature. The binding human judgement has\\nalready happened in `approve`; this path cannot approve work.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The SEP-41 asset every engagement settles in.",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reclaim a milestone the builder did not deliver in time.\\n\\nOnly after the deadline, and never once the reviewer has approved \\xe2\\x80\\x94 an\\napproved milestone is owed to the builder regardless of the clock.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record the reviewer's decision that the milestone is met.\\n\\nApproving does not pay. `release` is a separate signature so that the\\njudgement and the money movement are two distinct, auditable acts.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay an approved milestone out to the builder.\\n\\nThe reviewer-controlled payout path. Requires the reviewer's signature\\nand an `Approved` status \\xe2\\x80\\x94 no score or recommendation can reach this\\nline. After that human approval, `claim` is the builder's recovery path.",
+      "name": "release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether this address may approve, hold or release on this engagement.",
+      "name": "can_decide",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Value still held in escrow for this engagement.",
+      "name": "get_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Authorise another wallet to decide payouts on this engagement.\\n\\nOnly the sponsor may call this. The builder is refused however the call\\nis dressed up: a builder who could approve would sign off their own work\\nand release their own payment, and that is the one collision this\\ncontract will not allow at any point in an engagement's life.",
+      "name": "add_reviewer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pin the settlement asset once, at deploy time.\\n\\nDeliberately not re-callable: if the token could be swapped later, an\\nengagement funded in USDC could be released in something worthless.\\n`first_id` starts the engagement counter above whatever the previous\\ndeployment reached, so an id names exactly one engagement across both and\\na link written against the old contract never resolves to a new one.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "first_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_milestone",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Milestone"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_engagement",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Engagement"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw that authority again.\\n\\nThe sponsor cannot remove themselves. Their authority comes from having\\nfunded the work rather than from a list entry, and an engagement nobody\\ncan decide would leave the builder waiting for a deadline instead of a\\ndecision.",
+      "name": "remove_reviewer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Attach an evidence bundle to a milestone.\\n\\nLegal from `Pending` (first submission) and from `Held` (revision after\\nthe reviewer asked for changes).",
+      "name": "submit_evidence",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "evidence_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "evidence_uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "engagement_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Define an engagement and its milestones. Does not move funds \\xe2\\x80\\x94 see `fund`.\\n\\nThe sponsor signs, and by signing becomes the account that decides every\\npayout. `reviewers` is who else may \\xe2\\x80\\x94 it can be empty, and the sponsor can\\nchange it later with `add_reviewer` and `remove_reviewer`.",
+      "name": "create_engagement",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "builder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reviewers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "milestones",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "MilestoneInput"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Set once at deploy: which SAC this contract settles in.",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Monotonic engagement id source.",
+            "name": "Counter"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Engagement",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Milestone",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "sha256 of the canonical off-chain acceptance-criteria document.\\nThe criteria text itself lives off-chain; this makes that record\\ntamper-evident without paying to store prose on ledger.",
+          "name": "criteria_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Ledger timestamp after which the sponsor may reclaim this milestone.",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "decided_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "sha256 of the canonical off-chain evidence bundle, set on submission.",
+          "name": "evidence_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Optional public pointer to that bundle.",
+          "name": "evidence_uri",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "MilestoneStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "submitted_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Engagement",
+      "fields": [
+        {
+          "doc": "",
+          "name": "builder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "milestones",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Milestone"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Extra wallets the sponsor authorised to decide payouts.\\n\\nThe sponsor always has that authority \\xe2\\x80\\x94 they defined the milestones and\\nthey funded them, so they are the one person who must be able to look at\\nthe work and pay for it. This list is who else may, and the sponsor can\\nchange it at any time.\\n\\nThe builder can never appear here. That is the one collision that would\\nbe a hole rather than an inconvenience: a builder who could approve\\nwould sign off their own work and release their own payment.",
+          "name": "reviewers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "EngagementStatus"
+            }
+          }
+        },
+        {
+          "doc": "SAC address of the settlement asset (testnet USDC).",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Input shape for milestone definition at creation time.",
+      "lib": "",
+      "name": "MilestoneInput",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "criteria_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Lifecycle of a single milestone.\\n\\nEvery transition out of this enum requires a signature from a specific human\\nrole. There is no transition that any automated party \\xe2\\x80\\x94 including the\\nadvisory review module \\xe2\\x80\\x94 can trigger on its own.",
+      "lib": "",
+      "name": "MilestoneStatus",
+      "cases": [
+        {
+          "doc": "Funded and waiting on the builder.",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "Builder submitted evidence; waiting on the reviewer.",
+          "name": "EvidenceSubmitted",
+          "value": 1
+        },
+        {
+          "doc": "Reviewer approved. Funds are still in escrow until `release`.",
+          "name": "Approved",
+          "value": 2
+        },
+        {
+          "doc": "Reviewer asked for revision. Builder may resubmit.",
+          "name": "Held",
+          "value": 3
+        },
+        {
+          "doc": "Terminal. USDC has moved to the builder.",
+          "name": "Released",
+          "value": 4
+        },
+        {
+          "doc": "Terminal. USDC has moved back to the sponsor after the deadline.",
+          "name": "Refunded",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EngagementStatus",
+      "cases": [
+        {
+          "doc": "Created but not yet funded. No milestone work may start.",
+          "name": "Draft",
+          "value": 0
+        },
+        {
+          "doc": "Escrow holds the full milestone total.",
+          "name": "Funded",
+          "value": 1
+        },
+        {
+          "doc": "Every milestone reached a terminal state.",
+          "name": "Closed",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "EngagementNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "MilestoneNotFound",
+          "value": 4
+        },
+        {
+          "doc": "The caller is neither the sponsor nor one of the authorised reviewers.",
+          "name": "Unauthorized",
+          "value": 5
+        },
+        {
+          "doc": "The milestone is not in a status from which this action is legal.",
+          "name": "InvalidState",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AlreadyReleased",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotFunded",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AlreadyFunded",
+          "value": 9
+        },
+        {
+          "doc": "Refund attempted before the milestone deadline.",
+          "name": "DeadlineNotReached",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 11
+        },
+        {
+          "doc": "Sum of milestone amounts does not equal the declared total.",
+          "name": "AmountMismatch",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TooManyMilestones",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NoMilestones",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidDeadline",
+          "value": 15
+        },
+        {
+          "doc": "The project admin (sponsor) and builder must be distinct addresses.",
+          "name": "DuplicateRole",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticOverflow",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "InvalidTitle",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "InvalidEvidenceUri",
+          "value": 19
+        },
+        {
+          "doc": "The sponsor may authorise at most MAX_REVIEWERS extra wallets.",
+          "name": "TooManyReviewers",
+          "value": 20
+        },
+        {
+          "doc": "That wallet is already authorised.",
+          "name": "AlreadyReviewer",
+          "value": 21
+        },
+        {
+          "doc": "That wallet was not on the list to begin with.",
+          "name": "NotAReviewer",
+          "value": 22
+        },
+        {
+          "doc": "The builder can never decide their own payout.",
+          "name": "BuilderCannotReview",
+          "value": 23
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The reviewer sent the milestone back for revision.",
+      "lib": "",
+      "name": "Held",
+      "prefix_topics": [
+        "held"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reviewer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Every milestone reached a terminal state.",
+      "lib": "",
+      "name": "Closed",
+      "prefix_topics": [
+        "closed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The sponsor moved the full milestone total into escrow.",
+      "lib": "",
+      "name": "Funded",
+      "prefix_topics": [
+        "funded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The reviewer judged the milestone met. Funds have not moved.",
+      "lib": "",
+      "name": "Approved",
+      "prefix_topics": [
+        "approved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reviewer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The sponsor reclaimed an undelivered milestone after its deadline.",
+      "lib": "",
+      "name": "Refunded",
+      "prefix_topics": [
+        "refunded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Payment reached the builder. Emitted only after a reviewer signature.",
+      "lib": "",
+      "name": "Released",
+      "prefix_topics": [
+        "released"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "builder",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The sponsor authorised another wallet to decide payouts.",
+      "lib": "",
+      "name": "ReviewerAdded",
+      "prefix_topics": [
+        "reviewer_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reviewer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The sponsor withdrew that authority.",
+      "lib": "",
+      "name": "ReviewerRemoved",
+      "prefix_topics": [
+        "reviewer_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reviewer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "An engagement was defined. No funds have moved yet.",
+      "lib": "",
+      "name": "EngagementCreated",
+      "prefix_topics": [
+        "engagement_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sponsor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "builder",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The builder attached an evidence bundle to a milestone.",
+      "lib": "",
+      "name": "EvidenceSubmitted",
+      "prefix_topics": [
+        "evidence_submitted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "engagement_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "milestone_idx",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "builder",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
