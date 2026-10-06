@@ -1,0 +1,310 @@
+[
+  {
+    "function_v0": {
+      "doc": "Deliver `raw_report` to `receiver.on_report(self, metadata, payload)`.\\n\\nSame signature as the production forwarder's `report`; `signatures` is\\naccepted for interface compatibility and ignored.",
+      "name": "report",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "transmitter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "raw_report",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "report_context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Ed25519Signature"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "MockForwarderError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Codes match the production ForwarderError for the shared conditions, so\\n`Error(Contract, #n)` means the same thing from either contract.",
+      "lib": "",
+      "name": "MockForwarderError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidReport",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidReportContext",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidReportVersion",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyProcessed",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidReceiver",
+          "value": 18
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "type_and_version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_transmission_info",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "workflow_execution_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "report_id",
+          "type_": {
+            "bytes_n": {
+              "n": 2
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TransmissionInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Transmission",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Transmission",
+      "fields": [
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "TransmissionState"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "transmitter",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Accepted for interface compatibility with the production forwarder; the\\nmock never verifies signatures.",
+      "lib": "",
+      "name": "Ed25519Signature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TransmissionInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "TransmissionState"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "transmitter",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TransmissionState",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAttempted",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Succeeded",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidReceiver",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Failed",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Same topics and data layout as the production forwarder's\\nReportProcessedEvent, so off-chain consumers decode both identically.",
+      "lib": "",
+      "name": "ReportProcessedEvent",
+      "prefix_topics": [
+        "forwarder_ReportProcessed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "workflow_execution_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "report_id",
+          "type_": {
+            "bytes_n": {
+              "n": 2
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "success",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  }
+]

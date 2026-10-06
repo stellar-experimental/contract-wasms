@@ -1,0 +1,671 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Owner-set immutable map from a lowercase Axelar name to an OIF chain and address format.",
+      "lib": "",
+      "name": "Chain",
+      "fields": [
+        {
+          "doc": "Nonzero canonical OIF chain ID used in proof tuples.",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "Remote adapter address format: padded EVM, Stellar C-contract, or Solana base58.",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "AddressKind"
+            }
+          }
+        },
+        {
+          "doc": "Canonical lowercase Axelar name, 1\\xe2\\x80\\x9320 bytes of a-z, 0-9, '-'.",
+          "name": "name",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current mapping owner, or `None` after renouncement. Maintains instance/code TTL.",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": "address"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Chain map for `name`, looked up after ASCII lowercasing; `UnknownChain` if absent.\\n\\nPermissionless; maintains instance/code TTL but does not renew the map's TTL.",
+      "name": "route",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Chain"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read immutable provider configuration and maintain instance/code TTL.\\n\\nPermissionless. Returns `Configuration` if missing.",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "AxelarConfig"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Export source attestations to `recipient_oracle` on an Axelar `destination_chain`.\\n\\n`source` is the native attester; 1\\xe2\\x80\\x934 canonical payloads of at most 684 bytes each\\nmust be attested in this adapter's own namespace. Recipient is a raw 32-byte ID\\nconverted using the configured destination format. Attestations are not consumed.\\n\\n# Authorization and effects\\nRelayed mode: `payer` authorizes this call and transfer of positive `gas_amount`\\nfee-token base units. Gas service and gateway calls are atomic. No fee funds are\\nretained by the adapter; provider refund handling targets the payer.\\n\\nSelfRelay requires zero gas and no payer authorization; gateway dispatch remains.\\nSolana destinations require their config PDA and one proof of at most 320 bytes.\\n\\n# Errors\\nUnknown chains, malformed addresses/messages, unattested proofs, mode/fee mismatch,\\nconfiguration errors, and downstream provider/auth failures. Estimate gas externally;\\nthere is no local quote formula.",
+      "name": "submit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "destination_chain",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "recipient_oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payloads",
+          "type_": {
+            "vec": {
+              "element_type": "bytes"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "gas_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "destination_config",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "delivery_mode",
+          "type_": {
+            "udt": {
+              "name": "DeliveryMode"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Constructor-only provider addresses; chain maps are added by the owner.",
+      "lib": "",
+      "name": "AxelarConfig",
+      "fields": [
+        {
+          "doc": "Native gas service transferring the authorized payer fee.",
+          "name": "gas_service",
+          "type_": "address"
+        },
+        {
+          "doc": "Native gateway contract authenticating exact messages and sending GMP requests.",
+          "name": "gateway",
+          "type_": "address"
+        },
+        {
+          "doc": "Configured native fee token; deployment tooling verifies the XLM SAC.",
+          "name": "native_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register proofs from an exact gateway-approved GMP message; any relayer may call.\\n\\n`source_chain` selects the map after ASCII lowercasing and is passed to the gateway\\nexactly; `source_address` is the authenticated remote\\nadapter in that route's address format. `message_id` and Keccak of `payload` are\\npassed with this receiving contract to gateway `validate_message`. Only approval\\npermits decoding and recording the payload's source application/proofs.\\nSolana routes admit exactly one proof of at most 320 bytes, as on export.\\n\\n# Effects and errors\\nApproval consumption and storage are atomic; a malformed/bounded-message failure\\nrolls both back. Absent or expired tuples emit `OutputProven`; all renew TTL.\\n`UnknownChain`, invalid address, `NotApproved`, `Malformed`, `MessageLimit`, or\\nprovider failures abort. Source names and addresses are not caller attestations.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "source_chain",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "message_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "source_address",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "payload",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renew proof TTL for each concatenated 128-byte tuple, plus instance/code TTL.\\n\\nPermissionless; the common capped renewal policy applies. Empty input succeeds;\\n`Malformed` rejects partial tuples and `NotProven` rejects any missing proof.\\nAll renewals roll back on failure. This call does not register new evidence.\\nProofs expire 120,960 ledgers after their last renewal; an expired proof needs a\\nfresh authenticated delivery.",
+      "name": "maintain",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proofs",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Check one authenticated proof tuple without renewing proof TTL.\\n\\n`chain` is the source OIF chain ID; `oracle` is the authenticated remote adapter;\\n`application` is the source attester's raw ID; `hash` is Keccak of a canonical payload.\\nReturns `false` for unknown or expired tuples. Permissionless; maintains\\ninstance/code TTL. Configuration or host archival failures abort.",
+      "name": "is_proven",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "application",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lowercase Axelar name mapped to `chain_id`; `UnknownChain` if unmapped.\\n\\nThe Stellar counterpart of EVM `reverseChainIdMap`, returning the name itself.\\nPermissionless; maintains instance/code TTL but does not renew the reservation.",
+      "name": "chain_name",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Install immutable `config`, the mapping `owner` and the expected Stellar `network_id`.\\n\\nRequires native gateway/gas-service/token contract addresses. `owner` may be any\\naccount or contract; it can only add chain maps and transfer or renounce ownership.\\nReturns `Configuration` for a wrong network or `Address` for non-contract provider\\naddresses. Maintains instance/code TTL. The deployer must verify provider addresses\\nand the native token for this network. No chain is mapped at deployment.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "network_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "AxelarConfig"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set an immutable map from a canonical lowercase Axelar `name` to `chain_id` and `kind`.\\n\\nThe owner authorizes; the transaction's source account pays the rent for both\\nnew entries. Names are 1\\xe2\\x80\\x9320 bytes of a-z, 0-9 and '-';\\neach name and nonzero chain ID is mapped once and never changes; there is no count\\nlimit. This privilege lets chains be added after an immutable deployment, as in the\\nEVM mapped oracles. It cannot touch funds, proofs or existing maps, but it decides\\nwhich Axelar name authenticates an unmapped OIF chain ID; orders should only\\nreference mapped chains. Emits `ChainMapConfigured`.\\n\\n# Errors\\n`Configuration` for a renounced owner, invalid name, zero ID or an already-set name or ID.",
+      "name": "set_chain_map",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "AddressKind"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The owner set an immutable chain map.",
+      "lib": "",
+      "name": "ChainMapConfigured",
+      "prefix_topics": [
+        "chain_map_configured"
+      ],
+      "params": [
+        {
+          "doc": "Canonical lowercase Axelar name.",
+          "name": "name",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "Mapped OIF chain ID.",
+          "name": "chain_id",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "Remote adapter address format.",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "AddressKind"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove the owner permanently, freezing the set of chain maps.\\n\\nThe current owner authorizes. Emits `OwnershipTransferred` with no new owner.\\nReturns `Configuration` once ownership has been renounced.",
+      "name": "renounce_ownership",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer mapping ownership to `new_owner` in one step, as OpenZeppelin `Ownable`.\\n\\nThe current owner authorizes. Emits `OwnershipTransferred`. Returns\\n`Configuration` once ownership has been renounced.",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Require every concatenated 128-byte proof tuple to exist; empty input succeeds.\\n\\nEach tuple is `chain[32] || oracle[32] || application[32] || hash[32]`.\\nPermissionless; preserves proof TTL and maintains instance/code TTL. Returns\\n`Malformed` for a partial tuple or `NotProven` for any missing or expired member;\\nthe entire invocation fails if any check fails.",
+      "name": "efficient_require_proven",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proofs",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Address format used by an Axelar route; does not assign an OIF chain ID.",
+      "lib": "",
+      "name": "AddressKind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "20-byte EVM address right-aligned in a zero-padded 32-byte identifier.",
+            "name": "Evm"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Full 32-byte contract ID represented as canonical C-contract StrKey.",
+            "name": "Stellar"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Full 32-byte Solana program public key, encoded as canonical base58.",
+            "name": "Solana"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Provider-adapter errors, codes 1000\\xe2\\x80\\x931010; disjoint from settlement (2000s) and\\nrouter-adapter (3000s) codes as described on [`oif_common::Error`].",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "Invalid constructor settings, a renounced owner, or an invalid, zero or already-set chain map.",
+          "name": "Configuration",
+          "value": 1000
+        },
+        {
+          "doc": "The requested provider chain name or endpoint ID has no configured OIF mapping.",
+          "name": "UnknownChain",
+          "value": 1001
+        },
+        {
+          "doc": "Transport payload count, payload bytes or total message exceeds admitted shape.",
+          "name": "MessageLimit",
+          "value": 1002
+        },
+        {
+          "doc": "Message decoding failed or a query batch contains a partial 128-byte tuple.",
+          "name": "Malformed",
+          "value": 1003
+        },
+        {
+          "doc": "The source application does not attest all payloads in this adapter namespace.",
+          "name": "NotAttested",
+          "value": 1004
+        },
+        {
+          "doc": "At least one requested proof tuple is absent.",
+          "name": "NotProven",
+          "value": 1005
+        },
+        {
+          "doc": "Axelar gateway rejected approval for the exact message.",
+          "name": "NotApproved",
+          "value": 1006
+        },
+        {
+          "doc": "A native contract address or canonical remote adapter identifier is invalid.",
+          "name": "Address",
+          "value": 1007
+        },
+        {
+          "doc": "Fee budget is invalid: Axelar `Relayed` requires positive gas and `SelfRelay`\\nexactly zero; LayerZero requires a nonnegative fee.",
+          "name": "Fee",
+          "value": 1008
+        },
+        {
+          "doc": "LayerZero execution options differ from the supported positive-gas Type-3 shape.",
+          "name": "Options",
+          "value": 1009
+        },
+        {
+          "doc": "A LayerZero receive call supplied nonzero receiver value.",
+          "name": "Value",
+          "value": 1010
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "An absent tuple was recorded: on first delivery, and again on re-delivery after the\\ntemporary entry expired (unlike EVM, which emits once per tuple). Re-delivery of a\\nlive tuple emits nothing.",
+      "lib": "",
+      "name": "OutputProven",
+      "prefix_topics": [
+        "output_proven"
+      ],
+      "params": [
+        {
+          "doc": "Source OIF chain ID derived from the configured provider mapping.",
+          "name": "chain",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "Authenticated remote adapter ID, preserved without a peer whitelist.",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Raw source attester/application ID from the authenticated message.",
+          "name": "application",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Keccak-256 of one canonical proof payload.",
+          "name": "data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Ownership moved to `new_owner`, or was renounced when it is `None`.",
+      "lib": "",
+      "name": "OwnershipTransferred",
+      "prefix_topics": [
+        "ownership_transferred"
+      ],
+      "params": [
+        {
+          "doc": "Owner that authorized the change.",
+          "name": "previous_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "New owner; `None` freezes the set of chain maps.",
+          "name": "new_owner",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Explicit delivery choice; self-relaying skips gas-service payment, never gateway verification.",
+      "lib": "",
+      "name": "DeliveryMode",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Prepay provider delivery through the gas service.",
+            "name": "Relayed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Caller drives verification, gateway approval and execution at its own expense.",
+            "name": "SelfRelay"
+          }
+        }
+      ]
+    }
+  }
+]

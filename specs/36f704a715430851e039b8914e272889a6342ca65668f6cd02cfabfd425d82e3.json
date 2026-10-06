@@ -1,0 +1,752 @@
+[
+  {
+    "function_v0": {
+      "doc": "Deliver one output; return its stored `keccak256(solver || timestamp:u32)` record.\\n\\n`filler` authorizes the invocation and must approve this contract to pull the\\ncontext-priced amount. `solver` is the nonzero origin claimant ID, independent\\nof the payer. `output` is the full mandate; its context's recipient tag derives\\nthe native recipient.\\n`fill_deadline` is an inclusive Unix-second limit and must be the origin order's\\ncommitted deadline: the record lives only until `fill_deadline + NOT_FILLED_WINDOW`,\\nso an understated deadline lets anyone mint a valid non-fill once it lapses.\\n\\n# Effects\\nNew fills transfer to the recipient, store the record in temporary storage\\nextended to the fill horizon, and emit `OutputFilled`. Existing fills return the\\nold record without payment or another event, after all validation; retries extend\\nthe record to this call's horizon (never shortening it). Any failure rolls\\neverything back.\\n\\n# Errors\\nWrong domain, unsupported callback, invalid or exclusive context,\\nzero solver, arithmet",
+      "name": "fill",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "filler",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "solver",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "output",
+          "type_": {
+            "udt": {
+              "name": "MandateOutput"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fill_deadline",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A new fill record was written and paid. `payload` is the canonical fill\\ndescription (solver, order, timestamp and common payload); together with the\\nemitter's immutable configuration it reconstructs the complete mandate.\\n`final_amount` is the amount actually transferred after context pricing.",
+      "lib": "",
+      "name": "OutputFilled",
+      "prefix_topics": [
+        "output_filled"
+      ],
+      "params": [
+        {
+          "doc": "Opaque origin order ID; indexed topic.",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "Raw output-oracle ID committed by the mandate.",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Canonical packed proof; reconstruct mandate domain from the authenticated emitter.",
+          "name": "payload",
+          "type_": "bytes",
+          "location": "data"
+        },
+        {
+          "doc": "Actual token base units transferred after context pricing; may differ from mandate amount.",
+          "name": "final_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renew each concatenated 128-byte same-chain proof tuple to the full proof TTL, plus\\ninstance/code TTL. Permissionless. `Malformed` for a partial tuple; `Unproven` if any\\ntuple is absent or expired (an expired proof is re-created by `set_attestation`\\nwhile its fill record lives). A failure rolls back every renewal.",
+      "name": "maintain",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proofs",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "[`InputOracle::is_proven`](oif_common::interfaces::InputOracle::is_proven) over proofs recorded by `set_attestation`.\\n\\nReturns `false` for unknown or expired tuples. No data TTL renewal.",
+      "name": "is_proven",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "application",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A non-fill description was emitted for export. No marker is stored.",
+      "lib": "",
+      "name": "OutputNotFilled",
+      "prefix_topics": [
+        "output_not_filled"
+      ],
+      "params": [
+        {
+          "doc": "Opaque origin order ID; indexed topic.",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "Raw output-oracle ID committed by the mandate.",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Canonical packed proof; reconstruct mandate domain from the authenticated emitter.",
+          "name": "payload",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return whether every payload has a matching fill record or a valid non-fill.\\n\\n`oracle` is an explicit raw namespace: export adapters must pass their own contract\\nID and authenticate the remote chain/application. Accepts 0\\xe2\\x80\\x934 exact canonical\\npayloads of at most 684 bytes; an empty query returns `true`. Fill proofs compare\\nstored solver/timestamp; non-fills require no fill and\\n`committed deadline < now <= committed deadline + NOT_FILLED_WINDOW`. Outside that\\nwindow a non-fill is `false`: the fill record may have expired.\\n\\nOversized callback/context fields within a bounded proof are answered truthfully:\\nno such fill can exist, while non-fill follows the deadline. This differs from\\n`fill`/`emit_not_filled` admission. No authorization or data TTL renewal occurs;\\ninstance/code TTL is maintained. Malformed proofs, unknown proof prefixes, or bounds errors\\nabort rather than returning `false`.",
+      "name": "has_attested",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "payloads",
+          "type_": {
+            "vec": {
+              "element_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind the immutable OIF destination `chain_id` and expected Stellar `network_id`.\\n\\nReturns `WrongNetwork` if the network differs from the host ledger. Stores\\nconfiguration in instance storage and renews instance/code TTL. There is no\\nadministrator or mutable deployment configuration.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "network_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emit and return a canonical non-fill proof when\\n`fill_deadline < now <= fill_deadline + NOT_FILLED_WINDOW` and unfilled.\\n\\nPermissionless. Validates chain, settler and output byte bounds; it does not execute\\nor validate callback/context semantics. Emits `OutputNotFilled`, storing no marker.\\nAn early caller-supplied deadline cannot block fills. Consumers must reconstruct\\nthe proof using their committed deadline; a recorded fill even after that deadline\\nblocks emission. Maintains instance/code TTL, not fill TTL.\\n\\n# Errors\\n`DeadlineNotPassed`, `NotFilledWindowElapsed`, `AlreadyFilled`,\\ndomain/configuration or resource-bound errors.",
+      "name": "emit_not_filled",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "output",
+          "type_": {
+            "udt": {
+              "name": "MandateOutput"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fill_deadline",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bytes",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read the record for `order_id` and `keccak256(full packed MandateOutput)`.\\n\\nReturns `None` for an unknown pair, and once the temporary record has expired after\\n`fill_deadline + NOT_FILLED_WINDOW`; a known record commits solver and timestamp.\\nPermissionless; maintains instance/code TTL but not fill TTL. Configuration\\nerrors abort.",
+      "name": "get_fill_record",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "output_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": {
+                  "bytes_n": {
+                    "n": 32
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record a local input-oracle proof for an existing fill of `output`.\\n\\nPermissionless, as on EVM `setAttestation`. `output.oracle` must be this settler.\\nThe stored fill record must equal `keccak256(solver || timestamp:u32)`; the proof\\nis then `keccak(proof_tuple(output, keccak(fill payload)))`, a temporary entry\\nliving `TTL_TARGET` ledgers. Repeat calls are idempotent and restore the full\\nproof TTL, re-creating an expired proof while the fill record lives. No event is\\nemitted: `OutputFilled` already carries the payload. Only fills are attestable;\\nunfilled same-chain orders refund through the escrow's `refund` after `expires`.\\n\\n# Errors\\n`WrongChain`, `WrongSettler`, `ResourceLimit`, `WrongOracle`, `InvalidAttestation`,\\n`WireLimit` or configuration errors.",
+      "name": "set_attestation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "solver",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "output",
+          "type_": {
+            "udt": {
+              "name": "MandateOutput"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Decode the native destination a fill of `output` would pay.\\n\\nApplies the fill's chain, settler, byte-bound, callback and context-shape rules.\\nThe result is a G, C or M address according to the context's recipient tag. It\\ndoes not predict token, trustline, pricing-time or authorization outcomes.\\n\\n# Errors\\n`WrongChain`, `WrongSettler`, `ResourceLimit`, `CallbackUnsupported`,\\n`InvalidContext`, or configuration errors.",
+      "name": "resolve_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "output",
+          "type_": {
+            "udt": {
+              "name": "MandateOutput"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "muxed_address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically fill 1\\xe2\\x80\\x934 outputs of this settler for one order with the same filler and proposed solver.\\n\\nThe filler authorizes this call and grants token allowances as for `fill`.\\nThe first output's record must equal this call's `keccak256(solver || now:u32)`:\\na previous fill even by the same solver at another second loses competition.\\nLater filled outputs skip payment after validation. New outputs emit `OutputFilled`;\\nall writes/transfers roll back on failure. Fills and retries extend records to\\nthe fill horizon, as for `fill`.\\n\\n# Errors\\n`EmptyCollection`, `ResourceLimit`, `AlreadyFilled` for first-output competition,\\nor any domain, deadline, `FillHorizon`, context, token or authorization failure\\nfrom `fill`.",
+      "name": "fill_order_outputs",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "filler",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "solver",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "outputs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "MandateOutput"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fill_deadline",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "[`InputOracle::efficient_require_proven`](oif_common::interfaces::InputOracle::efficient_require_proven) over proofs recorded by `set_attestation`.\\n\\nEmpty input succeeds. No data TTL renewal.\\n\\n# Errors\\n`Malformed` for a partial 128-byte tuple, `Unproven` for any missing or expired proof.",
+      "name": "efficient_require_proven",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proofs",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Settlement errors, codes 2000\\xe2\\x80\\x932033, grouped by the phase that raises them.\\n\\nOracle adapters use 1000\\xe2\\x80\\x931010 and the router adapter 3000\\xe2\\x80\\x933009. All three ranges\\navoid the Stellar Asset Contract's 1\\xe2\\x80\\x9315 and the LI.FI router's codes below 1000:\\nnested failures propagate their callee's number, and a caller's typed client would\\notherwise decode, say, a missing trustline as a settlement error.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Truncated, trailing, or otherwise malformed packed encoding.",
+          "name": "Malformed",
+          "value": 2000
+        },
+        {
+          "doc": "Proof prefix does not identify a supported fill/non-fill encoding.",
+          "name": "UnknownDomain",
+          "value": 2001
+        },
+        {
+          "doc": "A variable length or count cannot fit its u16 wire field.",
+          "name": "WireLimit",
+          "value": 2002
+        },
+        {
+          "doc": "A collection or byte field exceeds the lower execution admission limit.",
+          "name": "ResourceLimit",
+          "value": 2003
+        },
+        {
+          "doc": "An unsigned wire amount cannot fit a nonnegative native i128 token amount.",
+          "name": "AmountRange",
+          "value": 2004
+        },
+        {
+          "doc": "Ledger time cannot be represented as a u32 wire timestamp.",
+          "name": "TimestampRange",
+          "value": 2005
+        },
+        {
+          "doc": "Constructor `network_id` differs from the host ledger.",
+          "name": "WrongNetwork",
+          "value": 2006
+        },
+        {
+          "doc": "An order or output does not name the configured local OIF chain.",
+          "name": "WrongChain",
+          "value": 2007
+        },
+        {
+          "doc": "An output does not name this output-settler contract.",
+          "name": "WrongSettler",
+          "value": 2008
+        },
+        {
+          "doc": "Address is not a supported G/C identity, or a contract address was required.",
+          "name": "AddressType",
+          "value": 2009
+        },
+        {
+          "doc": "Local output execution was requested with nonempty callback data.",
+          "name": "CallbackUnsupported",
+          "value": 2010
+        },
+        {
+          "doc": "Context kind or exact byte length is unsupported.",
+          "name": "InvalidContext",
+          "value": 2011
+        },
+        {
+          "doc": "Before exclusivity ends, proposed solver differs from the exclusive claimant.",
+          "name": "Exclusive",
+          "value": 2012
+        },
+        {
+          "doc": "The proposed origin solver identifier is all zero bytes.",
+          "name": "ZeroSolver",
+          "value": 2013
+        },
+        {
+          "doc": "Checked U256 pricing arithmetic overflowed.",
+          "name": "Arithmetic",
+          "value": 2014
+        },
+        {
+          "doc": "Fill time or supplied proof timestamp exceeds the allowed fill deadline.",
+          "name": "DeadlinePassed",
+          "value": 2015
+        },
+        {
+          "doc": "A strictly-after deadline condition for non-fill/refund has not been met.",
+          "name": "DeadlineNotPassed",
+          "value": 2016
+        },
+        {
+          "doc": "An existing fill blocks non-fill emission or wins first-output batch competition.",
+          "name": "AlreadyFilled",
+          "value": 2017
+        },
+        {
+          "doc": "An order or fill batch is empty where at least one item is required.",
+          "name": "EmptyCollection",
+          "value": 2018
+        },
+        {
+          "doc": "Two committed outputs have the same full packed-mandate identity.",
+          "name": "DuplicateOutput",
+          "value": 2019
+        },
+        {
+          "doc": "Opening does not satisfy now < fill_deadline <= expires.",
+          "name": "InvalidDeadlines",
+          "value": 2020
+        },
+        {
+          "doc": "Order ID is already retained, or settlement requires a deposited status.",
+          "name": "InvalidStatus",
+          "value": 2021
+        },
+        {
+          "doc": "No retained status exists for the supplied complete order commitment.",
+          "name": "UnknownOrder",
+          "value": 2022
+        },
+        {
+          "doc": "An input transfer did not increase escrow balance by exactly its amount.",
+          "name": "ShortCredit",
+          "value": 2023
+        },
+        {
+          "doc": "Number of solves differs from committed outputs or no first solver exists.",
+          "name": "InvalidProofCount",
+          "value": 2024
+        },
+        {
+          "doc": "Native claimant commitment differs from the first output solver.",
+          "name": "ClaimantMismatch",
+          "value": 2025
+        },
+        {
+          "doc": "The selected oracle does not prove the requested non-fill.",
+          "name": "Unproven",
+          "value": 2026
+        },
+        {
+          "doc": "Requested output index is outside the committed output vector.",
+          "name": "InvalidIndex",
+          "value": 2027
+        },
+        {
+          "doc": "Required immutable deployment configuration is missing.",
+          "name": "NotConfigured",
+          "value": 2028
+        },
+        {
+          "doc": "An input token amount is not strictly positive.",
+          "name": "InvalidInput",
+          "value": 2029
+        },
+        {
+          "doc": "Output oracle is not this settler, so it cannot attest locally.",
+          "name": "WrongOracle",
+          "value": 2030
+        },
+        {
+          "doc": "No stored fill record matches the supplied solver and timestamp.",
+          "name": "InvalidAttestation",
+          "value": 2031
+        },
+        {
+          "doc": "Retaining the fill record until `fill_deadline + NOT_FILLED_WINDOW` would exceed\\nthe host's maximum temporary-entry TTL; fill once the deadline is nearer.",
+          "name": "FillHorizon",
+          "value": 2032
+        },
+        {
+          "doc": "Non-fill emission was requested after `fill_deadline + NOT_FILLED_WINDOW`.",
+          "name": "NotFilledWindowElapsed",
+          "value": 2033
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The shared cross-chain output, field for field the reference `MandateOutput`.\\nEvery field is a wire identifier, so `token`, `settler` and `oracle` are raw\\n32-byte IDs and `recipient` is a raw 32-byte payload rather than a native\\n`Address`: the output may live on any chain and is hashed into proofs as-is.\\n`amount` is the original mandate amount; Dutch pricing never changes it.",
+      "lib": "",
+      "name": "MandateOutput",
+      "fields": [
+        {
+          "doc": "Original unsigned destination base-unit amount; context pricing does not alter the commitment.",
+          "name": "amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "Opaque destination callback bytes, at most 256; Stellar fills require empty bytes.",
+          "name": "callback_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Full unsigned 256-bit OIF destination chain ID.",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "Opaque fulfillment context, at most 256 bytes; local execution uses supported exact layouts.",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Raw output-oracle ID; the source adapter must attest in this exact namespace.",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination recipient identifier; Stellar uses the raw G key or C ID typed by the context tag.",
+          "name": "recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Raw destination output-settler/application ID.",
+          "name": "settler",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination token identifier; Stellar uses the raw SAC/C-contract ID.",
+          "name": "token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  }
+]

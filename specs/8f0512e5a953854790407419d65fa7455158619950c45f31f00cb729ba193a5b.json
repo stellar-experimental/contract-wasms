@@ -1,0 +1,765 @@
+[
+  {
+    "event_v0": {
+      "doc": "Deposit accepted. Carries the complete order so clients can recover the body\\nthey must resupply for every later settlement call.",
+      "lib": "",
+      "name": "Opened",
+      "prefix_topics": [
+        "opened"
+      ],
+      "params": [
+        {
+          "doc": "Commitment to the complete order, network, and this escrow; indexed topic.",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "Complete canonical body required for every later settlement call.",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit an order's inputs and return its domain-separated order ID.\\n\\n# Authorization\\n`order.user` authorizes `(order_id,)` and the exact token-transfer subcalls.\\nPersist canonical order XDR before submission: only status is stored on-chain.\\n\\n# Effects\\nRequires `now < fill_deadline <= expires`, 1\\xe2\\x80\\x934 inputs/outputs, positive i128 input\\namounts, unique output identities, local contract token/oracle addresses, and the\\nconfigured origin chain. Stores `Deposited`, renews data TTL, and emits `Opened`.\\nAll transfers and writes roll back if any input fails to credit its exact amount.\\n\\n# Errors\\nAdmission/domain errors, `InvalidDeadlines`, `DuplicateOutput`, `InvalidInput`,\\n`InvalidStatus` for a retained order ID, and `ShortCredit`; token/auth failures\\nalso abort. A nonce alone does not prevent opening a different complete order.",
+      "name": "open",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Inputs returned to the recorded user, by expiry or by a proven non-fill.",
+      "lib": "",
+      "name": "Refunded",
+      "prefix_topics": [
+        "refunded"
+      ],
+      "params": [
+        {
+          "doc": "Refunded order commitment; indexed topic. The recorded user receives all inputs.",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Inputs released to `destination` on behalf of the authorizing `claimant`.",
+      "lib": "",
+      "name": "Finalised",
+      "prefix_topics": [
+        "finalised"
+      ],
+      "params": [
+        {
+          "doc": "Settled order commitment; indexed topic.",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "Authorized native identity committed by the first output solver.",
+          "name": "claimant",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Native address receiving every escrowed input.",
+          "name": "destination",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return all inputs to the recorded user after `now > order.expires`.\\n\\nPermissionless: only transaction fees need a payer; the payout address cannot be\\nchanged. Resupply the exact order body. Transitions `Deposited` to `Refunded` and\\nemits `Refunded`; a token failure rolls back the entire call. Does not renew data TTL.\\n\\n# Errors\\n`UnknownOrder`, `InvalidStatus`, or `DeadlineNotPassed`, plus token failures.\\nDeadline comparison uses the full u64 ledger time, including beyond the u32 wire range.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Release all inputs to `destination` after every committed output is proven filled.\\n\\n`solves` supplies one solver/timestamp per output in order; solvers may differ.\\nThe first solver must equal the native `claimant` address commitment.\\n\\n# Authorization\\nThe claimant authorizes `(order_id, solves, claimant, destination)`; the actual\\ninvocation still supplies the full original order. Each timestamp must be at or\\nbefore `fill_deadline`; the selected input oracle authenticates every proof.\\n\\n# Effects\\nTransitions `Deposited` to `Claimed` before transfers and emits `Finalised`.\\nA failure rolls back the transition and all payouts. Data TTL is not renewed.\\nClaims remain available after expiry and can race a permissionless refund.\\n\\n# Errors\\n`UnknownOrder`, `InvalidStatus`, `InvalidProofCount`, `ClaimantMismatch`,\\n`DeadlinePassed`, invalid addresses, or a downstream oracle/token/auth failure.",
+      "name": "finalise",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "solves",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Solve"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "claimant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renew an existing order entry, including terminal status, and instance/code TTL.\\n\\nPermissionless; returns `true` if the entry exists and `false` for an unknown ID.\\nUses the common capped renewal policy. Restore archived entries before invoking;\\nmaintenance does not restore them. Configuration errors abort the call.",
+      "name": "maintain",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read retained status, or `None` for an unknown order commitment.\\n\\nPermissionless; maintains instance/code TTL but not the order entry. Numeric\\nstates are `Deposited = 0`, `Claimed = 1`, `Refunded = 2`. Terminal states remain\\nas replay evidence. Archived state must be restored; it is not an unknown order.\\nConfiguration errors or host archival failures abort the call.",
+      "name": "order_status",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": {
+                  "udt": {
+                    "name": "OrderStatus"
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind this deployment to its immutable OIF `chain_id` and Stellar `network_id`.\\n\\n# Errors\\nReturns `WrongNetwork` unless `network_id` equals the host ledger network ID.\\nStores configuration in instance storage and maintains instance/code TTL.\\nNo administrator or subsequent configuration entrypoint exists.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "network_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the order commitment for this network and escrow without depositing funds.\\n\\nThe preimage is `\"OIF.Stellar.Order.v1\" || network[32] || escrow[32] || Order.to_xdr()`.\\nChecks bounded nonempty collections and output byte lengths; it does not perform\\nall `open` admission checks. No user authorization is required. Maintains instance/code TTL.\\n\\n# Errors\\n`EmptyCollection`, `ResourceLimit`, or configuration errors.",
+      "name": "order_identifier",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open `order`, pay its inputs to `destination`, run the solver hook, then require fills.\\n\\nMirrors EVM `openForAndFinalise`: the solver may fund outputs from the inputs it\\njust received. When `call` is nonempty, `destination` must be a contract\\nimplementing `InputCallback::order_finalised(inputs, call)`; inputs are passed\\nunmodified. Every output is then checked against the input oracle with\\n`Solve { solver: commitment(claimant), timestamp: now }`. There is no same-chain\\nrestriction; the oracle check is the only gate. Soroban forbids re-entry, so\\n`destination` must not be this escrow or the invoking contract, and nested atomic\\nopens on the same escrow are impossible.\\n\\n# Authorization\\n`order.user` authorizes `(order_id,)` and the token subcalls, as for `open`;\\n`claimant` authorizes `(order_id, claimant, destination, call)`.\\n\\n# Effects\\nEmits `Opened` then `Finalised`; ends `Claimed`. Any failure, including an\\nunproven output, rolls back the whole invocation.\\n\\n# Errors\\n`open` admission errors, `AddressType`, `Unpr",
+      "name": "open_and_finalise",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "claimant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "call",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return inputs to the recorded user when one committed output is proven unfilled.\\n\\n`output_index` is zero-based. Requires `now > order.fill_deadline` and a proof\\nreconstructed with the original deadline and output domain, not a caller-chosen\\nreplacement. No user authorization is required; resupply the exact order body.\\nTransitions `Deposited` to `Refunded` and emits `Refunded`; token failures roll back\\nstate and payouts. Does not renew data TTL.\\n\\n# Errors\\n`UnknownOrder`, `InvalidStatus`, `DeadlineNotPassed`, `InvalidIndex`, or `Unproven`,\\nplus downstream oracle/token failures.",
+      "name": "refund_on_non_fill",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order",
+          "type_": {
+            "udt": {
+              "name": "Order"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "output_index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Settlement errors, codes 2000\\xe2\\x80\\x932033, grouped by the phase that raises them.\\n\\nOracle adapters use 1000\\xe2\\x80\\x931010 and the router adapter 3000\\xe2\\x80\\x933009. All three ranges\\navoid the Stellar Asset Contract's 1\\xe2\\x80\\x9315 and the LI.FI router's codes below 1000:\\nnested failures propagate their callee's number, and a caller's typed client would\\notherwise decode, say, a missing trustline as a settlement error.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Truncated, trailing, or otherwise malformed packed encoding.",
+          "name": "Malformed",
+          "value": 2000
+        },
+        {
+          "doc": "Proof prefix does not identify a supported fill/non-fill encoding.",
+          "name": "UnknownDomain",
+          "value": 2001
+        },
+        {
+          "doc": "A variable length or count cannot fit its u16 wire field.",
+          "name": "WireLimit",
+          "value": 2002
+        },
+        {
+          "doc": "A collection or byte field exceeds the lower execution admission limit.",
+          "name": "ResourceLimit",
+          "value": 2003
+        },
+        {
+          "doc": "An unsigned wire amount cannot fit a nonnegative native i128 token amount.",
+          "name": "AmountRange",
+          "value": 2004
+        },
+        {
+          "doc": "Ledger time cannot be represented as a u32 wire timestamp.",
+          "name": "TimestampRange",
+          "value": 2005
+        },
+        {
+          "doc": "Constructor `network_id` differs from the host ledger.",
+          "name": "WrongNetwork",
+          "value": 2006
+        },
+        {
+          "doc": "An order or output does not name the configured local OIF chain.",
+          "name": "WrongChain",
+          "value": 2007
+        },
+        {
+          "doc": "An output does not name this output-settler contract.",
+          "name": "WrongSettler",
+          "value": 2008
+        },
+        {
+          "doc": "Address is not a supported G/C identity, or a contract address was required.",
+          "name": "AddressType",
+          "value": 2009
+        },
+        {
+          "doc": "Local output execution was requested with nonempty callback data.",
+          "name": "CallbackUnsupported",
+          "value": 2010
+        },
+        {
+          "doc": "Context kind or exact byte length is unsupported.",
+          "name": "InvalidContext",
+          "value": 2011
+        },
+        {
+          "doc": "Before exclusivity ends, proposed solver differs from the exclusive claimant.",
+          "name": "Exclusive",
+          "value": 2012
+        },
+        {
+          "doc": "The proposed origin solver identifier is all zero bytes.",
+          "name": "ZeroSolver",
+          "value": 2013
+        },
+        {
+          "doc": "Checked U256 pricing arithmetic overflowed.",
+          "name": "Arithmetic",
+          "value": 2014
+        },
+        {
+          "doc": "Fill time or supplied proof timestamp exceeds the allowed fill deadline.",
+          "name": "DeadlinePassed",
+          "value": 2015
+        },
+        {
+          "doc": "A strictly-after deadline condition for non-fill/refund has not been met.",
+          "name": "DeadlineNotPassed",
+          "value": 2016
+        },
+        {
+          "doc": "An existing fill blocks non-fill emission or wins first-output batch competition.",
+          "name": "AlreadyFilled",
+          "value": 2017
+        },
+        {
+          "doc": "An order or fill batch is empty where at least one item is required.",
+          "name": "EmptyCollection",
+          "value": 2018
+        },
+        {
+          "doc": "Two committed outputs have the same full packed-mandate identity.",
+          "name": "DuplicateOutput",
+          "value": 2019
+        },
+        {
+          "doc": "Opening does not satisfy now < fill_deadline <= expires.",
+          "name": "InvalidDeadlines",
+          "value": 2020
+        },
+        {
+          "doc": "Order ID is already retained, or settlement requires a deposited status.",
+          "name": "InvalidStatus",
+          "value": 2021
+        },
+        {
+          "doc": "No retained status exists for the supplied complete order commitment.",
+          "name": "UnknownOrder",
+          "value": 2022
+        },
+        {
+          "doc": "An input transfer did not increase escrow balance by exactly its amount.",
+          "name": "ShortCredit",
+          "value": 2023
+        },
+        {
+          "doc": "Number of solves differs from committed outputs or no first solver exists.",
+          "name": "InvalidProofCount",
+          "value": 2024
+        },
+        {
+          "doc": "Native claimant commitment differs from the first output solver.",
+          "name": "ClaimantMismatch",
+          "value": 2025
+        },
+        {
+          "doc": "The selected oracle does not prove the requested non-fill.",
+          "name": "Unproven",
+          "value": 2026
+        },
+        {
+          "doc": "Requested output index is outside the committed output vector.",
+          "name": "InvalidIndex",
+          "value": 2027
+        },
+        {
+          "doc": "Required immutable deployment configuration is missing.",
+          "name": "NotConfigured",
+          "value": 2028
+        },
+        {
+          "doc": "An input token amount is not strictly positive.",
+          "name": "InvalidInput",
+          "value": 2029
+        },
+        {
+          "doc": "Output oracle is not this settler, so it cannot attest locally.",
+          "name": "WrongOracle",
+          "value": 2030
+        },
+        {
+          "doc": "No stored fill record matches the supplied solver and timestamp.",
+          "name": "InvalidAttestation",
+          "value": 2031
+        },
+        {
+          "doc": "Retaining the fill record until `fill_deadline + NOT_FILLED_WINDOW` would exceed\\nthe host's maximum temporary-entry TTL; fill once the deadline is nearer.",
+          "name": "FillHorizon",
+          "value": 2032
+        },
+        {
+          "doc": "Non-fill emission was requested after `fill_deadline + NOT_FILLED_WINDOW`.",
+          "name": "NotFilledWindowElapsed",
+          "value": 2033
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One escrowed input. Inputs are always local, so `token` is the native contract\\naddress the escrow calls directly; only outputs use raw wire identifiers.\\n`amount` must convert to a positive `i128`.",
+      "lib": "",
+      "name": "Input",
+      "fields": [
+        {
+          "doc": "Unsigned token base units; escrow requires 1 through i128::MAX and exact credit.",
+          "name": "amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "Native local token contract address, including the XLM SAC for native XLM.",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A Stellar-origin order. Its opaque ID is the Keccak of a versioned domain, the\\nnetwork ID, the escrow contract ID and this struct's canonical XDR, so every\\nfield is committed and settlement calls must resupply the exact body.\\n`fill_deadline` bounds output fills and proof timestamps (inclusive);\\n`expires` is the earliest second after which an unconditional refund is allowed\\n(`now > expires`). Both are Unix seconds. `input_oracle` is the local contract\\nconsulted for remote proofs; the user chooses and trusts it.",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "Permissionless expiry refunds start strictly after this absolute Unix second.",
+          "name": "expires",
+          "type_": "u32"
+        },
+        {
+          "doc": "Inclusive latest valid fill timestamp in absolute Unix seconds.",
+          "name": "fill_deadline",
+          "type_": "u32"
+        },
+        {
+          "doc": "User-selected local proof oracle; must be a C-contract and is a trust dependency.",
+          "name": "input_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "Ordered 1\\xe2\\x80\\x934 local inputs; exact vector contents are part of the order ID.",
+          "name": "inputs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Input"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "User-chosen bytes committed in this order; not a global nonce lock.",
+          "name": "nonce",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "OIF origin chain ID; must match input escrow configuration.",
+          "name": "origin_chain",
+          "type_": "u256"
+        },
+        {
+          "doc": "Ordered 1\\xe2\\x80\\x934 unique full mandates; the first output determines settlement ownership.",
+          "name": "outputs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "MandateOutput"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Native depositor, authorizer and exclusive refund recipient.",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Who filled one output and when, as recorded on the output chain. `solver` is\\nthe origin-side claimant identifier proposed at fill time, independent of the\\naccount that paid the tokens; for a Stellar claimant it is an address commitment.",
+      "lib": "",
+      "name": "Solve",
+      "fields": [
+        {
+          "doc": "Opaque origin claimant ID; Stellar claimants use typed native address commitments.",
+          "name": "solver",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Source fill time in Unix seconds; must not exceed the committed fill deadline.",
+          "name": "timestamp",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Persistent order state. The only transitions are `Deposited -> Claimed` and\\n`Deposited -> Refunded`; terminal entries are retained as replay evidence.",
+      "lib": "",
+      "name": "OrderStatus",
+      "cases": [
+        {
+          "doc": "Inputs are held and may be claimed or refunded according to the order.",
+          "name": "Deposited",
+          "value": 0
+        },
+        {
+          "doc": "Inputs were released to the authorized claimant destination; terminal replay evidence.",
+          "name": "Claimed",
+          "value": 1
+        },
+        {
+          "doc": "Inputs were returned to the recorded user; terminal replay evidence.",
+          "name": "Refunded",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The shared cross-chain output, field for field the reference `MandateOutput`.\\nEvery field is a wire identifier, so `token`, `settler` and `oracle` are raw\\n32-byte IDs and `recipient` is a raw 32-byte payload rather than a native\\n`Address`: the output may live on any chain and is hashed into proofs as-is.\\n`amount` is the original mandate amount; Dutch pricing never changes it.",
+      "lib": "",
+      "name": "MandateOutput",
+      "fields": [
+        {
+          "doc": "Original unsigned destination base-unit amount; context pricing does not alter the commitment.",
+          "name": "amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "Opaque destination callback bytes, at most 256; Stellar fills require empty bytes.",
+          "name": "callback_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Full unsigned 256-bit OIF destination chain ID.",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "Opaque fulfillment context, at most 256 bytes; local execution uses supported exact layouts.",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Raw output-oracle ID; the source adapter must attest in this exact namespace.",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination recipient identifier; Stellar uses the raw G key or C ID typed by the context tag.",
+          "name": "recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Raw destination output-settler/application ID.",
+          "name": "settler",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination token identifier; Stellar uses the raw SAC/C-contract ID.",
+          "name": "token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  }
+]

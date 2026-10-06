@@ -1,0 +1,348 @@
+[
+  {
+    "function_v0": {
+      "doc": "Open a one-input/one-output escrow order using the actual post-fee/source-swap amount.\\n\\n`amount` is positive source-token base units, argument index 2 excluding `Env`;\\nrouter registration uses `amount_arg_index = 2`, `amount_field = None`.\\n`terms` supplies the signed destination floor and fixed-point quote multiplier.\\n\\n# Authorization and effects\\nThe user authorizes these full arguments plus escrow's order-ID commitment and\\nexact transfer subcalls. Never transfers funds or authorizes on the user's behalf.\\nCalls escrow `open`, emits `IntentOpened`, and returns the canonical order ID.\\nAny error rolls back the whole transaction, including router fees/source swaps.\\n\\n# Errors\\nQuote/conversion errors from `build_order`, configuration errors, or\\nescrow/token/auth failures. Changed realized amounts require new authorization.\\nThe router ignores the return; recover the full order from escrow's `Opened` event.",
+      "name": "open",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "terms",
+          "type_": {
+            "udt": {
+              "name": "IntentTerms"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AdapterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Signed one-output quote terms. All deadlines are absolute and amounts use token base units.",
+      "lib": "",
+      "name": "IntentTerms",
+      "fields": [
+        {
+          "doc": "Unconditional refund becomes available strictly after this Unix second.",
+          "name": "expires",
+          "type_": "u32"
+        },
+        {
+          "doc": "Inclusive fill deadline in absolute Unix seconds.",
+          "name": "fill_deadline",
+          "type_": "u32"
+        },
+        {
+          "doc": "Local input oracle the escrow will consult for proofs.",
+          "name": "input_oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "User-selected order nonce; only the complete resulting order ID protects replay.",
+          "name": "nonce",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Output base units per input base unit, scaled by 10^18; includes decimal differences.",
+          "name": "output_amount_multiplier",
+          "type_": "u128"
+        },
+        {
+          "doc": "Committed output fields; amount is the minimum acceptable destination amount.",
+          "name": "output_floor",
+          "type_": {
+            "udt": {
+              "name": "MandateOutput"
+            }
+          }
+        },
+        {
+          "doc": "Router correlation ID; not globally unique and not an order commitment.",
+          "name": "tracking_id",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Adapter errors, codes 3000\\xe2\\x80\\x933009. Escrow (2000s), token and authorization failures\\nmay also abort; the ranges are disjoint as described on [`oif_common::Error`].",
+      "lib": "",
+      "name": "AdapterError",
+      "cases": [
+        {
+          "doc": "Deposit amount is not positive.",
+          "name": "InvalidInput",
+          "value": 3000
+        },
+        {
+          "doc": "Multiplier, output floor or calculated output is zero.",
+          "name": "InvalidOutput",
+          "value": 3001
+        },
+        {
+          "doc": "Calculated output falls below the signed destination floor.",
+          "name": "OutputBelowMinimum",
+          "value": 3002
+        },
+        {
+          "doc": "Checked U256 multiplication or division failed.",
+          "name": "Arithmetic",
+          "value": 3003
+        },
+        {
+          "doc": "Configured escrow is not a native C-contract address.",
+          "name": "AddressType",
+          "value": 3004
+        },
+        {
+          "doc": "Constructor `network_id` differs from the current ledger.",
+          "name": "WrongNetwork",
+          "value": 3005
+        },
+        {
+          "doc": "Constructor configuration is unavailable.",
+          "name": "NotConfigured",
+          "value": 3006
+        },
+        {
+          "doc": "Callback or context exceeds the shared admission bound.",
+          "name": "ResourceLimit",
+          "value": 3007
+        },
+        {
+          "doc": "A local-chain output requests a nonempty callback.",
+          "name": "CallbackUnsupported",
+          "value": 3008
+        },
+        {
+          "doc": "A local-chain output amount does not fit nonnegative i128.",
+          "name": "AmountRange",
+          "value": 3009
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Correlates router tracking to an escrow order; join with escrow `Opened` in the same invocation.",
+      "lib": "",
+      "name": "IntentOpened",
+      "prefix_topics": [
+        "intent_opened"
+      ],
+      "params": [
+        {
+          "doc": "Signed quote correlation ID; indexed topic, not globally unique.",
+          "name": "tracking_id",
+          "type_": "i128",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Canonical escrow order commitment; indexed topic.",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "Authorized depositor and eventual refund recipient.",
+          "name": "user",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Configured escrow emitting the full recoverable order.",
+          "name": "escrow",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable escrow deployment domain; returned by `get_config`.",
+      "lib": "",
+      "name": "AdapterConfig",
+      "fields": [
+        {
+          "doc": "OIF origin chain ID; must match the configured escrow.",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "Native input escrow contract called by this adapter.",
+          "name": "escrow",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return immutable escrow and chain configuration without user authorization.\\n\\nMaintains instance/code TTL. Returns `NotConfigured` when configuration is missing.\\nThe adapter stores no per-order data.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "AdapterConfig"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AdapterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind the immutable native `escrow`, OIF origin `chain_id`, and Stellar `network_id`.\\n\\nNo admin or later configuration path exists. `AddressType` rejects a non-contract\\nescrow; `WrongNetwork` rejects a mismatching ledger network. The constructor does\\nnot query escrow's chain configuration: choose matching values or escrow will\\nreject orders. Stores instance configuration and maintains instance/code TTL.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "escrow",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "network_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "AdapterError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The shared cross-chain output, field for field the reference `MandateOutput`.\\nEvery field is a wire identifier, so `token`, `settler` and `oracle` are raw\\n32-byte IDs and `recipient` is a raw 32-byte payload rather than a native\\n`Address`: the output may live on any chain and is hashed into proofs as-is.\\n`amount` is the original mandate amount; Dutch pricing never changes it.",
+      "lib": "",
+      "name": "MandateOutput",
+      "fields": [
+        {
+          "doc": "Original unsigned destination base-unit amount; context pricing does not alter the commitment.",
+          "name": "amount",
+          "type_": "u256"
+        },
+        {
+          "doc": "Opaque destination callback bytes, at most 256; Stellar fills require empty bytes.",
+          "name": "callback_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Full unsigned 256-bit OIF destination chain ID.",
+          "name": "chain_id",
+          "type_": "u256"
+        },
+        {
+          "doc": "Opaque fulfillment context, at most 256 bytes; local execution uses supported exact layouts.",
+          "name": "context",
+          "type_": "bytes"
+        },
+        {
+          "doc": "Raw output-oracle ID; the source adapter must attest in this exact namespace.",
+          "name": "oracle",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination recipient identifier; Stellar uses the raw G key or C ID typed by the context tag.",
+          "name": "recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Raw destination output-settler/application ID.",
+          "name": "settler",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Destination token identifier; Stellar uses the raw SAC/C-contract ID.",
+          "name": "token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  }
+]
