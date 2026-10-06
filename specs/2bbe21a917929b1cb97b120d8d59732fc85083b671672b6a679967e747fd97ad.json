@@ -1,0 +1,206 @@
+[
+  {
+    "event_v0": {
+      "doc": "Emitted when a SEP-41 token is swept from the port.",
+      "lib": "",
+      "name": "SweptSep41",
+      "prefix_topics": [
+        "swept_sep41"
+      ],
+      "params": [
+        {
+          "doc": "Recipient of the swept funds (event topic).",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Amount swept.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when native XLM is swept from the port.",
+      "lib": "",
+      "name": "SweptNative",
+      "prefix_topics": [
+        "swept_native"
+      ],
+      "params": [
+        {
+          "doc": "Recipient of the swept funds (event topic).",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Amount swept.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the off-ramp address is rotated.",
+      "lib": "",
+      "name": "OffRampChanged",
+      "prefix_topics": [
+        "off_ramp_changed"
+      ],
+      "params": [
+        {
+          "doc": "New off-ramp address.",
+          "name": "new_address",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the port's balance of `token_address`.\\n\\n# Arguments\\n\\n* `token_address` - Token contract address to query.\\n\\n# Returns\\n\\nBalance held by this port.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces the Wasm of this port with `new_wasm_hash`.\\n\\nOnly the admin (the factory that deployed this port) can call this:\\nwhen invoked from the factory, its `require_auth` is satisfied\\nautomatically as the invoking contract. The new Wasm must be already\\nuploaded to the ledger. The network emits the `executable_update`\\nsystem event automatically. The constructor is NOT re-run after an\\nupgrade, so storage migrations require a separate `migrate` step.\\n\\n# Arguments\\n\\n* `new_wasm_hash` - Wasm hash of the new port implementation.\\n\\n# Panics\\n\\nPanics if the invocation is not authorized by the admin, or if\\n`new_wasm_hash` is not present in the ledger.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the admin address of the port.\\n\\n# Returns\\n\\nAdmin address (the factory) authorized to upgrade the port.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweeps `amount` of a SEP-41 token from the port to `to`.\\n\\n`token_address` must expose the SEP-41 token interface. Emits\\n`SweptSep41`.\\n\\n# Arguments\\n\\n* `token_address` - SEP-41 token contract address to sweep.\\n* `to` - Recipient of the swept funds.\\n* `amount` - Amount to sweep.\\n\\n# Panics\\n\\nPanics if the invocation is not authorized by the current off-ramp, or\\nif the token transfer fails (insufficient balance, negative amount,\\n`token_address` is not a token, ...).",
+      "name": "sweep_sep41",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweeps native XLM from the port to `to`.\\n\\nEmits `SweptNative`.\\n\\n# Arguments\\n\\n* `to` - Recipient of the swept funds.\\n* `amount` - Amount to sweep.\\n\\n# Panics\\n\\nPanics if the invocation is not authorized by the current off-ramp,\\nor if the token transfer fails (insufficient balance, negative\\namount, ...).",
+      "name": "sweep_native",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the port.\\n\\n# Arguments\\n\\n* `admin` - Admin address (the deploying factory), i.e. the only\\nupgrade path of the port.\\n* `off_ramp` - Off-ramp address authorized to sweep funds and rotate\\nthe off-ramp.\\n* `xlm` - XLM token (SAC) contract address held by the port.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "off_ramp",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current off-ramp address.\\n\\n# Returns\\n\\nOff-ramp address authorized to sweep funds and rotate the off-ramp.",
+      "name": "get_off_ramp_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces the off-ramp address.\\n\\nEmits `OffRampChanged`.\\n\\n# Arguments\\n\\n* `off_ramp` - New off-ramp address.\\n\\n# Panics\\n\\nPanics if the invocation is not authorized by the current off-ramp.",
+      "name": "change_off_ramp_address",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "off_ramp",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

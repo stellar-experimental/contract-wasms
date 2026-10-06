@@ -1,0 +1,994 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the keeper is rotated.",
+      "lib": "",
+      "name": "SetKeeperEvent",
+      "prefix_topics": [
+        "set_keeper_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_keeper",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits `amount` of the underlying, supplies it to Kinetic, and mints shares.\\nReturns the vault's underlying-denominated balance after the deposit.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claims one reward asset (named in `data`) and reinvests it. Keeper-gated.\\n\\nReward selection is supplied per call via `data` \\xe2\\x80\\x94 an XDR-encoded\\n[`HarvestInstruction`] \\xe2\\x80\\x94 instead of being fixed at construction, so the immutable\\ncontract can compound reward assets Kinetic adds to the market over time. One reward\\nper call: the keeper enumerates the market's reward list off-chain and calls `harvest`\\nonce per active token (see design doc \\xc2\\xa712).\\n\\n- `None` / empty `data` => no-op (nothing to claim this call).\\n- Present-but-malformed `data` => `InvalidArgument` (a keeper encoding mistake; we\\nrefuse rather than proceed).\\n- Nothing accrued for the named reward => no-op (don't revert \\xe2\\x80\\x94 keeps keeper txs cheap).",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws `amount` of underlying from Kinetic to `to`, burning the matching shares.\\nReturns the vault's remaining underlying-denominated balance.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a depositor is added to (`allowed = true`) or removed from\\n(`allowed = false`) the deposit allowlist.",
+      "lib": "",
+      "name": "SetDepositorEvent",
+      "prefix_topics": [
+        "set_depositor_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single reward-harvest instruction, supplied by the keeper in `harvest`'s `data`\\npayload (XDR-encoded). Kinetic markets carry an evolving *list* of reward assets and\\nthis contract is not upgradable, so the reward token \\xe2\\x80\\x94 plus its slippage floor and swap\\nroute \\xe2\\x80\\x94 is chosen per call rather than fixed in `Config`. One reward per `harvest`; the\\nkeeper calls `harvest` once per active reward token it reads from Kinetic's incentives\\nlist. See design doc \\xc2\\xa712.",
+      "lib": "",
+      "name": "HarvestInstruction",
+      "fields": [
+        {
+          "doc": "Minimum acceptable output of the `reward_token -> asset` swap (slippage floor).",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Swap route. Empty => the default direct hop `[reward_token, asset]`; a longer path\\nhandles reward assets with no direct pool to `asset` (e.g. `SOLV -> XLM -> USDC`).",
+          "name": "path",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Reward asset to claim and compound this call.",
+          "name": "reward_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_keeper",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotates the keeper. Both parties must sign: the current keeper authorizes handing\\nthe role over, and the NEW keeper proves the address is real and under its control \\xe2\\x80\\x94\\na typo'd or inaccessible address would otherwise permanently brick every\\nkeeper-gated method (this contract is not upgradable).",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a depositor *code hash* is added to (`allowed = true`) or removed from\\n(`allowed = false`) the wasm-hash deposit allowlist.",
+      "lib": "",
+      "name": "SetAllowedHashEvent",
+      "prefix_topics": [
+        "set_allowed_hash_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether `depositor` is currently on the address deposit allowlist.",
+      "name": "is_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the strategy.\\n\\n`init_args` (4, in order):\\n1. `kinetic_router: Address`\\n2. `incentives: Address`\\n3. `swap_router: Address` \\xe2\\x80\\x94 AMM router for reward -> asset swaps (Soroswap today)\\n4. `keeper: Address` \\xe2\\x80\\x94 the only address allowed to harvest\\n\\nThe reward token is NOT fixed here: it is chosen per-`harvest` via the `data`\\npayload (see `harvest` and design doc \\xc2\\xa712), so the immutable contract can reach\\nreward assets Kinetic adds to the market after deployment.\\n\\nThe aToken address is resolved from the router for `asset` and cached in `Config`.\\n\\nConstruction is the only place this contract panics on bad input: a malformed\\nor short `init_args` aborts deployment via `.expect(...)` (each names the missing\\narg). This is deployment-time and one-shot \\xe2\\x80\\x94 there is no post-deploy code path\\nthat can reach these panics \\xe2\\x80\\x94 so returning a `Result` here buys nothing.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "init_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds `depositor` to the deposit allowlist. Keeper-gated; idempotent. The allowlist\\nstarts empty at construction, so the keeper must add the DeFindex vault before it\\ncan deposit.",
+      "name": "add_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether `hash` is currently on the wasm-hash deposit allowlist.",
+      "name": "is_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds a contract `hash` (wasm code hash) to the deposit allowlist. Keeper-gated;\\nidempotent. Any contract whose code hash matches may then deposit, regardless of its\\naddress \\xe2\\x80\\x94 bless a vault's wasm once and every instance of it is allowed. Because vault\\ncode hashes are known at build/upload time, the keeper can allowlist a hash before any\\nsuch vault is deployed. Note: a vault that upgrades its wasm changes hash and must be\\nre-blessed.",
+      "name": "add_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes `depositor` from the deposit allowlist. Keeper-gated; idempotent. This blocks\\nonly *future* deposits from `depositor` \\xe2\\x80\\x94 it never affects its ability to withdraw\\nfunds it already holds.",
+      "name": "remove_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Harvested profit still locked out of the share price at the current ledger time.",
+      "name": "get_locked_profit",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the keeper retunes the harvest-profit vesting window.",
+      "lib": "",
+      "name": "VestingWindowUpdatedEvent",
+      "prefix_topics": [
+        "vesting_window_updated_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_seconds",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_seconds",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current harvest-profit vesting window in seconds.",
+      "name": "get_vesting_window",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retunes the harvest-profit vesting window. Keeper-gated; bounded to\\n[`MIN_VESTING_SECONDS`, `MAX_VESTING_SECONDS`]. Keep the window at least as long as\\nthe harvest cadence \\xe2\\x80\\x94 shorter, and a sniper can wait a window out between harvests\\nand still capture the full vested amount right before the next one.",
+      "name": "set_vesting_window",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes a contract `hash` from the deposit allowlist. Keeper-gated; idempotent. Blocks\\nonly *future* deposits from contracts running that code \\xe2\\x80\\x94 never affects withdrawals.",
+      "name": "remove_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "configuration",
+          "type_": {
+            "udt": {
+              "name": "ReserveConfiguration"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "current_liquidity_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "current_variable_borrow_rate",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "debt_token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "interest_rate_strategy_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "last_update_timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "variable_borrow_index",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReserveConfiguration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "data_high",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "data_low",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable strategy configuration, set once at construction.\\n\\nNote there is no `b_rate` / `total_b_tokens` bookkeeping (unlike the Blend reference):\\nKinetic's aToken is a live-value token, so NAV is read directly from it.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Underlying asset managed by the strategy (e.g. USDC).",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "aToken for `asset`, resolved from the router at construction.",
+          "name": "atoken",
+          "type_": "address"
+        },
+        {
+          "doc": "Kinetic incentives controller \\xe2\\x80\\x94 reward claiming.",
+          "name": "incentives",
+          "type_": "address"
+        },
+        {
+          "doc": "Kinetic router \\xe2\\x80\\x94 supply / withdraw / index reads.",
+          "name": "kinetic_router",
+          "type_": "address"
+        },
+        {
+          "doc": "AMM router used to swap a reward token -> `asset` on harvest. Venue-agnostic; see\\n`swap.rs`. Currently a Soroswap router.\\n\\nNote: the reward token(s) are NOT fixed in config \\xe2\\x80\\x94 Kinetic markets carry an\\nevolving *list* of reward assets, so the keeper names which reward to claim +\\ncompound per `harvest` call via the `data` payload (see `lib.rs::harvest` and\\ndesign doc \\xc2\\xa712). This keeps the immutable contract able to reach reward assets\\nadded to the market after deployment.",
+          "name": "swap_router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Last observed liquidity index \\xe2\\x80\\x94 monotonicity tripwire (defense-in-depth).",
+            "name": "LastIndex"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Keeper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Harvested profit still vesting (locked out of the share price) as of `LockStart`.",
+            "name": "LockedProfit"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Timestamp of the harvest that (re)started the current vesting window.",
+            "name": "LockStart"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Length of the vesting window in seconds. Keeper-tunable within bounds; must stay at\\nleast as long as the harvest cadence or a sniper can wait a window out between\\nharvests and still capture the full vested amount.",
+            "name": "VestingSeconds"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "VaultPos",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlisted depositor by exact address (a specific DeFindex vault). Absent = not\\nallowed. See also `AllowedHash` for code-identity allowlisting.",
+            "name": "Depositor",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlisted depositor by contract *code hash*: any contract whose wasm hash matches\\nmay deposit, regardless of its address. Absent = not allowed. Lets every instance of\\na blessed vault wasm deposit without per-address curation.",
+            "name": "AllowedHash",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 401
+        },
+        {
+          "doc": "",
+          "name": "NegativeNotAllowed",
+          "value": 410
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgument",
+          "value": 411
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 412
+        },
+        {
+          "doc": "",
+          "name": "UnderflowOverflow",
+          "value": 413
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticError",
+          "value": 414
+        },
+        {
+          "doc": "",
+          "name": "DivisionByZero",
+          "value": 415
+        },
+        {
+          "doc": "",
+          "name": "InvalidSharesMinted",
+          "value": 416
+        },
+        {
+          "doc": "",
+          "name": "OnlyPositiveAmountAllowed",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 418
+        },
+        {
+          "doc": "",
+          "name": "ProtocolAddressNotFound",
+          "value": 420
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExpired",
+          "value": 421
+        },
+        {
+          "doc": "",
+          "name": "ExternalError",
+          "value": 422
+        },
+        {
+          "doc": "",
+          "name": "SoroswapPairError",
+          "value": 423
+        },
+        {
+          "doc": "",
+          "name": "AmountBelowMinDust",
+          "value": 451
+        },
+        {
+          "doc": "",
+          "name": "UnderlyingAmountBelowMin",
+          "value": 452
+        },
+        {
+          "doc": "",
+          "name": "BTokensAmountBelowMin",
+          "value": 453
+        },
+        {
+          "doc": "",
+          "name": "InternalSwapError",
+          "value": 454
+        },
+        {
+          "doc": "",
+          "name": "SupplyNotFound",
+          "value": 455
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositEvent",
+      "prefix_topics": [
+        "deposit_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HarvestEvent",
+      "prefix_topics": [
+        "harvest_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "price_per_share",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawEvent",
+      "prefix_topics": [
+        "withdraw_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

@@ -1,0 +1,1888 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NullifierUsed",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ProofVerificationFailed",
+          "value": 3
+        },
+        {
+          "doc": "Reserved: owner checks use OpenZeppelin `OwnableError`. Do not reuse.",
+          "name": "OnlyAdmin",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TreeAtCapacity",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AssociationRootMismatch",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidPublicSignals",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidTokenAmount",
+          "value": 8
+        },
+        {
+          "doc": "Proof `state_root` is not in the recent root history window.",
+          "name": "UnknownRoot",
+          "value": 9
+        },
+        {
+          "doc": "Exactly one output commitment is non-zero; only zero/zero or two non-zero outputs are allowed.",
+          "name": "InvalidCommitmentPair",
+          "value": 10
+        },
+        {
+          "doc": "Stored Merkle frontier length does not match tree depth (corrupt or outdated storage layout).",
+          "name": "InvalidMerkleFrontier",
+          "value": 11
+        },
+        {
+          "doc": "KYT passage registry is not configured (required for the current layout).",
+          "name": "KytRegistryMissing",
+          "value": 12
+        },
+        {
+          "doc": "Reserved (H1): on-chain application audit-key allowlist removed. Do not reuse.",
+          "name": "UnknownAuditPublicKey",
+          "value": 13
+        },
+        {
+          "doc": "Reserved (H1): on-chain application audit-key allowlist removed. Do not reuse.",
+          "name": "InvalidAuditPublicKey",
+          "value": 14
+        },
+        {
+          "doc": "No `ZkConfig` is registered for the requested nonce.",
+          "name": "ZkConfigNotFound",
+          "value": 15
+        },
+        {
+          "doc": "The `ZkConfig` for the requested nonce has been deprecated by the admin.",
+          "name": "ZkConfigDeprecated",
+          "value": 16
+        },
+        {
+          "doc": "`add_zk_config` was called with a `nonce` that already has a config registered.",
+          "name": "ZkConfigAlreadyExists",
+          "value": 17
+        },
+        {
+          "doc": "`add_zk_config` shape parameters are inconsistent (odd `n_outs`, insufficient\\n`n_audit_slots`, an `audit_offset`/`output_note_offset` that doesn't match the\\nformula-derived value, or a VK whose `ic` length doesn't match the shape).",
+          "name": "InvalidZkConfig",
+          "value": 18
+        },
+        {
+          "doc": "`__constructor` was called with `tree_depth > MAX_TREE_DEPTH`.",
+          "name": "InvalidTreeDepth",
+          "value": 19
+        },
+        {
+          "doc": "Duplicate nullifier hashes appear in a single `transact` public-signal vector (C3).",
+          "name": "DuplicateNullifier",
+          "value": 20
+        },
+        {
+          "doc": "Calldata escrow recipient does not match the public-signal escrow limbs.",
+          "name": "EscrowRecipientMismatch",
+          "value": 21
+        },
+        {
+          "doc": "A sweep (non-zero public escrow recipient) requires a registry record for that account.",
+          "name": "SweepRequiresRegisteredRecipient",
+          "value": 22
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Admin-managed, nonce-keyed ZK circuit configuration: verification key plus every dynamic\\nshape parameter of the `Transaction(...)` circuit instantiation used to verify a `transact`\\ncall for that nonce (see `circuits/main.circom` / `libs/zk::ZkLayoutParams`).",
+      "lib": "",
+      "name": "ZkConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "audit_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "deprecated",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "n_audit_slots",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "n_ins",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "n_outs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "note_audit_len",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "note_output_len",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "output_note_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "public_n_inputs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "public_n_outputs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vk_bytes",
+          "type_": "bytes"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for tree leaves \\xe2\\x80\\x94 each leaf stored by index for O(1) write on deposit.",
+      "lib": "",
+      "name": "TreeDataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Leaf",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LeafCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Ephemeral public key (ECDH point x, y) stored per leaf; not part of the Merkle hash.",
+            "name": "LeafEphemeral",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Right-spine / filled-subtree frontier after the last `insert_two` (length `merkle_depth - 1`).",
+            "name": "PairwiseFrontier"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Persistent storage key for the per-nonce [`ZkConfig`] registry.",
+      "lib": "",
+      "name": "ZkConfigKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Config",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by [`PrivacyPoolsContract::set_registry`].",
+      "lib": "",
+      "name": "RegistrySet",
+      "prefix_topics": [
+        "admin",
+        "registry_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by [`PrivacyPoolsContract::add_zk_config`].",
+      "lib": "",
+      "name": "ZkConfigAdded",
+      "prefix_topics": [
+        "admin",
+        "zk_config_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Ring buffer of historical Merkle roots (for proofs generated against recent states).",
+      "lib": "",
+      "name": "RootHistoryKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Newest root slot index in the ring buffer.",
+            "name": "CurrentRootIndex"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Root value at slot `i` (0..ROOT_HISTORY_SIZE).",
+            "name": "Root",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by [`PrivacyPoolsContract::set_kyt_registry`].",
+      "lib": "",
+      "name": "KytRegistrySet",
+      "prefix_topics": [
+        "admin",
+        "kyt_registry_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage key for nullifiers \\xe2\\x80\\x94 each nullifier hash maps to bool (consumed or not).",
+      "lib": "",
+      "name": "NulifierDataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Nulifier",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Ephemeral BabyJubJub / ECDH point (not hashed into the Merkle tree).",
+      "lib": "",
+      "name": "EphemeralKeyCoords",
+      "fields": [
+        {
+          "doc": "",
+          "name": "x",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "y",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One event per audit slot (`0..n_audit_slots`) in a `transact` call's public signals \\xe2\\x80\\x94 lets\\noff-chain scanners recover auditor ciphertexts from events instead of re-parsing calldata.",
+      "lib": "",
+      "name": "AuditSlotEncrypted",
+      "prefix_topics": [
+        "audit",
+        "audit_slot"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "slot_index",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payload",
+          "type_": {
+            "udt": {
+              "name": "AuditSlotEventPayload"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KytPassageTransact",
+      "prefix_topics": [
+        "audit",
+        "kyt_passage"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "passage_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "public_signal_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by [`PrivacyPoolsContract::deprecate_zk_config`].",
+      "lib": "",
+      "name": "ZkConfigDeprecated",
+      "prefix_topics": [
+        "admin",
+        "zk_config_deprecated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OutputNoteEncrypted",
+      "prefix_topics": [
+        "audit",
+        "output_note"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "commitment_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payload",
+          "type_": {
+            "udt": {
+              "name": "OutputNoteEventPayload"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces this contract's WASM. The new code takes effect after this\\ninvocation completes. Fails once [`Self::disable_upgrades`] has run, and\\nwhile a migration is in progress.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AuditSlotEventPayload",
+      "fields": [
+        {
+          "doc": "",
+          "name": "ciphertext",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_x",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_y",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Single entrypoint: verifies `circuits/main.circom` Groth16 proof and public signals, checks\\ntree root and nullifiers, appends new output commitments (with ephemeral keys, not in Merkle),\\nthen applies public token deposits / withdrawals: `publicDepositedAssets` + `publicDeposits`\\npull from `from`, and `publicWithdrawnAssets` + `publicWithdrawals` send to the Stellar\\naccount from `withdrawAddressHi` / `withdrawAddressLo`.\\n\\nThe proof-bound escrow recipient reconstructed from public signals is the only\\nauthorization subject. Both limbs zero means a non-sweep: both sweep output owner\\ncoordinates must also be zero. A nonzero pair is a sweep: that account must\\n`require_auth()` (host account credentials, so multisig and rotated signers work; a\\nrevoked key cannot), must already have a private address in the registry, and both\\nsweep output owner coordinates must equal that registry key.\\n\\nAsset ids: Stellar **contract** token `C...` addresses encoded as two field elements (same 32-byte\\nsplit as account keys \\xe2\\x80\\x94 see `cir",
+      "name": "transact",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "proof_bytes",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "pub_signals_bytes",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "ciphertext_bytes",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "kyt_authorization",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "KytPassageAuthorization"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OutputNoteEventPayload",
+      "fields": [
+        {
+          "doc": "",
+          "name": "ciphertext",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_x",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_y",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "output_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets the owner address recorded by OpenZeppelin Ownable.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns `Some(Address)` if ownership is set, or `None` if ownership has\\nbeen renounced.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_registry",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_registry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tree_depth",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registers a new per-nonce ZK circuit configuration (VK + full circuit shape). Owner-only;\\nfails if `nonce` already has a config. Validates `n_outs` is even (leaves are inserted\\npairwise via `PairwiseLeanIMT::insert_two`), `n_audit_slots >= n_ins + n_outs`, that\\n`audit_offset`/`output_note_offset` match the formula-derived layout, and that the VK's\\n`ic` length matches the resulting total public-signal count.",
+      "name": "add_zk_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vk_bytes",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "n_ins",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "n_outs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "public_n_inputs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "public_n_outputs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "n_audit_slots",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "note_audit_len",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "audit_offset",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "note_output_len",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "output_note_offset",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reads a registered ZK config (extending its persistent TTL), or `None` if absent.",
+      "name": "get_zk_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ZkConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true if `root` appears in the recent root history (ring buffer).\\nAll-zero bytes are never accepted.",
+      "name": "is_known_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Copies up to `max_items` leaves, then the frontier, then root-history\\nslots. Missing null-like gaps in the root ring are skipped. Re-calling\\ncontinues from the stored cursor.",
+      "name": "migrate_range",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "max_items",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lifts the pause without bumping the schema. Copied keys stay unread.",
+      "name": "abort_migration",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pauses user and owner mutations and opens a batched copy into the\\nmigration namespace. `to_version` must be the current schema plus one.",
+      "name": "begin_migration",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to_version",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets all commitments (leaves) in the merkle tree. Read-only view helper (not called from\\n`transact`/`add_zk_config` or any other state-mutating entrypoint) intended for off-chain\\nsimulation/queries; its cost scales with `count`, which grows with real pool usage rather\\nthan with a single caller-controlled input, so it does not let one transaction consume a\\ndisproportionate share of a block's resources the way an admin/user-controlled shape\\nparameter would. Acknowledged `dos-unbounded-operation` finding.\\n\\n`leaves` is a local in-memory `Vec` (`vec![&env]`), not persistent contract storage, so\\nthere is no storage-side access-control concern in the `push_back` below either;\\nacknowledged `dos-unexpected-revert-with-storage` false positive. Both acknowledgments are\\nfunction-level because neither detector respects a `#[allow]` placed on the loop/statement\\nitself.",
+      "name": "get_commitments",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets the current merkle root of the commitment tree.",
+      "name": "get_merkle_root",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accepts a pending ownership transfer.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Errors\\n\\n* [`crate::role_transfer::RoleTransferError::NoPendingTransfer`] - If\\nthere is no pending transfer to accept.\\n\\n# Events\\n\\n* topics - `[\"ownership_transfer_completed\"]`\\n* data - `[new_owner: Address]`",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permanently disables WASM replacement. Operational owner calls stay\\navailable. Cannot be undone, and cannot run during a migration.",
+      "name": "disable_upgrades",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_kyt_registry",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets the current depth of the merkle tree",
+      "name": "get_merkle_depth",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_kyt_registry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "kyt_registry",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrades_enabled",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Token balance held by this contract for a Stellar asset contract (`C...`).",
+      "name": "get_token_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bumps the schema version and lifts the pause after the leaf replay root\\nmatches the stored Merkle root and the range cursor is finished.",
+      "name": "finalize_migration",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ephemeral key (x, y) for a leaf index, if present.",
+      "name": "get_leaf_ephemeral",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leaf_index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "EphemeralKeyCoords"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_migrated_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_schema_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Copies nullifier flags for the supplied hashes. Unknown hashes and\\nrepeats are no-ops. The caller does not supply the stored value.",
+      "name": "migrate_nullifiers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nullifiers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "renounce_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initiates a 2-step ownership transfer to a new address.\\n\\nRequires authorization from the current owner. The new owner must later\\ncall `accept_ownership()` to complete the transfer.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `new_owner` - The proposed new owner.\\n* `live_until_ledger` - Ledger number until which the new owner can\\naccept. A value of `0` cancels any pending transfer.\\n\\n# Errors\\n\\n* [`OwnableError::OwnerNotSet`] - If the owner is not set.\\n* [`crate::role_transfer::RoleTransferError::NoPendingTransfer`] - If\\ntrying to cancel a transfer that doesn't exist.\\n* [`crate::role_transfer::RoleTransferError::InvalidLiveUntilLedger`] -\\nIf the specified ledger is in the past.\\n* [`crate::role_transfer::RoleTransferError::InvalidPendingAccount`] -\\nIf the specified pending account is not the same as the provided `new`\\naddress.\\n\\n# Notes\\n\\n* Authorization for the current owner is required.",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Marks a registered ZK config as deprecated; subsequent `transact` calls referencing this\\n`nonce` fail with [`Error::ZkConfigDeprecated`]. Owner-only.",
+      "name": "deprecate_zk_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "require_kyt_passage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passage_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gets the number of commitments (leaves) in the merkle tree",
+      "name": "get_commitment_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Filled-subtree frontier after the last pairwise insert (reload on the next deposit).",
+      "name": "get_pairwise_frontier",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`publicNInputs` / `publicNOutputs` for the nonce-`0` (\"standard\") ZK config.\\nPanics with [`Error::ZkConfigNotFound`] when nonce `0` is unregistered. Prefer\\n[`Self::get_zk_config`] for a specific nonce.",
+      "name": "get_public_slot_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u32",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true if the given nullifier hash has already been consumed (used in a withdrawal).",
+      "name": "is_nulifier_hash_consumed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        },
+        {
+          "doc": "",
+          "name": "TransferExpired",
+          "value": 2203
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Stores the pending role holder and the explicit deadline for acceptance.",
+      "lib": "",
+      "name": "PendingTransfer",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is granted.",
+      "lib": "",
+      "name": "RoleGranted",
+      "prefix_topics": [
+        "role_granted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role is revoked.",
+      "lib": "",
+      "name": "RoleRevoked",
+      "prefix_topics": [
+        "role_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the admin role is renounced.",
+      "lib": "",
+      "name": "AdminRenounced",
+      "prefix_topics": [
+        "admin_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a role admin is changed.",
+      "lib": "",
+      "name": "RoleAdminChanged",
+      "prefix_topics": [
+        "role_admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin_role",
+          "type_": "symbol",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AccessControlError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2000
+        },
+        {
+          "doc": "",
+          "name": "AdminNotSet",
+          "value": 2001
+        },
+        {
+          "doc": "",
+          "name": "IndexOutOfBounds",
+          "value": 2002
+        },
+        {
+          "doc": "",
+          "name": "AdminRoleNotFound",
+          "value": 2003
+        },
+        {
+          "doc": "",
+          "name": "RoleCountIsNotZero",
+          "value": 2004
+        },
+        {
+          "doc": "",
+          "name": "RoleNotFound",
+          "value": 2005
+        },
+        {
+          "doc": "",
+          "name": "AdminAlreadySet",
+          "value": 2006
+        },
+        {
+          "doc": "",
+          "name": "RoleNotHeld",
+          "value": 2007
+        },
+        {
+          "doc": "",
+          "name": "RoleIsEmpty",
+          "value": 2008
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2009
+        },
+        {
+          "doc": "",
+          "name": "MaxRolesExceeded",
+          "value": 2010
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is completed.",
+      "lib": "",
+      "name": "AdminTransferCompleted",
+      "prefix_topics": [
+        "admin_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an admin transfer is initiated.",
+      "lib": "",
+      "name": "AdminTransferInitiated",
+      "prefix_topics": [
+        "admin_transfer_initiated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Storage key for enumeration of accounts per role.",
+      "lib": "",
+      "name": "RoleAccountKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for the data associated with the access control",
+      "lib": "",
+      "name": "AccessControlStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ExistingRoles"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccounts",
+            "type_": [
+              {
+                "udt": {
+                  "name": "RoleAccountKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "HasRole",
+            "type_": [
+              "address",
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAccountsCount",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "RoleAdmin",
+            "type_": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys for `Ownable` utility.",
+      "lib": "",
+      "name": "OwnableStorageKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingOwner"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KytPassageRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "consumed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "expires_at_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PrivateAddressRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "public_key_x",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "public_key_y",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "updated_at_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KytPassageAuthorization",
+      "fields": [
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PrivateAddressRegistration",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "public_key_x",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "public_key_y",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "UpgradesDisabled",
+          "value": 3001
+        },
+        {
+          "doc": "",
+          "name": "MigrationInProgress",
+          "value": 3002
+        },
+        {
+          "doc": "",
+          "name": "MigrationNotActive",
+          "value": 3003
+        },
+        {
+          "doc": "",
+          "name": "MigrationIncomplete",
+          "value": 3004
+        },
+        {
+          "doc": "",
+          "name": "MigrationRootMismatch",
+          "value": 3005
+        },
+        {
+          "doc": "",
+          "name": "InvalidMigrationVersion",
+          "value": 3006
+        },
+        {
+          "doc": "",
+          "name": "RenounceDuringMigration",
+          "value": 3007
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MigrationPhase",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Idle"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "`(from_schema, to_schema, migrated_count)`.",
+            "name": "Active",
+            "type_": [
+              "u32",
+              "u32",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Groth16Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "MalformedVerifyingKey",
+          "value": 0
+        },
+        {
+          "doc": "`Proof::from_bytes` received a `proof_bytes` argument that is too short (or otherwise\\nfails to parse as `a || b || c`) for the fixed G1/G2 encoding lengths.",
+          "name": "MalformedProof",
+          "value": 1
+        },
+        {
+          "doc": "`PublicSignals::from_bytes` received a length prefix that does not match the remaining\\npayload (too short, truncated Fr limbs, or a claimed length that overflows).",
+          "name": "MalformedPublicSignals",
+          "value": 2
+        }
+      ]
+    }
+  }
+]
