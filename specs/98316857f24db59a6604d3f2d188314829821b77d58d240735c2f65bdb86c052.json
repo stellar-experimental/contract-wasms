@@ -1,0 +1,502 @@
+[
+  {
+    "function_v0": {
+      "doc": "Owner-only: stop future orders. Funds stay escrowed until withdrawn.",
+      "name": "cancel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Keeper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Router"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ActiveIds"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Strategy",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. `fee_bps` is taken once, upfront, at `create_strategy`\\ntime (not per order \\xe2\\x80\\x94 cheaper on gas than Elysium's design needed to\\nbe, and simpler than Stellar's per-order 0.1% treasury payment).",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DcaError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotActive",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotDue",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadyDone",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "BadParams",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInit",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Strategy",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_per_order",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "budget_remaining",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "buy_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "interval_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "next_order_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "orders_done",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "orders_total",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sell_asset",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_strategy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Strategy"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Only the keeper can call this, and it can only ever do exactly what's\\nbaked into this function: swap this strategy's fixed `amount_per_order`\\nthrough the router and send the proceeds straight to `owner` \\xe2\\x80\\x94 the\\ncontract never custodies the swap output. `min_amount_out` is computed\\noff-chain by the bot (reference price minus a slippage tolerance) and\\nre-checked here implicitly: the router call reverts if it can't meet it.",
+      "name": "execute_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "min_amount_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_active_ids",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Creates a strategy and pulls `amount_per_order * orders_total` worth\\nof `sell_asset` from `owner` into the contract's own balance, plus the\\nupfront fee straight to `treasury`. These are plain `transfer`s out of\\n`owner`, so no prior `approve` is needed: the owner's single signature\\non this call authorizes exactly those two transfers (Soroban auth\\nentries cover the nested token calls).",
+      "name": "create_strategy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sell_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buy_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_per_order",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "orders_total",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "interval_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner-only: pull back whatever budget hasn't been swapped yet.\\nNo co-signer dance, no account-merge \\xe2\\x80\\x94 this is the Soroban\\nequivalent of the Stellar \"Withdraw & close\" flow.",
+      "name": "withdraw_remaining",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "DcaError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

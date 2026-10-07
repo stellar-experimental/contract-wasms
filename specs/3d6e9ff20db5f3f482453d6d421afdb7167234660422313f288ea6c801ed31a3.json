@@ -1,0 +1,602 @@
+[
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Paid",
+      "prefix_topics": [
+        "paid"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "gross",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "net",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tax",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Service fee charged on this payment. Zero until it is enabled.",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "receipt_ref",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "Tax period of the payment (year * 12 + month - 1), in the freelancer's time zone.",
+          "name": "period",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Reserve rate applied, in basis points.",
+          "name": "tax_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InsufficientReserve",
+          "value": 2
+        },
+        {
+          "doc": "The freelancer cannot be the payer or the contract itself.",
+          "name": "InvalidParty",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ReceiptRefTooLong",
+          "value": 4
+        },
+        {
+          "doc": "The fee exceeds MAX_FEE_BPS.",
+          "name": "FeeTooHigh",
+          "value": 5
+        },
+        {
+          "doc": "A receipt with that number already exists for this freelancer.",
+          "name": "ReceiptExists",
+          "value": 6
+        },
+        {
+          "doc": "Nobody issued that receipt: there is nothing to pay.",
+          "name": "UnknownReceipt",
+          "value": 7
+        },
+        {
+          "doc": "The receipt has already been paid.",
+          "name": "AlreadyPaid",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "ConceptTooLong",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "EmptyReceiptRef",
+          "value": 10
+        },
+        {
+          "doc": "The reserve rate exceeds MAX_TAX_BPS.",
+          "name": "TaxRateTooHigh",
+          "value": 11
+        },
+        {
+          "doc": "The UTC offset is outside -12:00 to +14:00.",
+          "name": "InvalidUtcOffset",
+          "value": 12
+        },
+        {
+          "doc": "The freelancer has not chosen a rate and time zone yet.",
+          "name": "NoProfile",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Issued",
+      "prefix_topics": [
+        "issued"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receipt_ref",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "gross",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "concept",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What the freelancer chose: the share of each payment that goes to the reserve, and the\\ntime zone in which their tax month closes.",
+      "lib": "",
+      "name": "Profile",
+      "fields": [
+        {
+          "doc": "",
+          "name": "tax_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "utc_offset_min",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Fee receipt recorded on chain. The freelancer issues it with their signature and the\\nclient can only pay what it says here, once.",
+      "lib": "",
+      "name": "Receipt",
+      "fields": [
+        {
+          "doc": "",
+          "name": "concept",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "gross",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "paid",
+          "type_": "bool"
+        },
+        {
+          "doc": "Rate and time zone copied from the profile when the receipt was issued. A later\\nprofile change never alters a receipt the client has already seen.",
+          "name": "tax_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "utc_offset_min",
+          "type_": "i32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProfileSet",
+      "prefix_topics": [
+        "profile_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tax_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "utc_offset_min",
+          "type_": "i32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TaxWithdrawn",
+      "prefix_topics": [
+        "tax_withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Service fee: basis points and the wallet that receives it.",
+      "name": "fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The client pays an issued receipt. The amount comes from the receipt, not from the\\nclient: the net goes straight to the freelancer's wallet and the reserve stays in the contract.",
+      "name": "pay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receipt_ref",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The freelancer issues a fee receipt and signs it. It is the only thing a client can\\npay later, so nobody else can add payments to the freelancer's month.",
+      "name": "issue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receipt_ref",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "gross",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "concept",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "profile",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Profile"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "receipt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receipt_ref",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Receipt"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Gross collected by the freelancer in that period. For Peru, this is the number\\ncompared against SUNAT's monthly threshold.",
+      "name": "month_gross",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "period",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The freelancer chooses the reserve rate and the time zone of their tax month. It\\napplies to receipts issued from now on; receipts already issued keep their own.",
+      "name": "set_profile",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tax_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "utc_offset_min",
+          "type_": "i32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "tax_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Only the freelancer moves their reserve, for example to pay SUNAT.",
+      "name": "withdraw_tax",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`token` is the SAC contract of the USDC used for payments. `fee_bps` is the\\nservice fee, deducted from the gross and sent to `fee_to`. It is fixed at\\ndeployment: nobody can raise it later.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current tax period in the freelancer's time zone, to query the month's running total.\\nWithout a profile it is measured in UTC.",
+      "name": "current_period",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renews the reserve's TTL without moving funds. Anyone can call it: it only keeps\\nan idle reserve from being archived and needing a restore.",
+      "name": "extend_reserve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "freelancer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
