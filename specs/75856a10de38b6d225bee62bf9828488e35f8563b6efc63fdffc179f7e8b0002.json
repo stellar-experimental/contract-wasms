@@ -1,0 +1,499 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "K\\xe1\\xba\\xbf ho\\xe1\\xba\\xa1ch E \\xc4\\x91\\xe1\\xbb\\x83 l\\xe1\\xba\\xa1i cho R trong c\\xc3\\xb9ng tx (ch\\xe1\\xbb\\x89 khi `borrow > 0`).",
+      "lib": "",
+      "name": "Plan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "L\\xc6\\xb0\\xe1\\xbb\\xa3ng vay flash (ph\\xe1\\xba\\xa3i b\\xe1\\xba\\xb1ng `amount` c\\xe1\\xbb\\xa7a callback).",
+          "name": "borrow",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "V\\xe1\\xbb\\x91n t\\xe1\\xbb\\xb1 c\\xe1\\xba\\xa5p E chuy\\xe1\\xbb\\x83n cho R tr\\xc6\\xb0\\xe1\\xbb\\x9bc khi vay.",
+          "name": "own",
+          "type_": "i128"
+        },
+        {
+          "doc": "`borrow + REPAY_SLACK`: ph\\xe1\\xba\\xa7n tr\\xe1\\xba\\xa3 E duy\\xe1\\xbb\\x87t cho Blend k\\xc3\\xa9o.",
+          "name": "repay",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Lo\\xe1\\xba\\xa1i b\\xc6\\xb0\\xe1\\xbb\\x9bc. Bi\\xe1\\xba\\xbfn th\\xe1\\xbb\\x83 m\\xe1\\xbb\\x9bi (Soroswap, pool CL kh\\xc3\\xa1c) = capability bit m\\xe1\\xbb\\x9bi; enum \\xc4\\x91\\xc3\\xb3ng n\\xc3\\xaan lo\\xe1\\xba\\xa1i l\\xe1\\xba\\xa1\\nkh\\xc3\\xb4ng decode \\xc4\\x91\\xc6\\xb0\\xe1\\xbb\\xa3c, kh\\xc3\\xb4ng \"fall through\".",
+      "lib": "",
+      "name": "Step",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aqua",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AquaStep"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "Cu\\xe1\\xbb\\x91i v\\xc3\\xb2ng l\\xc3\\xa3i < `min_profit` (\\xe1\\xbb\\x9f R: l\\xc6\\xb0\\xe1\\xbb\\xa3ng ra \\xe2\\x88\\x92 own \\xe2\\x88\\x92 ph\\xe1\\xba\\xa7n tr\\xe1\\xba\\xa3; \\xe1\\xbb\\x9f E: s\\xe1\\xbb\\x91 d\\xc6\\xb0 c\\xe1\\xbb\\xa7a E t\\xc4\\x83ng th\\xc3\\xaam).",
+          "name": "NoProfit",
+          "value": 3
+        },
+        {
+          "doc": "Lender \\xc4\\x91\\xc3\\xb2i ph\\xc3\\xad \\xe2\\x89\\xa0 0: vi ph\\xe1\\xba\\xa1m lu\\xe1\\xba\\xadt ch\\xe1\\xbb\\x89 d\\xc3\\xb9ng v\\xe1\\xbb\\x91n vay mi\\xe1\\xbb\\x85n ph\\xc3\\xad.",
+          "name": "NotFree",
+          "value": 4
+        },
+        {
+          "doc": "Ledger hi\\xe1\\xbb\\x87n t\\xe1\\xba\\xa1i \\xe2\\x89\\xa0 `target_ledger`.",
+          "name": "StaleLedger",
+          "value": 5
+        },
+        {
+          "doc": "Route r\\xe1\\xbb\\x97ng, b\\xc6\\xb0\\xe1\\xbb\\x9bc/hop kh\\xc3\\xb4ng n\\xe1\\xbb\\x91i nhau, v\\xc3\\xb2ng kh\\xc3\\xb4ng kh\\xc3\\xa9p, ho\\xe1\\xba\\xb7c `min_out` \\xc3\\xa2m.",
+          "name": "BadRoute",
+          "value": 8
+        },
+        {
+          "doc": "Router tr\\xe1\\xba\\xa3 \\xc3\\xadt h\\xc6\\xa1n `min_out` c\\xe1\\xbb\\xa7a b\\xc6\\xb0\\xe1\\xbb\\x9bc.",
+          "name": "HopShort",
+          "value": 9
+        },
+        {
+          "doc": "Callback m\\xc3\\xa0 kh\\xc3\\xb4ng c\\xc3\\xb3 plan do peer \\xc4\\x91\\xe1\\xba\\xb7t trong ch\\xc3\\xadnh tx n\\xc3\\xa0y.",
+          "name": "NoPlan",
+          "value": 10
+        },
+        {
+          "doc": "Kho\\xe1\\xba\\xa3n vay kh\\xc3\\xb4ng do peer m\\xe1\\xbb\\x9f.",
+          "name": "BadInitiator",
+          "value": 12
+        },
+        {
+          "doc": "T\\xc3\\xa0i s\\xe1\\xba\\xa3n ho\\xe1\\xba\\xb7c l\\xc6\\xb0\\xe1\\xbb\\xa3ng vay c\\xe1\\xbb\\xa7a callback kh\\xc3\\xa1c plan.",
+          "name": "PlanMismatch",
+          "value": 13
+        },
+        {
+          "doc": "\\xc4\\x90\\xc3\\xa3 c\\xc3\\xb3 plan \\xc4\\x91ang ch\\xe1\\xbb\\x9d (kh\\xc3\\xb4ng bao gi\\xe1\\xbb\\x9d x\\xe1\\xba\\xa3y ra trong lu\\xe1\\xbb\\x93ng \\xc4\\x91\\xc3\\xbang).",
+          "name": "Busy",
+          "value": 14
+        },
+        {
+          "doc": "Ch\\xc6\\xb0a `link` peer.",
+          "name": "NotLinked",
+          "value": 15
+        },
+        {
+          "doc": "`own` < 0, `borrow` < 0, `own + borrow` \\xe2\\x89\\xa4 0 (ho\\xe1\\xba\\xb7c tr\\xc3\\xa0n), ho\\xe1\\xba\\xb7c `min_profit` \\xe2\\x89\\xa4 0.",
+          "name": "BadAmount",
+          "value": 16
+        },
+        {
+          "doc": "`link` g\\xe1\\xbb\\x8di l\\xe1\\xba\\xa7n hai.",
+          "name": "AlreadyLinked",
+          "value": 17
+        },
+        {
+          "doc": "`own` > s\\xe1\\xbb\\x91 d\\xc6\\xb0 `asset` c\\xe1\\xbb\\xa7a E: v\\xe1\\xbb\\x91n t\\xe1\\xbb\\xb1 c\\xe1\\xba\\xa5p kh\\xc3\\xb4ng \\xc4\\x91\\xe1\\xbb\\xa7 cho ph\\xe1\\xba\\xa7n lane khai.",
+          "name": "NoCapital",
+          "value": 18
+        },
+        {
+          "doc": "G\\xe1\\xbb\\x8di sai vai: `run` v\\xc3\\xa0o receiver, ho\\xe1\\xba\\xb7c `set_plan` / `exec_op` v\\xc3\\xa0o instance gi\\xe1\\xbb\\xaf v\\xe1\\xbb\\x91n.",
+          "name": "WrongRole",
+          "value": 19
+        },
+        {
+          "doc": "Lender tr\\xe1\\xba\\xa3 v\\xe1\\xbb\\x81 m\\xc3\\xa0 kh\\xc3\\xb4ng g\\xe1\\xbb\\x8di `exec_op` (plan c\\xc3\\xb2n \\xe1\\xbb\\x9f R): c\\xe1\\xba\\xa3 tx revert.",
+          "name": "NoCallback",
+          "value": 20
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "C\\xe1\\xba\\xa5u h\\xc3\\xacnh b\\xe1\\xba\\xa5t bi\\xe1\\xba\\xbfn tr\\xe1\\xbb\\xab `operator` (xoay kho\\xc3\\xa1 n\\xc3\\xb3ng). \\xc4\\x90\\xe1\\xbb\\x95i lender/router = deploy m\\xe1\\xbb\\x9bi.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "V\\xc3\\xad owner: qu\\xe1\\xba\\xa3n tr\\xe1\\xbb\\x8b, nh\\xe1\\xba\\xadn l\\xc3\\xa3i, v\\xc3\\xa0 l\\xe1\\xbb\\x91i ra duy nh\\xe1\\xba\\xa5t c\\xe1\\xbb\\xa7a ti\\xe1\\xbb\\x81n (k\\xe1\\xbb\\x83 c\\xe1\\xba\\xa3 v\\xe1\\xbb\\x91n). Kh\\xc3\\xb4ng bao gi\\xe1\\xbb\\x9d l\\xc3\\xaan box.",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "`true` = instance gi\\xe1\\xbb\\xaf v\\xe1\\xbb\\x91n, nh\\xe1\\xba\\xadn `run` (E); `false` = receiver, nh\\xe1\\xba\\xadn `set_plan` / `exec_op` (R).",
+          "name": "entry",
+          "type_": "bool"
+        },
+        {
+          "doc": "Pool Blend v2: cho vay flash v\\xc3\\xa0 l\\xc3\\xa0 contract duy nh\\xe1\\xba\\xa5t \\xc4\\x91\\xc6\\xb0\\xe1\\xbb\\xa3c g\\xe1\\xbb\\x8di `exec_op`.",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "Kho\\xc3\\xa1 n\\xc3\\xb3ng k\\xc3\\xbd `run`. Kh\\xc3\\xb4ng gi\\xe1\\xbb\\xaf ti\\xe1\\xbb\\x81n.",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "Router Aquarius (`swap_chained`).",
+          "name": "router",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "M\\xe1\\xbb\\x99t b\\xc6\\xb0\\xe1\\xbb\\x9bc swap qua router Aquarius. L\\xc6\\xb0\\xe1\\xbb\\xa3ng v\\xc3\\xa0o **t\\xc6\\xb0\\xe1\\xbb\\x9dng minh**: b\\xc6\\xb0\\xe1\\xbb\\x9bc \\xc4\\x91\\xe1\\xba\\xa7u = `own + borrow`, b\\xc6\\xb0\\xe1\\xbb\\x9bc sau = l\\xc6\\xb0\\xe1\\xbb\\xa3ng\\nra c\\xe1\\xbb\\xa7a b\\xc6\\xb0\\xe1\\xbb\\x9bc tr\\xc6\\xb0\\xe1\\xbb\\x9bc (gi\\xc3\\xa1 tr\\xe1\\xbb\\x8b router tr\\xe1\\xba\\xa3 v\\xe1\\xbb\\x81) \\xe2\\x80\\x94 kh\\xc3\\xb4ng \\xc4\\x91\\xe1\\xbb\\x8dc s\\xe1\\xbb\\x91 d\\xc6\\xb0, n\\xc3\\xaan v\\xe1\\xbb\\x91n c\\xe1\\xbb\\xa7a E kh\\xc3\\xb4ng bao gi\\xe1\\xbb\\x9d b\\xe1\\xbb\\x8b cu\\xe1\\xbb\\x91n v\\xc3\\xa0o.",
+      "lib": "",
+      "name": "AquaStep",
+      "fields": [
+        {
+          "doc": "",
+          "name": "hops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    {
+                      "vec": {
+                        "element_type": "address"
+                      }
+                    },
+                    {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    },
+                    "address"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**C** \\xe2\\x80\\x94 v\\xc3\\xb2ng thu\\xe1\\xba\\xa7n Soroban kh\\xc3\\xa9p v\\xe1\\xbb\\x81 `asset`, l\\xc6\\xb0\\xe1\\xbb\\xa3ng v\\xc3\\xa0o `own + borrow`: `own` l\\xe1\\xba\\xa5y t\\xe1\\xbb\\xab v\\xe1\\xbb\\x91n c\\xe1\\xbb\\xa7a E,\\n`borrow` vay flash Blend ph\\xc3\\xad 0 (0 = kh\\xc3\\xb4ng ch\\xe1\\xba\\xa1m lender). L\\xc3\\xa3i = s\\xe1\\xbb\\x91 d\\xc6\\xb0 `asset` c\\xe1\\xbb\\xa7a E t\\xc4\\x83ng th\\xc3\\xaam, \\xe2\\x89\\xa5\\n`min_profit`, chuy\\xe1\\xbb\\x83n v\\xe1\\xbb\\x81 admin v\\xc3\\xa0 tr\\xe1\\xba\\xa3 v\\xe1\\xbb\\x81.",
+      "name": "run",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "own",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "borrow",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "N\\xe1\\xbb\\x91i instance kia. Admin, **m\\xe1\\xbb\\x99t l\\xe1\\xba\\xa7n**: \\xc4\\x91\\xe1\\xbb\\x95i peer = deploy m\\xe1\\xbb\\x9bi.",
+      "name": "link",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "peer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "peer",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lane \\xc4\\x91\\xe1\\xbb\\x8dc l\\xc3\\xbac boot \\xc4\\x91\\xe1\\xbb\\x83 so v\\xe1\\xbb\\x9bi env (operator, lender, router, entry).",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Callback 2/2 \\xe2\\x80\\x94 pool Blend g\\xe1\\xbb\\x8di sau khi chuy\\xe1\\xbb\\x83n `amount` cho ta (`moderc3156::exec_op`). X\\xc3\\xa1c th\\xe1\\xbb\\xb1c t\\xe1\\xbb\\xab\\n**frame c\\xe1\\xbb\\xa7a ta** (plan m\\xe1\\xbb\\x99t l\\xe1\\xba\\xa7n do peer \\xc4\\x91\\xe1\\xba\\xb7t, pool \\xc4\\x91\\xc3\\xa3 c\\xe1\\xba\\xa5u h\\xc3\\xacnh l\\xc3\\xa0 ng\\xc6\\xb0\\xe1\\xbb\\x9di g\\xe1\\xbb\\x8di tr\\xe1\\xbb\\xb1c ti\\xe1\\xba\\xbfp), kh\\xc3\\xb4ng t\\xe1\\xbb\\xab tham\\ns\\xe1\\xbb\\x91.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Callback 1/2 \\xe2\\x80\\x94 ch\\xe1\\xbb\\x89 peer (E) \\xc4\\x91\\xe1\\xba\\xb7t \\xc4\\x91\\xc6\\xb0\\xe1\\xbb\\xa3c, trong tx c\\xe1\\xbb\\xa7a ch\\xc3\\xadnh n\\xc3\\xb3.",
+      "name": "set_plan",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "plan",
+          "type_": {
+            "udt": {
+              "name": "Plan"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**L\\xe1\\xbb\\x91i ra duy nh\\xe1\\xba\\xa5t c\\xe1\\xbb\\xa7a ti\\xe1\\xbb\\x81n.** Ch\\xe1\\xbb\\x89 admin, lu\\xc3\\xb4n v\\xe1\\xbb\\x81 admin, kh\\xc3\\xb4ng c\\xc3\\xb3 tham s\\xe1\\xbb\\x91 \\xc4\\x91\\xc3\\xadch. R\\xc3\\xbat v\\xe1\\xbb\\x91n t\\xe1\\xbb\\xb1 c\\xe1\\xba\\xa5p c\\xe1\\xbb\\xa7a\\nE v\\xc3\\xa0 c\\xe1\\xbb\\xa9u token b\\xe1\\xbb\\x8b g\\xe1\\xbb\\xadi nh\\xe1\\xba\\xa7m \\xc4\\x91\\xe1\\xbb\\x81u \\xc4\\x91i \\xc4\\x91\\xc6\\xb0\\xe1\\xbb\\x9dng n\\xc3\\xa0y.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "E g\\xe1\\xbb\\x8di ngay sau `flash_loan`: plan ph\\xe1\\xba\\xa3i \\xc4\\x91\\xc3\\xa3 \\xc4\\x91\\xc6\\xb0\\xe1\\xbb\\xa3c `exec_op` l\\xe1\\xba\\xa5y \\xc4\\x91i. Ch\\xe1\\xbb\\x89 peer.",
+      "name": "plan_used",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "capabilities",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Xoay kho\\xc3\\xa1 n\\xc3\\xb3ng. Admin.",
+      "name": "set_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "entry",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

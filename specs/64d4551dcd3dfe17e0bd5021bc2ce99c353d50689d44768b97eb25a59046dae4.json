@@ -1,0 +1,571 @@
+[
+  {
+    "function_v0": {
+      "doc": "Returns currently accrued protocol fees.",
+      "name": "fees",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current owner.",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors returned by the rollup contract.",
+      "lib": "",
+      "name": "ContractError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "DepositAmountMustBePositive",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NewBlockHashEmpty",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "OldBlockHashMismatch",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "BlockHashUnchanged",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "ArrayLengthExceedsLimit",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "WithdrawalSumMismatch",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "WithdrawalAmountMustBeNonNegative",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "FeesMustBeNonNegative",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "WithdrawalAddressIsContract",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "NoWithdrawalAllowance",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "NoFeesToCollect",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "CannotRecoverCollateral",
+          "value": 51
+        },
+        {
+          "doc": "",
+          "name": "RecoverAmountMustBePositive",
+          "value": 52
+        },
+        {
+          "doc": "",
+          "name": "RenounceOwnershipDisabled",
+          "value": 61
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 62
+        },
+        {
+          "doc": "",
+          "name": "OwnerIsContract",
+          "value": 63
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticOverflow",
+          "value": 71
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Advances the rollup state to a new block hash and posts new withdrawable\\nbalances plus fees.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `old_block_hash` - Expected current block hash.\\n* `new_block_hash` - New block hash to commit.\\n* `new_withdrawal_credits` - Recipients and amounts of the newly posted\\nwithdrawal allowances.\\n* `new_withdrawal_sum` - Sum of all new withdrawal amounts.\\n* `new_fees` - Fees accrued in the new rollup block.\\n\\n# Errors\\n\\n* [`ContractError::NewBlockHashEmpty`] - If `new_block_hash` is zero.\\n* [`ContractError::OldBlockHashMismatch`] - If `old_block_hash` does not\\nmatch the currently stored block hash.\\n* [`ContractError::BlockHashUnchanged`] - If the new block hash is equal\\nto the old block hash.\\n* [`ContractError::ArrayLengthExceedsLimit`] - If more than 100\\nwithdrawal credits are posted.\\n* [`ContractError::WithdrawalSumMismatch`] - If the provided\\n`new_withdrawal_sum` does not match the calculated total.\\n* [`ContractError::InsufficientBalance`] - If the contract balan",
+      "name": "rollup",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "old_block_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_block_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_withdrawal_credits",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "WithdrawalCredit"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_withdrawal_sum",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "new_fees",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits collateral into the rollup.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `user` - Address providing the deposit.\\n* `amount` - Amount of collateral token to deposit.\\n\\n# Errors\\n\\n* [`ContractError::DepositAmountMustBePositive`] - If `amount <= 0`.\\n\\n# Notes\\n\\n* Authorization from `user` is required.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Recovers non-collateral tokens that were sent to the contract.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `token_address` - Token contract to recover.\\n* `to` - Recipient of the recovered tokens.\\n* `amount` - Amount to recover.\\n\\n# Errors\\n\\n* [`ContractError::CannotRecoverCollateral`] - If `token_address` is the\\nconfigured collateral token.\\n* [`ContractError::RecoverAmountMustBePositive`] - If `amount <= 0`.\\n\\n# Notes\\n\\n* Owner authorization is required.",
+      "name": "recover",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces the contract Wasm with `new_wasm_hash`. Requires authorization\\nfrom the owner.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws the full posted allowance for `user`.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `user` - Address withdrawing its allowance.\\n\\n# Errors\\n\\n* [`ContractError::NoWithdrawalAllowance`] - If no positive allowance is\\navailable for `user`.\\n\\n# Notes\\n\\n* Authorization from `user` is required.\\n* This method withdraws the full stored allowance and resets it to zero.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Withdrawal allowance credited to one recipient in a rollup block.",
+      "lib": "",
+      "name": "WithdrawalCredit",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the height of the latest committed rollup block.\\n\\nThe constructor sets this to zero, and every [`Self::rollup`] increments\\nit by one, so the value counts the blocks committed so far.",
+      "name": "block_height",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Collects all currently accrued protocol fees.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `to` - Recipient of collected fees.\\n\\n# Errors\\n\\n* [`ContractError::NoFeesToCollect`] - If no positive fee balance is\\navailable.\\n\\n# Notes\\n\\n* Owner authorization is required.\\n* Collected fees are removed from both `Fees` and `TotalWithdrawable`.",
+      "name": "collect_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the rollup contract.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `collateral_token` - Token contract used for deposits, withdrawals,\\nand fees.\\n* `owner` - Upgrade and admin authority for rollup updates and fee\\ncollection.\\n\\n# Errors\\n\\n* [`ContractError::OwnerIsContract`] - If `owner` is the address of\\nthis contract.\\n\\n# Notes\\n\\n* The latest block hash is initialized to the zero hash.\\n* The block height is initialized to zero.\\n* Fees and total withdrawable balances are initialized to zero.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accepts a pending ownership transfer.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the latest committed rollup block hash.",
+      "name": "latest_block_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current collateral-token balance held by the contract.",
+      "name": "collateral_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rejects ownership renunciation.\\n\\n# Errors\\n\\n* [`ContractError::RenounceOwnershipDisabled`] - Always returned.",
+      "name": "renounce_ownership",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total amount currently reserved for user withdrawals plus\\naccrued fees.",
+      "name": "total_withdrawable",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initiates a 2-step ownership transfer.\\n\\nThe proposed new owner must later call [`Self::accept_ownership`] to\\ncomplete the transfer.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `new_owner` - Proposed new owner.\\n* `live_until_ledger` - Ledger until which the pending transfer can be\\naccepted.\\n\\n# Notes\\n\\n* Authorization is enforced internally by the ownable library.",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current withdrawal allowance for `user`.",
+      "name": "withdrawal_allowances",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        },
+        {
+          "doc": "",
+          "name": "TransferExpired",
+          "value": 2203
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
