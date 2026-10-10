@@ -1,0 +1,467 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "The whole on-chain record of a hold \\xe2\\x80\\x94 three fields, each required:\\n* `owner`  \\xe2\\x80\\x94 the funds are returned to it on release/cancel, and its `Locked` total is\\ndecremented; without it the contract cannot move the custody back.\\n* `amount` \\xe2\\x80\\x94 exactly what to transfer back or onward; without it a finalize cannot move value.\\n* `status` \\xe2\\x80\\x94 the state machine (see [`HoldStatus`]).\\nThe id is the storage key, not a field. There is no other field.",
+      "lib": "",
+      "name": "Hold",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "HoldStatus"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Numeric codes 1..=6 are identical to v1/v2 so the backend's error mapping is unchanged. `NotInitialized` and\\n`AlreadyInitialized` are unreachable in v3 (an instance cannot exist unconfigured and there is no `initialize`); they keep\\ntheir numbers so no code is ever reused with a different meaning.",
+      "lib": "",
+      "name": "HoldError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "HoldAlreadyExists",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "HoldNotFound",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "HoldNotActive",
+          "value": 6
+        },
+        {
+          "doc": "v3: the constructor's `token` is not a Stellar Asset Contract.",
+          "name": "InvalidToken",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "The hold state machine. Encoded on-chain as a bare `u32` (0..=3) rather than a named variant,\\nso the stored value carries no readable words. Required: the state machine is what makes\\ndouble-finalization impossible.",
+      "lib": "",
+      "name": "HoldStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Released",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Settled",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Cancelled",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The contract's own events carry ONLY the opaque id: the owner and amount are already public in\\nthe SAC `transfer` event emitted in the same transaction, so repeating them here would add\\nnothing but a second place to find them. Topic names are lower-case so a v2 event can never be\\nmistaken for a v1 `HOLD_*` event by an indexer.",
+      "lib": "",
+      "name": "HoldCreatedEvent",
+      "prefix_topics": [
+        "hold_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HoldSettledEvent",
+      "prefix_topics": [
+        "hold_settled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HoldReleasedEvent",
+      "prefix_topics": [
+        "hold_released"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HoldCancelledEvent",
+      "prefix_topics": [
+        "hold_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `set_controller`. Addresses only: a governance fact, kept so a controller change is\\nauditable from the chain itself.",
+      "lib": "",
+      "name": "ControllerChangedEvent",
+      "prefix_topics": [
+        "controller_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_controller",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_controller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only. `None` for an unknown id \\xe2\\x80\\x94 a missing hold is a legitimate observed state.",
+      "name": "get_hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Hold"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only: the configured Hold Controller. Always `Some` in v3; kept as `Option` so the v2 read interface is unchanged.",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only: the configured SAC token contract. Always `Some` in v3; kept as `Option` like `get_admin`.",
+      "name": "get_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancels an ACTIVE hold \\xe2\\x80\\x94 the funds return to the original owner, with a distinct terminal\\nstatus from `release_hold` (same custody mechanics, different audit meaning).",
+      "name": "cancel_hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "HoldError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Locks `amount` of TRS belonging to `owner` under a new hold identified by the opaque\\n`hold_id` (32 random bytes chosen by the backend).\\n\\nAuthorization: BOTH the Hold Controller AND `owner` must authorize this call.\\nReal custody: on success the owner's SAC balance decreases by `amount` and this contract's\\nSAC balance increases by the same amount.",
+      "name": "create_hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "HoldError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settles an ACTIVE hold \\xe2\\x80\\x94 the funds move to `destination`, never to the owner\\nautomatically. The destination is supplied by the authorized controller for this call\\nonly; it is a transfer target, not stored contract state. Every settlement goes through this\\none function \\xe2\\x80\\x94 nothing on-chain marks one settlement as different from another.",
+      "name": "settle_hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "destination",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "HoldError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Releases an ACTIVE hold \\xe2\\x80\\x94 the funds return to the original owner.",
+      "name": "release_hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hold_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "HoldError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configures the Hold Controller (`admin`) and the SAC token contract. Run by the Soroban host exactly once, inside the\\nhost function that creates this instance, so there is no window in which the instance exists unconfigured (F11), and\\nthe host rejects any later invocation of `__constructor`. Creating an instance without these arguments fails.\\n\\nAuthorization: `admin` must authorize (it is normally the deploying transaction's source account).\\n`token` must be a Stellar Asset Contract \\xe2\\x80\\x94 anything else aborts the creation with `InvalidToken`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Controller rotation: requires the CURRENT controller's AND `new_controller`'s authorization (v3, F21 \\xe2\\x80\\x94 the new key\\nproves it exists and is held before it becomes the only key able to finalize holds) and emits `controller_changed`.",
+      "name": "set_controller",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_controller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "HoldError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only, O(1): the sum of every currently-ACTIVE hold amount for `owner`.",
+      "name": "get_locked_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
