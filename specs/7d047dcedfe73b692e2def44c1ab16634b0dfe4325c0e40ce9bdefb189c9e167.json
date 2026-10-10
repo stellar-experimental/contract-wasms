@@ -1,0 +1,685 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Envelope"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "send",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "keep_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "keep_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_keep_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claim_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "memo",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "return_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "KeepAsset"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Hand both parts to `to`. Anyone may submit it; the signature by the link's key over\\n`(\"claim\", this_contract, id, to)` is the authorisation, and it fixes the destination.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Both parts back to the sender. The sender may do it any time while open; anyone may\\nonce the return date has passed. `by` is whoever is asking, and must authorise.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Sent",
+      "prefix_topics": [
+        "sent"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "cash",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "keep_asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "keep_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "keep_out",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "No envelope (or keep asset) at that key.",
+          "name": "NotFound",
+          "value": 1
+        },
+        {
+          "doc": "The envelope was already claimed or returned.",
+          "name": "NotOpen",
+          "value": 2
+        },
+        {
+          "doc": "Reserved. A claim's signature is checked by the host, which aborts on a bad one before\\nthe contract can return a code; the claim page checks the key first and says so.",
+          "name": "BadSecret",
+          "value": 3
+        },
+        {
+          "doc": "keep_bps above 10,000.",
+          "name": "BadRate",
+          "value": 4
+        },
+        {
+          "doc": "Below the minimum send, or a keep slice that would buy nothing.",
+          "name": "TooSmall",
+          "value": 5
+        },
+        {
+          "doc": "return_at outside [now + 1 day, now + 1 year].",
+          "name": "BadReturnDate",
+          "value": 6
+        },
+        {
+          "doc": "The keep asset is not on the table, or is disabled.",
+          "name": "AssetOff",
+          "value": 7
+        },
+        {
+          "doc": "Too early: a stranger before the return date, or a measurement before 30 days.",
+          "name": "NotYet",
+          "value": 8
+        },
+        {
+          "doc": "Reserved. A refund names its caller; a stranger before the date gets NotYet.",
+          "name": "NotSender",
+          "value": 9
+        },
+        {
+          "doc": "Still held was already measured for this envelope.",
+          "name": "AlreadyMeasured",
+          "value": 10
+        },
+        {
+          "doc": "Arithmetic out of range.",
+          "name": "Overflow",
+          "value": 11
+        },
+        {
+          "doc": "The pool does not trade USDC at in_idx for the asset at out_idx.",
+          "name": "BadPool",
+          "value": 12
+        },
+        {
+          "doc": "Only Claimed envelopes can be measured.",
+          "name": "NotClaimed",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "State",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Claimed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Returned"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Still held: read the keep asset's balance of whoever claimed, once, 30 days on.",
+      "name": "measure",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_hold",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "min_hold",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "min_send",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add or disable a keep asset for future sends. Touches no envelope: an envelope carries\\nits own asset and amounts, and claim and refund read only those.",
+      "name": "set_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Claimed",
+      "prefix_topics": [
+        "claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Envelope",
+      "fields": [
+        {
+          "doc": "USDC left to spend.",
+          "name": "cash",
+          "type_": "i128"
+        },
+        {
+          "doc": "The ed25519 public key of the link's secret.",
+          "name": "claim_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "When it was claimed or returned (0 while open).",
+          "name": "claimed_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "claimed_by",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "claimed_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "created_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "keep_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keep_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "USDC that went into the pool.",
+          "name": "keep_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "Units of the keep asset that came out, measured on this contract's own balance.",
+          "name": "keep_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "0 = not measured.",
+          "name": "measured_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "measured_balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "sha256 of the sender's reason, or zero.",
+          "name": "memo",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "return_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "State"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Measured",
+      "prefix_topics": [
+        "measured"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "balance",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Refunded",
+      "prefix_topics": [
+        "refunded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KeepAsset",
+      "fields": [
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
