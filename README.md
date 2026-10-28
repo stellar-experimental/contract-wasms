@@ -3,7 +3,7 @@
 This repository does a daily download of contracts deployed to the Stellar Mainnet.
 
 It also generates a docs website about all the contracts at:
-- https://leighmcculloch.github.io/stellar-contract-wasms/
+- <https://stellar-experimental.github.io/contract-wasms/>
 
 ## What's Here
 
