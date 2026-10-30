@@ -1,0 +1,318 @@
+[
+  {
+    "function_v0": {
+      "doc": "Execute one or more parallel multi-hop swap branches across Aqua,\\nSoroswap, and Comet pools funded from `user`.",
+      "name": "ss",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "branches",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Branch"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "out_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "mutex_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Arm the companion executor instance in `Temporary` storage right before\\n`Blend::flash_loan` invokes `exec_op` on it.",
+      "name": "arm",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "branches",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Branch"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "out_min",
+          "type_": "u128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Extend this contract instance's TTL to 120 days.",
+      "name": "ping",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Phase-0 Classic -> Phase-1 Soroban atomic gate (`L65202588` / `L65202591`,\\nIssue #3208): requires `token_in.balance(user) >= min_user_bal` after Phase-0\\nClassic settlement before pulling `total_in` into the Soroban legs.\\nBecause `token_in.transfer(user, self, total_in)` already puts `user`'s\\n`token_in` balance entry in the read-write footprint, this check adds zero\\nfootprint keys and zero Classic semaphore operations.",
+      "name": "ss_if",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "branches",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Branch"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "out_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "min_user_bal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "mutex_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Blend v2 flash-loan callback (`exec_op(caller, token, amount, fee)`).\\nConsumes and deletes the armed route from `Temporary` storage, executes\\nthe swap branches, enforces `total_out >= out_min`, and sends `total_out`\\nback to `caller` so Blend's trailing `Repay` request pulls principal +\\nrounding fee via `transfer_from`.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrade this contract's WASM code in-place without changing its address.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Zero-principal closed-cycle flash swap borrowing `sum(branches)` of\\n`token` from `blend_pool`, routing through companion `exec` (`exec != self`\\nso Soroban's host call-stack never re-enters `self`), repaying Blend via\\n`Request { request_type: 5, amount: i128::MAX }`, and sweeping net profit\\nto `user`.",
+      "name": "flash_ss",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "exec",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blend_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "branches",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Branch"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "out_min",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "mutex_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Link this router instance to a companion executor instance (a second\\ndeployment of this same WASM) so `LiveLoader` discovers `Exec` from\\ninstance storage while keeping the Blend callback non-reentrant.",
+      "name": "set_exec",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "exec",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Blend v2 `Request` (`request_type == 5` is `Repay`).",
+      "lib": "",
+      "name": "BlendRequest",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Blend v2 `FlashLoan` (`{ amount, asset, contract }`).",
+      "lib": "",
+      "name": "BlendFlashLoan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
