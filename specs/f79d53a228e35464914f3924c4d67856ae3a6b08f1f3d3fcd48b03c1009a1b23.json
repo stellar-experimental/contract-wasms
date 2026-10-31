@@ -1,0 +1,255 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "ProfitTooLow",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "BadSplit",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "BadAmount",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "aqua_usdc_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "Index of XLM and USDC inside the Aquarius pool's token list.",
+          "name": "aqua_xlm_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "aqua_xlm_usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backfill",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blnd",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "blnt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "comet_blnd_usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "comet_blnt_usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "comet_blnt_xlm",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Owner"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute the full cycle. Returns realised profit in USDC stroops.\\nAny `Err` (or a panic in a nested call) reverts every leg.\\n\\n* `usdc_in`     \\xe2\\x80\\x94 USDC spent on BLND in Comet v1.1.\\n* `blnt_to_xlm` \\xe2\\x80\\x94 how much of the received BLNT goes to the BLNT/XLM pool;\\nthe remainder goes to BLNT/USDC. Must be in `0..=blnt_received`.\\n* `min_profit`  \\xe2\\x80\\x94 revert unless `usdc_out - usdc_in >= min_profit`.\\n\\nOwner authorization needed: `run(...)` with the sub-invocation\\n`usdc.transfer(owner, this_contract, usdc_in)`. Nothing else.",
+      "name": "run",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "blnt_to_xlm",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Send the contract's whole balance of `token` to the owner.\\n`run` leaves nothing behind by design; this recovers dust or stray transfers.",
+      "name": "sweep",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the contract code in place; address, owner and config are kept.\\nThe new wasm must already be uploaded (its hash is `new_wasm_hash`).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
