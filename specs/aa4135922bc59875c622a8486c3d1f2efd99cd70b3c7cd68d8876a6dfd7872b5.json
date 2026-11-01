@@ -1,0 +1,1740 @@
+[
+  {
+    "function_v0": {
+      "doc": "Halts order creation, settlement and deposits. Restricted to [`Role::Pauser`].\\n\\nRefunds (aggregator, expiry, and admin force-refund) stay available so pausing\\ncannot trap user escrow. Pausing is intentionally easier to authorise than\\nunpausing: halting the system is a fail-safe action, restarting it is a governance\\ndecision.",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resumes the contract. Restricted to [`Role::Admin`].",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces this contract's WASM. Restricted to [`Role::Upgrader`].\\n\\nStellar upgrades in place: the contract address, its storage and its balances are\\nuntouched, and only the executable changes. That removes the entire class of\\nproxy-related failure the EVM design has to defend against \\xe2\\x80\\x94 no delegatecall, no\\nimplementation slot to hijack, no storage-layout compatibility to verify.\\n\\nWhat it does *not* remove is the need to keep storage readable: if a new WASM\\nchanges the shape of a stored type, existing entries will fail to decode. Bump\\n[`STORAGE_VERSION`] and migrate deliberately when that happens.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "role",
+          "type_": {
+            "udt": {
+              "name": "Role"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Order"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "grant_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": {
+            "udt": {
+              "name": "Role"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "revoke_role",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": {
+            "udt": {
+              "name": "Role"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Creates an order.\\n\\n`creator` is whoever submits the transaction; `requester` is the beneficiary. A\\nrelayer may create on a user's behalf only if it holds [`Role::OrderCreator`].\\n\\nFor off-ramp orders the requester's authorisation is required explicitly, binding\\ntheir intent at the order level rather than relying solely on the token transfer's\\nown auth check. `intent_key` makes the order id deterministic, which gives the\\ncontract true idempotency: replaying an intent is rejected rather than creating a\\nsecond payable order.",
+      "name": "create_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "creator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "intent_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refunds a pending order. Restricted to [`Role::Aggregator`].\\n\\nIntentionally allowed while paused: pausing must stop new flow and settlement, not\\ntrap user escrow. Creation and settlement remain gated by [`ensure_not_paused`].",
+      "name": "refund_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settles a pending order. Restricted to [`Role::Aggregator`].",
+      "name": "settle_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomic constructor \\xe2\\x80\\x94 runs once at deploy, inside the create transaction.\\n\\nThis replaces a separate `initialize` call so a front-runner cannot seize Admin\\nbetween deploy and init. `admin` must authorise (and receives Admin, Upgrader,\\nPauser, Treasurer); `aggregator` receives Aggregator and OrderCreator. In\\nproduction these must be different addresses, and `admin` should be a multisig.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "aggregator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "order_ttl",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_order_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_ttl",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "storage_version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deterministic order id.\\n\\nDomain-separated by network and contract address, so an intent formed for one\\ndeployment can never collide with or be replayed against another. Deriving from an\\nexplicit `intent_key` rather than a timestamp is what makes replay detection\\npossible at all.",
+      "name": "compute_order_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "intent_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "escrowed_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_token_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits on-ramp float. Permissionless \\xe2\\x80\\x94 anyone may top up the house position.",
+      "name": "deposit_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_token_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin emergency refund that skips the provider advisory hook.\\n\\nUse when a misbehaving adapter would otherwise block fund recovery by panicking in\\n`on_order_refunded`. Does not require the contract to be unpaused: incident response\\nmust be able to return escrow without first winning a governance unpause.",
+      "name": "force_refund_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "reserved_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws unencumbered float. Restricted to [`Role::Treasurer`].\\n\\nBounded by [`available_liquidity`], so this can never reach user escrow or float\\nalready committed to a pending order.",
+      "name": "withdraw_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Float that is neither escrowed for users nor committed to a pending order.",
+      "name": "available_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refunds an order whose TTL has elapsed. Permissionless.\\n\\nThis is the system's liveness guarantee: if the aggregator stalls or censors, an\\noff-ramp user can always recover their own escrow with nobody's cooperation. The\\nrefund always pays the requester, never the caller, so triggering it for someone\\nelse is a favour rather than an attack. Also allowed while paused \\xe2\\x80\\x94 see\\n[`Self::refund_order`].",
+      "name": "refund_expired_order",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the route used when a caller does not name one.\\n\\nValidated against the registry on the way in, so a typo cannot silently point every\\nnew order at a non-existent route.",
+      "name": "set_default_provider",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_provider_registry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleChanged",
+      "prefix_topics": [
+        "role"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": {
+            "udt": {
+              "name": "Role"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "granted",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OrderCreated",
+      "prefix_topics": [
+        "order",
+        "created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OrderSettled",
+      "prefix_topics": [
+        "order",
+        "settled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "net_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PauseChanged",
+      "prefix_topics": [
+        "pause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ConfigUpdated",
+      "prefix_topics": [
+        "config"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "field",
+          "type_": "symbol",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OrderRefunded",
+      "prefix_topics": [
+        "order",
+        "refunded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "True when the refund came from the permissionless expiry path rather than the\\naggregator, which is a signal worth alerting on: it means settlement did not\\nhappen in time.",
+          "name": "expired",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LiquidityDeposited",
+      "prefix_topics": [
+        "liquidity"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LiquidityWithdrawn",
+      "prefix_topics": [
+        "liquidity"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenAllowanceUpdated",
+      "prefix_topics": [
+        "config",
+        "token"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Route applied when a caller does not name one. `None` means internal liquidity.",
+          "name": "default_provider",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Fee in basis points of `MAX_BPS`.",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Recipient of protocol fees. Separate from `treasury` so revenue and settlement\\nfloat can sit in different custody arrangements.",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Seconds after creation at which an order becomes permissionlessly refundable.",
+          "name": "order_ttl",
+          "type_": "u64"
+        },
+        {
+          "doc": "Registry resolving `provider_id` to an adapter address.",
+          "name": "provider_registry",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Destination for settled off-ramp principal.",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Set once at initialisation; its presence marks the contract as initialised.",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Storage-format version, used to gate migrations after a WASM upgrade.",
+            "name": "Version"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Role",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Role"
+                }
+              },
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "TokenAllowed",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent. Keyed by order id.",
+            "name": "Order",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent. User funds held against pending off-ramp orders, per token.",
+            "name": "Escrowed",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent. House float committed to pending on-ramp orders, per token.",
+            "name": "Reserved",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Roles, mirroring the separation of duties from the EVM deployment.",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "Configuration, token allowlist, role management, unpause.",
+          "name": "Admin",
+          "value": 0
+        },
+        {
+          "doc": "Authorises WASM upgrades. Held apart from settlement.",
+          "name": "Upgrader",
+          "value": 1
+        },
+        {
+          "doc": "Emergency stop. Unpausing is Admin-only by design.",
+          "name": "Pauser",
+          "value": 2
+        },
+        {
+          "doc": "Settles and refunds orders.",
+          "name": "Aggregator",
+          "value": 3
+        },
+        {
+          "doc": "Creates orders on a user's behalf (relayed flow).",
+          "name": "OrderCreator",
+          "value": 4
+        },
+        {
+          "doc": "Moves house float in and out.",
+          "name": "Treasurer",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors returned across the ElementFlow contracts.\\n\\nValues are stable and must not be renumbered: the aggregator backend matches on them.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ContractPaused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotPaused",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidAddress",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "EmptyMessageHash",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TokenNotAllowed",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidTtl",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticOverflow",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "OrderAlreadyExists",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "OrderNotFound",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "OrderNotPending",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "OrderNotExpired",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLiquidity",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "UnexpectedBalanceDelta",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "ProviderSettlementShortfall",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "ProviderRegistryNotSet",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "ProviderNotRegistered",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "ProviderDisabled",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "ProviderAlreadyRegistered",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "ProviderIdMismatch",
+          "value": 44
+        },
+        {
+          "doc": "",
+          "name": "TokenNotSupported",
+          "value": 45
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Canonical order record.",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "Gross amount in token base units (stroops for classic assets).",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "After this timestamp the order may be refunded by anyone.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Fee snapshot taken at creation, so a later fee change cannot retroactively\\nalter a pending order's economics.",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Opaque off-chain metadata reference.",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "Settlement route. `None` means internal liquidity held by the manager.",
+          "name": "provider_id",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "OrderStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Direction of the ramp.\\n\\n`OnRamp` is fiat -> crypto: the user pays fiat off-chain and receives tokens.\\n`OffRamp` is crypto -> fiat: the user escrows tokens and receives fiat off-chain.",
+      "lib": "",
+      "name": "OrderType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OnRamp",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "OffRamp",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Lifecycle of an order. `Settled` and `Refunded` are terminal; there is no path out of\\neither. Absence of a stored record is the \"does not exist\" state, so unlike the EVM\\nport there is no `None` sentinel to model.",
+      "lib": "",
+      "name": "OrderStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Settled",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Refunded",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Read-only view of an order handed to provider adapters.\\n\\nAdapters receive an owned copy and can never mutate manager state.",
+      "lib": "",
+      "name": "OrderContext",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount owed to the fee recipient.",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "Amount owed to the beneficiary after fees.",
+          "name": "net_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
