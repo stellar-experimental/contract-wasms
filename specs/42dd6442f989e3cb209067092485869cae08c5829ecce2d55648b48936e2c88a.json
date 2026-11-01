@@ -1,0 +1,889 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Full authority: register, re-enable, swap adapters.",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "May only disable routes. Held more widely so an on-call operator can act fast.",
+            "name": "Guardian",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Provider",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ProviderIds"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GuardianSet",
+      "prefix_topics": [
+        "guardian"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "guardian",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProviderInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdapterUpdated",
+      "prefix_topics": [
+        "provider",
+        "adapter"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProviderEnabledSet",
+      "prefix_topics": [
+        "provider",
+        "enabled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Typed events. Declared with `#[contractevent]` so the schema ships in the contract\\nspec and downstream indexers decode from metadata rather than hand-written topics.",
+      "lib": "",
+      "name": "ProviderRegistered",
+      "prefix_topics": [
+        "provider",
+        "registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the adapter for a registered route even when the route is disabled.\\n\\nUsed by the order manager on the refund path so that cutting off a misbehaving\\npartner cannot strand escrow already held against in-flight orders. Settlement and\\nnew creation continue to use [`Self::resolve`], which rejects disabled routes.",
+      "name": "adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolves a route for settlement and new order creation.\\n\\nFails loudly for unknown or disabled routes so callers get an explicit error rather\\nthan silently falling through to a default. This is the entry point the order\\nmanager invokes for create/settle.",
+      "name": "resolve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_active",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_provider",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ProviderInfo"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_guardian",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guardian",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomic constructor \\xe2\\x80\\x94 runs once at deploy. See order-manager for rationale.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Points an existing route at a new adapter, keeping the route id so that orders\\nalready referencing it stay settleable.",
+      "name": "update_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Re-enables a route. Admin only \\xe2\\x80\\x94 restoring a route is a deliberate decision.",
+      "name": "enable_provider",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "All registered ids, including disabled ones. Off-chain use.",
+      "name": "all_provider_ids",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Disables a route. Callable by the admin or any guardian.",
+      "name": "disable_provider",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registers a new settlement route.\\n\\nCross-checks the adapter's self-reported id against the key it is being filed\\nunder. Filing an adapter under the wrong key would silently route orders to the\\nwrong counterparty, so that state is made unrepresentable rather than merely\\ndiscouraged.",
+      "name": "register_provider",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "provider_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "adapter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Roles, mirroring the separation of duties from the EVM deployment.",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "Configuration, token allowlist, role management, unpause.",
+          "name": "Admin",
+          "value": 0
+        },
+        {
+          "doc": "Authorises WASM upgrades. Held apart from settlement.",
+          "name": "Upgrader",
+          "value": 1
+        },
+        {
+          "doc": "Emergency stop. Unpausing is Admin-only by design.",
+          "name": "Pauser",
+          "value": 2
+        },
+        {
+          "doc": "Settles and refunds orders.",
+          "name": "Aggregator",
+          "value": 3
+        },
+        {
+          "doc": "Creates orders on a user's behalf (relayed flow).",
+          "name": "OrderCreator",
+          "value": 4
+        },
+        {
+          "doc": "Moves house float in and out.",
+          "name": "Treasurer",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors returned across the ElementFlow contracts.\\n\\nValues are stable and must not be renumbered: the aggregator backend matches on them.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ContractPaused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotPaused",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidAddress",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "EmptyMessageHash",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TokenNotAllowed",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidTtl",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticOverflow",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "OrderAlreadyExists",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "OrderNotFound",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "OrderNotPending",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "OrderNotExpired",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "InsufficientLiquidity",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "UnexpectedBalanceDelta",
+          "value": 31
+        },
+        {
+          "doc": "",
+          "name": "ProviderSettlementShortfall",
+          "value": 32
+        },
+        {
+          "doc": "",
+          "name": "ProviderRegistryNotSet",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "ProviderNotRegistered",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "ProviderDisabled",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "ProviderAlreadyRegistered",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "ProviderIdMismatch",
+          "value": 44
+        },
+        {
+          "doc": "",
+          "name": "TokenNotSupported",
+          "value": 45
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Canonical order record.",
+      "lib": "",
+      "name": "Order",
+      "fields": [
+        {
+          "doc": "Gross amount in token base units (stroops for classic assets).",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "After this timestamp the order may be refunded by anyone.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Fee snapshot taken at creation, so a later fee change cannot retroactively\\nalter a pending order's economics.",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Opaque off-chain metadata reference.",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "Settlement route. `None` means internal liquidity held by the manager.",
+          "name": "provider_id",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "OrderStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Direction of the ramp.\\n\\n`OnRamp` is fiat -> crypto: the user pays fiat off-chain and receives tokens.\\n`OffRamp` is crypto -> fiat: the user escrows tokens and receives fiat off-chain.",
+      "lib": "",
+      "name": "OrderType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OnRamp",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "OffRamp",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Lifecycle of an order. `Settled` and `Refunded` are terminal; there is no path out of\\neither. Absence of a stored record is the \"does not exist\" state, so unlike the EVM\\nport there is no `None` sentinel to model.",
+      "lib": "",
+      "name": "OrderStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Pending",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Settled",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Refunded",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Read-only view of an order handed to provider adapters.\\n\\nAdapters receive an owned copy and can never mutate manager state.",
+      "lib": "",
+      "name": "OrderContext",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amount owed to the fee recipient.",
+          "name": "fee_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "message_hash",
+          "type_": "string"
+        },
+        {
+          "doc": "Amount owed to the beneficiary after fees.",
+          "name": "net_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "order_type",
+          "type_": {
+            "udt": {
+              "name": "OrderType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "requester",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
