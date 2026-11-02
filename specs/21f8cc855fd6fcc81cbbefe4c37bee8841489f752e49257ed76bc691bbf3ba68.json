@@ -1,0 +1,273 @@
+[
+  {
+    "function_v0": {
+      "doc": "Open (or add to) a leveraged position: `deposit` of the user's own\\n`collateral` plus `borrow` of `debt` swapped (by `swap`, made by the receiver)\\ninto at least `min_out` more collateral, all supplied as collateral in `pool`.\\nReturns the finished health factor (7 decimals). `approve_expiry` is the ledger the\\npool's allowance lapses at, fixed when the transaction is signed.",
+      "name": "open",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "debt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "borrow",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": {
+            "udt": {
+              "name": "SwapCall"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_hf",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "approve_expiry",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LeverageError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "BadArgs",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unhealthy",
+          "value": 3
+        },
+        {
+          "doc": "The pool returned without running the staged swap (not a Blend pool).",
+          "name": "NotExecuted",
+          "value": 4
+        },
+        {
+          "doc": "close with nothing to withdraw (no collateral of that asset in the pool).",
+          "name": "NoPosition",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close (all or part of) a leveraged position: flash-borrow `flash_amount` of `collateral`,\\nswap it (by `swap`) into at least `min_out` of `debt` for the user, repay `repay` of\\n`debt` (an amount above the debt repays it all; Blend refunds the rest), withdraw\\n`withdraw` of collateral (`None`: all of it), and repay the flash loan from it.\\nReturns the remaining health factor, or 0 when no debt is left. With debt left it must\\nbe at least `min_hf`.",
+      "name": "close",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "debt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "flash_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": {
+            "udt": {
+              "name": "SwapCall"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "repay",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "withdraw",
+          "type_": {
+            "option": {
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_hf",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "approve_expiry",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "receiver",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploys this contract's own receiver from `receiver_wasm`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver_wasm",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One transfer of the swapped-out token (the flashed debt asset) the swap may pull from the\\nreceiver: `debt.transfer(receiver, to, amount)`. Nothing else is authorized.",
+      "lib": "",
+      "name": "Pull",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The swap, as a plain contract call the receiver makes: `contract.function(args\\xe2\\x80\\xa6)`, e.g. the\\nSoroswap aggregator's `swap_exact_in(receiver, debt, amount, collateral, min_out, routes, None)`.\\nKept generic so the contract never depends on one DEX's interface or address: a new\\naggregator, a router or another venue works without redeploying. It is safe because the\\nreceiver only pre-authorizes `pulls` (at most the flashed amount, never more), measures what\\nit actually received by balance, reverts below `min_out`, and returns any unspent input.",
+      "lib": "",
+      "name": "SwapCall",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "pulls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Pull"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

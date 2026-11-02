@@ -1,0 +1,215 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReceiverError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoStagedOp",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "BadArgs",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InsufficientOutput",
+          "value": 3
+        },
+        {
+          "doc": "exec_op was called without the flash loan having arrived (not a real flash loan).",
+          "name": "NotFunded",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stage the next op. Only the pinned leverage contract (direct caller). Stored with the\\nreceiver's balance of the token to be flashed, so exec_op can tell the loan from funds\\nthat were already here.",
+      "name": "stage",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "op",
+          "type_": {
+            "udt": {
+              "name": "Staged"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Blend flash-loan callback; `caller` is the position owner (`from`).",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "True while a staged op has not been run: seidar-leverage checks this after the flash loan,\\nso a pool that never called back can't leave a stale op behind.",
+      "name": "pending",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The seidar-leverage contract this receiver serves.",
+      "name": "leverage",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leverage",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One transfer of the swapped-out token (the flashed debt asset) the swap may pull from the\\nreceiver: `debt.transfer(receiver, to, amount)`. Nothing else is authorized.",
+      "lib": "",
+      "name": "Pull",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One staged swap, set by seidar-leverage and run by seidar-leverage-receiver inside Blend's\\n`exec_op` callback: swap the flashed `amount` of `asset_in` into `asset_out` with `swap`\\n(at least `min_out`) and send all of it to `user`. Opening flashes the debt asset into\\ncollateral; closing flashes the collateral asset into the debt asset.",
+      "lib": "",
+      "name": "Staged",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap",
+          "type_": {
+            "udt": {
+              "name": "SwapCall"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The swap, as a plain contract call the receiver makes: `contract.function(args\\xe2\\x80\\xa6)`, e.g. the\\nSoroswap aggregator's `swap_exact_in(receiver, debt, amount, collateral, min_out, routes, None)`.\\nKept generic so the contract never depends on one DEX's interface or address: a new\\naggregator, a router or another venue works without redeploying. It is safe because the\\nreceiver only pre-authorizes `pulls` (at most the flashed amount, never more), measures what\\nit actually received by balance, reverts below `min_out`, and returns any unspent input.",
+      "lib": "",
+      "name": "SwapCall",
+      "fields": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "function",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "pulls",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Pull"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

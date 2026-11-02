@@ -1,0 +1,897 @@
+[
+  {
+    "function_v0": {
+      "doc": "Provision a card from its public key alone. Returns its token id and purse.",
+      "name": "import_card",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "curve",
+          "type_": {
+            "udt": {
+              "name": "Curve"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u32",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NonFungibleTokenError",
+      "cases": [
+        {
+          "doc": "The chip attestation did not verify, or its nonce is not above the stored one.",
+          "name": "InvalidSignature",
+          "value": 101
+        },
+        {
+          "doc": "No token has this id, or no token was minted for this chip.",
+          "name": "NonExistentToken",
+          "value": 102
+        },
+        {
+          "doc": "`max_tokens` tokens have been minted.",
+          "name": "TokenIDsAreDepleted",
+          "value": 103
+        },
+        {
+          "doc": "This chip already has a token.",
+          "name": "TokenAlreadyMinted",
+          "value": 104
+        },
+        {
+          "doc": "No curve is recorded for this chip.",
+          "name": "MissingCurve",
+          "value": 105
+        },
+        {
+          "doc": "No factory is set, so there is no purse to deploy. `mint` checks this before it\\nwrites anything.",
+          "name": "MissingPocket",
+          "value": 106
+        },
+        {
+          "doc": "Unknown ERC-7496 trait key.",
+          "name": "TraitDoesNotExist",
+          "value": 107
+        },
+        {
+          "doc": "`trait_values` was handed more keys than one call may batch.",
+          "name": "TooManyTraitKeys",
+          "value": 108
+        },
+        {
+          "doc": "The token has no owner. Only a token minted by v1.0 can be in this state, and only\\nuntil `migrate_v1` has run for it.",
+          "name": "TokenNotClaimed",
+          "value": 109
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A card provisioned: token minted, purse deployed, the two bound. `to` is the purse \\xe2\\x80\\x94\\na token is never emitted unowned, because there is no state in which it is. The data\\nis the bare token id, as SEP-50 gives it.",
+      "lib": "",
+      "name": "Mint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The contract now runs `wasm_hash`.",
+      "lib": "",
+      "name": "Upgrade",
+      "prefix_topics": [
+        "upgrade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-50's metadata update, named `metadata` after the rule that an event takes its\\nemitter's name: what a token's metadata says changed, so a client that cached it\\nfetches it again. The data is the bare token id, as SEP-50 gives it.",
+      "lib": "",
+      "name": "Metadata",
+      "prefix_topics": [
+        "metadata"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-41's `set_admin`: the admin changed. The topic is the outgoing admin and the data\\nis the incoming one, as SEP-41 gives them.",
+      "lib": "",
+      "name": "SetAdmin",
+      "prefix_topics": [
+        "set_admin"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A stored trait changed (SEP-50's trait update, ERC-7496 `TraitUpdated`). The token id\\nis a topic, so the events of one token can be filtered.",
+      "lib": "",
+      "name": "SetTrait",
+      "prefix_topics": [
+        "set_trait"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "trait_key",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_value",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-50 `transfer`: a token changed owner. Clawback is the only path that does it after\\nmint, and the standard wants every change of owner announced, so an indexer can follow\\nownership from this event alone. Mint announces itself with [`Mint`] instead.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`mint` deploys purses through a different factory from now on.",
+      "lib": "",
+      "name": "SetFactory",
+      "prefix_topics": [
+        "set_factory"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "ERC-7496 `TraitMetadataURIUpdated`: the schema every cached trait is read through.",
+      "lib": "",
+      "name": "SetTraitMetadataUri",
+      "prefix_topics": [
+        "set_trait_metadata_uri"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "This card's purse, or `None` when no factory is configured or no purse has been\\ndeployed yet.\\n\\nThe one link an outside reader cannot reconstruct alone: `public_key(token_id)`\\nis public, but nothing on chain says which factory to ask. Deliberately a\\n*pointer* and not a balance \\xe2\\x80\\x94 the purse holds the card's float and its DeFi\\npositions, and it can answer for both without this contract mirroring either.\\n\\nBest-effort by design: a missing, mis-pointed or trapping factory reads as\\n`None`. Resolving a card must never be able to fail because of a contract this\\none merely points at.\\n\\n# Arguments\\n\\n* `e` - The environment object.\\n* `token_id` - Token id as a number.\\n\\n# Returns\\n\\nThe purse address, or `None`.\\n\\n# Panics\\n\\n* If the token does not exist (`NonFungibleTokenError::NonExistentToken`).",
+      "name": "pocket",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a stored trait. Admin only.\\n\\n# Arguments\\n\\n* `e` - The environment object.\\n* `token_id` - Token id as a number.\\n* `trait_key` - Name of the trait; only `tier` exists.\\n* `new_value` - The value to store.\\n\\n# Panics\\n\\n* If the admin does not authorize the call.\\n* If the token does not exist (`NonFungibleTokenError::NonExistentToken`).\\n* If the key is not a declared trait (`NonFungibleTokenError::TraitDoesNotExist`).\\n\\n# Events\\n\\nTwo, in this order:\\n\\n* topics - `[\"set_trait\", token_id: u32]`, data - `{trait_key: String, new_value:\\ni128}`. SEP-50's trait update.\\n* topics - `[\"metadata\"]`, data - `token_id: u32`. SEP-50's metadata update, because\\n`tier` drives the art, so a new value means the metadata a client cached is stale.\\nMint does not emit it: nothing is cached yet.",
+      "name": "set_trait",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "trait_key",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "new_value",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Value of one trait, or `0` for a known trait that has never been set (the\\nstandard's default). An unknown key is an error, not a zero.\\n\\n# Arguments\\n\\n* `e` - The environment object.\\n* `token_id` - Token id as a number.\\n* `trait_key` - Name of the trait; only `tier` exists.\\n\\n# Returns\\n\\nThe stored value, or `0` if none was set.\\n\\n# Panics\\n\\n* If the token does not exist (`NonFungibleTokenError::NonExistentToken`).\\n* If the key is not a declared trait (`NonFungibleTokenError::TraitDoesNotExist`).",
+      "name": "trait_value",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "trait_key",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Values of several traits of one token, in the order the keys were given.\\n\\n# Arguments\\n\\n* `e` - The environment object.\\n* `token_id` - Token id as a number.\\n* `trait_keys` - At most 32 trait names.\\n\\n# Returns\\n\\nOne value per key, as [`NFCtoNFT::trait_value`] returns it.\\n\\n# Panics\\n\\n* If more than 32 keys are given (`NonFungibleTokenError::TooManyTraitKeys`).\\n* Whatever [`NFCtoNFT::trait_value`] panics on, for any key.",
+      "name": "trait_values",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "trait_keys",
+          "type_": {
+            "vec": {
+              "element_type": "string"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Where the ERC-7496 trait schema lives.\\n\\n# Arguments\\n\\n* `e` - The environment object.\\n\\n# Returns\\n\\nThe schema location, or an empty string if none was set.",
+      "name": "trait_metadata_uri",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin-set, so the schema can be republished without an upgrade. Emits, because\\nthe schema is what tells a reader how to interpret every value it has cached.\\n\\n# Arguments\\n\\n* `e` - The environment object.\\n* `uri` - The new location of the trait schema.\\n\\n# Panics\\n\\n* If the admin does not authorize the call.\\n\\n# Events\\n\\n* topics - `[\"set_trait_metadata_uri\"]`\\n* data - `{uri: String}`",
+      "name": "set_trait_metadata_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "auth",
+          "type_": {
+            "udt": {
+              "name": "ChipAuth"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "curve",
+          "type_": {
+            "udt": {
+              "name": "Curve"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "upgrade_policy",
+          "type_": {
+            "udt": {
+              "name": "UpgradePolicy"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u32",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "curve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Curve"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "clawback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_nonce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token_uri",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "public_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 65
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_factory",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "collection_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "uri",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "max_tokens",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "next_token_id",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stateless chip-signature oracle over the registry's stored curve. Replay is the\\ncaller's digest contract: callers must put their own nonce/expiry inside\\n`digest` (the Pocket passes the host authorization payload; attestation\\nintegrators bring a domain + nonce). Unknown cards verify false.",
+      "name": "verify_for_card",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "digest",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "auth",
+          "type_": {
+            "udt": {
+              "name": "ChipAuth"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Curve",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Secp256k1"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Secp256r1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Complete chip proof for one gated call (Pocket / nfc-nft).",
+      "lib": "",
+      "name": "ChipAuth",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Secp256k1",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Secp256k1Auth"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Secp256r1",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Secp256r1Auth"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Secp256k1Auth",
+      "fields": [
+        {
+          "doc": "",
+          "name": "recovery_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Secp256r1Auth",
+      "fields": [
+        {
+          "doc": "",
+          "name": "rnd_b",
+          "type_": {
+            "bytes_n": {
+              "n": 16
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What the holder wants to happen when this purse needs new code. Here rather than in\\n`pocket` because the factory passes it to the Pocket constructor and a `cdylib` cannot\\nbe a library dependency.\\n\\n**Enforced on the purse, recorded on the account.**\\n\\nFor a purse this decides how the contract holds its code. `Managed` deploys an\\nexecutable *reference* to the factory's entry, so one `set_pocket_wasm_hash` re-points\\nthe whole fleet at once; `Pocket::upgrade` refuses under it, because pinning a hash\\nwould leave the fleet in silence. `Manual` pins a hash that only the card's own chip\\ncan move. That is CAP-85, and it is the second authority a gate always needed \\xe2\\x80\\x94 the\\ntag owner \\xe2\\x80\\x94 which is why this stopped being a note and became a decision.\\n\\n`ChimpAccount` still only records it: accounts are deployed off-chain by a G-address,\\nso nothing owns an entry for them to reference.\\n\\nSet at mint, before a card has a holder. The enrolment station passes `Manual`, so\\nfollowing the fleet is the holder's opt-in, made later thr",
+      "lib": "",
+      "name": "UpgradePolicy",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Holder accepts security upgrades pushed by ChimpDAO.",
+            "name": "Managed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Holder is notified and taps to accept each upgrade.",
+            "name": "Manual"
+          }
+        }
+      ]
+    }
+  }
+]
