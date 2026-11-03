@@ -1,0 +1,1225 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deployed risk configuration: `(c_factor, target_hf, min_hf, orange_hf)`,\\nall 1e7-scaled.\\n\\nRead-only view for off-chain consumers (frontend, keeper, monitoring), so\\nthey act on the on-chain thresholds rather than copies of deploy values.\\n`c_factor` is the configured one; the HF uses the lower of it and the\\npool's (see `risk_factors`).",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw by share count: burn exactly `shares` of `from`'s and pay what\\nthey are worth to `to`. Returns the underlying paid.\\n\\n`withdraw` takes an amount of underlying and refuses one worth more than\\nthe caller's shares. The share price moves every ledger, so a holder\\ncannot reliably ask it for everything they hold; here they pass their\\nshare balance and nothing is left behind. Sized and rounded like\\n`withdraw`, against the withdrawer. The DeFindex trait has no such call.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Query the underlying asset balance for an address.\\n\\nbalance = caller_shares / (total_shares + unvested_shares) \\xc3\\x97\\n(supply_value - debt_value)",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit underlying asset, lever it in, mint shares.\\n\\nFlow:\\n1. Transfer `amount` from `from` to the strategy contract\\n2. Lever it in: one SupplyCollateral + Borrow submit, sized to land on\\n`target_hf` (`compute_lever_in`). Blend refuses the borrow if it would\\nsettle the reserve above its own `max_util`.\\n3. Check what the pool settled: HF >= `min_hf`\\n4. Price the equity the b/d token deltas add, mint proportional shares\\n5. Return the depositor's underlying balance\\n\\nThe first deposit gives up `FIRST_DEPOSIT_LOCKUP` shares to the lockup,\\nso only the keeper or the admin may make it; anyone else is refused with\\n`NotAuthorized` until the vault has been seeded.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Harvest BLND emissions, swap to underlying, re-leverage.\\n\\nCallable only by the keeper. Claims from both supply and borrow emission\\nsides, swaps BLND \\xe2\\x86\\x92 underlying via Soroswap, then re-leverages proceeds.\\nNo share tokens are minted: the proceeds raise per-share equity gradually,\\nas the shares they are priced at vest over `PROFIT_UNLOCK_LEDGERS` (see\\n`reserves::harvest`).\\n\\nRefused while a split harvest is awaiting settlement: this path would\\nswap the pending claim's BLND and lever the proceeds in the same call,\\nleaving `harvest_reinvest` to measure a settlement whose underlying has\\nalready gone into the pool. Settle through `harvest_reinvest` (which\\ncovers the Soroswap route) rather than interleaving the two. Refused too\\nwhile the previous harvest's shares are vesting (`check_vested`).\\n\\n**The swap always runs with a floor** (see `blend_pool::perform_reinvest`):\\nthe stricter of the keeper's `amount_out_min`, optionally carried in\\n`data` as 16 big-endian bytes, and the admin's `min_harvest_rate` priced\\nover the",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current contract version (1 at deploy, bumped on each upgrade).",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current strategy position details.\\nReturns (total_equity, total_shares, b_tokens, d_tokens, b_rate, d_rate).\\n\\n`total_equity` is the whole position's, harvest profit not yet vested\\nincluded; shares are priced at `total_equity / (total_shares +\\nunvested_shares())`.",
+      "name": "position",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  "i128",
+                  "i128",
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The intermediate token of the on-chain Soroswap harvest route, if any.",
+      "name": "swap_via",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw underlying by unwinding proportional leverage.\\n\\nFlow:\\n1. Calculate proportional b/d tokens for the requested amount\\n2. Submit unwind: repay proportional debt, withdraw proportional collateral\\n3. Burn shares, transfer equity to `to`\\n4. Return the depositor's remaining underlying balance",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rebalance: partial-unwind if HF is in the orange zone (HF < orange_hf),\\nrestoring HF to `orange_hf + REBALANCE_HF_BUFFER`. Callable by anyone\\n(permissionless \\xe2\\x80\\x94 protects the vault). Emits a `rebalance` event when debt\\nis repaid.",
+      "name": "rebalance",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current keeper address.",
+      "name": "get_keeper",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper-gated re-leverage: borrow against collateral the vault already\\nholds, supply it straight back, and restore the leverage ratio toward\\n`target_hf`. Returns the underlying borrowed (`0` on a no-op).\\n\\nThe only path that adds leverage to the existing position: `rebalance`,\\n`rebalance_keeper` and `partial_unwind` remove it, and `deposit`,\\n`harvest` and `harvest_reinvest` lever only the capital they bring in.\\n\\nEquity is untouched \\xe2\\x80\\x94 the borrow and the supply are the same amount, so\\n`B \\xe2\\x88\\x92 D` is invariant and no share price moves. What changes is the ratio\\nthe vault earns on.\\n\\n**What bounds it.** Adding leverage is the unsafe direction, so the keeper\\ngets no discretion over the amount (unlike `partial_unwind`, where the\\nkeeper's target is trusted precisely because it can only make the position\\nsafer). The target is fixed on-chain:\\n\\n- it is `target_hf`, the HF a fresh deposit lands at. HF and leverage are\\nthe same statement, so this *is* the \"never exceed the configured\\nleverage\" cap;\\n- `target_hf` sits at lea",
+      "name": "releverage",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new keeper address (keeper self-rotation).\\n\\nGated by the *current* keeper. This is one of two ways to rotate the\\nkeeper; see `admin_set_keeper` for the admin recovery path used when the\\nkeeper key is lost or compromised.",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The SEP-41 share token this strategy deployed at construction, and is\\nthe admin and minter of.",
+      "name": "share_token",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Live risk factors behind the health factor:\\n`(strategy_c_factor, pool_c_factor, pool_l_factor)`, all 1e7-scaled.\\n\\nRead-only view for operators and monitoring. The pool values are fetched\\nfrom the reserve config on every call, so a Blend governance change shows\\nhere as soon as it lands. The HF uses `min(strategy_c_factor,\\npool_c_factor)`.",
+      "name": "risk_factors",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Route the on-chain Soroswap harvest swap through `via` \\xe2\\x80\\x94 BLND \\xe2\\x86\\x92 via \\xe2\\x86\\x92\\nunderlying \\xe2\\x80\\x94 or straight BLND \\xe2\\x86\\x92 underlying with `None` (admin-gated).\\n\\nFor an underlying with no BLND pair on Soroswap (CETES, USTRY) or a thin\\none (XLM), the route through a deep intermediate (USDC) is the one that\\nworks, or pays. The swap's floor prices the BLND, not the route, so it is\\nunaffected.",
+      "name": "set_swap_via",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "via",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configured swap account, or `NotInitialized` if unset.",
+      "name": "swap_account",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the strategy with configuration.\\n\\ninit_args layout:\\n[0] pool: Address          \\xe2\\x80\\x94 Blend pool\\n[1] blend_token: Address   \\xe2\\x80\\x94 BLND token\\n[2] router: Address        \\xe2\\x80\\x94 Soroswap router\\n[3] reward_threshold: i128 \\xe2\\x80\\x94 min BLND to trigger harvest\\n[4] keeper: Address        \\xe2\\x80\\x94 authorized harvest caller\\n[5] c_factor: i128         \\xe2\\x80\\x94 collateral factor (1e7)\\n[6] target_hf: i128        \\xe2\\x80\\x94 health factor deposits are levered to (1e7)\\n[7] min_hf: i128           \\xe2\\x80\\x94 minimum health factor (1e7)\\n[8] orange_hf: i128        \\xe2\\x80\\x94 orange-zone threshold; partial unwind triggered below this (1e7)\\n[9] admin: Address         \\xe2\\x80\\x94 authorized to upgrade the contract\\n[10] share_token_wasm: BytesN<32> \\xe2\\x80\\x94 uploaded `vault_share` wasm hash\\n[11] share_name: String    \\xe2\\x80\\x94 share token name\\n[12] share_symbol: String  \\xe2\\x80\\x94 share token symbol\\n\\nThe strategy deploys its own share token, as both its admin and its\\nminter, so the token and its minter are fixed from construction: no\\nlater call can repoint the strategy at another token, or ",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "init_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper-gated: claim BLND emissions into the strategy and approve the swap\\naccount to pull them for an off-chain Broker swap. The BLND stays in the\\ncontract until pulled, so the on-chain Soroswap path remains a valid\\nfallback. Returns the BLND balance available to swap.\\n\\n**The approval is not unconditional.** Granting it records a\\n`PendingHarvest`: how much BLND became pullable, the underlying balance\\nbefore any proceeds could arrive, and the minimum underlying owed back at\\nthe admin's `min_harvest_rate`. `harvest_reinvest` will not settle the\\nharvest unless the measured proceeds clear that floor \\xe2\\x80\\x94 see there for the\\nmeasurement. Two conditions gate the approval, and failing either leaves\\nthe BLND in the contract for the Soroswap route rather than erroring:\\n\\n- a `swap_account` is set (who may pull), and\\n- a `min_harvest_rate` is set (what they owe back).\\n\\nClaiming while a previous claim's allowance is still live is rejected:\\ntwo overlapping approvals would let more BLND out than the newer floor\\ncovers. Once t",
+      "name": "harvest_claim",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get current health factor (1e7 scaled).\\n\\nExpressed in Blend's own terms: the collateral side is weighted by the\\nstrategy's `c_factor` (capped at the pool's live one) and the debt side\\ncarries the pool's live `l_factor`, so 1.0 here is the liquidation\\nthreshold, not an optimistic approximation of it.",
+      "name": "health_factor",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper-only partial unwind: if HF is below `target_hf`, repay just enough\\ndebt to bring it there. Unlike `rebalance` it acts at any HF below the\\ntarget, inside the orange zone or not, so the keeper can take leverage off\\nahead of a move it expects. Anyone else protects the vault through\\n`rebalance`. Emits a `rebalance` event with the keeper as caller when debt\\nis repaid. Returns the underlying repaid.\\n\\nThe keeper's authorization is required before anything else, so it is\\nspent even by a call that turns out to be a no-op: a signed call sent\\nwhile the vault has no debt cannot be replayed later, by anyone, at a\\nmoment of their choosing.\\n\\n`target_hf` is used as given, and refused with `InvalidArgument` below the\\nrebalance target (`orange_hf + REBALANCE_HF_BUFFER`): landing nearer the\\ntrigger would re-arm it on the next accrual, the churn the buffer exists\\nto prevent.",
+      "name": "partial_unwind",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target_hf",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The claim awaiting settlement as `(blnd_claimed, underlying_before,\\nfloor, approval_expiration)`, or an error when none is in flight.\\n\\nRead-only view of the obligation the next `harvest_reinvest` has to\\nclear, so the keeper and monitoring can see an unsettled claim (and the\\nledger at which its allowance expires) rather than inferring it from\\nevents.",
+      "name": "pending_harvest",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128",
+                  "i128",
+                  "u32"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the risk parameters (admin-gated), under the constructor's own\\nvalidation against the pool's live reserve config \\xe2\\x80\\x94 notably\\n`c_factor <= pool c_factor`, so a Blend governance cut can be followed\\nwithin its timelock.\\n\\nTakes effect at once: new deposits and harvests lever to the new\\n`target_hf`; `releverage` moves the existing position toward it when it\\nis lower, the keeper's `partial_unwind` when it is higher; and a higher\\n`orange_hf` can make the position eligible for `rebalance` immediately.\\nEmits `risk_params` with the new `(c_factor, target_hf, min_hf,\\norange_hf)`.",
+      "name": "set_risk_params",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "c_factor",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "target_hf",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_hf",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "orange_hf",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Shares harvest profit was minted as, still vesting to the holders (see\\n`PROFIT_UNLOCK_LEDGERS`). Not part of the share token's supply.",
+      "name": "unvested_shares",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin recovery path to rotate the keeper (gated by the `admin-sep` admin).\\n\\nComplements `set_keeper`: the keeper rotates itself in normal operation,\\nbut if the keeper key is lost or compromised the admin can install a new\\nkeeper here without the old keeper's cooperation.",
+      "name": "admin_set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper-gated: re-leverage harvested proceeds via the chosen route.\\n\\n- `via_soroswap = true`: swap the strategy's BLND \\xe2\\x86\\x92 underlying on-chain\\nthrough Soroswap, under the same floor as the trait `harvest` (the\\nstricter of `amount_out_min` and the admin's `min_harvest_rate`), then\\nre-leverage.\\n- `via_soroswap = false` (Broker): the keeper has already swapped off-chain\\nand transferred `amount_in` of underlying back to the strategy; re-leverage\\nit directly (asserted to be held). `amount_out_min` is ignored here.\\n\\n**Settlement floor.** This call closes out the `PendingHarvest` opened by\\n`harvest_claim`, measured on two balances the contract reads itself\\nrather than on `amount_in`, which says nothing about where the\\nunderlying came from:\\n\\n- `spent` \\xe2\\x80\\x94 BLND the claim made pullable, minus what is still here.\\nHowever much left, by whatever route, is what is owed for.\\n- `delivered` \\xe2\\x80\\x94 underlying held now over the claim-time baseline, plus\\nthe on-chain swap's output when this call is the one that swapped.\\n\\n`delivered`",
+      "name": "harvest_reinvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "via_soroswap",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_out_min",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configured settlement floor rate, or an error if unset (Broker path\\nclosed). See `set_min_harvest_rate` for the units.",
+      "name": "min_harvest_rate",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper-authorised auto-rebalance: `rebalance`, attributed to the keeper.\\nRepays just enough debt to bring HF back to `orange_hf +\\nREBALANCE_HF_BUFFER` when it has dropped into the orange zone; emits a\\n`rebalance` event with the keeper as caller, before/after HF and the\\nunderlying repaid. Returns the underlying repaid.\\n\\nNot rate-limited, and nothing would be gained by it: `rebalance` offers\\nthe same unwind to anyone, and the unwind limits itself \\xe2\\x80\\x94 it acts only\\nbelow `orange_hf` and lands above it, so a repeat call is a no-op.",
+      "name": "rebalance_keeper",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the keeper-controlled account allowed to pull claimed BLND for an\\noff-chain swap (admin-gated).\\n\\nRevokes the outgoing account's allowance first, so a removed account\\ncannot pull a claim in flight. That claim stays pending: settle it through\\n`harvest_reinvest`, or let it expire and claim again for the new account.",
+      "name": "set_swap_account",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the harvest floor rate (admin-gated): the minimum underlying the\\nvault will accept back per `SCALAR_7` of BLND it gives up, both in\\nsmallest units.\\n\\nOne rate governs both harvest routes. On the off-chain (Broker) path it\\nis the settlement floor `harvest_reinvest` measures the returned\\nunderlying against; on the on-chain Soroswap swap (trait `harvest`, and\\n`harvest_reinvest` with `via_soroswap`) it becomes the swap's\\n`amount_out_min` when the caller supplies no stricter one of its own.\\n\\nIt is a floor, not a price \\xe2\\x80\\x94 set it well below the market BLND rate (a\\nthird to a half is a reasonable starting point) so ordinary spread, Broker\\nfee and price drift between claim and settle never trip it, and it binds\\nonly when a settlement comes back materially short of what the BLND was\\nworth.\\n\\nConsequences of getting it wrong are asymmetric and both recoverable:\\ntoo high and the harvest reverts until the admin lowers it (yield\\npauses, nothing is lost); too low and the floor stops catching small\\nshortfalls. Review it w",
+      "name": "set_min_harvest_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the minimum BLND balance a harvest swaps (admin-gated). Emits\\n`reward_threshold`.",
+      "name": "set_reward_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reward_threshold",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "The underlying asset (e.g. USDC)",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "BLND token address",
+          "name": "blend_token",
+          "type_": "address"
+        },
+        {
+          "doc": "Collateral factor (1e7 scaled, e.g. 9_500_000 = 0.95). Health-factor\\nmath uses the lower of this and the pool's live one.",
+          "name": "c_factor",
+          "type_": "i128"
+        },
+        {
+          "doc": "Emission claim IDs (supply + borrow sides)",
+          "name": "claim_ids",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Minimum health factor (1e7 scaled, e.g. 1_050_000 = 1.05)",
+          "name": "min_hf",
+          "type_": "i128"
+        },
+        {
+          "doc": "Orange-zone threshold: HF below this triggers partial unwind (1e7 scaled).\\nMust satisfy min_hf < orange_hf. e.g. 1_150_000 = 1.15",
+          "name": "orange_hf",
+          "type_": "i128"
+        },
+        {
+          "doc": "Blend pool address",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "Reserve index in the pool",
+          "name": "reserve_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Minimum BLND balance to trigger harvest swap",
+          "name": "reward_threshold",
+          "type_": "i128"
+        },
+        {
+          "doc": "Soroswap router address",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "Health factor a deposit is levered to (1e7 scaled, e.g. 11_300_000 =\\n1.13), in Blend's terms: the pool's live `l_factor` is part of it. It is\\nthe vault's leverage, `B/E = target_hf / (target_hf \\xe2\\x88\\x92 c_factor \\xc3\\x97 l_factor)`.\\nAt least `orange_hf + RELEVERAGE_HF_BUFFER` (`validate_risk_params`).",
+          "name": "target_hf",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Keeper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Monotonic contract version, bumped on each upgrade.",
+            "name": "Version"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The SEP-41 vault-share token contract \\xe2\\x80\\x94 the canonical per-user share\\nledger. The strategy is its minter (mints on deposit, burns on withdraw).",
+            "name": "ShareToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ledger sequence of the last keeper re-leverage (for rate-limiting).",
+            "name": "LastReleverage"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Keeper-controlled account allowed to pull claimed BLND for an off-chain\\n(Stellar Broker) swap during the split harvest flow.",
+            "name": "SwapAccount"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Minimum underlying the vault will accept per `SCALAR_7` of BLND when an\\noff-chain harvest settles (admin-set). Gates the Broker path.",
+            "name": "MinHarvestRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The in-flight `harvest_claim` awaiting settlement by `harvest_reinvest`.",
+            "name": "PendingHarvest"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Shares minted for harvest profit, still vesting to the holders.",
+            "name": "UnvestedShares"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Optional intermediate token of the on-chain Soroswap harvest route\\n(BLND \\xe2\\x86\\x92 via \\xe2\\x86\\x92 underlying), admin-set.",
+            "name": "SwapVia"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A `harvest_claim` whose BLND has been approved to the swap account and whose\\nproceeds have not yet been settled by `harvest_reinvest`.\\n\\nThe record is what ties the two halves of the split harvest together: it\\npins how much BLND was pullable, what the underlying balance was before any\\nof it could come back, and the minimum that must return. Single-use \\xe2\\x80\\x94 the\\nsettling call takes it.",
+      "lib": "",
+      "name": "PendingHarvest",
+      "fields": [
+        {
+          "doc": "BLND held by the strategy at claim time \\xe2\\x80\\x94 the whole approved amount.",
+          "name": "blnd_claimed",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger at which the swap account's allowance expires.",
+          "name": "expiration",
+          "type_": "u32"
+        },
+        {
+          "doc": "Minimum underlying owed back if the whole `blnd_claimed` is pulled.\\nProrated at settlement by how much BLND actually left.",
+          "name": "floor",
+          "type_": "i128"
+        },
+        {
+          "doc": "Underlying held at claim time, the baseline the settlement is measured\\nagainst. Idle underlying is normally ~0 (deposits are levered in the\\nsame call), so growth over this baseline *is* the harvest proceeds.",
+          "name": "underlying_before",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Shares a harvest's profit was minted as, held by no one: `amount` at ledger\\n`start`, vesting linearly to none at ledger `end` (see\\n`PROFIT_UNLOCK_LEDGERS`). They are priced alongside the holders' shares\\nuntil they vest, and are never part of the share token's supply.",
+      "lib": "",
+      "name": "UnvestedShares",
+      "fields": [
+        {
+          "doc": "Shares still unvested at ledger `start`.",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger by which all of `amount` has vested.",
+          "name": "end",
+          "type_": "u32"
+        },
+        {
+          "doc": "Ledger the schedule was last set.",
+          "name": "start",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 401
+        },
+        {
+          "doc": "",
+          "name": "NegativeNotAllowed",
+          "value": 410
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgument",
+          "value": 411
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 412
+        },
+        {
+          "doc": "",
+          "name": "UnderflowOverflow",
+          "value": 413
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticError",
+          "value": 414
+        },
+        {
+          "doc": "",
+          "name": "DivisionByZero",
+          "value": 415
+        },
+        {
+          "doc": "",
+          "name": "InvalidSharesMinted",
+          "value": 416
+        },
+        {
+          "doc": "",
+          "name": "OnlyPositiveAmountAllowed",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 418
+        },
+        {
+          "doc": "",
+          "name": "ProtocolAddressNotFound",
+          "value": 420
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExpired",
+          "value": 421
+        },
+        {
+          "doc": "",
+          "name": "ExternalError",
+          "value": 422
+        },
+        {
+          "doc": "",
+          "name": "SoroswapPairError",
+          "value": 423
+        },
+        {
+          "doc": "",
+          "name": "AmountBelowMinDust",
+          "value": 451
+        },
+        {
+          "doc": "",
+          "name": "UnderlyingAmountBelowMin",
+          "value": 452
+        },
+        {
+          "doc": "",
+          "name": "BTokensAmountBelowMin",
+          "value": 453
+        },
+        {
+          "doc": "",
+          "name": "InternalSwapError",
+          "value": 454
+        },
+        {
+          "doc": "",
+          "name": "SupplyNotFound",
+          "value": 455
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositEvent",
+      "prefix_topics": [
+        "deposit_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HarvestEvent",
+      "prefix_topics": [
+        "harvest_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "price_per_share",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawEvent",
+      "prefix_topics": [
+        "withdraw_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
