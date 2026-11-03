@@ -1,0 +1,738 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Agent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "Policy"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "UnknownAgent",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AgentPaused",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AgentExpired",
+          "value": 3
+        },
+        {
+          "doc": "Agents may only authorize token transfers, nothing else.",
+          "name": "NotATransfer",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "WrongToken",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "PayeeNotAllowed",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "OverPerTxLimit",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "OverBudget",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "AgentExists",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidPolicy",
+          "value": 11
+        },
+        {
+          "doc": "A passkey signature, but this wallet has no passkey owner.",
+          "name": "NoPasskey",
+          "value": 12
+        },
+        {
+          "doc": "The passkey assertion is malformed or not for this payload.",
+          "name": "InvalidPasskeySignature",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What an agent has spent in its current budget window.",
+      "lib": "",
+      "name": "Spend",
+      "fields": [
+        {
+          "doc": "",
+          "name": "spent",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "window_start",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What an agent may do with the wallet's money.",
+      "lib": "",
+      "name": "Policy",
+      "fields": [
+        {
+          "doc": "Most the agent may send in one budget window.",
+          "name": "budget",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger timestamp after which the agent can no longer spend. 0 = never.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Payees the agent may pay. Empty means any payee.",
+          "name": "payees",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Most the agent may send in a single transfer, in the token's base units.",
+          "name": "per_tx",
+          "type_": "i128"
+        },
+        {
+          "doc": "The one asset the agent may spend, e.g. the USDC Stellar Asset Contract.",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Length of the budget window in seconds (e.g. 2_592_000 for 30 days).",
+          "name": "window_secs",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A one-off approval from the owner for a payment the policy would refuse,\\nsuch as one over the per-transfer limit. Used up by the first matching\\ntransfer to `payee` of at most `amount`.",
+      "lib": "",
+      "name": "Allowance",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What can sign for this wallet: an agent (limited by its policy) or the\\nowner's passkey (anything).",
+      "lib": "",
+      "name": "Signature",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Agent",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AgentSignature"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Passkey",
+            "type_": [
+              {
+                "udt": {
+                  "name": "PasskeySignature"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AgentAdded",
+      "prefix_topics": [
+        "agent_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "Policy"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted for every transfer an agent authorizes, so each payment can be\\ntraced back to the mandate that allowed it.",
+      "lib": "",
+      "name": "AgentSpend",
+      "prefix_topics": [
+        "agent_spend"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "True when an owner approval, not the policy, covered this payment.",
+          "name": "approved_by_owner",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AgentRemoved",
+      "prefix_topics": [
+        "agent_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The signature an agent attaches to an authorization entry.",
+      "lib": "",
+      "name": "AgentSignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A passkey (WebAuthn) assertion, as the browser returns it, with the\\nsignature converted from DER to 64-byte r||s with a low S.",
+      "lib": "",
+      "name": "PasskeySignature",
+      "fields": [
+        {
+          "doc": "",
+          "name": "authenticator_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "client_data_json",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "agent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Agent"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The owner's passkey, if a passkey owns this wallet.",
+      "name": "passkey",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 65
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moves funds out of the wallet. Only the owner can do this.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_agent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "Policy"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What the agent can still spend in its current window.",
+      "name": "remaining",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Hands the wallet to another address. Removes any passkey owner.",
+      "name": "set_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces an agent's policy. What it has already spent this window stays counted.",
+      "name": "set_policy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "Policy"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moves ownership to a passkey, e.g. to add a new device or replace a lost one.",
+      "name": "set_passkey",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "udt": {
+              "name": "Signature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Approves one payment the policy would otherwise refuse. This is how an\\n\"ask me first\" request from an agent gets answered on-chain.",
+      "name": "approve_once",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Revokes an agent immediately. Its key can never authorize anything again.",
+      "name": "remove_agent",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pass exactly one of `owner` (an address that will authorize owner\\ncalls) or `passkey` (an uncompressed secp256r1 key; the wallet then\\nowns itself and checks the passkey in `__check_auth`).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "passkey",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
