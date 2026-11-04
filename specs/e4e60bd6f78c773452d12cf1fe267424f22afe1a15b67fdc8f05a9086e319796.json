@@ -1,0 +1,313 @@
+[
+  {
+    "function_v0": {
+      "doc": "Stakes `amount` of `asset` (already transferred to this contract by\\nthe caller \\xe2\\x80\\x94 see vault-factory's fund_vault) into `pool_id` on the\\nvault's behalf. `pool_id` is an off-chain-computed hint (whichever\\npool currently has the best yield, per blendRates.ts) \\xe2\\x80\\x94 this contract\\nstill executes the actual token movement on-chain, so a wrong or\\nmalicious hint can only mean a worse pool, never a way to divert\\nfunds, since `to`/`from`/`spender` on the Blend call are always this\\ncontract's own address.\\n\\nOnly callable by the configured vault-factory (`vault_factory` here\\nmust be the caller authorizing this invocation \\xe2\\x80\\x94 Soroban satisfies\\nthis automatically for a contract calling another contract with its\\nown address, no separate signature needed).",
+      "name": "stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swaps this contract's WASM in place, keeping the same contract ID\\nand all existing storage (positions, admin, pool allowlist) intact \\xe2\\x80\\x94\\nthe standard Soroban upgrade pattern. Same rationale as\\nvault-factory's `upgrade`: without this, any future fix requires a\\nbrand-new contract and orphans every vault's still-open position.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unstakes a vault's *full* position (principal + all accrued yield so\\nfar) and closes it out \\xe2\\x80\\x94 used for a `Manual` release, or a\\n`Schedule`/`Pct` drip's final interval, so the last payment captures\\nwhatever yield accrued rather than leaving dust stranded with no\\nmore scheduled withdrawals. Sends straight to `vault_factory`\\n(skipping an extra transfer hop through this contract).",
+      "name": "unstake_full",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. `admin` should be a multisig, same requirement as\\nvault-factory's admin (FR-2.6) \\xe2\\x80\\x94 this contract can move staked funds.\\n\\nA Soroban constructor (Protocol 22+), invoked atomically by the\\n`CreateContractV2` host operation in the same transaction as\\ndeployment \\xe2\\x80\\x94 see vault-factory's `__constructor` for why a\\npost-deploy `initialize` function (even with `require_auth`) leaves a\\nrace window an attacker can win by naming themselves admin first, and\\nwhy a constructor closes it structurally rather than just narrowing\\nit.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_factory",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reports a vault's current staked value (principal + accrued interest\\nso far), without unstaking anything \\xe2\\x80\\x94 this is a read-only call, never\\na real Blend withdrawal. Uses the pool's *current* `b_rate` against\\nthis vault's tracked share count, so the number moves as Blend's\\ninterest accrues, the same way a wallet balance would.",
+      "name": "get_vault_value",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unstakes exactly `amount` from a vault's position, leaving the\\nremainder staked \\xe2\\x80\\x94 used for `Schedule`/`Pct` drip intervals that\\naren't the vault's last. The position is *not* closed: the vault\\nkeeps earning yield on what's left.",
+      "name": "unstake_partial",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds or removes a Blend pool from the set this adapter may call.\\nPool contracts receive token-moving authority during `submit`, so an\\narbitrary off-chain rate hint must never become an arbitrary contract\\ninvocation. The configured multisig admin owns this risk boundary.",
+      "name": "set_pool_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a vault is currently staked into. The Blend pool is the source of\\ntruth for the position's real *value* (principal + accrued interest) \\xe2\\x80\\x94\\n`shares` never caches that value directly. It only records how many\\nbTokens this vault's share of the adapter's pooled Blend position\\nrepresents, measured as a balance delta around each stake/unstake call\\n(Blend has no concept of per-vault positions; every vault's funds sit\\nunder this adapter's own address). Combined with the pool's current\\n`b_rate` (see `get_vault_value`), that's enough to report a live value\\nwithout executing a withdrawal.",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": "address"
+        },
+        {
+          "doc": "Reentrancy guard, same pattern and rationale as vault-factory's\\n`Vault.releasing`: stake()/unstake_full()/unstake_partial() can't\\nknow this position's final share count until Blend's `pool.submit()`\\nreturns, so the usual \"write final state before any external call\"\\nordering isn't available. Set true immediately before calling into\\nBlend, checked at entry, cleared on the final storage write.",
+          "name": "processing",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "PositionNotFound",
+          "value": 4
+        },
+        {
+          "doc": "A vault may add to its existing position, but it may not silently\\nswitch pool or asset while funds remain in the original position.",
+          "name": "PositionMismatch",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidParams",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "PoolNotAllowed",
+          "value": 7
+        },
+        {
+          "doc": "stake()/unstake_full()/unstake_partial() reentrancy guard tripped \\xe2\\x80\\x94\\nthis position already has one of those calls in flight. See\\n`Position.processing`'s doc comment.",
+          "name": "PositionBusy",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The only address permitted to call stake/unstake (vault-factory).",
+            "name": "VaultFactory"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Blend pools explicitly approved by the yield-adapter admin.",
+            "name": "AllowedPool",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Position",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

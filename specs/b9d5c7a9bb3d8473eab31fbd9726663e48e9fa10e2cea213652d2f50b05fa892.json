@@ -1,0 +1,1168 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "Cross-contract call surface for the yield-adapter (ADR 0006), declared as\\na bare trait rather than a dependency on the `yield-adapter` crate.\\n\\nA Cargo dependency on that crate would also link its `#[contract]`\\nstruct and `#[contractimpl]` block into *this* contract's own compiled\\nWasm \\xe2\\x80\\x94 `cdylib` linking includes every reachable Wasm-exported symbol\\nfrom any dependency, not just the ones this crate's code actually calls.\\nThat silently duplicated the yield-adapter's entire exported interface\\n(including a second, incompatible `__constructor`) inside vault-factory's\\nown binary, breaking function dispatch on both sides. A `#[contractclient]`\\ntrait has no function bodies, so it generates only the thin\\naddress-based call wrapper below and nothing gets exported.\\n\\nvault-factory never inspects the specific error a yield-adapter call\\nfails with \\xe2\\x80\\x94 it only ever uses the panicking `Client` methods (`stake`,\\n`unstake_full`, `unstake_partial`), which abort the whole transaction on\\nany failure regardless of the concrete e",
+      "lib": "",
+      "name": "YieldAdapterError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Unspecified",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "FR-2.4/FR-3.1. **Permissionless** \\xe2\\x80\\x94 callable by any address once the\\nvault's `lock_rule` condition is met. This is the baseline guarantee\\nthat a payout can never be stuck just because Agapay's own keeper\\ninfrastructure is down (see backend/keeper and PRD NFR-2.1).\\n`triggered_by` is recorded for keeper-incentive accounting (FR-3.2)\\nbut is never authorization-gated.",
+      "name": "release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "triggered_by",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swaps this contract's WASM in place, keeping the same contract ID and\\nall existing storage (vaults, admin, config) intact \\xe2\\x80\\x94 the standard\\nSoroban upgrade pattern. Without this, any future code change would\\nrequire deploying a brand-new contract and losing every vault's\\non-chain history, which is far too destructive for a fix or feature\\nadd. Admin-gated, same threshold requirement as every other admin\\ncapability here (FR-2.6).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Vault"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless maintenance operation used by supervised keepers. It\\ncommits TTL extension for the contract instance/code and the selected\\npersistent vault entry; unlike read simulation, this changes ledger state.",
+      "name": "extend_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "FR-2.3. Any address may fund any vault, not just its owner \\xe2\\x80\\x94 a\\ndeliberately supported use case, not an edge case to block.\\n\\nADR 0006: vaults always stake \\xe2\\x80\\x94 this is not an opt-in path, so\\nfund_vault requires a configured yield-adapter and immediately\\ndelegates the received amount to it. `pool_id` is an off-chain\\n\"best current yield\" hint (see backend/api/src/yield/blendRates.ts)\\n\\xe2\\x80\\x94 the yield-adapter contract still executes the actual token\\nmovement, so a wrong hint can only mean a worse pool, never a way to\\nmisdirect funds (same reasoning as `release`'s `triggered_by`).",
+      "name": "fund_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency stop on *new* vault activity only. Never gates `release()`\\n\\xe2\\x80\\x94 pausing the ability to pay out already-funded vaults would defeat\\nthe FR-3.1/NFR-2.1 \"money never gets stuck\" guarantee this whole\\ndesign exists to provide.",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lets an owner walk away from a vault that never received any\\nfunding. Deliberately unavailable once even one atomic unit is funded \\xe2\\x80\\x94\\nreal money in the vault means release() is the only safe exit\\n(FR-3.1's \"money never gets stuck\" guarantee), never a cancel path.",
+      "name": "cancel_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "FR-2.1/FR-2.2. Requires `owner.require_auth()` \\xe2\\x80\\x94 creating a vault is\\nnot permissionless (unlike `release`, see FR-3.1).\\n\\n`Schedule`/`Pct` are now accepted alongside `Manual` (drip release) \\xe2\\x80\\x94\\nsee `release()`'s per-rule branch for how each pays out.",
+      "name": "create_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "due_date",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "beneficiaries",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "split_rule",
+          "type_": {
+            "udt": {
+              "name": "SplitRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "release_rule",
+          "type_": {
+            "udt": {
+              "name": "ReleaseRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "lock_rule",
+          "type_": {
+            "udt": {
+              "name": "LockRule"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Backstop for a vault whose stored `split_rule` can never be satisfied\\nby `release()` \\xe2\\x80\\x94 e.g. a `Percentage` split that doesn't sum to\\n10,000 bps, created before `validate_split` caught this at creation\\ntime (the exact bug class behind a real stuck testnet vault). This is\\ndeliberately *not* a general admin override \\xe2\\x80\\x94 every guard below\\nexists so a compromised or malicious admin key still can't use this\\nto redirect funds anywhere but the vault's own beneficiaries:\\n\\n- Only fires when `split_amounts` \\xe2\\x80\\x94 the identical computation\\n`release()` itself would run \\xe2\\x80\\x94 provably fails on this vault's own\\nstored data, re-derived here rather than taken on the caller's\\nword. A vault `release()` could actually complete is never\\neligible, so this can never be used to shortcut a normal release\\nor skip its own conditions (due date, target-met, schedule).\\n- No destination parameter. Funds always go to the vault's own\\nalready-stored beneficiaries, split evenly \\xe2\\x80\\x94 the broken\\nsplit_rule's own numbers are exactly what can't be tr",
+      "name": "rescue_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. `admin` should itself be a Stellar multisig (M-of-N)\\naccount, not a single key \\xe2\\x80\\x94 see FR-2.6 and ADR 0001's note that\\nStellar's native multisig satisfies this requirement directly.\\n\\nThis is a Soroban constructor (Protocol 22+), not a regular\\n`initialize` function called in a second transaction after deploy.\\nThat distinction is load-bearing: a constructor runs atomically as\\npart of the `CreateContractV2` host operation, in the *same*\\ntransaction that deploys the contract (`stellar contract deploy\\n--wasm ... -- --admin <address>`), and the host only ever invokes it\\nfrom that internal path \\xe2\\x80\\x94 no transaction submitted after deployment\\ncan call `__constructor` again, at any address, by anyone (see\\n`call_constructor` in soroban-env-host, which runs it with\\n`internal_host_call: true`, unreachable from `invoke_contract`).\\n\\nA plain post-deploy `initialize` function \\xe2\\x80\\x94 even with\\n`admin.require_auth()` \\xe2\\x80\\x94 leaves a window between the deploy\\ntransaction landing and the initialize transaction landing wh",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assigns the Agapay fee recipient. Production deployments should set\\nthis to a separately controlled treasury rather than an operator key.",
+      "name": "set_fee_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds or removes an asset from the set `create_vault` may denominate\\na vault in \\xe2\\x80\\x94 mirrors yield-adapter's Blend pool allowlist\\n(`set_pool_allowed`). Without this, any syntactically-valid contract\\naddress could be named as `asset`, including one an attacker\\ncontrols with adversarial `transfer()` logic, with no on-chain\\nrestriction to real, vetted stablecoins (the PRD's own \"stablecoins\\nonly\" requirement was previously enforced nowhere on-chain).",
+      "name": "set_asset_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configures the yield-adapter contract fund_vault/release delegate\\nstaking to (ADR 0006). Admin-gated, same threshold requirement as\\nevery other admin capability here (FR-2.6).",
+      "name": "set_yield_adapter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yield_adapter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Vault",
+      "fields": [
+        {
+          "doc": "Denomination asset's Stellar Asset Contract address. Stablecoins only (PRD B.2.5).",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "beneficiaries",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "current_balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix seconds.",
+          "name": "due_date",
+          "type_": "u64"
+        },
+        {
+          "doc": "Principal required to satisfy target-based locks: target + fee.",
+          "name": "funding_target",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "lock_rule",
+          "type_": {
+            "udt": {
+              "name": "LockRule"
+            }
+          }
+        },
+        {
+          "doc": "The next timestamp a `Schedule`/`Pct` drip interval becomes due.\\nStarts at `due_date`, advances by `interval_seconds` after each\\nnon-final drip. Unused by `Manual` (its own `due_date` check via\\n`lock_rule` is what gates it).",
+          "name": "next_release_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "Agapay protocol fee fixed at creation from target and duration.",
+          "name": "platform_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "release_rule",
+          "type_": {
+            "udt": {
+              "name": "ReleaseRule"
+            }
+          }
+        },
+        {
+          "doc": "Reentrancy guard. Set true immediately before `release()`/\\n`rescue_vault()` call out to the yield-adapter (and, transitively,\\nBlend) \\xe2\\x80\\x94 both functions need that call's *return value* to compute\\nthe final balance/status, so the usual \"write final state before any\\nexternal call\" ordering isn't available here. This flag is the\\nfallback: it closes the window a reentrant call could otherwise walk\\nthrough while this vault's real final state is still unwritten. Not\\ncurrently known to be exploitable (neither SEP-41 token transfers nor\\nBlend's `pool.submit()` call back into arbitrary caller contracts),\\nbut that's an assumption about every current *and future* allowlisted\\nasset/pool, not a structural guarantee \\xe2\\x80\\x94 found in an adversarial\\nsecurity review ahead of mainnet.",
+          "name": "releasing",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "split_rule",
+          "type_": {
+            "udt": {
+              "name": "SplitRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "VaultStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "target_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Snapshotted from the contract's global `yield_adapter` the moment this\\nvault is first funded \\xe2\\x80\\x94 never re-read afterward, even if admin later\\ncalls `set_yield_adapter` to point new vaults elsewhere. Without this,\\nan admin changing the global adapter while this vault still has an\\nopen position there orphans it permanently: both `release()` and its\\nown `rescue_vault()` backstop would call the *new* adapter, which has\\nno record of this vault's position (`PositionNotFound`), with no\\npath back to the old adapter either. `None` until first funded.",
+          "name": "yield_adapter",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What condition gates `release()`, independent of `ReleaseRule`'s payout\\n*shape*. Mirrors the vocabulary the wizard already shows users\\n(frontend/web/src/vaultWizard.ts's `LockRule`) \\xe2\\x80\\x94 previously collected\\nfrom users but never actually enforced on-chain; `release()` checked\\n`due_date` unconditionally regardless of what a user picked. FR-2.4\\nrequires a target-gated rule to actually revert if the target isn't met.",
+      "lib": "",
+      "name": "LockRule",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Gated on `due_date` only \\xe2\\x80\\x94 today's only enforced behavior.",
+            "name": "TargetDate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Gated on `current_balance >= funding_target` only, no date requirement.",
+            "name": "TargetMet"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Gated on both `due_date` and `target_amount`.",
+            "name": "Both"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "No additional gate beyond the vault being `Active`.",
+            "name": "None"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PctParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "interval_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "percent_per_interval",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "How a release is divided among beneficiaries. Mirrors cal-core's `SplitRule`.",
+      "lib": "",
+      "name": "SplitRule",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Equal"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Beneficiary index -> principal amount at the vault target. Values must\\nbe positive and sum to `target_amount`; yield/shortfall scales them\\nproportionally, with final-beneficiary rounding dust.",
+            "name": "Fixed",
+            "type_": [
+              {
+                "vec": {
+                  "element_type": "i128"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Beneficiary index -> percentage (parts per 10_000, i.e. basis points).",
+            "name": "Percentage",
+            "type_": [
+              {
+                "vec": {
+                  "element_type": "u32"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "How a vault pays out. Mirrors cal-core's `ReleaseRule` (PRD FR-2.1).",
+      "lib": "",
+      "name": "ReleaseRule",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Full balance released once, on or after `due_date`.",
+            "name": "Manual"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A fixed amount released per interval, starting at `due_date`.",
+            "name": "Schedule",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ScheduleParams"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A percentage of the *remaining* balance released per interval.",
+            "name": "Pct",
+            "type_": [
+              {
+                "udt": {
+                  "name": "PctParams"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Active"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Funding is closed and scheduled/percentage payouts are in progress.",
+            "name": "Draining"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Completed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Archived"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Owner-cancelled while still unfunded (`current_balance == 0`) \\xe2\\x80\\x94 a\\nterminal state, same as Completed/Archived. Never reachable once any\\nfunding has landed, since real money means release() is the only\\nsafe way out (FR-3.1's \"money never gets stuck\" guarantee).",
+            "name": "Cancelled"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultFunded",
+      "prefix_topics": [
+        "funded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "event",
+          "type_": {
+            "udt": {
+              "name": "VaultFundedEvent"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted on every successful `release()` call. Indexed by Mercury (ADR 0003)\\ninto the off-chain `ReleaseEvent` cache \\xe2\\x80\\x94 this on-chain event is the source\\nof truth (NFR-4.2), the indexed copy is a derived, rebuildable cache.",
+      "lib": "",
+      "name": "ReleaseEvent",
+      "fields": [
+        {
+          "doc": "Parallel to `Vault.beneficiaries` \\xe2\\x80\\x94 amounts[i] paid to beneficiaries[i].",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "platform_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "triggered_by",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultCreated",
+      "prefix_topics": [
+        "created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "event",
+          "type_": {
+            "udt": {
+              "name": "VaultCreatedEvent"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultRescued",
+      "prefix_topics": [
+        "rescued"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "event",
+          "type_": {
+            "udt": {
+              "name": "VaultRescuedEvent"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultReleased",
+      "prefix_topics": [
+        "release"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "event",
+          "type_": {
+            "udt": {
+              "name": "ReleaseEvent"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`#[contracttype]` enums only support unit variants or single-value tuple\\nvariants (soroban-sdk 27 rejects multi-field struct variants at the\\nTryFromVal level) \\xe2\\x80\\x94 so `Schedule`/`Pct` each wrap a dedicated params\\nstruct rather than carrying two named fields directly.",
+      "lib": "",
+      "name": "ScheduleParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_per_interval",
+          "type_": "i128"
+        },
+        {
+          "doc": "Day of the calendar month (1-28) a drip may land on. 28 is the cap\\nso every month has that day, avoiding February edge cases. 0 = not\\nused. Mutually exclusive with `days_of_week`.",
+          "name": "day_of_month",
+          "type_": "u32"
+        },
+        {
+          "doc": "Bitmask of allowed weekdays a drip may land on: bit 0 = Sunday ...\\nbit 6 = Saturday (same convention as JS `Date.getUTCDay()`, so the\\nwizard's day-of-week picker maps directly). 0 = not used. Mutually\\nexclusive with `day_of_month`.",
+          "name": "days_of_week",
+          "type_": "u32"
+        },
+        {
+          "doc": "Flat step in seconds between drips. Only used when both fields below\\nare 0 \\xe2\\x80\\x94 a calendar-anchored schedule (weekday or day-of-month)\\noverrides it, since \"every N seconds\" can't express \"every Monday\"\\nor \"the 15th of the month\" (months/weeks aren't a fixed number of\\nseconds). See `next_schedule_release` in lib.rs.",
+          "name": "interval_seconds",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultCancelled",
+      "prefix_topics": [
+        "cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "event",
+          "type_": {
+            "udt": {
+              "name": "VaultCancelledEvent"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted after funds have been transferred and successfully supplied to the\\napproved yield pool. This is the durable source for funding reconciliation.",
+      "lib": "",
+      "name": "VaultFundedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted when a vault is created so off-chain views can discover the new\\nidentifier without scanning contract storage.",
+      "lib": "",
+      "name": "VaultCreatedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted by `rescue_vault` \\xe2\\x80\\x94 deliberately a distinct event from\\n`VaultReleased`, never reused, so a rescue is always visible on-chain as\\nexactly what it is: a backstop path taken because the vault's stored\\nsplit_rule could never satisfy a normal `release()`, not a normal payout.",
+      "lib": "",
+      "name": "VaultRescuedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Equal split among the vault's own stored beneficiaries \\xe2\\x80\\x94 rescue never\\ntakes a caller-supplied distribution, only this one deterministic\\nfallback, precisely so the admin has no discretion over amounts.",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "platform_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted when an owner cancels their own still-unfunded vault.",
+      "lib": "",
+      "name": "VaultCancelledEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "VaultNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidParams",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TooManyBeneficiaries",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotDue",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "TargetNotMet",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AlreadyCompleted",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "SplitMismatch",
+          "value": 9
+        },
+        {
+          "doc": "fund_vault requires a configured yield-adapter (ADR 0006) \\xe2\\x80\\x94 vaults\\nalways stake, this is not an optional/degraded path.",
+          "name": "YieldAdapterNotConfigured",
+          "value": 10
+        },
+        {
+          "doc": "The vault reached its padded funding requirement and no longer accepts deposits.",
+          "name": "FundingClosed",
+          "value": 11
+        },
+        {
+          "doc": "A deposit may fill the remaining requirement but may not overfund it.",
+          "name": "FundingExceedsTarget",
+          "value": 12
+        },
+        {
+          "doc": "`cancel_vault` was called by an address other than the vault's owner.",
+          "name": "NotOwner",
+          "value": 13
+        },
+        {
+          "doc": "`cancel_vault` requires `current_balance == 0` \\xe2\\x80\\x94 once any funding has\\nlanded, release() is the only way out (FR-3.1).",
+          "name": "VaultNotEmpty",
+          "value": 14
+        },
+        {
+          "doc": "`create_vault`'s `asset` is not on the admin-approved allowlist (see\\n`set_asset_allowed`) \\xe2\\x80\\x94 mirrors yield-adapter's Blend pool allowlist,\\nclosing the gap where any syntactically-valid contract address could\\notherwise be named as a vault's denomination, including one an\\nattacker controls, with no on-chain restriction to real stablecoins.",
+          "name": "AssetNotAllowed",
+          "value": 15
+        },
+        {
+          "doc": "release()/rescue_vault() reentrancy guard tripped \\xe2\\x80\\x94 this vault already\\nhas one of those calls in flight. See `Vault.releasing`'s doc comment.",
+          "name": "ReleaseInProgress",
+          "value": 16
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextVaultId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Vault",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The yield-adapter contract (ADR 0006) that fund_vault/release\\ndelegate staking to. Required for fund_vault to succeed \\xe2\\x80\\x94 vaults\\nalways stake, by design, not as an opt-in.",
+            "name": "YieldAdapter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeTreasury"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Admin-approved vault denomination assets \\xe2\\x80\\x94 mirrors yield-adapter's\\nBlend pool allowlist. `create_vault` rejects any asset not on this\\nlist (see `AssetNotAllowed`).",
+            "name": "AllowedAsset",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

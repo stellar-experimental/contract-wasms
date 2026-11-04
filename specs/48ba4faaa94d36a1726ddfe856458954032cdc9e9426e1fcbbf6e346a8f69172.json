@@ -1,0 +1,529 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "`per_fill` caps one operation (a fill, or a bridge move).",
+      "lib": "",
+      "name": "Limits",
+      "fields": [
+        {
+          "doc": "",
+          "name": "per_fill",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "per_window",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Window",
+      "fields": [
+        {
+          "doc": "",
+          "name": "spent",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "start",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "No limits set: the bridge refuses to move anything.",
+          "name": "LimitsNotSet",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "OverMoveCap",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "OverWindowCap",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NonPositiveAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AuthExpired",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AuthTooLong",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "OperationUsed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "VaultNotAccount",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AdminIsOperator",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "DestNotConfigured",
+          "value": 10
+        },
+        {
+          "doc": "The call ended holding more USDC than it started with.",
+          "name": "Retained",
+          "value": 11
+        },
+        {
+          "doc": "Only the free standard tier: a fee is what a leaked operator and API\\nkey together could burn the vault's USDC into.",
+          "name": "FeeNotAllowed",
+          "value": 12
+        },
+        {
+          "doc": "A zero window resets on every move, so `per_window` would never bind.",
+          "name": "WindowZero",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 14
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "window_secs",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Bridged",
+      "prefix_topics": [
+        "bridged"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operation_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "destination_domain",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "mint_recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The vault's sign-off on one move. Single use through the operation id.",
+      "lib": "",
+      "name": "MoveAuth",
+      "fields": [
+        {
+          "doc": "",
+          "name": "expiry_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "dest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "domain",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "limits",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Limits"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "window",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Window"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether a move with this operation id has burned: the solver's\\nanswer after a restart that lost the send's outcome.",
+      "name": "is_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operation_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "In-place code upgrade; address and storage stay. The new code's\\nconstructor does not run.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Our vault on `domain`, left-padded to 32 bytes as CCTP names it.",
+      "name": "set_dest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "mint_recipient",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Zero limits stop every move: the bridge's pause.",
+      "name": "set_limits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "limits",
+          "type_": {
+            "udt": {
+              "name": "Limits"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burns `amount` of the vault's USDC towards our vault on\\n`destination_domain`. `auth.sig` is the vault's SEP-53 signature over\\n[`move_message`]; `destination_caller` is zero, so anyone may mint.",
+      "name": "bridge_cctp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "destination_domain",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_finality",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "operation_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth",
+          "type_": {
+            "udt": {
+              "name": "MoveAuth"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_operator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "window_secs",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "First half of an admin handover, as `Ownable2Step` on EVM: nothing\\nchanges until the new admin accepts with its own signature.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_messenger",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "messenger",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
