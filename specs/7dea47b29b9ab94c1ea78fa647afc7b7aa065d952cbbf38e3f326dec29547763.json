@@ -1,0 +1,991 @@
+[
+  {
+    "event_v0": {
+      "doc": "One per pool a swap passes through (asset-to-asset swaps emit two).\\n`fee_amount` is in the hop's output token and stays in that pool;\\n`dislocation` is the D the fee was priced at (18 decimals).",
+      "lib": "",
+      "name": "Hop",
+      "prefix_topics": [
+        "hop"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "hitz_in",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "dislocation",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_rate",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reserve_hitz",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reserve_asset",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One trusted asset's pool. Pools are kept in listing order.",
+      "lib": "",
+      "name": "Pool",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "ln(reserve / hitz) minus its exponential average, in 18 decimals,\\nas of `updated`. It decays toward zero between trades.",
+          "name": "deviation",
+          "type_": "i128"
+        },
+        {
+          "doc": "HITZ in the pool.",
+          "name": "hitz",
+          "type_": "i128"
+        },
+        {
+          "doc": "The asset in the pool.",
+          "name": "reserve",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger timestamp `deviation` refers to.",
+          "name": "updated",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One per swap.",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "UnsupportedPair",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Slippage",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotSeeded",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AlreadySeeded",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "PriceOutOfRange",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidAddress",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "DuplicateToken",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InvalidPool",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "TradeTooSmall",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NoPendingUpgrade",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TimelockActive",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "UpgradeHashMismatch",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "Renounced",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "TooManyAssets",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "NoPendingListing",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "ListingMismatch",
+          "value": 18
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Listed",
+      "prefix_topics": [
+        "listed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Seeded",
+      "prefix_topics": [
+        "seeded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "hitz",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposit",
+      "prefix_topics": [
+        "deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "hitz",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A pool as the views report it, brought up to the current ledger time.",
+      "lib": "",
+      "name": "PoolState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "The pool's deviation now (18 decimals).",
+          "name": "deviation",
+          "type_": "i128"
+        },
+        {
+          "doc": "The largest |dislocation| of this asset against its references now\\n(18 decimals): what a very small hop through this pool is priced at.",
+          "name": "dislocation",
+          "type_": "i128"
+        },
+        {
+          "doc": "The fee a very small hop through this pool pays now (9 decimals:\\n10_000_000 = 1%).",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hitz",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Renounced",
+      "prefix_topics": [
+        "renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingListing",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ListingProposed",
+      "prefix_topics": [
+        "listing_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposed",
+      "prefix_topics": [
+        "upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ListingCancelled",
+      "prefix_topics": [
+        "listing_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradesRenounced",
+      "prefix_topics": [
+        "upgrades_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The HITZ token.",
+      "name": "hitz",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One pool, brought up to the current ledger time.",
+      "name": "pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PoolState"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault's exchange rate: how much `quote` one unit of `base` is\\nworth, from the two pools (9 decimals, raw token units).",
+      "name": "rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "base",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time initial liquidity for `asset`'s pool, by the admin, at the\\nasset's market price: `amount / hitz` is the pool's starting price.\\nThe pool's deviation starts at the HITZ-weighted average of the other\\npools' deviations, so a recent HITZ move that every pool already shows\\nisn't read as a dislocation of the new asset.",
+      "name": "seed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hitz",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swap an exact `amount_in` of `token_in` for at least `min_out` of\\n`token_out`, paid to `to`. Any listed asset trades with HITZ (one hop)\\nand with any other listed asset (two hops, through HITZ). Expiry comes\\nfrom the transaction's own time bounds.",
+      "name": "swap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The admin, or `None` once renounced.",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Every pool, in listing order.",
+      "name": "pools",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "PoolState"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What `swap` would pay out right now for `amount_in`, after fees.",
+      "name": "quote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The listed trusted assets, in listing order.",
+      "name": "assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add liquidity to `asset`'s pool at its current ratio. Anyone can.\\n`hitz` is exact; the matching amount of the asset (rounded up, in the\\nvault's favour) must land in `[min_amount, max_amount]`, which bounds\\nthe price the deposit accepts so it can't be sandwiched. No shares, no\\nwithdrawal. The price doesn't move, so the pool's deviation doesn't\\neither.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hitz",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Install the proposed code once the 7 days have passed.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Give up the admin role for good: no upgrade, listing or seeding can\\never run again.",
+      "name": "renounce",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "List the proposed asset once the 7 days have passed. Its pool starts\\nempty and takes no part in trading or in other pools' fees until\\n`seed`.",
+      "name": "list_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether the code can still change: false once `renounce_upgrades` or\\n`renounce` has run.",
+      "name": "upgradable",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "How far `rate(base, quote)` sits from its average, as a natural log in\\n18 decimals: positive when `base` is worth more `quote` than usual.",
+      "name": "dislocation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "base",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quote",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`assets` are the trusted assets the vault starts with (XLM and USDC\\non mainnet), each with an empty pool until the admin seeds it.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hitz",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_listing",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_listing",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingListing"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingUpgrade"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose listing a new trusted asset. It can be listed with\\n`list_asset` after 7 days, then seeded. A new proposal replaces the\\npending one and restarts the clock.",
+      "name": "propose_listing",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose new vault code. It can be installed with `upgrade` after\\n7 days. A new proposal replaces the pending one and restarts the clock.",
+      "name": "propose_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Give up upgrades for good: the code can never change again, and any\\npending upgrade is dropped. The admin keeps listing new trusted assets\\n(still timelocked) and seeding them, until `renounce`.",
+      "name": "renounce_upgrades",
+      "inputs": [],
+      "outputs": []
+    }
+  }
+]
