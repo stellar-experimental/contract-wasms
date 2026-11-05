@@ -1,0 +1,153 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One anchored commitment: the content hash it binds and the ledger sequence\\nwhere the binding was first recorded.",
+      "lib": "",
+      "name": "Anchor",
+      "fields": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "seq",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Fail-closed error codes (never invent a success).",
+      "lib": "",
+      "name": "CgError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "HashMismatch",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read an anchor: None when the id was never anchored.",
+      "name": "read",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Anchor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anchor a commitment id -> content hash at this ledger sequence.\\nPublic: anyone may anchor; authority lives with the caller's policy.\\nFirst write wins; same (id, hash) replays idemtently; a different hash\\nfor the same id fails with HashMismatch (never overwritten).",
+      "name": "commit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "CgError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Version constant as an on-ledger String.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Strict read: the anchor must exist and its hash must equal the caller's\\nexpectation, else the invocation fails (fail-closed verification).",
+      "name": "assert_anchored",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "CgError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
