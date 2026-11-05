@@ -1,0 +1,528 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "A firm quote, from the TAKER's perspective: the taker pays\\n`amount_in` of `token_in` and receives `amount_out` of `token_out`\\nfrom the maker.",
+      "lib": "",
+      "name": "Quote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "Last ledger (inclusive) at which this quote may settle.",
+          "name": "expiry_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maker",
+          "type_": "address"
+        },
+        {
+          "doc": "Max deviation from the oracle (NAV) price, in bps, either\\ndirection. 0 = no oracle check (pairs without a feed).",
+          "name": "max_nav_dev_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maker-chosen unique id; (maker, nonce) settles at most once\\nwithin `USED_TTL_LEDGERS` of first use. Makers use random u64s.",
+          "name": "nonce",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "taker",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeeVault"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SwapBook contract whose `get_oracle_price` supplies NAV.",
+            "name": "SwapBook"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeePer100k"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Replay record for a settled or cancelled (maker, nonce). Temporary\\nstorage, lives `USED_TTL_LEDGERS` from the write.",
+            "name": "Used",
+            "type_": [
+              "address",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RfqError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "SameToken",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SameParty",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "ExpiryTooFar",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AlreadyUsed",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NavBandTooWide",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "NavBandExceeded",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "OracleUnavailable",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "FeeAboveCap",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "OracleStale",
+          "value": 15
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_used",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "maker",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the fee rate (per 100k). Hard-capped at the deployed 0.5 bps.",
+      "name": "set_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_per_100k",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Result of `check_quote` \\xe2\\x80\\x94 the exact on-chain view of a quote.",
+      "lib": "",
+      "name": "QuoteCheck",
+      "fields": [
+        {
+          "doc": "Signed deviation in bps: positive = taker receives LESS than NAV.",
+          "name": "deviation_bps",
+          "type_": "i128"
+        },
+        {
+          "doc": "Oracle fair value of `amount_in` in `token_out` base units\\n(0 when the quote carries no NAV band).",
+          "name": "fair_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "maker_receives",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Oracle fair value of `amount_in` of `token_in`, in `token_out`\\nbase units, per the SwapBook's feeds for the pair.",
+      "name": "fair_value",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(admin, fee_vault, swap_book)",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  "address",
+                  "address"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Everything `settle_quote` would compute, without auth or\\ntransfers. Fails with the same error settlement would.",
+      "name": "check_quote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "q",
+          "type_": {
+            "udt": {
+              "name": "Quote"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "QuoteCheck"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Retire a signed-but-unsettled quote: writes the replay record for\\n`(maker, nonce)` so no quote carrying that nonce can settle for\\n`USED_TTL_LEDGERS`. Only the maker can call it. Without this a\\nsigned quote is a free option for the taker until it expires.",
+      "name": "cancel_nonce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "maker",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nonce",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle a firm quote. Requires auth from BOTH parties: the taker\\n(normally the transaction source) and the maker (normally a\\npre-signed authorization entry carried in the transaction).\\nReturns the protocol fee charged.",
+      "name": "settle_quote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "q",
+          "type_": {
+            "udt": {
+              "name": "Quote"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy-time constructor \\xe2\\x80\\x94 atomic with deployment.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_book",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Repoint the NAV source (a SwapBook with `get_oracle_price`).",
+      "name": "set_swap_book",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "swap_book",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Two-step admin rotation; the pending address must `accept_admin`.\\nCalling again overwrites (and so cancels) a previous pending.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RfqError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
