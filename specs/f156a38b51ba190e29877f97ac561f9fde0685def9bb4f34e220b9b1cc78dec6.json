@@ -1,0 +1,244 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "The token is not an active member of the membership contract.",
+          "name": "NotAMember",
+          "value": 1
+        },
+        {
+          "doc": "The admin has not set the key trust lists are sealed for.",
+          "name": "TrustKeyNotSet",
+          "value": 2
+        },
+        {
+          "doc": "An encrypted list is longer than `MAX_TRUST_LIST_SIZE`.",
+          "name": "TrustListTooLarge",
+          "value": 3
+        },
+        {
+          "doc": "The list's operator copy is not sealed for the current trust key.",
+          "name": "TrustKeyMismatch",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One recipient's copy of a trust list's data key.",
+      "lib": "",
+      "name": "KeyWrap",
+      "fields": [
+        {
+          "doc": "The one-time X25519 public key this copy was sealed with.",
+          "name": "ephemeral",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "The recipient's X25519 public key.",
+          "name": "key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "The data key, sealed with AES-256-GCM, tag included.",
+          "name": "sealed",
+          "type_": {
+            "bytes_n": {
+              "n": 48
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A member's encrypted trust list.",
+      "lib": "",
+      "name": "TrustList",
+      "fields": [
+        {
+          "doc": "Version, nonce and ciphertext of the list, opaque to the contract.",
+          "name": "list",
+          "type_": "bytes"
+        },
+        {
+          "doc": "The member's copy of the data key.",
+          "name": "member",
+          "type_": {
+            "udt": {
+              "name": "KeyWrap"
+            }
+          }
+        },
+        {
+          "doc": "The operator's copy, sealed for the key `get_trust_key` returns.",
+          "name": "operator",
+          "type_": {
+            "udt": {
+              "name": "KeyWrap"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`membership` is the contract whose token ids this one keys by.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "membership",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_trust_key",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the X25519 public key every trust list is sealed for besides its\\nmember, as the admin. Lists sealed for the previous key stay as they\\nare and are refused when written again.",
+      "name": "set_trust_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_trust_list",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "member_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "TrustList"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Store the encrypted trust list of `member_id`, replacing the previous\\none, for as long as the network allows.\\n\\nRequires the signature of the address holding `member_id` on the\\nmembership contract, the token not revoked.",
+      "name": "set_trust_list",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "member_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "trust_list",
+          "type_": {
+            "udt": {
+              "name": "TrustList"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the voting power of each token, 6 decimals, as the admin.",
+      "name": "set_voting_powers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "powers",
+          "type_": {
+            "map": {
+              "key_type": "u32",
+              "value_type": "i64"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The voting power of `token_id`, 6 decimals, 5.0 if the admin has not\\nset one.",
+      "name": "get_voting_power_for_user",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i64"
+      ]
+    }
+  }
+]

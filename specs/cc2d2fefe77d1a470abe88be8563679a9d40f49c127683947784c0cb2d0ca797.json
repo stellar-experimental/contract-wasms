@@ -1,0 +1,178 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UptoError",
+      "cases": [
+        {
+          "doc": "`terms.max_amount` is zero or negative.",
+          "name": "InvalidMaxAmount",
+          "value": 1
+        },
+        {
+          "doc": "The requested amount is negative.",
+          "name": "NegativeAmount",
+          "value": 2
+        },
+        {
+          "doc": "The requested amount is larger than `terms.max_amount`.",
+          "name": "AmountExceedsMax",
+          "value": 3
+        },
+        {
+          "doc": "The current ledger is before `terms.valid_after_ledger`.",
+          "name": "NotYetValid",
+          "value": 4
+        },
+        {
+          "doc": "The current ledger is after `terms.expiration_ledger`.",
+          "name": "Expired",
+          "value": 5
+        },
+        {
+          "doc": "The recipient is this contract, which would lock the funds.",
+          "name": "InvalidRecipient",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The terms a payer signs. Field names are sorted, so the XDR form is an `ScMap` whose keys appear\\nin exactly this order.",
+      "lib": "",
+      "name": "UptoTerms",
+      "fields": [
+        {
+          "doc": "Last ledger (inclusive) at which the terms may be settled. Clients set it equal to the\\nauthorization entry's `signatureExpirationLedger`.",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "The only address allowed to choose the amount and submit the settlement.",
+          "name": "facilitator",
+          "type_": "address"
+        },
+        {
+          "doc": "Upper bound on the amount, in atomic units of `token`. Must be positive.",
+          "name": "max_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Receiver of the funds (`G\\xe2\\x80\\xa6` account or `C\\xe2\\x80\\xa6` contract).",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "SEP-41 token contract (a Stellar Asset Contract or a custom token).",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "First ledger at which the terms may be settled. Clients normally send 0.",
+          "name": "valid_after_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted once per successful settlement, including zero-amount settlements.\\nTopics: `[\"upto_settled\", payer, recipient]`; data: a map of the remaining fields.",
+      "lib": "",
+      "name": "UptoSettled",
+      "prefix_topics": [
+        "upto_settled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "max_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "facilitator",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settles `amount` (`0..=terms.max_amount`) from `payer` to `terms.recipient` and returns it.\\n\\nRequires the payer's authorization of `settle(terms)` with the single `approve` child\\ndescribed in the crate documentation, and `terms.facilitator`'s authorization of\\n`settle(payer, terms, amount)`. Any error rolls back the whole invocation, including the\\npayer's nonce.",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "payer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "terms",
+          "type_": {
+            "udt": {
+              "name": "UptoTerms"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "UptoError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Interface version of this contract.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  }
+]
