@@ -1,0 +1,1939 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotCore",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotLeader",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotMember",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NoRate",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "BadArg",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "TooManyTypes",
+          "value": 9
+        },
+        {
+          "doc": "On hold.",
+          "name": "Unavailable",
+          "value": 10
+        },
+        {
+          "doc": "More than her authorisation, the voucher, the share's area or the machine's week allows.",
+          "name": "TooMuchWork",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "VoucherExists",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotReady",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "BadDelay",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "CoreAlreadySet",
+          "value": 19
+        },
+        {
+          "doc": "An owner cannot claim on her own voucher.",
+          "name": "SelfClaim",
+          "value": 20
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Paused",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Roles"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LandTitle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FundCore"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Rate",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A price an acre for one machine type on one crop family (union, type, family), 27 Oct.",
+            "name": "CropRate",
+            "type_": [
+              "address",
+              "u32",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Types",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PrepayDriverBp",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Which parts of the price go to the union treasury, not the owner (executive decision 2 Nov): a mask\\nof `PART_*` bits; unset = depreciation and margin.",
+            "name": "UnionParts",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextMachine"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Machine",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Voucher",
+            "type_": [
+              "address",
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Centi acres a machine worked in a week (machine id, week index). **Temporary** storage (C7):\\ndeleted by the network once the week is over.",
+            "name": "WeekUse",
+            "type_": [
+              "u64",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Machine",
+      "fields": [
+        {
+          "doc": "",
+          "name": "acres_per_week",
+          "type_": "u32"
+        },
+        {
+          "doc": "Always true since 3 Nov (a machine is available from its registration); kept for the layout.",
+          "name": "confirmed",
+          "type_": "bool"
+        },
+        {
+          "doc": "0 none, 1 in repair, 2 driver not available, 3 other (R83).",
+          "name": "hold_reason",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "on_hold",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "Hash of the 8 photos at 45\\xc2\\xb0 (L13); the photos stay off-chain.",
+          "name": "photos_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Voucher",
+      "fields": [
+        {
+          "doc": "",
+          "name": "code_expires",
+          "type_": "u64"
+        },
+        {
+          "doc": "Unused since the signed claim (23 Oct); kept so stored vouchers keep their layout.",
+          "name": "code_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "code_max",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        },
+        {
+          "doc": "Centi tractor acres granted (27 Oct; were centi tractor hours).",
+          "name": "units",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "used",
+          "type_": "u32"
+        },
+        {
+          "doc": "Lapsed when the loan closed or defaulted.",
+          "name": "void",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RateSet",
+      "prefix_topics": [
+        "rate_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "parts",
+          "type_": {
+            "udt": {
+              "name": "RateParts"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One acre of a machine's work, in nIN (7 decimals), by part (D16, D20; per acre since 27 Oct).",
+      "lib": "",
+      "name": "RateParts",
+      "fields": [
+        {
+          "doc": "",
+          "name": "depreciation",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "diesel",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "driver",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "insurance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "maintenance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "margin",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CropRateSet",
+      "prefix_topics": [
+        "crop_rate_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "crop_family",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "None: the crop's own price is removed, the type's price applies again.",
+          "name": "parts",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "RateParts"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UnionPartsSet",
+      "prefix_topics": [
+        "union_parts_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "mask",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoucherVoided",
+      "prefix_topics": [
+        "voucher_voided"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "unused_units",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "RateParts"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "fund_core at a default: the unclaimed work lapses (they never lapse otherwise, 26 Oct).",
+      "name": "void",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MachineUpdated",
+      "prefix_topics": [
+        "machine_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "confirmed",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "on_hold",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "hold_reason",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PrepayShareSet",
+      "prefix_topics": [
+        "prepay_share_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "driver_bp",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoucherClaimed",
+      "prefix_topics": [
+        "voucher_claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Acres worked, in hundredths of an acre.",
+          "name": "acres",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Centi tractor acres they used of her voucher.",
+          "name": "units",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "prepay",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "The union's part of the price (2 Nov), held until she repays.",
+          "name": "to_union",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VoucherGranted",
+      "prefix_topics": [
+        "voucher_granted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "units",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "D19: the owner scans her QR after the job and claims the acres worked, `acres` in hundredths of an\\nacre (27 Oct; were hours), never more than the crop share's own area, using \\xe2\\x89\\xa4 `max_units` centi tractor\\nacres, the units she signed for: her authorisation of (union, token_id, max_units) is used once, its\\nexpiry ledger ~48 h out. The price is the machine type's on the share's crop (its own crop price if the\\nunion set one). Owner split (1 Nov): fund_core pays the prepay (diesel plus the union's share of the\\ndriver part, X32) at once from the voucher's reserve; the rest is postpaid, paid when she repays and by\\nsenior if she defaults.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "max_units",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "acres",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "fund_core at the draw: her loan's voucher part.",
+      "name": "grant",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "units",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "machine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Machine"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "voucher",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Voucher"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MachineRegistered",
+      "prefix_topics": [
+        "machine_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "acres_per_week",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "R83: on hold with a reason (1 in repair, 2 driver not available, 3 other), and back.",
+      "name": "set_hold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "on_hold",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The union account (its signers, 2 of 3) sets the price of a machine's acre in parts. The\\namounts are open and stay adjustable by the union (executive decision, 12 Oct), like the prepay share.",
+      "name": "set_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "parts",
+          "type_": {
+            "udt": {
+              "name": "RateParts"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A crop share's (crop family, area in centi acres) as this contract reads them from its token id.",
+      "name": "share_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "u32",
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fund_core",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "fund_core: she hands back `units` unclaimed centi tractor acres (26 Oct); her debt drops.",
+      "name": "take_back",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "units",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The union's parts of the price (`PART_*` bits; default depreciation and margin).",
+      "name": "union_parts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "prepay_share",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "roles",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "land_title",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_delay",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingDelay"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The price an acre of `machine_type` on crop family `crop_family`: its crop price, else the type's.",
+      "name": "rate_for_crop",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "crop_family",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "RateParts"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A price an acre for `machine_type` on one crop family (27 Oct), e.g. trailer \\xc3\\x97 sugarcane; `None` removes it\\n(the type's price applies again). The type must have its own price first.",
+      "name": "set_crop_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "crop_family",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "parts",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "RateParts"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set once; only a timelocked upgrade can repoint it.",
+      "name": "set_fund_core",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fund_core",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade_delay",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Hundredths of an acre worked by the machine this week (27 Oct).",
+      "name": "acres_this_week",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Kept for old clients only: a no-op since 3 Nov (a machine is available from its\\nregistration; N9 removed). Still checks the owner, writes nothing.",
+      "name": "confirm_machine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingUpgrade"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Which parts of the price go to the union treasury (executive decision 2 Nov): `PART_*` bits of\\nmaintenance, insurance, depreciation and margin; driver and diesel stay the owner's.",
+      "name": "set_union_parts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "mask",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "L13: a leader registers a member's machine; it is available at once (no owner confirmation).",
+      "name": "register_machine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "machine_type",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "acres_per_week",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "photos_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "X32: the share of the driver part paid at the job.",
+      "name": "set_prepay_share",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "driver_bp",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "delay_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The value of one tractor acre (the voucher's unit, 27 Oct): machine type 1's whole price an acre.\\nfund_core lends it at the draw and pays owners from it.",
+      "name": "value_per_tractor_acre",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The senior money one tractor acre (the voucher's unit) needs at the job: the prepay of\\nmachine type 1. Another machine's acre uses fewer or more units at the same prepay ratio.",
+      "name": "prepay_per_tractor_acre",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Loan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "defaulted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "drawdown_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interest_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interest_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "maturity_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "overdue",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "principal_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate_bp",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Oracle",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Attester",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Core",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Tranche",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Junior",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Senior",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UnionRole",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Treasurer",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Secretary",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarketLite",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cash",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claimable_principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_borrows",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPendingDelay"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingDelay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeApplied",
+      "prefix_topics": [
+        "upgrade_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeDelaySet",
+      "prefix_topics": [
+        "upgrade_delay_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposed",
+      "prefix_topics": [
+        "upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

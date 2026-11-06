@@ -1,0 +1,862 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotReady",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "BadDelay",
+          "value": 3
+        },
+        {
+          "doc": "A month outside 1\\xe2\\x80\\x9312, or two windows that share a month.",
+          "name": "BadWindow",
+          "value": 4
+        },
+        {
+          "doc": "Not a leader of the union, or no roles contract set.",
+          "name": "NotLeader",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A union's local selling price of a crop family: paise per kg, and when it was set (unix).",
+      "lib": "",
+      "name": "Price",
+      "fields": [
+        {
+          "doc": "",
+          "name": "at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "paise_per_kg",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One sowing window: from the first day of `first` to the last day of `last` (months 1\\xe2\\x80\\x9312;\\n`first` > `last` runs over the new year, e.g. December to February).",
+      "lib": "",
+      "name": "Window",
+      "fields": [
+        {
+          "doc": "",
+          "name": "first",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "last",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Windows",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Roles"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Price",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The trust's admin account changed.",
+      "lib": "",
+      "name": "AdminSet",
+      "prefix_topics": [
+        "admin_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceSet",
+      "prefix_topics": [
+        "price_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "family",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "paise_per_kg",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WindowsSet",
+      "prefix_topics": [
+        "windows_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "family",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "windows",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Window"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "family",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Price"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The window of a crop share: crop code (family \\xc3\\x97 1000 + variety) and planned sowing (unix).\\nNone when its family has no window holding that month.",
+      "name": "window",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "crop_code",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "sos",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "tuple": {
+                "value_types": [
+                  "u64",
+                  "u64"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "windows",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "family",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Window"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A leader of the union sets its local price of a crop family (paise per kg); 0 removes it.",
+      "name": "set_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "family",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "paise_per_kg",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The roles contract that names a union's leaders (the trust, once).",
+      "name": "set_roles",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "roles",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A crop family's sowing windows (the trust, from the catalogue); empty removes them.",
+      "name": "set_windows",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "family",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "windows",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Window"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade_delay",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingUpgrade"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "delay_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Loan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "defaulted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "drawdown_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interest_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interest_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "maturity_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "overdue",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "principal_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate_bp",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Oracle",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Attester",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Core",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Tranche",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Junior",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Senior",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UnionRole",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Treasurer",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Secretary",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarketLite",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cash",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claimable_principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_borrows",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPendingDelay"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingDelay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeApplied",
+      "prefix_topics": [
+        "upgrade_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeDelaySet",
+      "prefix_topics": [
+        "upgrade_delay_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposed",
+      "prefix_topics": [
+        "upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

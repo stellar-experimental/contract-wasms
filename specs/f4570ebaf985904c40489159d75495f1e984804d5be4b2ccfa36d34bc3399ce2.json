@@ -1,0 +1,1588 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "fx_pool's INR/USD fix (the same fields as its `RateFix`).",
+      "lib": "",
+      "name": "Fix",
+      "fields": [
+        {
+          "doc": "",
+          "name": "inr_per_usd",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "set_by",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "valid_until",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Where a senior investor's USDC comes from (R24, decision 005): set by the trust at acceptance.",
+      "lib": "",
+      "name": "Tag",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Offshore",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Domestic",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "fx_pool's acceptance of a member LP (the same fields as its `LpMember`).",
+      "lib": "",
+      "name": "LpOf",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "AmountZero",
+          "value": 103
+        },
+        {
+          "doc": "Not an investor the trust accepted.",
+          "name": "NotAccepted",
+          "value": 104
+        },
+        {
+          "doc": "The deposit would take the senior USDC above the trust's cap.",
+          "name": "AboveCap",
+          "value": 105
+        },
+        {
+          "doc": "No fix, or it ran out.",
+          "name": "StaleRate",
+          "value": 106
+        },
+        {
+          "doc": "The LP pays less than the fix less its fee.",
+          "name": "BelowFix",
+          "value": 107
+        },
+        {
+          "doc": "",
+          "name": "NotLeader",
+          "value": 108
+        },
+        {
+          "doc": "Not an accepted LP of the union, or its identity is not checked (K1).",
+          "name": "NotLp",
+          "value": 109
+        },
+        {
+          "doc": "",
+          "name": "VaultAlreadySet",
+          "value": 110
+        },
+        {
+          "doc": "",
+          "name": "NoVault",
+          "value": 111
+        },
+        {
+          "doc": "An investor's residency is set once.",
+          "name": "TagFixed",
+          "value": 112
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotReady",
+          "value": 113
+        },
+        {
+          "doc": "",
+          "name": "BadDelay",
+          "value": 114
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 115
+        },
+        {
+          "doc": "fund_core does not know the union: no USDC is taken for it.",
+          "name": "UnknownUnion",
+          "value": 116
+        },
+        {
+          "doc": "The vault's guarantee would pass its cap.",
+          "name": "AboveGuaranteeCap",
+          "value": 117
+        },
+        {
+          "doc": "The LP's account did not pay the investor the USDC it signed for (re-review, 3 Nov).",
+          "name": "NotPaid",
+          "value": 118
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CapSet",
+      "prefix_topics": [
+        "cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Usdc"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FundCore"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FxPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Roles"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The most senior USDC this contract takes in, in all (the trust; 0 until set).",
+            "name": "Cap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Senior USDC held here for investors' principal: deposits less what `redeem` paid out or wrote off.",
+            "name": "Total"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The vault (nUSD, later), set once.",
+            "name": "Vault"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The most guarantee the vault may assign, in USDC (the trust; 0 until set).",
+            "name": "GuaranteeCap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Guarantee the vault assigned so far, in USDC.",
+            "name": "Guaranteed"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Investor",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "(union, investor).",
+            "name": "Principal",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "USDC taken in for a union under one residency, less what was paid back or written off (R24).",
+            "name": "UnionUsdc",
+            "type_": [
+              "address",
+              {
+                "udt": {
+                  "name": "Tag"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "USDC of a union's investors left here after a haircut (2 Nov): out of `Total`, kept for the loss\\ncover that comes with nUSD; no call moves it yet.",
+            "name": "HaircutUsdc",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The trust's acceptance of a senior investor: never a member. `kyc_ref` points at the KYC record kept\\noff-chain; no personal data on-chain (C17).",
+      "lib": "",
+      "name": "Investor",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminSet",
+      "prefix_topics": [
+        "admin_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Redeemed",
+      "prefix_topics": [
+        "redeemed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "interest",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "USDC of this exit's principal left here after a haircut.",
+          "name": "haircut",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VaultSet",
+      "prefix_topics": [
+        "vault_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What an investor paid in for a union's senior shares still held: the USDC and the nIN it minted.",
+      "lib": "",
+      "name": "Principal",
+      "fields": [
+        {
+          "doc": "",
+          "name": "nin",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposited",
+      "prefix_topics": [
+        "deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nin",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "inr_per_usd",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausedSet",
+      "prefix_topics": [
+        "paused_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Guaranteed",
+      "prefix_topics": [
+        "guaranteed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nin",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "inr_per_usd",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "IncomePaid",
+      "prefix_topics": [
+        "income_paid"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "inr",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "cash_settled",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InvestorSet",
+      "prefix_topics": [
+        "investor_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "vault",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "After fund_core's 14-day unbond: up to `max_shares` (0: all claimable). fund_core burns the principal\\nand keeps the interest owed to the investor; the USDC paid in for that principal comes back at par,\\nnever more than recorded. Returns the USDC paid.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "An accepted investor puts `usdc` behind a union's vouchers: it stays here, and the same value in nIN\\nat the day's fix goes into the union's senior pool in their name. Returns the nIN.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most senior USDC this contract takes in, in all (unaudited: 0 = no deposits until the trust sets it).",
+      "name": "set_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GuaranteeCapSet",
+      "prefix_topics": [
+        "guarantee_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "investor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Investor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "principal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Principal"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault (nUSD, later), set once.",
+      "name": "set_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "guaranteed",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "An investor's owed interest (rupees, from their exit) paid in USDC by a member LP of the union: the LP\\ntakes `inr` rupees at the office and pays `usdc` straight to the investor, at least the fix less the\\nLP fee. A leader of the union (who hands over the notes) and the LP sign. fund_core burns the nIN and\\nbooks the rupees off cash at hand. The LP's Nila account pays from its free USDC (`send_usdc`), so an\\nopen lien does not stop it. No USDC of this contract moves. Returns what cash at hand covered.",
+      "name": "pay_income",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "inr",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stops deposits, exits, income payouts and the vault's guarantee.",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "union_usdc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "haircut_usdc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The trust accepts or drops a senior investor (KYC off-chain); the residency is set once.",
+      "name": "set_investor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fund_core",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fx_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "roles",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "guarantee_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade_delay",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault assigns guarantee to a union with USDC it holds itself: senior nIN at the fix in the vault's\\nname; no USDC moves here. Returns the nIN.",
+      "name": "mint_guaranteed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingUpgrade"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most guarantee the vault may assign, in USDC (0 = none until the trust sets it, after nUSD's audit).",
+      "name": "set_guarantee_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "delay_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Loan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "defaulted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "drawdown_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interest_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interest_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "maturity_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "overdue",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "principal_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate_bp",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Oracle",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Attester",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Core",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Tranche",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Junior",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Senior",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UnionRole",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Treasurer",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Secretary",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarketLite",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cash",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claimable_principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_borrows",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPendingDelay"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingDelay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeApplied",
+      "prefix_topics": [
+        "upgrade_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeDelaySet",
+      "prefix_topics": [
+        "upgrade_delay_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposed",
+      "prefix_topics": [
+        "upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

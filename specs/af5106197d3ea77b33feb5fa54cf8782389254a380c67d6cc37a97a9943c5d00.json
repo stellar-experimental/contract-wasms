@@ -1,0 +1,1299 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "A move of an account that already names a union: it applies after the union's recovery wait,\\nand a recovery proposed meanwhile cancels it, so a stolen key can never outrun recovery.",
+      "lib": "",
+      "name": "Move",
+      "fields": [
+        {
+          "doc": "",
+          "name": "at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": {
+            "udt": {
+              "name": "MoveTo"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "The co-signer of a recovery is not a leader of the account's union.",
+          "name": "NotLeaders",
+          "value": 1
+        },
+        {
+          "doc": "No recovery pending, or its wait has not passed.",
+          "name": "NotReady",
+          "value": 2
+        },
+        {
+          "doc": "The account already runs this code.",
+          "name": "Current",
+          "value": 3
+        },
+        {
+          "doc": "No session, it has ended, or the signer is not a leader of the union.",
+          "name": "NoSession",
+          "value": 4
+        },
+        {
+          "doc": "A session signature for a call outside the session's contracts.",
+          "name": "OutsideSession",
+          "value": 5
+        },
+        {
+          "doc": "The member's session QR has expired.",
+          "name": "Expired",
+          "value": 6
+        },
+        {
+          "doc": "A signature of another key type than the signer's.",
+          "name": "WrongKind",
+          "value": 7
+        },
+        {
+          "doc": "A recovery is pending: the account signs nothing until it executes.",
+          "name": "Frozen",
+          "value": 8
+        },
+        {
+          "doc": "The union names no fx_pool or USDC (LP positions are not set up for it), or the caller is\\nnot the fx_pool that holds the lien.",
+          "name": "NotPool",
+          "value": 9
+        },
+        {
+          "doc": "Locked USDC: a lock above the free USDC, a send above it, a direct USDC move while a lien\\nstands, or a change of union or code while a lien stands.",
+          "name": "Locked",
+          "value": 10
+        },
+        {
+          "doc": "fx_pool asked for more than the lien.",
+          "name": "NotClaimable",
+          "value": 11
+        },
+        {
+          "doc": "A zero or negative amount.",
+          "name": "BadAmount",
+          "value": 12
+        },
+        {
+          "doc": "The union names no SMS key (SMS recovery is off for this union).",
+          "name": "NoSmsKey",
+          "value": 13
+        },
+        {
+          "doc": "The member has named no union (no recovery, no session, no LP positions).",
+          "name": "NoUnion",
+          "value": 14
+        },
+        {
+          "doc": "The named union has set no settings in roles.",
+          "name": "NoSettings",
+          "value": 15
+        },
+        {
+          "doc": "A leader session is running: no change of union or code.",
+          "name": "InSession",
+          "value": 16
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What a waiting move changes (review 5 Nov).",
+      "lib": "",
+      "name": "MoveTo",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Union",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Code",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Signer",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "The Privy Stellar wallet (smartphones).",
+            "name": "Ed25519",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "The keypad's device key, SEC1 uncompressed public key (0x04 | x | y).",
+            "name": "P256",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 65
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Roles"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The union the member named (`set_union`); absent until she names one.",
+            "name": "Union"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Signer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Until when (unix seconds) a leader of the union may sign for the account.",
+            "name": "Session"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "USDC locked by fx_pool for the union's cash she holds (the LP pledge, 30 Oct).",
+            "name": "Lien"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The fx_pool and USDC of the lien, recorded at the lock that opened it (3 Nov).",
+            "name": "LienPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LienUsdc"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "A change of union or code waiting out the union's recovery wait (review 5 Nov).",
+            "name": "Move"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A proposed signer and when it may take effect (unix seconds).",
+      "lib": "",
+      "name": "Pending",
+      "fields": [
+        {
+          "doc": "",
+          "name": "at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "udt": {
+              "name": "Signer"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LienSet",
+      "prefix_topics": [
+        "lien_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "lien",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "fx_pool took locked USDC into itself (a Collect closing or opening an LP position, 31 Oct).",
+      "lib": "",
+      "name": "PaidPool",
+      "prefix_topics": [
+        "paid_pool"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The member named her union (3 Nov).",
+      "lib": "",
+      "name": "UnionSet",
+      "prefix_topics": [
+        "union_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Signature",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "The signer's own, Ed25519.",
+            "name": "Ed25519",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "The signer's own, P-256: r | s, s in the lower half.",
+            "name": "P256",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "In a session: the leader who signs for the account (the leader's account authorizes it).",
+            "name": "Leader",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SignerSet",
+      "prefix_topics": [
+        "signer_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "udt": {
+              "name": "Signer"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The lien's fx_pool only, at a Collect's scan (allowed while frozen): `amount` of the lien\\ngoes to that fx_pool and the lien drops by it. Returns the lien.",
+      "name": "pay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A change of union or code is waiting (review 5 Nov); `finish_move` applies it from `at`.",
+      "lib": "",
+      "name": "MoveWaiting",
+      "prefix_topics": [
+        "move_waiting"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": {
+            "udt": {
+              "name": "MoveTo"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "at",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SessionUsed",
+      "prefix_topics": [
+        "session_used"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "lien",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "fx_pool only (an LP accepts a Collect, or a Bring put the union's USDC here): locks `amount`\\nof the free USDC. The lock that opens a lien records its fx_pool and USDC. Returns the lien.",
+      "name": "lock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A union's settings as roles keeps them (`roles.union_settings`, 3 Nov); same layout as\\nnila-roles' `UnionSettings`.",
+      "lib": "",
+      "name": "UnionSettings",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fx_pool",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "session_contracts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "session_len",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "sms_key",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wait",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "roles",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The union the member named, if any.",
+      "name": "union",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "signer",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Signer"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The lien's fx_pool only (a settle past the margin, or an accepted Collect that expired or\\nwas cancelled). Allowed while frozen. Returns the lien.",
+      "name": "unlock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SessionStarted",
+      "prefix_topics": [
+        "session_started"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "until",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Pending"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "session",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The member alone moves her account to new code (her own signature; a leader session never\\nreaches this account): never while a recovery is pending, a session runs, or a lien stands.\\nOnce a union is named it waits the union's recovery wait (`finish_move`, review 5 Nov).",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RecoveryProposed",
+      "prefix_topics": [
+        "recovery_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "udt": {
+              "name": "Signer"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "at",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The fx_pool that holds the lien (none while the lien is 0).",
+      "name": "lien_pool",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The signer sends free USDC (the lien stays covered).",
+      "name": "send_usdc",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The member names (or changes) her union, with her own signature: never while a recovery\\nis pending, a leader session runs, or a lien stands. Only a union with settings in roles\\n(`NoSettings` otherwise), so never one the trust has not admitted (decision 008). Her first\\nunion applies at once; a change waits the union's recovery wait (`finish_move`, review 5 Nov).",
+      "name": "set_union",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The account's own signer moves to a new key (a new phone).",
+      "name": "set_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "udt": {
+              "name": "Signer"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The account's own signer ends a session early (a session never reaches the account itself).",
+      "name": "end_session",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone, once a waiting move's time has come and no recovery cancelled it: the change of\\nunion or code applies (review 5 Nov). Same conditions as the move itself.",
+      "name": "finish_move",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "udt": {
+              "name": "Signature"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_move",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Move"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deployed by the deployer (or anyone) with no union: the member names it with `set_union`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "roles",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "udt": {
+              "name": "Signer"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assist and keypad mode: the member's phone signs this (its QR, valid until `not_after`,\\nunix seconds by the phone's clock); from its submission any leader of the union may sign\\nfor the account for the union's session length.",
+      "name": "start_session",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "not_after",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The one recovery path (executive decision 4 Nov): one leader of the union and the union's\\nSMS key together propose a new signer, of either type (a smartphone's new Privy key,\\nEd25519, or a keypad's device key, P-256); the node co-signs only for the key the new phone\\nregistered through the SMS link. It takes effect after the union's wait.",
+      "name": "recover_by_sms",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "udt": {
+              "name": "Signer"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone, once the wait has passed: the proposed signer takes over.",
+      "name": "execute_recovery",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Loan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "defaulted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "drawdown_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interest_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interest_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "maturity_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "overdue",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "principal_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate_bp",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Oracle",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Attester",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Core",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Tranche",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Junior",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Senior",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UnionRole",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Treasurer",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Secretary",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarketLite",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cash",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claimable_principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_borrows",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPendingDelay"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingDelay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeApplied",
+      "prefix_topics": [
+        "upgrade_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeDelaySet",
+      "prefix_topics": [
+        "upgrade_delay_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposed",
+      "prefix_topics": [
+        "upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
