@@ -1,0 +1,699 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Pact",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bar",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "completers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "confirm_after",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "creator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "days",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "locks",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "members",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "starts_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "StakeTooSmall",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "StakeNotWhole",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TooFewMembers",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TooManyMembers",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "DuplicateMember",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "CreatorNotMember",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "DeadlineNotFuture",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "UnknownPact",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NotMember",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "AlreadyLocked",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "LockClosed",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "NotAllLocked",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "AlreadyFinished",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "BadOutcome",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "RefundNotDue",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "Invariant",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "BarTooSmall",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "TooFewDays",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "TooManyDays",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "CountZero",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "DayClosed",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "NotLocked",
+          "value": 22
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Rules",
+      "fields": [
+        {
+          "doc": "",
+          "name": "day_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_days",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_members",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_days",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_members",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_stake",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Status",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Settled"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Refunded"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "lock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a pact. Does not take XLM. Every member, including the creator, locks afterwards.\\nDay 0 begins at `starts_at`. The pact ends `days` ledger-days later.",
+      "name": "open",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "creator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "members",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "starts_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "days",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "bar",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pact",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Pact"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "count",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "day",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "rules",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Rules"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add this camera count to the member's open day. The member signs. Past days stay as recorded.",
+      "name": "record",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return every locked stake when someone never locked and the deadline has passed.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay from the stored counts. Anyone may call this after the last day.\\nA member finishes when every day reached the bar. A missing day is a miss.",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PactOpened",
+      "prefix_topics": [
+        "pact_opened"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "creator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "confirm_after",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "members",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "days",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "bar",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PactSettled",
+      "prefix_topics": [
+        "pact_settled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "completers",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakeLocked",
+      "prefix_topics": [
+        "stake_locked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Wallet that receives the pot when every member misses. Set once, at deploy.",
+      "name": "treasury",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PactRefunded",
+      "prefix_topics": [
+        "pact_refunded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CountRecorded",
+      "prefix_topics": [
+        "count_recorded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "day",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_locked",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pact_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
