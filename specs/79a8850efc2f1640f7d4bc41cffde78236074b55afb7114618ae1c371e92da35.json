@@ -1,0 +1,1345 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Task",
+      "fields": [
+        {
+          "doc": "Commitment to what the judges saw, bound into the verdict.",
+          "name": "commitment",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Deadline for the court once a dispute is open.",
+          "name": "court_until",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "End of the dispute window once a verdict is in.",
+          "name": "dispute_until",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "disputer",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "poster",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "submissions",
+          "type_": "u32"
+        },
+        {
+          "doc": "Hash of everything the task promises: description, criteria, tests.",
+          "name": "task_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "winner",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "TaskExists",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "TaskNotFound",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidState",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ScoreTooLow",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidDeadline",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "DeadlinePassed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "AlreadySubmitted",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NotASubmitter",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "PosterCannotSubmit",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "DisputeWindowOpen",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "DisputeWindowClosed",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "NotAParty",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "RefundLocked",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "EscalationNotOpen",
+          "value": 17
+        },
+        {
+          "doc": "",
+          "name": "CourtWindowOpen",
+          "value": 18
+        },
+        {
+          "doc": "",
+          "name": "NothingToUphold",
+          "value": 19
+        },
+        {
+          "doc": "",
+          "name": "NoRotation",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "RotationNotReady",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "InvalidScore",
+          "value": 22
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Seconds after the deadline within which a verdict is expected.",
+          "name": "adjudication_sla",
+          "type_": "u64"
+        },
+        {
+          "doc": "Pauses the contract and proposes rotations. Intended to be a multisig.",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Authorizes rulings on disputed tasks; separate from the verdict authority.",
+          "name": "court_authority",
+          "type_": "address"
+        },
+        {
+          "doc": "Seconds the court has to rule before anyone can resolve the dispute.",
+          "name": "court_sla",
+          "type_": "u64"
+        },
+        {
+          "doc": "Dispute stake as a share of the reward, in basis points.",
+          "name": "dispute_stake_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Seconds a verdict stays disputable before `finalize` can pay it.",
+          "name": "dispute_window",
+          "type_": "u64"
+        },
+        {
+          "doc": "Fee on a paid reward, in basis points. At most `MAX_FEE_BPS`.",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Receives the protocol fee.",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Smallest dispute stake, whatever the reward.",
+          "name": "min_dispute_stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "Minimum judged score (1-100) that can be paid.",
+          "name": "pass_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "Emergency stop for new work and payouts.",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "SEP-41 token the rewards are paid in (the native XLM SAC on mainnet).",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "Authorizes verdicts: `(task_id, winner, score, commitment)`.",
+          "name": "verdict_authority",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "What the court decides about a disputed task.",
+      "lib": "",
+      "name": "Ruling",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "The verdict stands: the original winner is paid and receives the stake.",
+            "name": "Uphold"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Pay this submitter at this score instead; the stake goes back.",
+            "name": "Award",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Nobody qualifies: the reward goes back to the poster with the stake.",
+            "name": "Refund"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Status",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Open",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Settling",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Disputed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Completed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Refunded",
+          "value": 5
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Task",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Submission",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Rotation"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "When the contract was last unpaused; the court gets a full SLA after it.",
+            "name": "UnpausedAt"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Rotation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "court_authority",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Earliest time `apply_rotation` succeeds.",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "verdict_authority",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PostEvent",
+      "prefix_topics": [
+        "post"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "poster",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "task_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PauseEvent",
+      "prefix_topics": [
+        "pause"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Apply the court's ruling, authorized by the court authority over\\n`(task_id, ruling, commitment)`.",
+      "name": "rule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "ruling",
+          "type_": {
+            "udt": {
+              "name": "Ruling"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RefundEvent",
+      "prefix_topics": [
+        "refund"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "poster",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RulingEvent",
+      "prefix_topics": [
+        "ruling"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ruling",
+          "type_": {
+            "udt": {
+              "name": "Ruling"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A winner was paid. `reward` is what the winner received; `fee` went to the\\nfee recipient in the same transaction.",
+      "lib": "",
+      "name": "SettleEvent",
+      "prefix_topics": [
+        "settle"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "winner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SubmitEvent",
+      "prefix_topics": [
+        "submit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "submission_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency stop for new work and payouts. Admin only.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DisputeEvent",
+      "prefix_topics": [
+        "dispute"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "disputer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "stake",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "court_until",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "VerdictEvent",
+      "prefix_topics": [
+        "verdict"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "winner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "dispute_until",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return the reward to the poster.\\n\\n- **Open** (no submissions): the poster may cancel at any time; after the\\ndeadline anyone may refund.\\n- **Active** (submissions, no verdict): locked until\\n`deadline + adjudication_sla + dispute_window`, so the verdict and the\\nescalation window both come first; after that anyone may refund.\\n\\nNever paused, and never pays anyone but the poster.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record an agent's submission before the deadline. One per agent; the\\nfirst one makes the task Active.",
+      "name": "submit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "submission_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A submitter took a task with no verdict past its SLA to the court.",
+      "lib": "",
+      "name": "EscalateEvent",
+      "prefix_topics": [
+        "escalate"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "court_until",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Contest a verdict during the dispute window. Only the poster or another\\nsubmitter can dispute, once per task, and must lock a stake.",
+      "name": "dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "disputer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Take a task with no verdict past its SLA to the court. Any submitter may\\ndo this, without a stake, until the escalation window closes.",
+      "name": "escalate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay the winner once the dispute window has closed. Anyone may call it.",
+      "name": "finalize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Task"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lock a reward. The poster authorizes the transfer into the contract.",
+      "name": "post_task",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "poster",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "task_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The court missed its SLA; the dispute closed on the standing verdict.",
+      "lib": "",
+      "name": "CourtTimeoutEvent",
+      "prefix_topics": [
+        "court_timeout"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_rotation",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Rotation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy with the full configuration. `paused` is ignored and starts false.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The stake a dispute on a task with this reward requires.",
+      "name": "dispute_stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reward",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RotationAppliedEvent",
+      "prefix_topics": [
+        "rotation_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "rotation",
+          "type_": {
+            "udt": {
+              "name": "Rotation"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Apply the pending rotation once its delay has passed. Anyone may call it.",
+      "name": "apply_rotation",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_submission",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "agent",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RotationProposedEvent",
+      "prefix_topics": [
+        "rotation_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "rotation",
+          "type_": {
+            "udt": {
+              "name": "Rotation"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw a pending rotation. Admin only.",
+      "name": "cancel_rotation",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RotationCancelledEvent",
+      "prefix_topics": [
+        "rotation_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Announce a change of verdict authority, court authority and/or admin.\\nIt can be applied only after `ROTATION_DELAY`, so the change is public\\nbefore it takes effect. Replaces any pending proposal. Admin only.",
+      "name": "propose_rotation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "verdict_authority",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "court_authority",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accept a verdict authorized by the verdict authority over\\n`(task_id, winner, score, commitment)`. The reward stays in the contract\\nuntil the dispute window closes.",
+      "name": "release_to_winner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "winner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close a dispute the court did not rule on in time. Anyone may call it.\\nThe standing verdict is paid (or, for an escalated task with no\\nverdict, the poster is refunded), and the stake goes back to the\\ndisputer: a court that does not show up costs nobody their stake.\\nBlocked while paused, and the court gets a full `court_sla` after an\\nunpause, so a pause can never settle a dispute without a ruling.",
+      "name": "resolve_expired_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "task_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
