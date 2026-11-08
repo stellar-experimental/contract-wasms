@@ -1,0 +1,1143 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "A v3 backstop loss-waterfall position. Mirrors the backstop's `BackstopTier` so the\\ntype is included in this contract's spec.",
+      "lib": "",
+      "name": "BackstopTier",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FirstLoss"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SecondLoss"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ThirdLoss"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "The error codes for the contract.",
+      "lib": "",
+      "name": "BackstopManagerErrors",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InternalError",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitializedError",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedError",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NegativeAmountError",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AllowanceError",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "BalanceError",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "OverflowError",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "ContractListOverMax",
+          "value": 100
+        },
+        {
+          "doc": "",
+          "name": "InvalidContractAddress",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "InvalidScope",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "InvalidOwner",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "NoPendingOwner",
+          "value": 104
+        },
+        {
+          "doc": "",
+          "name": "OwnerTransferNotReady",
+          "value": 105
+        },
+        {
+          "doc": "",
+          "name": "OwnerProposalExpired",
+          "value": 106
+        },
+        {
+          "doc": "",
+          "name": "InvalidBps",
+          "value": 107
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the manager is paid its harvestable balance of a token",
+      "lib": "",
+      "name": "Harvest",
+      "prefix_topics": [
+        "harvest"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the owner sets the principal of a position",
+      "lib": "",
+      "name": "PrincipalSet",
+      "prefix_topics": [
+        "principal_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the owner sets the manager's share of earnings",
+      "lib": "",
+      "name": "HarvestBpsSet",
+      "prefix_topics": [
+        "harvest_bps_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the pending owner accepts ownership",
+      "lib": "",
+      "name": "OwnerAccepted",
+      "prefix_topics": [
+        "owner_accepted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the owner proposes a new owner",
+      "lib": "",
+      "name": "OwnerProposed",
+      "prefix_topics": [
+        "owner_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the owner sets the amount of a token owed to the manager",
+      "lib": "",
+      "name": "HarvestableSet",
+      "prefix_topics": [
+        "harvestable_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the owner cancels, or the pending owner declines, a proposal",
+      "lib": "",
+      "name": "OwnerCancelled",
+      "prefix_topics": [
+        "owner_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `b_withdraw` with the split of the withdrawn tokens",
+      "lib": "",
+      "name": "EarningsRealized",
+      "prefix_topics": [
+        "earnings_realized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "principal_part",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "earnings_part",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "manager_part",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "vec"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Persistent storage keys",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "LP tokens deposited into a position that have not been withdrawn",
+            "name": "Principal",
+            "type_": [
+              {
+                "udt": {
+                  "name": "PositionKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "LP tokens of a token owed to the manager",
+            "name": "Harvest",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Manager",
+      "fields": [
+        {
+          "doc": "The address of the manager",
+          "name": "id",
+          "type_": "address"
+        },
+        {
+          "doc": "The scope of the manager\\n0 -> Low\\n1 -> Medium\\n2 -> High",
+          "name": "scope",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Identifies a backstop position held by the contract",
+      "lib": "",
+      "name": "PositionKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A proposed ownership transfer awaiting acceptance",
+      "lib": "",
+      "name": "PendingOwner",
+      "fields": [
+        {
+          "doc": "The proposed owner",
+          "name": "id",
+          "type_": "address"
+        },
+        {
+          "doc": "The ledger sequence the proposal was made in",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "The ledger timestamp the proposal was made at",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get owner",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the pools this contract can interact with",
+      "name": "pools",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, Low) Claim backstop deposit emissions for one tier of a pool for the contract\\n\\nReturns the amount of backstop tokens minted from the claimed BLNT emissions\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier to claim emissions for\\n* `pool_address` - The address of the pool to claim from\\n* `min_lp_tokens_out` - The minimum amount of backstop tokens to mint with emissions\\n\\n### Errors\\nIf an invalid backstop or pool address is included",
+      "name": "b_claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_lp_tokens_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, Low) Transfer the manager's harvestable balance of a token to the manager.\\n\\nPays the smaller of the harvestable balance and the contract's balance of the token,\\nand returns the amount paid. Tokens always go to the manager, even if the owner calls.\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `token` - The address of the token to harvest",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get manager",
+      "name": "manager",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Manager"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, Medium) Deposit \"amount\" of a tier's backstop token from the contract into the backstop for \"pool_address\"\\n\\nReturns the number of backstop pool shares minted\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier to deposit into\\n* `pool_address` - The address of the pool\\n* `amount` - The amount of tokens to deposit",
+      "name": "b_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the backstops this contract can interact with",
+      "name": "backstops",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the principal of a backstop position, in LP tokens",
+      "name": "principal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Set the list of valid pools\\n\\n### Arguments\\n* `pools` - The addresses of the pools the manager can interact with",
+      "name": "set_pools",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, High) Withdraw shares from the contract's withdraw queue for a tier of a pool's backstop\\n\\nThe withdrawn tokens are always sent to this contract. They are counted as earnings\\n(position value above principal) first, and the manager's `harvest_bps` share of the\\nearnings is added to its harvestable balance. The rest reduces principal.\\n\\nReturns the amount of tokens returned\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier to withdraw from\\n* `pool_address` - The address of the pool\\n* `amount` - The amount of shares to withdraw",
+      "name": "b_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, High) Exit the Comet LP used as the backstop token for a tier of a pool.\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier whose token is the Comet LP to exit\\n* `pool_address` - The address of the pool\\n* `burn_amount` - The amount of pool shares to burn\\n* `min_amounts_out` - The minimum amount of tokens to receive\\n\\n### Errors\\nIf an invalid backstop or pool address is included",
+      "name": "c_exit_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "burn_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_amounts_out",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, High) Join the Comet LP used as the backstop token for a tier of a pool.\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier whose token is the Comet LP to join\\n* `pool_address` - The address of the pool\\n* `pool_amount_out` - The amount of pool shares to mint\\n* `max_amounts_in` - The maximum amount of tokens to deposit\\n\\n### Errors\\nIf an invalid backstop or pool address is included",
+      "name": "c_join_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_amounts_in",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the manager's share of earnings, in basis points",
+      "name": "harvest_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the amount of a token owed to the manager",
+      "name": "harvestable",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Set the manager for the contract\\n\\n### Arguments\\n* `manager` - The address of the manager\\n* `scope` - The scope of the manager. 0 = Low, 1 = Medium, 2 = High",
+      "name": "set_manager",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Pending Owner) Accept ownership of the contract\\n\\n### Errors\\n* NoPendingOwner - There is no pending proposal\\n* OwnerTransferNotReady - Called in the same ledger as the proposal\\n* OwnerProposalExpired - Called more than one week after the proposal",
+      "name": "accept_owner",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, Low) Transfer tokens from the contract back to the owner\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `token` - The address of the token to transfer\\n* `amount` - The amount of tokens to transfer",
+      "name": "refund_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the backstop manager\\n\\n### Arguments\\n* owner - The address of the owner of the funds\\n* manager - The address of the manager of the funds\\n* admin_scope - The scope of the manager. 0 = Low, 1 = Medium, 2 = High\\n* backstops - The addresses of the backstops the manager can interact with initially\\n* pools - The addresses of the pools the manager can interact with initially\\n\\n### Errors\\n* InvalidScope - The scope is greater than 2\\n* ContractListOverMax - Too many backstops or pools were provided",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "admin_scope",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "backstops",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pools",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the pending owner proposal, if any. An expired proposal is still returned\\nuntil it is replaced or cancelled.",
+      "name": "pending_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingOwner"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Propose a new owner for the contract. The owner does not change\\nuntil `new_owner` calls `accept_owner`. Replaces any pending proposal.\\n\\n### Arguments\\n* `new_owner` - The address of the proposed owner\\n\\n### Errors\\n* InvalidOwner - `new_owner` is the current owner or this contract",
+      "name": "propose_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Set the list of valid backstops\\n\\n### Arguments\\n* `backstops` - The addresses of the backstops the manager can interact with",
+      "name": "set_backstops",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "backstops",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Set the principal of a backstop position, in LP tokens\\n\\n### Arguments\\n* `backstop` - The address of the backstop contract\\n* `pool` - The address of the pool\\n* `tier` - The backstop tier\\n* `amount` - The principal, in LP tokens\\n\\n### Errors\\n* NegativeAmountError - `amount` is negative",
+      "name": "set_principal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Transfer tokens from the manager contract to another address\\n\\n### Arguments\\n* `token` - The address of the token to transfer\\n* `to` - The address to transfer the tokens to\\n* `amount` - The amount of tokens to transfer",
+      "name": "transfer_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Set the manager's share of earnings realized by `b_withdraw`\\n\\n### Arguments\\n* `bps` - The manager's share, in basis points (0 to 10000)\\n\\n### Errors\\n* InvalidBps - `bps` is greater than 10000",
+      "name": "set_harvest_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Only Owner) Set the amount of a token owed to the manager\\n\\n### Arguments\\n* `token` - The address of the token\\n* `amount` - The amount owed to the manager\\n\\n### Errors\\n* NegativeAmountError - `amount` is negative",
+      "name": "set_harvestable",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, Medium) Queue deposited pool shares from the contract for withdraw from a tier of a pool's backstop\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier to queue shares from\\n* `pool_address` - The address of the pool\\n* `amount` - The amount of shares to queue for withdraw",
+      "name": "b_queue_withdrawal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Manager, Medium) Dequeue a currently queued pool share withdraw for the contract from a tier of a pool's backstop\\n\\n### Arguments\\n* `from` - The caller of the function\\n* `backstop` - The address of the backstop contract\\n* `tier` - The backstop tier to dequeue shares from\\n* `pool_address` - The address of the pool\\n* `amount` - The amount of shares to dequeue",
+      "name": "b_dequeue_withdrawal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(Owner or Pending Owner) Cancel the pending owner proposal. The owner can cancel\\nit, and the pending owner can decline it.\\n\\n### Arguments\\n* `from` - The caller of the function\\n\\n### Errors\\n* NoPendingOwner - There is no pending proposal\\n* UnauthorizedError - `from` is neither the owner nor the pending owner",
+      "name": "cancel_owner_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
