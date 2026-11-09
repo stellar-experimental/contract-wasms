@@ -1,0 +1,744 @@
+[
+  {
+    "function_v0": {
+      "doc": "Approve an open proposal. Each signer may approve at most once.\\nEnforces conflict-of-interest recusal (I-COI-1) and supports elevated NoK and 72h grace signers.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit tokens into the treasury. Any address can fund it.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute a proposal once it has reached the approval threshold.\\nAnyone can call this after enough approvals are in.",
+      "name": "execute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Propose a payment. Any signer can propose; the proposer counts as the first approval.",
+      "name": "propose",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "memo",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "community_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "Token contract address \\xe2\\x80\\x94 use the native XLM token or BRZA token address.",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Proposal",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EncumberedBalance"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "GovernanceContract"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Council"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OutgoingCouncil"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "OutgoingSigners"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "NoKBinding",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "ExecutedGovernanceProposal",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize the vault. `signers` are the multisig participants; `threshold` is\\nthe minimum number of approvals required to execute a payment proposal.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "community_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Proposal",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "approvals",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "encumbered",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "executed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "memo",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update multisig signers and approval threshold.\\nIn a 1-of-1 vault, the founder/sole signer can progressively upgrade signers.\\nIn an M-of-N multisig (threshold > 1), a single signer cannot reconfigure signers;\\n`set_signers_multisig` must be used with >= threshold approvals.",
+      "name": "set_signers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Proposal"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Encumber funds for a passed proposal prior to final execution (RT-02 Fix).\\nLocks the amount into `EncumberedBalance` so concurrent proposals cannot overspend available vault liquidity.",
+      "name": "encumber_payout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_nok_binding",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "council_signer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "NoKFailoverRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CouncilConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "grace_period_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "term_ends_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "term_epoch",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "available_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Elevate a registered Next-of-Kin via 48h post-cooldown dead-man switch.",
+      "name": "elevate_nok_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "primary_signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nok_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_cooldown_ended_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "encumbered_balance",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_council_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "CouncilConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NoKFailoverRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "council_signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "elevated",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "elevated_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "nok_backup_signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nok_identity_hmac",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind payouts to governance proposal execution (I-PAYLOAD-BIND-1, I-COI-1).\\nCross-contracts to GovernanceContract::consume_for_execution to verify proposal status and payload.",
+      "name": "execute_bound_payout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "governance_proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vault_proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "payload_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a Next-of-Kin failover backup signer for an elected council seat (I-COUNCIL-NOK-1).",
+      "name": "register_council_nok",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "council_signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nok_address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nok_id_hmac",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update multisig signers with multisig consensus (M-of-N).\\nRequires distinct signatures from at least `config.threshold` current signers.",
+      "name": "set_signers_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "approvers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate council signers with 72-hour grace handover (QoL-4, I-COUNCIL-NOK-1).",
+      "name": "rotate_council_signers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "term_ends_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_governance_contract",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or update the linked GovernanceContract address. Caller must be an active signer.",
+      "name": "set_governance_contract",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "governance",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Elevate a registered Next-of-Kin via M-1 peer council co-signatures.",
+      "name": "elevate_nok_signer_attested",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "attesting_signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "primary_signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "nok_address",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate council signers via M-of-N multisig consensus.",
+      "name": "rotate_council_signers_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "approvers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_signers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "term_ends_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

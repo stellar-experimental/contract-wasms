@@ -1,0 +1,955 @@
+[
+  {
+    "function_v0": {
+      "doc": "Cast a vote on an active proposal.\\nEmits a sanitized commitment event WITHOUT cleartext choice (I-PRIVACY-ROLL-1).",
+      "name": "vote",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "support",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cancel an active proposal. Proposer or admin only.",
+      "name": "cancel",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Finalize a proposal strictly after its deadline has passed (I-TIMELOCK-1).\\nTransitions passing proposals to ProposalStatus::Cooldown with cooldown_ends_at.",
+      "name": "finalize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "ProposalStatus"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_voted",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Membership"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TreasuryVault"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TallyRelayer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "VotingPeriod"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Proposal",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Voted",
+            "type_": [
+              "u64",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "membership",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "voting_period",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Proposal",
+      "fields": [
+        {
+          "doc": "",
+          "name": "abstain_votes",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "against_votes",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "community_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "cooldown_ends_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "cooldown_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "election_slate_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "executed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "for_votes",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "funding_amount_minor",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "payload_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proposal_type",
+          "type_": {
+            "udt": {
+              "name": "ProposalType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proposer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "quorum_threshold_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "snapshot_member_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "ProposalStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tie_extended",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "veto_reason_hash",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "vetoed",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Proposal"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mark a proposal as executed. Admin only.",
+      "name": "mark_executed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Veto a passed proposal strictly during the cooldown window (I-VETO-1).\\nEnforces Conflict-of-Interest recusal: proposer and recipient cannot veto (I-COI-1).",
+      "name": "veto_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reason_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "voting_period",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProposalType",
+      "cases": [
+        {
+          "doc": "",
+          "name": "General",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "FinancialPayout",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "CouncilElection",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ParameterChange",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a governance proposal with default 20% quorum.",
+      "name": "create_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "community_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ProposalStatus",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Cooldown",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Executable",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Passed",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Failed",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Tied",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Executed",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "Vetoed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "Cancelled",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_tally_relayer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tally_relayer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_voting_period",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "period",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "GovernanceError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ProposalNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "VotingStillActive",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "VotingAlreadyClosed",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AlreadyVoted",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidFinancialPayload",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotInCooldown",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "CooldownNotElapsed",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "CooldownWindowExpired",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "ExecutionWindowExpired",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "ConflictOfInterestRecusal",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedVetoCaller",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "UnauthorizedExecutionCaller",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "PayloadHashMismatch",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "InvalidProposalStatus",
+          "value": 16
+        },
+        {
+          "doc": "",
+          "name": "QuorumThresholdInvalid",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_treasury_vault",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury_vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Apply an aggregated verified batch tally from TallyRelayer or Admin.",
+      "name": "apply_verified_tally",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "batch_for_delta",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "batch_against_delta",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "batch_abstain_delta",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "_batch_commitment_proof",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cast an explicit vote commitment without plaintext choice in transaction parameters.",
+      "name": "cast_vote_commitment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vote_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cross-contract hook invoked exclusively by TreasuryVaultContract during payout execution.\\nAsserts status is Cooldown/Executable, cooldown elapsed, not vetoed, and payload matches exactly (I-PAYLOAD-BIND-1).",
+      "name": "consume_for_execution",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller_vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "expected_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "expected_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expected_payload_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Proposal"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a cryptographic payload-bound proposal (I-PAYLOAD-BIND-1, I-TIMELOCK-1).",
+      "name": "create_bound_proposal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "community_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "proposal_type",
+          "type_": {
+            "udt": {
+              "name": "ProposalType"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "funding_amount_minor",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "payload_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "cooldown_seconds",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ParticipationReceipt",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cast_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "vote_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_participation_receipt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposal_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "voter",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ParticipationReceipt"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create a governance proposal with custom quorum in basis points (e.g. 2000 = 20%).",
+      "name": "create_proposal_with_quorum",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "proposer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "community_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "description",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "quorum_threshold_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  }
+]
