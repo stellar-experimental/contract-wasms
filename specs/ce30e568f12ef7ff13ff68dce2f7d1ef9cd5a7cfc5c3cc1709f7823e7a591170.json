@@ -1,0 +1,948 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Snapshot of the lent reserve, for monitors and curators.",
+      "lib": "",
+      "name": "ReserveStatus",
+      "fields": [
+        {
+          "doc": "b-token to underlying rate, 12 decimals. A drop means a socialised loss.",
+          "name": "b_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Whether the reserve accepts new supply. Precept only lets it go from true to false.",
+          "name": "enabled",
+          "type_": "bool"
+        },
+        {
+          "doc": "Precept pool status. Supply is blocked above 3; withdrawals are never blocked by it.",
+          "name": "pool_status",
+          "type_": "u32"
+        },
+        {
+          "doc": "Total borrowed, in underlying units.",
+          "name": "total_liabilities",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total supplied, in underlying units.",
+          "name": "total_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "`total_liabilities / total_supply`, 7 decimals.",
+          "name": "utilization",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lends `amount` to the pool and credits `from` with the b-tokens it minted. Returns\\n`from`'s balance afterwards. Reverts when deposits are paused, when `from` is not\\nallowlisted, and (from the pool) when the pool status is above 3 or the reserve is\\ndisabled.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Nothing to claim: Precept pays lenders through `b_rate`. The keeper calls it to record\\na price-per-share checkpoint (the reserve's `b_rate`, 12 decimals) in the event log.",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws `amount` straight to `to` and debits `from` by the b-tokens the pool burned.\\nNever allowlist-gated or paused. Reverts (from the pool) when the withdrawal would\\nleave the reserve at 100% utilization.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless instance TTL bump, a keep-alive for quiet periods.",
+      "name": "extend_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_keeper",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotates the keeper. Both must sign: the old keeper hands the role over, and the new\\none proves the address is live. A typo would otherwise brick every keeper method, and\\nthis contract cannot be upgraded.",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What `vault` can withdraw right now: its balance, capped by what the pool's\\nutilization rule lets out and by the asset the pool actually holds. A withdrawal of\\nexactly this amount passes the pool's checks in the same ledger.",
+      "name": "max_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`init_args` = `[pool: Address, keeper: Address]`. Traps if `asset` is not a reserve of\\n`pool`. The deposit allowlists start empty.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "init_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds `depositor` to the address allowlist. Keeper-gated; idempotent.",
+      "name": "add_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "State of the lent reserve, with interest accrued to the current ledger.",
+      "name": "reserve_status",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "ReserveStatus"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sum of all vaults' b-tokens; equals the strategy's supply position in the pool.",
+      "name": "total_b_tokens",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "b-tokens credited to `vault`.",
+      "name": "vault_b_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds a wasm `hash` to the allowlist, so every contract running that code may deposit.\\nKeeper-gated; idempotent. A vault that upgrades its wasm must be re-blessed.",
+      "name": "add_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes `depositor` from the address allowlist. Keeper-gated; idempotent. Blocks only\\nfuture deposits, never withdrawals.",
+      "name": "remove_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "are_deposits_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Removes a wasm `hash` from the allowlist. Keeper-gated; idempotent. Blocks only future\\ndeposits, never withdrawals.",
+      "name": "remove_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pauses or resumes new deposits. Keeper-gated. Withdrawals are never paused: a vault\\ncan always take its money out (pool liquidity permitting).",
+      "name": "set_deposits_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the keeper is rotated.",
+      "lib": "",
+      "name": "SetKeeperEvent",
+      "prefix_topics": [
+        "set_keeper_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_keeper",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a depositor is added to (`allowed = true`) or removed from\\n(`allowed = false`) the address allowlist.",
+      "lib": "",
+      "name": "SetDepositorEvent",
+      "prefix_topics": [
+        "set_depositor_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the keeper pauses (`paused = true`) or resumes (`paused = false`) deposits.",
+      "lib": "",
+      "name": "DepositsPausedEvent",
+      "prefix_topics": [
+        "deposits_paused_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a depositor wasm hash is added to (`allowed = true`) or removed from\\n(`allowed = false`) the hash allowlist.",
+      "lib": "",
+      "name": "SetAllowedHashEvent",
+      "prefix_topics": [
+        "set_allowed_hash_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable strategy configuration, set once at construction.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Underlying asset the vault deposits and the strategy lends (e.g. USDC).",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "Precept pool the asset is lent to.",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "The asset's reserve index in `pool`. Fixed for the pool's life: Precept cannot add,\\nremove or reorder reserves once the pool is out of setup.",
+          "name": "reserve_index",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Keeper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Sum of every vault's b-tokens. Equals the strategy's own supply position in the pool,\\nbecause nobody else can change that position.",
+            "name": "TotalBTok"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "b-tokens credited to one depositing vault.",
+            "name": "VaultBTok",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlisted depositor by exact address. Absent = not allowed.",
+            "name": "Depositor",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlisted depositor by contract wasm hash. Absent = not allowed.",
+            "name": "AllowHash",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 401
+        },
+        {
+          "doc": "",
+          "name": "NegativeNotAllowed",
+          "value": 410
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgument",
+          "value": 411
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 412
+        },
+        {
+          "doc": "",
+          "name": "UnderflowOverflow",
+          "value": 413
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticError",
+          "value": 414
+        },
+        {
+          "doc": "",
+          "name": "DivisionByZero",
+          "value": 415
+        },
+        {
+          "doc": "",
+          "name": "InvalidSharesMinted",
+          "value": 416
+        },
+        {
+          "doc": "",
+          "name": "OnlyPositiveAmountAllowed",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 418
+        },
+        {
+          "doc": "",
+          "name": "ProtocolAddressNotFound",
+          "value": 420
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExpired",
+          "value": 421
+        },
+        {
+          "doc": "",
+          "name": "ExternalError",
+          "value": 422
+        },
+        {
+          "doc": "",
+          "name": "SoroswapPairError",
+          "value": 423
+        },
+        {
+          "doc": "",
+          "name": "AmountBelowMinDust",
+          "value": 451
+        },
+        {
+          "doc": "",
+          "name": "UnderlyingAmountBelowMin",
+          "value": 452
+        },
+        {
+          "doc": "",
+          "name": "BTokensAmountBelowMin",
+          "value": 453
+        },
+        {
+          "doc": "",
+          "name": "InternalSwapError",
+          "value": 454
+        },
+        {
+          "doc": "",
+          "name": "SupplyNotFound",
+          "value": 455
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositEvent",
+      "prefix_topics": [
+        "deposit_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HarvestEvent",
+      "prefix_topics": [
+        "harvest_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "price_per_share",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawEvent",
+      "prefix_topics": [
+        "withdraw_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
