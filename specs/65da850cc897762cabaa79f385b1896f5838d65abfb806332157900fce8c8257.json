@@ -1,0 +1,330 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One anchored commitment: the content hash it binds and the ledger sequence\\nwhere the binding was first recorded.",
+      "lib": "",
+      "name": "Anchor",
+      "fields": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "seq",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Fail-closed error codes (never invent a success).",
+      "lib": "",
+      "name": "CgError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "HashMismatch",
+          "value": 1
+        },
+        {
+          "doc": "The stored record's owner does not equal the one under verification.\\nUnreachable without a SHA-256 collision on the derivation (the id\\nbinds the owner); kept as an explicit dead-man's-say to stay fail-closed.",
+          "name": "OwnerMismatch",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One AUTHORIZED anchor: adds the identity of the owner whose signature the\\nwrite required, so a read-back can prove WHO anchored the commitment.",
+      "lib": "",
+      "name": "AuthorizedAnchor",
+      "fields": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seq",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read an anchor: None when the id was never anchored.",
+      "name": "read",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Anchor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anchor a commitment id -> content hash at this ledger sequence.\\nPublic: anyone may anchor; authority lives with the caller's policy.\\nFirst write wins; same (id, hash) replays idemtently; a different hash\\nfor the same id fails with HashMismatch (never overwritten).\\nPre-registration race documented honestly above: this lane is the\\ndemo/proof peer; identity-bearing callers use `commit_authorized`.",
+      "name": "commit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "CgError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Version constant as an on-ledger String.",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The authorized lane's domain separator as an on-ledger String, so a\\nthird party can read the exact derivation prefix from the ledger\\nitself instead of trusting a source file.",
+      "name": "auth_domain",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Strict read: the anchor must exist and its hash must equal the caller's\\nexpectation, else the invocation fails (fail-closed verification).",
+      "name": "assert_anchored",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "CgError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read an authorized anchor: None when never anchored. Returns the\\nowner identity too \\xe2\\x80\\x94 transparency lane (who anchored is public).",
+      "name": "read_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "AuthorizedAnchor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "AUTHORIZED anchor: id written ONLY through the owner's signature.\\nThe id is derived from (owner, hash) in-contract (above), so the\\nfunction CHANGES the caller's id only by refusing to take one \\xe2\\x80\\x94\\nthere is no id argument to lie about. Fail-closed everywhere:\\n- missing owner authorization -> host rejects the tx (never reaches\\nstorage),\\n- a record already exists with the same (owner, hash) -> idempotent\\nreplay of the original ledger sequence,\\n- any other occupied-lane shape -> fail-closed error (cryptographic\\ndead code, kept for defense in depth).",
+      "name": "commit_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "CgError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The canonical authorized-lane id, derived IN-CONTRACT:\\n`sha256( utf8(AUTH_DOMAIN) ++ utf8(strkey(owner)) ++ hash )`.\\nExported as a public fn so a verifier can ask the ledger for the\\ncanonical id of an (owner, hash) pair and compare it against what was\\nanchored \\xe2\\x80\\x94 the derivation itself never trusts a caller's arithmetic.",
+      "name": "derive_authorized_id",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Strict AUTHORIZED read-back (public, no signature required):\\nthe record must exist, the id must DERIVE from (owner, hash), the\\nstored hash must equal the caller's hash and the stored owner must\\nequal the caller's owner. Every failure is fail-closed.",
+      "name": "assert_anchored_authorized",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "CgError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
