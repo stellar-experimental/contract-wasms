@@ -1,0 +1,526 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Registro del resultado.",
+      "lib": "",
+      "name": "Draw",
+      "fields": [
+        {
+          "doc": "",
+          "name": "drawn_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "drawn_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "`sha256(signature)`: id\\xc3\\xa9ntico al campo `randomness` de drand.",
+          "name": "randomness",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "round",
+          "type_": "u64"
+        },
+        {
+          "doc": "Firma BLS de la ronda, comprimida (48 bytes), tal como la publica drand.",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 48
+            }
+          }
+        },
+        {
+          "doc": "\\xc3\\x8dndices ganadores en la lista can\\xc3\\xb3nica, en orden de premio.",
+          "name": "winners",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyDrawn",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TooFewEntries",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BadWinnerCount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "RoundTooSoon",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "RoundTooFar",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "RoundNotReady",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "InvalidSignature",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "MetaTooLong",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Drawn",
+      "prefix_topics": [
+        "drawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "round",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "randomness",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "winners",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Sello de un sorteo: lo que el organizador compromete antes de la semilla.",
+      "lib": "",
+      "name": "Raffle",
+      "fields": [
+        {
+          "doc": "Cantidad de entradas de la lista can\\xc3\\xb3nica.",
+          "name": "count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "SHA-256 de la lista can\\xc3\\xb3nica (docs/protocolo.md \\xc2\\xa71).",
+          "name": "list_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Texto libre corto: premio o t\\xc3\\xadtulo.",
+          "name": "meta",
+          "type_": "string"
+        },
+        {
+          "doc": "Cantidad de ganadores a seleccionar.",
+          "name": "num_winners",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "Ronda objetivo de drand quicknet.",
+          "name": "round",
+          "type_": "u64"
+        },
+        {
+          "doc": "Timestamp del ledger en que se sell\\xc3\\xb3.",
+          "name": "sealed_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "sealed_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Status",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Sealed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Drawn"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Sealed",
+      "prefix_topics": [
+        "sealed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "list_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "num_winners",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "round",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Raffle",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Draw",
+            "type_": [
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registra el resultado. Sin autorizaci\\xc3\\xb3n: cualquiera puede finalizar un\\nsorteo cuya ronda ya existe. `signature` es la firma de la ronda en\\nformato G1 sin comprimir (96 bytes, big-endian, `x || y`).",
+      "name": "draw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Draw"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Compromete una lista. Devuelve el `id` del sorteo (secuencial desde 1).",
+      "name": "seal",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "list_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "num_winners",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "meta",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renueva el TTL de un sorteo, de su registro y de la instancia del\\ncontrato (c\\xc3\\xb3digo incluido). Cualquiera puede llamarlo.\\n\\n`seal` y `draw` solo extienden las entradas del propio sorteo: la renta\\ndel c\\xc3\\xb3digo del contrato (la partida cara) se paga aqu\\xc3\\xad, de forma\\nexpl\\xc3\\xadcita, y no por sorpresa al organizador que llega justo cuando el\\nTTL cae bajo el umbral.",
+      "name": "extend",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pr\\xc3\\xb3ximo `id` que asignar\\xc3\\xa1 `seal`.",
+      "name": "next_id",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_draw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Draw"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ronda de quicknet vigente en un instante (Unix, segundos).",
+      "name": "round_at",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_raffle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "raffle_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Raffle"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Instante (Unix, segundos) en que se publica una ronda de quicknet.",
+      "name": "round_time",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "round",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  }
+]
