@@ -1,0 +1,451 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "One liquidation: the flash loan from `pool` (with the requests that repay it there), the receiver plan, and what the owner must\\nend up with: `profit_asset` must grow by at least `min_profit`; no token in `keep_assets` may shrink.",
+      "lib": "",
+      "name": "Job",
+      "fields": [
+        {
+          "doc": "",
+          "name": "flash_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "flash_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keep_assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_profit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "plan",
+          "type_": {
+            "udt": {
+              "name": "Plan"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "profit_asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "requests",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Request"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One swap with the least it must give back. With `all` the leg sells the whole balance of `token_in` that the receiver has at\\nthat moment and `amount_in` is not used: the last leg of a sale, so a lot that came out a little different still sells entirely.",
+      "lib": "",
+      "name": "Leg",
+      "fields": [
+        {
+          "doc": "",
+          "name": "all",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token_in",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_out",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "venue",
+          "type_": {
+            "udt": {
+              "name": "Venue"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What `exec_op` does: the steps in order, then every token in `sweep` that the receiver holds goes to the owner.",
+      "lib": "",
+      "name": "Plan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "steps",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Step"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sweep",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "One thing the receiver does: a swap, or a `submit` to a pool with the receiver as `from`, `spender` and `to`.",
+      "lib": "",
+      "name": "Step",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Swap",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Leg"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Submit",
+            "type_": [
+              "address",
+              {
+                "vec": {
+                  "element_type": {
+                    "udt": {
+                      "name": "Request"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPlan",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "BelowMinProfit",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "KeepAssetLost",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "SwapShort",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotEnoughFlashed",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where a swap is made. Aquarius: the pool and the indexes of the two tokens in it (`swap(user, in_idx, out_idx, in, out_min)`).\\nSoroswap: the router and the pair that takes the input (`swap_exact_tokens_for_tokens`, a path of the two tokens).",
+      "lib": "",
+      "name": "Venue",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Aquarius",
+            "type_": [
+              "address",
+              "u32",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Soroswap",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One entry of the pool request list (blend-contracts-v2 `pool/src/pool/actions.rs`).",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Entry instance. Runs the flash loan for the owner and rolls everything back unless the owner balances end as `job` says.\\nReturns the growth of `profit_asset`.",
+      "name": "run",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "job",
+          "type_": {
+            "udt": {
+              "name": "Job"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeps the instance alive; anyone may call it.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anything left in this instance goes to the owner.",
+      "name": "rescue",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Receiver instance, called by the lender pool with the loaned `amount` of `token` already sent here. Does the steps of the plan\\nand sends the results to the owner, who is the lender `from` and pays it back with them.",
+      "name": "exec_op",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Receiver instance. The owner `run` leaves the plan here for the `exec_op` that the lender pool calls in the same transaction.",
+      "name": "prepare",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "plan",
+          "type_": {
+            "udt": {
+              "name": "Plan"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A `submit` to a pool as this instance, for what a run left there (collateral the wallet cannot receive); the owner gets it.",
+      "name": "pool_submit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "requests",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Request"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
