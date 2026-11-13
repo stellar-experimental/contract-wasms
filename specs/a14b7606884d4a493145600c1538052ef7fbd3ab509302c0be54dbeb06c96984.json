@@ -1,0 +1,2795 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TtlConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bump_instance_on_lp_operations",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "bump_lp_balance_on_read",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "instance",
+          "type_": {
+            "udt": {
+              "name": "TtlPolicy"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "lp_balance",
+          "type_": {
+            "udt": {
+              "name": "TtlPolicy"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TtlPolicy",
+      "fields": [
+        {
+          "doc": "",
+          "name": "extend_to",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Error ranges reserved by dependencies.\\n\\n| Range                    | Owner                       | Status                     |\\n|--------------------------|-----------------------------|----------------------------|\\n| `1..=15`                 | Stellar Asset Contract      | live \\xe2\\x80\\x94 runtime (SAC calls) |\\n| `100..=114`              | OZ `FungibleTokenError`     | live \\xe2\\x80\\x94 in wasm (LP token)  |\\n| `200..=211`, `300..=34x` | OZ non-fungible / RWA       | compiled, not in wasm      |\\n| `1000..=1501`            | OZ `stellar-contract-utils` | compiled, not in wasm      |\\n| `2000..=2202`            | OZ `stellar-access`         | not linked                 |\\n| `4000..=5012`            | OZ governance               | compiled, not in wasm      |\\n\\n| Band     | Range       | What                               | Retriable                    | Fires normally |\\n|----------|-------------|------------------------------------|------------------------------|----------------|\\n| Input    | `x000\\xe2\\x80\\x93x099` | Malformed input       ",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "A per-coin vector (constructor `tokens`/`asset_types`, or an `amounts`/`min_amounts`) is not\\nexactly `COINS` long.",
+          "name": "InputCoinCountMismatch",
+          "value": 10000
+        },
+        {
+          "doc": "Coin index is not in `0..COINS`.",
+          "name": "InputCoinIndexOutOfRange",
+          "value": 10001
+        },
+        {
+          "doc": "A swap needs two different coins.",
+          "name": "InputDuplicateCoinIndex",
+          "value": 10002
+        },
+        {
+          "doc": "The input amount is zero (vs `MarketLpRoundsToZero`, which is nonzero but too small).",
+          "name": "InputZeroAmount",
+          "value": 10003
+        },
+        {
+          "doc": "A negative amount; the engine's arithmetic is unsigned.",
+          "name": "InputNegativeAmount",
+          "value": 10004
+        },
+        {
+          "doc": "`fee` is outside `0..=MAX_FEE`.",
+          "name": "InputFeeOutOfRange",
+          "value": 10005
+        },
+        {
+          "doc": "`admin_fee` is outside `0..FEE_DENOMINATOR`.",
+          "name": "InputAdminFeeOutOfRange",
+          "value": 10006
+        },
+        {
+          "doc": "`offpeg_fee_multiplier` is unsupported or would make the dynamic fee exceed its maximum.",
+          "name": "InputOffpegMultiplierOutOfRange",
+          "value": 10007
+        },
+        {
+          "doc": "Amplification is outside `1..MAX_A`.",
+          "name": "InputAmplificationOutOfRange",
+          "value": 10008
+        },
+        {
+          "doc": "A ramp must run at least `MIN_RAMP_TIME`.",
+          "name": "InputRampDurationTooShort",
+          "value": 10009
+        },
+        {
+          "doc": "A coin reports more decimals than `PRECISION_DECIMALS`.",
+          "name": "InputTooManyDecimals",
+          "value": 10010
+        },
+        {
+          "doc": "The same token address appears more than once in the coin list.",
+          "name": "InputDuplicateCoinAddress",
+          "value": 10011
+        },
+        {
+          "doc": "The payout receiver is the pool itself.",
+          "name": "InputReceiverIsPool",
+          "value": 10012
+        },
+        {
+          "doc": "The pool named itself as the caller, which would spend or burn its own locked liquidity.",
+          "name": "InputCallerIsPool",
+          "value": 10013
+        },
+        {
+          "doc": "The LP token's `name` or `symbol` is too long.",
+          "name": "InputMetadataTooLong",
+          "value": 10014
+        },
+        {
+          "doc": "`min_locked_liquidity` is negative. Zero is legal and means the pool locks nothing.",
+          "name": "InputMinLockedLiquidityOutOfRange",
+          "value": 10015
+        },
+        {
+          "doc": "Called before the constructor ran.",
+          "name": "StateNotInitialized",
+          "value": 10200
+        },
+        {
+          "doc": "The operation needs liquidity, and the LP supply is zero.",
+          "name": "StateLpSupplyEmpty",
+          "value": 10201
+        },
+        {
+          "doc": "A reserve is zero; the invariant is undefined there.",
+          "name": "StateReserveEmpty",
+          "value": 10202
+        },
+        {
+          "doc": "A ramp was requested before `MIN_RAMP_TIME` elapsed since the last one.",
+          "name": "StateRampTooSoon",
+          "value": 10203
+        },
+        {
+          "doc": "The ramp would change amplification by more than `MAX_A_CHANGE`\\xc3\\x97 from its current value.",
+          "name": "StateAmplificationChangeTooLarge",
+          "value": 10204
+        },
+        {
+          "doc": "Reserves exceed the supported imbalance.",
+          "name": "StatePoolTooImbalanced",
+          "value": 10205
+        },
+        {
+          "doc": "The stored Factory and salt do not derive this contract's address: not a Factory deployment.",
+          "name": "StateNotFactoryDeployed",
+          "value": 10206
+        },
+        {
+          "doc": "Donations are disabled when the current spread and invariant checks pass.",
+          "name": "StateDonationNotNeeded",
+          "value": 10207
+        },
+        {
+          "doc": "The caller would get less, or pay more, than the bound they set.",
+          "name": "MarketSlippageExceeded",
+          "value": 10300
+        },
+        {
+          "doc": "A real input too small to mint or burn any LP; a larger one may succeed.",
+          "name": "MarketLpRoundsToZero",
+          "value": 10301
+        },
+        {
+          "doc": "The LP burn exceeds total supply \\xe2\\x80\\x94 a claim on more than the pool holds.",
+          "name": "MarketBurnExceedsSupply",
+          "value": 10302
+        },
+        {
+          "doc": "The burner does not hold the LP being burned (vs `MarketBurnExceedsSupply`, the whole pool).",
+          "name": "MarketInsufficientLpBalance",
+          "value": 10303
+        },
+        {
+          "doc": "The requested output or withdrawal exceeds what the coin reserve can pay; retry with less.",
+          "name": "MarketInsufficientLiquidity",
+          "value": 10304
+        },
+        {
+          "doc": "Initial deposit is too small to fund the locked liquidity, a larger one may succeed.",
+          "name": "MarketInitialDepositTooSmall",
+          "value": 10305
+        },
+        {
+          "doc": "A donation would put a coin's normalized balance (`xp`) above the prior pool maximum.",
+          "name": "MarketDonationAboveLimit",
+          "value": 10306
+        },
+        {
+          "doc": "A coin's token rejected a transfer *into* the pool (payer's balance/allowance/trustline).",
+          "name": "ExtTokenPullFailed",
+          "value": 10400
+        },
+        {
+          "doc": "A coin's token rejected a transfer *out of* the pool. Not the caller's fault; escalate.",
+          "name": "ExtTokenPushFailed",
+          "value": 10401
+        },
+        {
+          "doc": "A coin's token gave an unusable response \\xe2\\x80\\x94 trapped or undecodable. Its foreign error code is\\ndiscarded, not re-raised.",
+          "name": "ExtTokenUnusable",
+          "value": 10402
+        },
+        {
+          "doc": "A coin's token would not report usable `decimals`.",
+          "name": "ExtTokenBadMetadata",
+          "value": 10403
+        },
+        {
+          "doc": "The bound Factory could not be reached to resolve admin / fee receiver.",
+          "name": "ExtFactoryUnavailable",
+          "value": 10404
+        },
+        {
+          "doc": "A missing SAC trustline could not be opened.",
+          "name": "ExtTrustlineCreationFailed",
+          "value": 10405
+        },
+        {
+          "doc": "This compatibility entrypoint is not implemented in this port.",
+          "name": "Unimplemented",
+          "value": 10500
+        },
+        {
+          "doc": "This implementation supports only `ASSET_TYPE_PLAIN`, with no rate-oracle `methods` or `oracles`.",
+          "name": "UnimplementedRateOracle",
+          "value": 10501
+        },
+        {
+          "doc": "Newton iteration did not converge inside its cap; retry smaller.",
+          "name": "MathNotConverged",
+          "value": 10800
+        },
+        {
+          "doc": "Checked arithmetic overflowed or underflowed. Reserve exhaustion on a withdrawal is\\n`MarketInsufficientLiquidity` (10304), not this \\xe2\\x80\\x94 that condition is caught before the math.",
+          "name": "MathArithmetic",
+          "value": 10801
+        },
+        {
+          "doc": "A postcondition this contract guarantees did not hold.",
+          "name": "Internal",
+          "value": 10900
+        },
+        {
+          "doc": "Stored pool vectors disagree with this wasm's coin count.",
+          "name": "InternalReservesMalformed",
+          "value": 10901
+        },
+        {
+          "doc": "The engine rejected the pool's own stored params (fee, `A`, admin fee, or rate).",
+          "name": "InternalStoredParamsInvalid",
+          "value": 10902
+        },
+        {
+          "doc": "The LP token's `total_supply` diverged from the engine's `lp_supply`.",
+          "name": "InternalLpSupplyDrift",
+          "value": 10903
+        },
+        {
+          "doc": "An engine value did not fit a host `i128`.",
+          "name": "InternalValueUnrepresentable",
+          "value": 10904
+        },
+        {
+          "doc": "The planned transition would have lowered the invariant per LP token \\xe2\\x80\\x94 LP principal leaking\\nout. The engine's guardrail refused the plan; nothing was written.",
+          "name": "InternalVirtualPriceDropped",
+          "value": 10905
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Voluntary contribution to reserves; no LP tokens are minted.",
+      "lib": "",
+      "name": "Donation",
+      "prefix_topics": [
+        "donation"
+      ],
+      "params": [
+        {
+          "doc": "Account contributing the tokens.",
+          "name": "donor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Tokens contributed for each coin, in raw units.",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the contribution.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Exchange",
+      "prefix_topics": [
+        "exchange"
+      ],
+      "params": [
+        {
+          "doc": "Account swapping tokens.",
+          "name": "buyer",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Index of the token paid in.",
+          "name": "input_coin_index",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Index of the token paid out.",
+          "name": "output_coin_index",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Input tokens paid, in raw units.",
+          "name": "tokens_sold",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Output tokens received, in raw units.",
+          "name": "tokens_bought",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Swap fee, in raw output-token units.",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Fee portion accrued to the protocol, in raw output-token units.",
+          "name": "admin_fee_cut",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Account receiving the output tokens.",
+          "name": "receiver",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Recipient's virtual-account ID, if supplied.",
+          "name": "receiver_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the swap.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "SEP-41 LP mint to a muxed recipient.",
+      "lib": "",
+      "name": "MuxedMint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "Base account receiving the minted LP tokens.",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Recipient's virtual-account ID.",
+          "name": "to_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "LP tokens minted, in raw units.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ApplyNewFee",
+      "prefix_topics": [
+        "apply_new_fee"
+      ],
+      "params": [
+        {
+          "doc": "New base fee, scaled by `FEE_DENOMINATOR`.",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "New dynamic off-peg fee multiplier, scaled by `FEE_DENOMINATOR`.",
+          "name": "offpeg_fee_multiplier",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Administrator that applied the fee change.",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Deposit.",
+      "lib": "",
+      "name": "AddLiquidity",
+      "prefix_topics": [
+        "add_liquidity"
+      ],
+      "params": [
+        {
+          "doc": "Liquidity provider depositing tokens.",
+          "name": "provider",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "LP tokens minted to the receiver, in raw units.",
+          "name": "mint_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Tokens deposited for each coin, in raw units.",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Imbalance fees for each coin, in raw units.",
+          "name": "fees",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Fee portions accrued to the protocol for each coin, in raw units.",
+          "name": "admin_fee_cuts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Base account receiving the minted LP tokens.",
+          "name": "receiver",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Recipient's virtual-account ID, if supplied.",
+          "name": "receiver_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the deposit.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Pool initialization. `scaled_amplification` uses `A_PRECISION`; fee fields use `FEE_DENOMINATOR`.",
+      "lib": "",
+      "name": "PoolInitialized",
+      "prefix_topics": [
+        "pool_initialized"
+      ],
+      "params": [
+        {
+          "doc": "Factory that created the pool.",
+          "name": "factory",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Pool tokens in fixed index order.",
+          "name": "coins",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Token decimal counts in coin order.",
+          "name": "coin_decimals",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "XP conversion rates in coin order.",
+          "name": "rates",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Initial amplification, scaled by `A_PRECISION`.",
+          "name": "scaled_amplification",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Initialization timestamp, in ledger seconds.",
+          "name": "initialized_at",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "Base fee, scaled by `FEE_DENOMINATOR`.",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Protocol share of fees, scaled by `FEE_DENOMINATOR`.",
+          "name": "admin_fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Dynamic off-peg fee multiplier, scaled by `FEE_DENOMINATOR`.",
+          "name": "offpeg_fee_multiplier",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "LP tokens permanently locked on the first deposit.",
+          "name": "min_locked_liquidity",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Decimal precision of the LP token.",
+          "name": "lp_decimals",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "LP token name.",
+          "name": "name",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "LP token symbol.",
+          "name": "symbol",
+          "type_": "string",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveLiquidity",
+      "prefix_topics": [
+        "remove_liquidity"
+      ],
+      "params": [
+        {
+          "doc": "Liquidity provider burning LP tokens.",
+          "name": "provider",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "LP tokens burned, in raw units.",
+          "name": "burn_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Tokens withdrawn for each coin, in raw units.",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Withdrawal fees for each coin, in raw units.",
+          "name": "fees",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Account receiving the withdrawn tokens.",
+          "name": "receiver",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Recipient's virtual-account ID, if supplied.",
+          "name": "receiver_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the withdrawal.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawAdminFees",
+      "prefix_topics": [
+        "withdraw_admin_fees"
+      ],
+      "params": [
+        {
+          "doc": "Account receiving the protocol fees.",
+          "name": "fee_receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Fee recipient's virtual-account ID, if supplied.",
+          "name": "fee_receiver_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Protocol fees withdrawn for each coin, in raw units.",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the withdrawal.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveLiquidityOne",
+      "prefix_topics": [
+        "remove_liquidity_one"
+      ],
+      "params": [
+        {
+          "doc": "Liquidity provider burning LP tokens.",
+          "name": "provider",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "Index of the withdrawn coin.",
+          "name": "coin_index",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "LP tokens burned, in raw units.",
+          "name": "burn_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Withdrawn tokens, in raw units.",
+          "name": "coin_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Withdrawal fee, in raw units.",
+          "name": "fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Fee portion accrued to the protocol, in raw units.",
+          "name": "admin_fee_cut",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Account receiving the withdrawn tokens.",
+          "name": "receiver",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Recipient's virtual-account ID, if supplied.",
+          "name": "receiver_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the withdrawal.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Internal accounting, not token custody.",
+      "lib": "",
+      "name": "PoolAccountingState",
+      "fields": [
+        {
+          "doc": "Active reserves for each coin, in raw units.",
+          "name": "active_balances",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Accrued protocol fees for each coin, in raw units.",
+          "name": "admin_balances",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Total LP token supply, in raw units.",
+          "name": "lp_supply",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "An amplification ramp has started; values use `A_PRECISION`.",
+      "lib": "",
+      "name": "AmplificationRampStarted",
+      "prefix_topics": [
+        "amplification_ramp_started"
+      ],
+      "params": [
+        {
+          "doc": "Starting amplification, scaled by `A_PRECISION`.",
+          "name": "initial_scaled_amplification",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Target amplification, scaled by `A_PRECISION`.",
+          "name": "target_scaled_amplification",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Ramp start timestamp, in ledger seconds.",
+          "name": "ramp_start_time",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "Ramp end timestamp, in ledger seconds.",
+          "name": "ramp_end_time",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "Administrator that started the ramp.",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "An in-progress amplification ramp was halted.",
+      "lib": "",
+      "name": "AmplificationRampStopped",
+      "prefix_topics": [
+        "amplification_ramp_stopped"
+      ],
+      "params": [
+        {
+          "doc": "Amplification at the stop point, scaled by `A_PRECISION`.",
+          "name": "scaled_value",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Stop timestamp, in ledger seconds.",
+          "name": "stopped_at",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "Administrator that stopped the ramp.",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Imbalanced withdrawal.",
+      "lib": "",
+      "name": "RemoveLiquidityImbalance",
+      "prefix_topics": [
+        "remove_liquidity_imbalance"
+      ],
+      "params": [
+        {
+          "doc": "Liquidity provider burning LP tokens.",
+          "name": "provider",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "LP tokens burned, in raw units.",
+          "name": "burn_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Tokens withdrawn for each coin, in raw units.",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Withdrawal fees for each coin, in raw units.",
+          "name": "fees",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Fee portions accrued to the protocol for each coin, in raw units.",
+          "name": "admin_fee_cuts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Account receiving the withdrawn tokens.",
+          "name": "receiver",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Recipient's virtual-account ID, if supplied.",
+          "name": "receiver_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "Pool accounting after the withdrawal.",
+          "name": "post_state",
+          "type_": {
+            "udt": {
+              "name": "PoolAccountingState"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Pool configuration. StableSwap scalars are stored as `i128` and lifted to `Word` in `state_store.rs`.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Protocol's share of `fee`, scaled by `FEE_DENOMINATOR`.",
+          "name": "admin_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Decimals each coin reported during construction.",
+          "name": "coin_decimals",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "The Factory that deployed this pool. Written once, no entrypoint re-points a live pool.",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "Base swap fee, scaled by `FEE_DENOMINATOR`.",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Amplification ramp endpoints, both pre-scaled `A \\xc2\\xb7 A_PRECISION`. Together with\\n`ramp_start_time`/`ramp_end_time` they define a linear `A(t)`; a static pool keeps the\\nendpoints equal so `A(t)` is constant.",
+          "name": "initial_scaled_amplification",
+          "type_": "i128"
+        },
+        {
+          "doc": "LP permanently locked by the first deposit, in raw LP units.",
+          "name": "min_locked_liquidity",
+          "type_": "i128"
+        },
+        {
+          "doc": "Number of coins; equals the compile-time `COINS`.",
+          "name": "n_coins",
+          "type_": "u32"
+        },
+        {
+          "doc": "Off-peg fee multiplier, scaled by `FEE_DENOMINATOR`; at least 1.0x.",
+          "name": "offpeg_fee_multiplier",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ramp end time, in seconds.",
+          "name": "ramp_end_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger timestamps bounding the ramp, in seconds.",
+          "name": "ramp_start_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Per-coin rate multiplier bridging native decimals to `xp`.",
+          "name": "rates",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Deployment salt; with `factory` it must re-derive this contract's address (see `factory()`).",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "target_scaled_amplification",
+          "type_": "i128"
+        },
+        {
+          "doc": "SAC addresses, one per coin (`len == n_coins`).",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mutable pool reserves.\\n`balances` are the active pool reserves; `admin_balances` the protocol's cut.",
+      "lib": "",
+      "name": "Reserves",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin_balances",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "balances",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable pool metadata and numeric scales.",
+      "lib": "",
+      "name": "PoolInfo",
+      "fields": [
+        {
+          "doc": "Number of pool coins.",
+          "name": "coin_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Decimals reported by each coin at construction.",
+          "name": "coin_decimals",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Pool coins in their fixed index order.",
+          "name": "coins",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Factory that deployed and governs this pool.",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "LP permanently locked by the first deposit, in raw LP-token units.",
+          "name": "min_locked_liquidity",
+          "type_": "i128"
+        },
+        {
+          "doc": "Per-coin rate multipliers bridging native decimals to `xp`.",
+          "name": "rates",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Fixed-point scales used by the pool's public numeric values.",
+          "name": "scales",
+          "type_": {
+            "udt": {
+              "name": "PoolScales"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Fixed-point scales used by this pool's public numeric values.",
+      "lib": "",
+      "name": "PoolScales",
+      "fields": [
+        {
+          "doc": "Scale applied to amplification values.",
+          "name": "amplification_scale",
+          "type_": "i128"
+        },
+        {
+          "doc": "Divisor used by fee and off-peg multiplier values.",
+          "name": "fee_denominator",
+          "type_": "i128"
+        },
+        {
+          "doc": "Fixed-point precision used by virtual-price and rate values.",
+          "name": "precision",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A coherent read of current accounting and mutable economic parameters.",
+      "lib": "",
+      "name": "PoolSnapshot",
+      "fields": [
+        {
+          "doc": "Active reserves used by the invariant and trading.",
+          "name": "active_balances",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Accrued protocol fees held outside the active reserves.",
+          "name": "admin_balances",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "Protocol share of the fee, scaled by `FEE_DENOMINATOR`.",
+          "name": "admin_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Stored schedule that determines the current amplification.",
+          "name": "amplification_ramp",
+          "type_": {
+            "udt": {
+              "name": "AmplificationRamp"
+            }
+          }
+        },
+        {
+          "doc": "Current time-interpolated amplification, scaled by [`PoolScales::amplification_scale`].",
+          "name": "current_scaled_amplification",
+          "type_": "i128"
+        },
+        {
+          "doc": "Current base swap fee, scaled by `FEE_DENOMINATOR`.",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Total issued LP-token supply, including permanently locked liquidity.",
+          "name": "lp_supply",
+          "type_": "i128"
+        },
+        {
+          "doc": "Current dynamic off-peg fee multiplier, scaled by `FEE_DENOMINATOR`.",
+          "name": "offpeg_fee_multiplier",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Stored schedule for the current or most recently completed amplification ramp.",
+      "lib": "",
+      "name": "AmplificationRamp",
+      "fields": [
+        {
+          "doc": "Amplification at the start of the ramp, scaled by [`PoolScales::amplification_scale`].",
+          "name": "initial_scaled_amplification",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger timestamp (seconds) at which the ramp ends.",
+          "name": "ramp_end_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger timestamp (seconds) at which the ramp started.",
+          "name": "ramp_start_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Amplification at the end of the ramp, scaled by [`PoolScales::amplification_scale`].",
+          "name": "target_scaled_amplification",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Base swap fee, scaled by `FEE_DENOMINATOR`.",
+      "name": "fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the name for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SAC address of coin `i`.",
+      "name": "coins",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Instantaneous price of coin `i` against coin 0, computed from the current balances.",
+      "name": "get_p",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pool config: tokens, curve params, and per-coin rates.",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Contribute without minting LP; requires a failing current spread or invariant check.\\nResulting normalized reserves cannot exceed the pool's previous maximum.\\n\\nIrreversible and fee-free; `amounts` contains one raw amount per coin (zeros allowed).\\nRequires existing LP supply and a valid post-state.",
+      "name": "donate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quote the amount of coin `i` required to receive `dy` of coin `j` \\xe2\\x80\\x94 the inverse of\\n[`Self::get_dy`], fee taken into account.\\n\\n- `i`: index of the coin being sold (input).\\n- `j`: index of the coin being bought (output).\\n- `dy`: desired amount of coin `j` to receive after the swap fee is deducted.",
+      "name": "get_dx",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "j",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "dy",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quote the amount of coin `j` received for `dx` of coin `i`, net of the swap fee.\\n\\n- `i`: index of the coin being sold (input).\\n- `j`: index of the coin being bought (output).\\n- `dx`: amount of coin `i` paid in.",
+      "name": "get_dy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "j",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "dx",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin linearly ramping amplification to `target_amplification` by `ramp_end_time`.\\n\\nRequires authorization from the current Factory admin.\\n\\nSee `amp::ramp` for the timing and change bounds a ramp must satisfy.\\n\\n- `target_amplification`: human amplification to ramp to, NOT pre-scaled by `A_PRECISION`.\\n- `ramp_end_time`: ledger timestamp (seconds) at which the ramp completes.",
+      "name": "ramp_a",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "target_amplification",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ramp_end_time",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the symbol for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the amount of tokens a `spender` is allowed to spend on behalf of\\nan `owner`. Overrides any existing allowance set between `spender` and\\n`owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.\\n* `amount` - The amount of tokens made available to `spender`.\\n* `live_until_ledger` - The ledger number at which the allowance\\nexpires.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InvalidLiveUntilLedger`] - Occurs when\\nattempting to set `live_until_ledger` that is less than the current\\nledger number and greater than `0`.\\n* [`FungibleTokenError::LessThanZero`] - Occurs when `amount < 0`.\\n\\n# Events\\n\\n* topics - `[\"approve\", from: Address, spender: Address]`\\n* data - `[amount: i128, live_until_ledger: u32]`",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens held by `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The address for which the balance is being queried.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploying Factory; trust this result only after verifying a Wasm hash with the provenance fix.",
+      "name": "factory",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Active reserve of coin `i`.",
+      "name": "balances",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moving-average oracle of the invariant `D`, read at the current ledger time.",
+      "name": "d_oracle",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of decimals used to represent amounts of this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Swap `dx` of coin `i` into coin `j`, paying `receiver` the net output (swap fee deducted).\\n\\n- `caller`: authorizes the call and pays `dx` in.\\n- `i`: index of the coin being sold (input).\\n- `j`: index of the coin being bought (output).\\n- `dx`: amount of coin `i` paid in.\\n- `min_dy`: slippage floor on the coins out.\\n- `receiver`: paid the `dy` out.\\nOpens missing SAC trustlines with the receiver's authorization.",
+      "name": "exchange",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "j",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "dx",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_dy",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "muxed_address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Active + admin reserves, per coin.",
+      "name": "reserves",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Reserves"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `amount` of tokens from `from` to `to`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `from` - The address holding the tokens.\\n* `to` - The address receiving the transferred tokens.\\n* `amount` - The amount of tokens to be transferred.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InsufficientBalance`] - When attempting to\\ntransfer more tokens than `from` current balance.\\n* [`FungibleTokenError::LessThanZero`] - When `amount < 0`.\\n\\n# Events\\n\\n* topics - `[\"transfer\", from: Address, to: Address]`\\n* data - `[to_muxed_id: Option<u64>, amount: i128]`",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "muxed_address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current amplification scaled by `A_PRECISION`.",
+      "name": "a_precise",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Protocol's share of the fee, scaled by `FEE_DENOMINATOR`.",
+      "name": "admin_fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens a `spender` is allowed to spend on behalf\\nof an `owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "EMA (moving-average) price of coin `i` against coin 0.",
+      "name": "ema_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Immutable pool metadata and numeric scales.",
+      "name": "pool_info",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PoolInfo"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Spot price of coin `i` against coin 0, as of the last trade.",
+      "name": "last_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pool TTL policy.",
+      "name": "ttl_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "TtlConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Dynamic (off-peg) fee for the `i \\xe2\\x86\\x92 j` direction, scaled by `FEE_DENOMINATOR`.\\n\\nRises from the base `fee` towards `fee \\xc2\\xb7 offpeg_fee_multiplier / FEE_DENOMINATOR` as the two coins drift apart.\\n\\n- `i`: index of the coin being sold (input).\\n- `j`: index of the coin being bought (output).",
+      "name": "dynamic_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "j",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the base swap fee and the off-peg fee multiplier.\\n\\nRequires authorization from the current Factory admin.\\n\\n- `new_fee`: base swap fee, scaled by `FEE_DENOMINATOR`; at most `MAX_FEE` (50%).\\n- `new_offpeg_fee_multiplier`: off-peg fee multiplier, scaled by `FEE_DENOMINATOR`; at least\\n1.0x, and small enough that the dynamic fee it implies stays \\xe2\\x89\\xa4 `MAX_FEE`.",
+      "name": "set_new_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "new_offpeg_fee_multiplier",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Halt an in-progress amplification ramp, pinning it at its current value.\\n\\nRequires authorization from the current Factory admin.",
+      "name": "stop_ramp_a",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "All active reserves.",
+      "name": "get_balances",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "i128"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moving-average price oracle for coin `i`, read at the current ledger time.",
+      "name": "price_oracle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Per-coin rate multipliers bridging native decimals to `xp`.",
+      "name": "stored_rates",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "i128"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the total amount of tokens in circulation.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set up the pool and register the contract as its own SEP-41 LP token.\\n\\n`args` contains every immutable pool and LP-token setting.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "args",
+          "type_": {
+            "udt": {
+              "name": "PoolConstructorArgs"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add liquidity: deposit `amounts` (one entry per coin) and mint LP to `receiver`, returning the LP minted.\\n\\nOn the first deposit every coin must be nonzero and the LP minted is the invariant `D`\\nitself; later deposits are charged the imbalance fee on the part of the deposit that shifts\\nthe pool away from its current balance.\\n\\n- `caller`: authorizes the call and pays the coins in.\\n- `amounts`: amount of each coin to deposit, one entry per coin.\\n- `min_mint`: slippage floor on the LP minted.\\n- `receiver`: credited the minted LP at its base address. LP balances are stored per\\nbase address, so muxed IDs do not create separate on-chain LP positions. The optional\\nID is preserved in the mint and liquidity events for off-chain attribution.",
+      "name": "add_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "min_mint",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "muxed_address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Construction-time token decimals used to derive rates, in `coins(i)` order.",
+      "name": "coin_decimals",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "u32"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Active reserves, accrued protocol fees, LP supply, and parameters in one read.",
+      "name": "pool_snapshot",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PoolSnapshot"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfers `amount` of tokens from `from` to `to` using the\\nallowance mechanism. `amount` is then deducted from `spender`\\nallowance.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `spender` - The address authorizing the transfer, and having its\\nallowance consumed during the transfer.\\n* `from` - The address holding the tokens which will be transferred.\\n* `to` - The address receiving the transferred tokens.\\n* `amount` - The amount of tokens to be transferred.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InsufficientBalance`] - When attempting to\\ntransfer more tokens than `from` current balance.\\n* [`FungibleTokenError::LessThanZero`] - When `amount < 0`.\\n* [`FungibleTokenError::InsufficientAllowance`] - When attempting to\\ntransfer more tokens than `spender` current allowance.\\n\\n# Events\\n\\n* topics - `[\"transfer\", from: Address, to: Address]`\\n* data - `[amount: i128]`",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accumulated admin balance of coin `i` \\xe2\\x80\\x94 the protocol's uncollected fee cut, held outside the\\nactive reserves until [`Self::withdraw_admin_fees`] collects it.",
+      "name": "admin_balances",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the moving-average windows of the price and `D` oracles. Not implemented: this port keeps\\nno moving-average state.\\n\\n- `ma_exp_time`: window of the price oracle, in seconds.\\n- `d_ma_time`: window of the invariant-`D` oracle, in seconds.",
+      "name": "set_ma_exp_time",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ma_exp_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "d_ma_time",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove liquidity: burn `burn_amount` LP for a proportional, fee-free payout of every coin to `receiver`.\\n\\nPays out the same fraction \\xe2\\x80\\x94 `burn_amount / lp_supply` \\xe2\\x80\\x94 of every coin, so the pool's mix is\\nunchanged by the withdrawal. Nothing is charged.\\n\\n- `caller`: authorizes the call and is charged the LP burn.\\n- `burn_amount`: LP-token amount being redeemed.\\n- `min_amounts`: slippage floor for each coin, one entry per coin.\\n- `receiver`: paid the coins.\\nOpens missing SAC trustlines with the receiver's authorization.\\n- `claim_admin_fees`: if `true`, also sweep the pool's accumulated admin fees to the Factory's\\nfee receiver in the same call",
+      "name": "remove_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "burn_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "muxed_address"
+        },
+        {
+          "doc": "",
+          "name": "claim_admin_fees",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": "i128"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless. Extends the pool instance TTL.",
+      "name": "bump_instance_ttl",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quote the LP minted (deposit) or burned (withdrawal) for a balance change, imbalance fee\\ntaken into account.\\n\\n- `amounts`: amount added or removed for each coin, one entry per coin.\\n- `is_deposit`: `true` to add `amounts`, `false` to remove them.",
+      "name": "calc_token_amount",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "is_deposit",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Value of one LP token: invariant `D \\xc2\\xb7 precision() / lp_supply`, a `precision()`-scaled fixed-point number.",
+      "name": "get_virtual_price",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless. Extends an LP holder's balance TTL.",
+      "name": "bump_lp_balance_ttl",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "holder",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw accumulated `admin_balances` out to the Factory's fee receiver.\\n\\nPermissionless: anyone may trigger the withdrawal.",
+      "name": "withdraw_admin_fees",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Off-peg fee multiplier, scaled by `FEE_DENOMINATOR`.",
+      "name": "offpeg_fee_multiplier",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Quote the amount of coin `i` received for burning `burn_amount` LP in a one-coin withdrawal,\\nwithdrawal fee taken into account.\\n\\n- `burn_amount`: LP-token amount being redeemed.\\n- `i`: index of the coin to withdraw.",
+      "name": "calc_withdraw_one_coin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "burn_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw a single coin `i` by burning LP, returning the coin amount paid out.\\n\\nThe burn shrinks the invariant pro-rata; the payout is the resulting drop in coin `i`,\\nreduced by the single-coin withdrawal fee.\\n\\n- `caller`: authorizes the call and is charged the LP burn.\\n- `burn_amount`: LP-token amount being redeemed.\\n- `i`: index of the coin to withdraw.\\n- `min_received`: slippage floor on the coins out.\\n- `receiver`: paid the coins.\\nOpens missing SAC trustlines with the receiver's authorization.",
+      "name": "remove_liquidity_one_coin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "burn_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "i",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_received",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "muxed_address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw an explicit, possibly imbalanced `amounts`, returning the LP actually burned.\\n\\nThe part of the withdrawal that shifts the pool away from its current balance is charged the\\nimbalance fee, so an imbalanced exit burns more LP than a balanced one of the same value.\\n\\n- `caller`: authorizes the call and is charged the LP burn.\\n- `amounts`: amount of each coin to withdraw, one entry per coin.\\n- `max_burn`: slippage cap on the LP burned.\\n- `receiver`: paid the coins.\\nOpens missing SAC trustlines with the receiver's authorization.",
+      "name": "remove_liquidity_imbalance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amounts",
+          "type_": {
+            "vec": {
+              "element_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "max_burn",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "muxed_address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "All immutable settings supplied when a pool is constructed.\\n\\nThis is the single argument to a pool's `__constructor`. It is shared by the Factory, which\\nserializes and authorizes the call, and by the pool, which validates and persists it.",
+      "lib": "",
+      "name": "PoolConstructorArgs",
+      "fields": [
+        {
+          "doc": "Protocol share of fees, scaled by the pool fee denominator.",
+          "name": "admin_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Human-readable, unscaled amplification.",
+          "name": "amplification",
+          "type_": "i128"
+        },
+        {
+          "doc": "Asset type for each token; current pools support only plain assets.",
+          "name": "asset_types",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Factory permanently bound to the pool and authorized to construct it.",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "Base swap fee, scaled by the pool fee denominator.",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "Price-oracle averaging window.",
+          "name": "ma_exp_time",
+          "type_": "u64"
+        },
+        {
+          "doc": "Reserved Curve-compatible rate methods; current pools require this to be empty.",
+          "name": "methods",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        },
+        {
+          "doc": "LP units permanently locked on the first deposit.",
+          "name": "min_locked_liquidity",
+          "type_": "i128"
+        },
+        {
+          "doc": "LP token name.",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "Dynamic-fee multiplier, scaled by the pool fee denominator.",
+          "name": "offpeg_fee_multiplier",
+          "type_": "i128"
+        },
+        {
+          "doc": "Reserved Curve-compatible rate oracles; current pools require this to be empty.",
+          "name": "oracles",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Deployment salt the Factory derived the pool's address from; see [`pool_address`].",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "LP token symbol.",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "Pool token contracts in their fixed index order.",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are burned.",
+      "lib": "",
+      "name": "Burn",
+      "prefix_topics": [
+        "burn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are minted.",
+      "lib": "",
+      "name": "Mint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an allowance is approved.",
+      "lib": "",
+      "name": "Approve",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred between addresses without a\\nmuxed destination.\\n\\nPer SEP-41, the event data is a bare `i128` when no muxed address is\\ninvolved. The `data_format = \"single-value\"` attribute ensures the\\n`amount` field is serialized as a bare value rather than a map.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred to a muxed address.\\n\\nPer SEP-41, when the destination is a [`MuxedAddress`] the event data\\ncarries both the amount and the muxed identifier so that off-chain\\nconsumers can attribute the transfer to the correct sub-account.\\n\\nUses `topics = [\"transfer\"]` so that both [`Transfer`] and\\n[`MuxedTransfer`] share the same `\"transfer\"` event symbol, as required\\nby SEP-41.",
+      "lib": "",
+      "name": "MuxedTransfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FungibleTokenError",
+      "cases": [
+        {
+          "doc": "Indicates an error related to the current balance of account from which\\ntokens are expected to be transferred.",
+          "name": "InsufficientBalance",
+          "value": 100
+        },
+        {
+          "doc": "Indicates a failure with the allowance mechanism when a given spender\\ndoesn't have enough allowance.",
+          "name": "InsufficientAllowance",
+          "value": 101
+        },
+        {
+          "doc": "Indicates an invalid value for `live_until_ledger` when setting an\\nallowance.",
+          "name": "InvalidLiveUntilLedger",
+          "value": 102
+        },
+        {
+          "doc": "Indicates an error when an input that must be >= 0",
+          "name": "LessThanZero",
+          "value": 103
+        },
+        {
+          "doc": "Indicates overflow when adding two values",
+          "name": "MathOverflow",
+          "value": 104
+        },
+        {
+          "doc": "Indicates access to uninitialized metadata",
+          "name": "UnsetMetadata",
+          "value": 105
+        },
+        {
+          "doc": "Indicates that the operation would have caused `total_supply` to exceed\\nthe `cap`.",
+          "name": "ExceededCap",
+          "value": 106
+        },
+        {
+          "doc": "Indicates the supplied `cap` is not a valid cap value.",
+          "name": "InvalidCap",
+          "value": 107
+        },
+        {
+          "doc": "Indicates the Cap was not set.",
+          "name": "CapNotSet",
+          "value": 108
+        },
+        {
+          "doc": "Indicates the SAC address was not set.",
+          "name": "SACNotSet",
+          "value": 109
+        },
+        {
+          "doc": "Indicates a SAC address different than expected.",
+          "name": "SACAddressMismatch",
+          "value": 110
+        },
+        {
+          "doc": "Indicates a missing function parameter in the SAC contract context.",
+          "name": "SACMissingFnParam",
+          "value": 111
+        },
+        {
+          "doc": "Indicates an invalid function parameter in the SAC contract context.",
+          "name": "SACInvalidFnParam",
+          "value": 112
+        },
+        {
+          "doc": "The user is not allowed to perform this operation",
+          "name": "UserNotAllowed",
+          "value": 113
+        },
+        {
+          "doc": "The user is blocked and cannot perform this operation",
+          "name": "UserBlocked",
+          "value": 114
+        }
+      ]
+    }
+  }
+]
