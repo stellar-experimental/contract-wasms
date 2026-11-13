@@ -1,0 +1,720 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The token functions this instance authorizes, as constructed, in the order given.",
+      "name": "allowed",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "symbol"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "network",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "signers",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 20
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One owner's `personal_sign` over the auth text: `sig` is r (32) || s (32) || v (1),\\nv in {27, 28}, or {0, 1} for the wallets that leave 27 off.",
+      "lib": "",
+      "name": "EvmSig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 65
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signer_index",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pure: the exact text an owner signs (`personal_sign`) for `payload` authorizing the\\ncalls named by `fn_names`, so the page and the contract have one source of truth.\\n`fn_names` must be the function names of the contexts the host will hand\\n`__check_auth`, in that exact order: for one root invocation with no sub-invocation,\\nthat one name. A different list is a different digest, so the signature recovers to\\na stranger. More than `MAX_CONTEXTS` names refuses with `ContextRefused`.",
+      "name": "auth_text",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fn_names",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "threshold",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Instance storage: five keys, written together by the constructor, one TTL to maintain.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "`Vec<BytesN<20>>`: the owners' Ethereum addresses, in signer-index order.",
+            "name": "Signers"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "`u32`: distinct valid signers an authorization needs.",
+            "name": "Threshold"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "`Address`: the hstXDC token whose role-gated calls this account authorizes.",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "`String`: the short network name written into every signed text.",
+            "name": "Network"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "`Vec<Symbol>`: the token functions this instance authorizes, as constructed, in the\\norder given. There is no setter: a different list is a different instance.",
+            "name": "Allowed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The owners themselves append `address` as the last signer; the invariant is\\nre-checked (at most `MAX_SIGNERS`, no repeat).",
+      "name": "add_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The host's question when any contract calls `require_auth()` on this address. The\\ncontexts are checked first, before any recovery is paid for: at most `MAX_CONTEXTS`,\\neach a call on the token to one of the names in `Allowed`, or on this contract to\\none of its own admin functions. Their function names, in order, become the second\\nline of the signed text, which is rebuilt from the payload and hashed as\\n`personal_sign` does; each signature is recovered and compared with the signer it\\nnames, and the indices must strictly ascend, so no signer counts twice. The host\\nalready refuses a high `s`; the nonce and the expiration are the host's too.",
+      "name": "__check_auth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signature_payload",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signatures",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "EvmSig"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "auth_contexts",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Context"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "AccountError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The owners themselves drop the signer at `index`; the signers after it move down one\\nindex. The invariant is re-checked, so the threshold must still be reachable.",
+      "name": "remove_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The owners themselves (a threshold of them, through `__check_auth`) replace the\\nsigner at `index` with `new_address`; the invariant is re-checked.",
+      "name": "rotate_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "new_address",
+          "type_": {
+            "bytes_n": {
+              "n": 20
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The owners themselves set the threshold; `MIN_THRESHOLD..=signers.len()`.",
+      "name": "set_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs inside the deploy transaction, so there is no window in which a stranger can\\ninitialize a freshly deployed account. Sets the five keys at once; refuses a\\nthreshold below `MIN_THRESHOLD` or above the signer count, more than `MAX_SIGNERS`\\nsigners, a repeated signer, an empty or over-long network name, and an `allowed`\\nlist that is empty, longer than `MAX_ALLOWED`, repeats a name, or holds a name that\\nis not a function name (a `Symbol` of at most `MAX_FN_NAME_LEN` characters). The\\nlist is the token functions this instance authorizes, in the order given, and is\\nnever changed after: there is no setter.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 20
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "network",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": {
+            "vec": {
+              "element_type": "symbol"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "A signature the host cannot decode (a high `s`, a zero scalar, a recovery that yields no\\npoint) is the host's failure, not a code in this enum; it fails the authorization too.",
+      "lib": "",
+      "name": "AccountError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotEnoughSigners",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "BadSignature",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "UnknownSigner",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "SignersNotAscending",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ContextRefused",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The whole deal of one borrow facility. Immutable after construction; hashed by\\ncanonical encoding v1 into `terms_hash`, the value the signed legal document cites.",
+      "lib": "",
+      "name": "Terms",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrower",
+          "type_": "address"
+        },
+        {
+          "doc": "hstXDC shares the borrower escrows (7 decimals). > 0.",
+          "name": "collateral_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "The hstXDC contract.",
+          "name": "collateral_token",
+          "type_": "address"
+        },
+        {
+          "doc": "Seconds after maturity before default may be marked.\\nterm + grace <= `facility::MAX_TENOR_SECS`.",
+          "name": "grace_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "lender",
+          "type_": "address"
+        },
+        {
+          "doc": "The USDC Stellar Asset Contract.",
+          "name": "loan_token",
+          "type_": "address"
+        },
+        {
+          "doc": "Loan-token amount the lender funds and the borrower draws (7 decimals).\\n0 < principal <= `facility::MAX_PRINCIPAL`.",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "Simple annual interest in basis points. <= `facility::MAX_RATE_BPS` (0 allowed).",
+          "name": "rate_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Seconds from `draw` to maturity. >= 1.",
+          "name": "term_secs",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "How a feed contract is called.",
+      "lib": "",
+      "name": "FeedKind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "SEP-40: `lastprice(Asset) -> Option<PriceData>`, `decimals() -> u32`.",
+            "name": "Sep40"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Pre-SEP-40 shape kept for feeds not yet verified: `lastprice(Address) -> (i128, u64)`.",
+            "name": "Legacy"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A price feed the adaptor reads: which contract, which asset on it, and how to call it.\\n(`Asset` from sep-40-oracle derives neither `Debug` nor `Eq`, so neither can this.)",
+      "lib": "",
+      "name": "FeedSource",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Asset"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "FeedKind"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One signed statement about the XDC reserve, submitted by the attestor role.\\nAmounts are XDC in 7-decimal fixed point (the token's own decimals).\\n\\nThe attestation carries the exchange rate explicitly instead of the contract deriving it\\nas reserve \\xc3\\xb7 claims: a deposit into the reserve must create mint headroom (amount up, rate\\nunchanged) while rewards move the rate (rate up, headroom unchanged). The contract\\nenforces solvency (`claims * rate <= amount`) and the per-attestation rate cap, so the\\nattestor's freedom is bounded on both axes.",
+      "lib": "",
+      "name": "Attestation",
+      "fields": [
+        {
+          "doc": "Reserve including accrued rewards, 7 decimals.",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "The Stellar account that submitted it (must hold the ATTESTOR role).",
+          "name": "attestor",
+          "type_": "address"
+        },
+        {
+          "doc": "XDC per hstXDC, `RATE_SCALAR` fixed point. Must satisfy solvency and the change cap.",
+          "name": "rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "XDC-chain address of the reserve (custody address or masternode).",
+          "name": "reserve_address",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "ReserveState"
+            }
+          }
+        },
+        {
+          "doc": "Unix seconds of the reading. Strictly increasing; never in the future.",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "XDC block height the reading was taken at. Strictly increasing.",
+          "name": "xdc_block",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a consumer sees from the oracle adaptor besides the bare price: the flags that\\nturn \"degrade, never revert\" into something a reader can act on.",
+      "lib": "",
+      "name": "PriceStatus",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate_stale",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "safe_mode",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "samples",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "stale",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where the XDC reserve sits. `Held` (at the custody address, not yet staked) is a valid\\nand truthful launch state; `Staked` follows the masternode ceremony.",
+      "lib": "",
+      "name": "ReserveState",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Held"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Staked"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where one borrow facility stands. Repaid, Claimed and Cancelled are terminal.",
+      "lib": "",
+      "name": "FacilityState",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Proposed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Open"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Funded"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Drawn"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Repaid"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Defaulted"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Claimed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Cancelled"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Limits the token enforces on attestations. Two of them bound a compromised attestor\\nkey in time, not just per step: `min_interval_secs` is measured on the ledger clock\\n(attestor-supplied timestamps cannot consume it) and `max_daily_rate_change_bps` caps\\nthe total move inside any rolling `RATE_BUDGET_WINDOW_SECS` window against the rate the\\nwindow opened with.",
+      "lib": "",
+      "name": "AttestationConfig",
+      "fields": [
+        {
+          "doc": "Age in seconds after which an attestation is stale: the rate freezes and minting stops.",
+          "name": "max_age_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "Maximum cumulative rate change inside one `RATE_BUDGET_WINDOW_SECS` window, in basis\\npoints of the rate at the window's start.",
+          "name": "max_daily_rate_change_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Maximum exchange-rate change per attestation, in basis points of the previous rate.",
+          "name": "max_rate_change_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Minimum ledger seconds between two accepted attestations. Must not exceed `max_age_secs`.",
+          "name": "min_interval_secs",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Asset type",
+      "lib": "",
+      "name": "Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Price data for an asset at a specific timestamp",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]
