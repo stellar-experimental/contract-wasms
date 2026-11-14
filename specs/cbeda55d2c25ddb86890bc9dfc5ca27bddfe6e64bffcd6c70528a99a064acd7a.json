@@ -1,0 +1,469 @@
+[
+  {
+    "function_v0": {
+      "doc": "Tip the author of post `post_id` `amount` stroops of XLM from\\n`tipper`. The XLM goes from the tipper to this contract and on to the\\nauthor in the same call, so the tipper's authorization names only\\nthis contract as the recipient.",
+      "name": "tip",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tipper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "post_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Write a post as `author`, and return its number.",
+      "name": "post",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "body",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Up to `limit` posts (at most [`MAX_PAGE`]) from number `first` on, in\\nthe order they were written. Post numbers start at 1.",
+      "name": "posts",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "first",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "Post"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A post as the blog returns it, with its comment count and tips so far.",
+      "lib": "",
+      "name": "Post",
+      "fields": [
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "body",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "comment_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Its number: posts count up from 1.",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "When it was posted: the ledger's close time, in seconds since 1970.",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "XLM tipped to its author so far, in stroops (10^-7 XLM).",
+          "name": "tipped",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Comment on post `post_id` as `author`, and return the comment's index\\non that post (from 0).",
+      "name": "comment",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "post_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "text",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A post as stored: written once, never rewritten.",
+      "lib": "",
+      "name": "Entry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "body",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What changes on a post after it is written, kept apart from its text so a\\ncomment or a tip rewrites a few bytes rather than the whole post.",
+      "lib": "",
+      "name": "Stats",
+      "fields": [
+        {
+          "doc": "",
+          "name": "comment_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tipped",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Up to `limit` comments (at most [`MAX_PAGE`]) on post `post_id`,\\nfrom index `first` (from 0) on, oldest first.",
+      "name": "comments",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "post_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "first",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "limit",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "udt": {
+                    "name": "Comment"
+                  }
+                }
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Post `id`.",
+      "name": "get_post",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Post"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when a post is written.",
+      "lib": "",
+      "name": "Posted",
+      "prefix_topics": [
+        "posted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when a post's author is tipped.",
+      "lib": "",
+      "name": "Tipped",
+      "prefix_topics": [
+        "tipped"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "post_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tipper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A comment on a post.",
+      "lib": "",
+      "name": "Comment",
+      "fields": [
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "text",
+          "type_": "string"
+        },
+        {
+          "doc": "When it was written: the ledger's close time, in seconds since 1970.",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "How many posts there are; the newest is number `post_count()`.",
+      "name": "post_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when a comment is written.",
+      "lib": "",
+      "name": "Commented",
+      "prefix_topics": [
+        "commented"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "post_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "author",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Why the blog refused a call. The app shows the same sentences\\n(`app/src/blog.ts`), by code and by name.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "A post needs a title.",
+          "name": "TitleEmpty",
+          "value": 1
+        },
+        {
+          "doc": "The title is longer than 100 bytes.",
+          "name": "TitleTooLong",
+          "value": 2
+        },
+        {
+          "doc": "A post needs a body.",
+          "name": "BodyEmpty",
+          "value": 3
+        },
+        {
+          "doc": "The post is longer than 2000 bytes.",
+          "name": "BodyTooLong",
+          "value": 4
+        },
+        {
+          "doc": "A comment needs some text.",
+          "name": "CommentEmpty",
+          "value": 5
+        },
+        {
+          "doc": "The comment is longer than 280 bytes.",
+          "name": "CommentTooLong",
+          "value": 6
+        },
+        {
+          "doc": "There is no post with that number.",
+          "name": "PostNotFound",
+          "value": 7
+        },
+        {
+          "doc": "A tip must be more than zero.",
+          "name": "TipNotPositive",
+          "value": 8
+        },
+        {
+          "doc": "You can't tip your own post.",
+          "name": "OwnPost",
+          "value": 9
+        }
+      ]
+    }
+  }
+]
