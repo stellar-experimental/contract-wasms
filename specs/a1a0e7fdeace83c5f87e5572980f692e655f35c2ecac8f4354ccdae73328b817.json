@@ -1,0 +1,326 @@
+[
+  {
+    "udt_union_v0": {
+      "doc": "What one blast entry should do with its amount.",
+      "lib": "",
+      "name": "Mode",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Try to transfer now; if the transfer fails, hold it as pending.",
+            "name": "Deliver"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Credit it as pending immediately.",
+            "name": "Hold"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Instance: the token (BLND SAC) address.",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: the only address allowed to credit and blast.",
+            "name": "Source"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: the only address allowed to upgrade the code.",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance: exact sum of all pending entries (stroops).",
+            "name": "TotalPending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance (v3): the WOTS+ commitment guarding the upgrade door \\xe2\\x80\\x94\\nsha256(seed || pk[0] || ... || pk[66]) of the current one-time\\npublic key. Rotates on every successful upgrade.",
+            "name": "PqRoot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Instance (v3): number of completed upgrades. Bound into every\\nupgrade signature, so a used signature can never replay.",
+            "name": "UpgradeSeq"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent: one entry per recipient, value = pending stroops.",
+            "name": "Pending",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One entry of a blast batch.",
+      "lib": "",
+      "name": "BlastEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "Mode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fire one batch of deliveries and holds. Source auth only.\\n\\nThe batch is validated as a whole before anything moves: every\\namount positive, and the contract balance must cover the\\nexisting total_pending plus the full batch sum. Per entry:\\nHold credits pending exactly as credit() does. Deliver tries\\nthe token transfer without reverting on failure \\xe2\\x80\\x94 success\\nemits a delivered event; failure credits the full amount as\\npending and emits a fallback event, so an amount is never lost\\nand never blocks the rest of the batch.",
+      "name": "blast",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "entries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "BlastEntry"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim the caller's full pending mark. The entry is removed and\\nthe amount transferred via the token contract. If the recipient\\nholds no trustline the token transfer fails and the whole call\\nreverts, leaving the entry untouched.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add pending marks. Source auth only. Every amount must be\\npositive, and the contract's token balance must cover the\\nexisting total plus everything being added \\xe2\\x80\\x94 crediting beyond\\nholdings is impossible.",
+      "name": "credit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "entries",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "address",
+                    "i128"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless lifetime extension for named entries that exist.",
+      "name": "extend",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "addrs",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public read: pending stroops for an address, 0 when none.",
+      "name": "pending",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace this contract's code. Two keys must speak: the\\nadmin's ordinary authorization, AND a WOTS+ one-time signature\\n(the post-quantum guard) over exactly this upgrade \\xe2\\x80\\x94 this\\ncontract, the new code hash, the next key's commitment, and\\nthe current upgrade sequence number. The presented public key\\nmust hash to the stored commitment. On success the commitment\\nrotates to `next_pq_root` and the sequence advances, so the\\nsignature just used can never authorize anything again; the\\nprivate key behind a commitment signs exactly one upgrade in\\nits life, and its successor is generated fresh by the signer.\\nAny storage reshaping belongs to a migrate function in the NEW\\nversion's code, per the documented upgrade pattern.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "next_pq_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pq_seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pq_pubkey",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pq_signature",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pq_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public read: exact sum of all pending entries.",
+      "name": "total_pending",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Public read (v3): the current WOTS+ commitment guarding the\\nupgrade door, and the number of completed upgrades.",
+      "name": "upgrade_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "u64"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

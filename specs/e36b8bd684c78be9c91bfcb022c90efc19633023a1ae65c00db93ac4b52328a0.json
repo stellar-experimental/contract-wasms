@@ -1,0 +1,459 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Verified price data returned by the oracle. Prices keep the feed's native\\nprecision, and no exponent travels with them: one market's prices all\\ncome from one stream, which the anchored `feed_id` pins.",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "Best ask after spread reduction, in the same precision as `bid`.",
+          "name": "ask",
+          "type_": "i128"
+        },
+        {
+          "doc": "Best bid after spread reduction, in the feed's native precision.",
+          "name": "bid",
+          "type_": "i128"
+        },
+        {
+          "doc": "The report's observation time, `observationsTimestamp`, as a Unix\\ntimestamp (seconds).",
+          "name": "publish_time",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces the contract WASM. Storage is kept as is, not migrated.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `new_wasm_hash` - The hash of an uploaded WASM blob.\\n* `operator` - The owner.\\n\\n# Errors\\n\\n* `OwnableError::OwnerNotSet` - If ownership was renounced.\\n* [`OracleError::UpgradeNotOwner`] - If `operator` is not the owner.\\n\\n# Notes\\n\\n* Authorization for the owner is required, and `operator` must be the\\nowner.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the Chainlink verifier contract address.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.",
+      "name": "verifier",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns `Some(Address)` if ownership is set, or `None` if ownership has\\nbeen renounced.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Verifies a signed Data Streams report and returns the gated\\n`PriceData` for the caller's stream.\\n\\nA still-cached verified report skips the verifier call.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `report` - The signed report blob.\\n* `feed_id` - The caller's stream anchor. It must equal the report's\\n`feedId`.\\n* `protective` - Uses `close_staleness` instead of `trade_staleness` as\\nthe age window.\\n\\n# Errors\\n\\n* [`OracleError::InvalidData`] - If the body fails decoding or the\\n`feedId` is not a V3 stream id.\\n* [`OracleError::FeedMismatch`] - If the report prices another stream.\\n* [`OracleError::PriceAhead`] - If the validity start or the\\nobservation is over `trade_staleness` ahead of the ledger.\\n* [`OracleError::ReportExpired`] - If the ledger has passed\\n`expiresAt`.\\n* [`OracleError::PriceStale`] - If the observation is older than the\\nage window.\\n* [`OracleError::InvalidPrice`] - If the benchmark or a side is not\\npositive, the book is crossed, or an `int192` overflows `i128`.",
+      "name": "verify_price",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "report",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "feed_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "protective",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "PriceData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the oracle.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `owner` - The address that may update the staleness windows and the\\nspread reduction.\\n* `verifier` - Chainlink's deployed Data Streams verifier contract. No\\nentry point changes it. Only an owner upgrade can, and the upgrade\\nkeeps the oracle address each market stores.\\n* `trade_staleness` - The maximum age of a price observation for\\nstrict (fill) verifications (seconds).\\n* `close_staleness` - The maximum age for protective (gap-closing)\\nverifications (seconds). At least `trade_staleness`.\\n* `spread_reduction_factor` - Symmetric bid/ask narrowing toward their\\nmidpoint, `SCALAR_18`-scaled. `0` is off, and `SCALAR_18` collapses\\nboth onto the mid.\\n\\n# Errors\\n\\n* [`OracleError::InvalidStaleness`] - If the staleness pair is out of\\nbounds.\\n* [`OracleError::InvalidSpreadReduction`] - If the factor is outside\\n`[0, SCALAR_18]`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "verifier",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "trade_staleness",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "close_staleness",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "spread_reduction_factor",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the protective (gap-closing) staleness window (seconds).\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.",
+      "name": "close_staleness",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the strict (fill) staleness window (seconds).\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.",
+      "name": "trade_staleness",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accepts a pending ownership transfer.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Errors\\n\\n* [`crate::role_transfer::RoleTransferError::NoPendingTransfer`] - If\\nthere is no pending transfer to accept.\\n\\n# Events\\n\\n* topics - `[\"ownership_transfer_completed\"]`\\n* data - `[new_owner: Address]`",
+      "name": "accept_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates both staleness windows.\\n\\nOne call sets the pair atomically, so the `trade <= close` ordering\\nis always validated against the new pair.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `trade_staleness` - The maximum report age for strict (fill)\\nverifications (seconds).\\n* `close_staleness` - The maximum report age for protective\\n(gap-closing) verifications (seconds). At least `trade_staleness`.\\n\\n# Errors\\n\\n* `OwnableError::OwnerNotSet` - If ownership was renounced.\\n* [`OracleError::InvalidStaleness`] - If the staleness pair is out of\\nbounds.\\n\\n# Events\\n\\n* topics - `[\"staleness_update\"]`\\n* data - `[trade_staleness: u64, close_staleness: u64]`\\n\\n# Notes\\n\\n* Authorization for the owner is required.",
+      "name": "update_staleness",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_staleness",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "close_staleness",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renounces ownership of the contract.\\n\\nPermanently removes the owner, disabling all functions gated by\\n`#[only_owner]`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n\\n# Errors\\n\\n* [`OwnableError::TransferInProgress`] - If there is a pending ownership\\ntransfer.\\n* [`OwnableError::OwnerNotSet`] - If the owner is not set.\\n\\n# Notes\\n\\n* Authorization for the current owner is required.",
+      "name": "renounce_ownership",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initiates a 2-step ownership transfer to a new address.\\n\\nRequires authorization from the current owner. The new owner must later\\ncall `accept_ownership()` to complete the transfer.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `new_owner` - The proposed new owner.\\n* `live_until_ledger` - Ledger number until which the new owner can\\naccept. A value of `0` cancels any pending transfer.\\n\\n# Errors\\n\\n* [`OwnableError::OwnerNotSet`] - If the owner is not set.\\n* [`crate::role_transfer::RoleTransferError::NoPendingTransfer`] - If\\ntrying to cancel a transfer that doesn't exist.\\n* [`crate::role_transfer::RoleTransferError::InvalidLiveUntilLedger`] -\\nIf the specified ledger is in the past.\\n* [`crate::role_transfer::RoleTransferError::InvalidPendingAccount`] -\\nIf the specified pending account is not the same as the provided `new`\\naddress.\\n\\n# Notes\\n\\n* Authorization for the current owner is required.",
+      "name": "transfer_ownership",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current spread reduction factor (`SCALAR_18`-scaled).\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.",
+      "name": "spread_reduction_factor",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the spread reduction factor.\\n\\n# Arguments\\n\\n* `env` - Access to the Soroban environment.\\n* `spread_reduction_factor` - The `SCALAR_18`-scaled narrowing toward\\nthe mid. `0` is off, and `SCALAR_18` collapses both sides onto the\\nmid.\\n\\n# Errors\\n\\n* `OwnableError::OwnerNotSet` - If ownership was renounced.\\n* [`OracleError::InvalidSpreadReduction`] - If the factor is outside\\n`[0, SCALAR_18]`.\\n\\n# Events\\n\\n* topics - `[\"spread_reduction_update\"]`\\n* data - `[spread_reduction_factor: i128]`\\n\\n# Notes\\n\\n* Authorization for the owner is required.",
+      "name": "update_spread_reduction_factor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spread_reduction_factor",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OracleError",
+      "cases": [
+        {
+          "doc": "`upgrade` was called with an `operator` that is not the contract owner.\\nThe discriminant is shared: market and factory raise the same code for\\nthe same condition.",
+          "name": "UpgradeNotOwner",
+          "value": 600
+        },
+        {
+          "doc": "The verified report body failed decoding, or the feed id is not a V3\\nstream id (`0x0003` prefix).",
+          "name": "InvalidData",
+          "value": 780
+        },
+        {
+          "doc": "A non-positive benchmark or price side, a crossed book (`bid > ask`),\\nor an `int192` value that overflows `i128`.",
+          "name": "InvalidPrice",
+          "value": 781
+        },
+        {
+          "doc": "The observation is older than the selected staleness window.",
+          "name": "PriceStale",
+          "value": 782
+        },
+        {
+          "doc": "A staleness pair that violates `MIN_STALENESS_SECONDS <= trade <=\\nMAX_TRADE_STALENESS_SECONDS` or `trade <= close <=\\nMAX_CLOSE_STALENESS_SECONDS`.",
+          "name": "InvalidStaleness",
+          "value": 783
+        },
+        {
+          "doc": "The ledger clock has passed the report's own `expiresAt`.",
+          "name": "ReportExpired",
+          "value": 784
+        },
+        {
+          "doc": "A `spread_reduction_factor` outside `[0, SCALAR_18]`.",
+          "name": "InvalidSpreadReduction",
+          "value": 785
+        },
+        {
+          "doc": "The report prices a different stream than the caller's feed anchor.",
+          "name": "FeedMismatch",
+          "value": 790
+        },
+        {
+          "doc": "The report's validity window opens, or its observation sits, more\\nthan the forward allowance ahead of the ledger clock. The forward\\nallowance is the trade window for both classes.",
+          "name": "PriceAhead",
+          "value": 793
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The owner replaced the staleness windows through `update_staleness`.",
+      "lib": "",
+      "name": "StalenessUpdate",
+      "prefix_topics": [
+        "staleness_update"
+      ],
+      "params": [
+        {
+          "doc": "The new strict (fill) window (seconds).",
+          "name": "trade_staleness",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "The new protective (gap-closing) window (seconds).",
+          "name": "close_staleness",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The owner replaced the spread reduction factor through\\n`update_spread_reduction_factor`.",
+      "lib": "",
+      "name": "SpreadReductionUpdate",
+      "prefix_topics": [
+        "spread_reduction_update"
+      ],
+      "params": [
+        {
+          "doc": "The new `SCALAR_18`-scaled narrowing toward the mid.",
+          "name": "spread_reduction_factor",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RoleTransferError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NoPendingTransfer",
+          "value": 2200
+        },
+        {
+          "doc": "",
+          "name": "InvalidLiveUntilLedger",
+          "value": 2201
+        },
+        {
+          "doc": "",
+          "name": "InvalidPendingAccount",
+          "value": 2202
+        },
+        {
+          "doc": "",
+          "name": "TransferExpired",
+          "value": 2203
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnableError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "OwnerNotSet",
+          "value": 2100
+        },
+        {
+          "doc": "",
+          "name": "TransferInProgress",
+          "value": 2101
+        },
+        {
+          "doc": "",
+          "name": "OwnerAlreadySet",
+          "value": 2102
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is initiated.",
+      "lib": "",
+      "name": "OwnershipTransfer",
+      "prefix_topics": [
+        "ownership_transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when ownership is renounced.",
+      "lib": "",
+      "name": "OwnershipRenounced",
+      "prefix_topics": [
+        "ownership_renounced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an ownership transfer is completed.",
+      "lib": "",
+      "name": "OwnershipTransferCompleted",
+      "prefix_topics": [
+        "ownership_transfer_completed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]
