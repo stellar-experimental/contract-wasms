@@ -1,0 +1,541 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "`tokens` or `engine` passed into `create_engine`/`create_pool_and_escrow` is not the\\nexact value `salt` actually deployed in an earlier phase (see the module doc's\\n\"Determinism\" section). Catches a wrong `salt` or a stale/copy-pasted struct *before* any\\none-time wiring (`set_minter`, `set_recovery_escrow`) is consumed irreversibly against the\\nwrong contract -- found during an audit review: nothing previously checked this on-chain,\\neven though `predict_market` could trivially recompute and assert the same addresses.\\n\\nThis proves `tokens`/`engine` is salt-arithmetic-consistent -- the one value derivable\\nfrom `salt` -- not that the earlier phase was actually run for this `salt` (the address\\nderivation is a pure function of `salt` alone, independent of whether anything is\\ndeployed there; confirmed via a final audit review). Skipping a phase entirely is still\\ncaught, just by a different mechanism: every real wiring call this function makes right\\nafter (`set_minter`, `set_risk_control`, `set_recovery_escrow`, ...) ",
+          "name": "TopologyMismatch",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for `create_tokens`. `permissioning` and `oracle` are shared, non-maturity-bound\\ninfrastructure -- pass existing deployments; see the crate-level docs.",
+      "lib": "",
+      "name": "TokenParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "permissioning",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "pt_symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "yt_symbol",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for `create_engine`.",
+      "lib": "",
+      "name": "EngineParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "permissioning",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "risk_control",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_fee_tier_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "tokenization_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_fee_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The two contracts `create_engine` deploys and wires. Pass this struct straight into\\n`create_pool_and_escrow`.",
+      "lib": "",
+      "name": "MarketEngine",
+      "fields": [
+        {
+          "doc": "",
+          "name": "market_config",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "principal_manager",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The three contracts `create_tokens` deploys and wires. Pass this struct straight into\\n`create_engine` and `create_pool_and_escrow`.",
+      "lib": "",
+      "name": "MarketTokens",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_wrapper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The seven contracts of one market, in deployment order.",
+      "lib": "",
+      "name": "MarketContracts",
+      "fields": [
+        {
+          "doc": "",
+          "name": "market_config",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "market_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "principal_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recovery_escrow",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_wrapper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Wasm hashes for `create_tokens` (`SYWrapper`, `PTToken`, `YTToken`), already uploaded to the\\nnetwork (`stellar contract upload` or `Deployer::upload_contract_wasm`).",
+      "lib": "",
+      "name": "TokenWasmHashes",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pt_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sy_wrapper",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "yt_token",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Wasm hashes for `create_engine` (`MarketConfig`, `PrincipalManager`).",
+      "lib": "",
+      "name": "EngineWasmHashes",
+      "fields": [
+        {
+          "doc": "",
+          "name": "market_config",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "principal_manager",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Parameters for `create_pool_and_escrow`.",
+      "lib": "",
+      "name": "PoolEscrowParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "time_stretch_years",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The two contracts `create_pool_and_escrow` deploys and wires. The market is fully live once\\nthis call returns.",
+      "lib": "",
+      "name": "MarketPoolAndEscrow",
+      "fields": [
+        {
+          "doc": "",
+          "name": "market_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recovery_escrow",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Wasm hashes for `create_pool_and_escrow` (`MarketPool`, `RecoveryEscrow`).",
+      "lib": "",
+      "name": "PoolEscrowWasmHashes",
+      "fields": [
+        {
+          "doc": "",
+          "name": "market_pool",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "recovery_escrow",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Phase 2 of 3. Deploy and initialize `MarketConfig` and `PrincipalManager`, wire the minter\\non PT/YT and the circuit breaker on SY/PrincipalManager -- atomically. `tokens` must be the\\nexact value `create_tokens` returned for this `salt`, which is verified on-chain (not just\\nby convention) before any of it is used. Pass the returned [`MarketEngine`] into\\n`create_pool_and_escrow`.",
+      "name": "create_engine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "udt": {
+              "name": "EngineWasmHashes"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "udt": {
+              "name": "MarketTokens"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "EngineParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketEngine"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Phase 1 of 3. Deploy and initialize `SYWrapper`, `PTToken` and `YTToken`, atomically.\\n`issuer` must be the underlying's live issuer authority and must authorize this call; each\\nchild `initialize` independently re-checks that live, exactly as it does today when called\\nby hand. Pass the returned [`MarketTokens`] into `create_engine`.",
+      "name": "create_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "udt": {
+              "name": "TokenWasmHashes"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "TokenParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketTokens"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Derive the seven contract addresses the three `create_*` calls with this exact `salt` will\\nproduce. Pure computation -- no deployment, no storage read, no auth. Safe to call before\\nthe issuer commits to signing anything, so a dapp can show the addresses in a confirmation\\nscreen first.",
+      "name": "predict_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketContracts"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Phase 3 of 3. Deploy and initialize `MarketPool` and `RecoveryEscrow`, wire the recovery\\nescrow into SY/PT/YT/Pool -- atomically. `tokens` and `engine` must be the exact values\\n`create_tokens`/`create_engine` returned for this `salt`, which is verified on-chain (not\\njust by convention) before any of it is used. The market is fully live once\\nthis call returns -- except the two steps this contract never does for any phase (see the\\nmodule docs): `RiskControl.add_consumer` for SY/PrincipalManager, `Router.register_market`\\nfor the pool, and granting every one of these five addresses (plus the treasury and the\\ncreator payee) compliance standing (`docs/DEPLOYMENT.md` \\xc2\\xa711).",
+      "name": "create_pool_and_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "issuer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "salt",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "wasm",
+          "type_": {
+            "udt": {
+              "name": "PoolEscrowWasmHashes"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "udt": {
+              "name": "MarketTokens"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "engine",
+          "type_": {
+            "udt": {
+              "name": "MarketEngine"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "params",
+          "type_": {
+            "udt": {
+              "name": "PoolEscrowParams"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketPoolAndEscrow"
+          }
+        }
+      ]
+    }
+  }
+]

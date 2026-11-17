@@ -1,0 +1,426 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "IssuerMismatch",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InvalidShare",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotApplicable",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Underlying"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Maturity"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ProtocolAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TokenizationFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "YtFeeBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SwapFeeTierBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ProtocolShareBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Explicit creator payee; only used when the underlying has no `admin()` (SEP-57).",
+            "name": "CreatorPayee"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper call: extend this contract's *instance* storage (admin, config,\\nreserves, totals, settlement rate, fee buckets) for ~30 days. Soroban does not bump instance\\nTTL on ordinary reads or writes, so a long-dated market needs this called periodically (or\\nan archived instance restored) -- see docs/DEPLOYMENT.md.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Split `fee` into (protocol share, creator share). The protocol share is floored, so any\\nrounding dust goes to the creator and the two always sum to `fee`.",
+      "name": "split",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The market creator's payout address: the underlying's *current* `admin()` (live) for a SAC,\\nor the configured payee for a SEP-57 token.",
+      "name": "creator",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "maturity",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reconfigure the three market fees. Only the underlying's *current* issuer authority.",
+      "name": "set_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokenization_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "yt_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "swap_fee_tier_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "treasury",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create the market configuration. `admin` must be the underlying's issuer authority (for a\\nSAC: `admin()`, read live) and must authorize this call.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "protocol_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokenization_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "yt_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "swap_fee_tier_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol_share_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "underlying",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "yt_fee_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Effective swap fee at `FEE_SCALE` (1e12) for a trade `seconds_to_maturity` before maturity:\\n`Fee Tier x (seconds_to_maturity / 86_400) / 365`, capped at `MAX_SWAP_FEE_RATE`.",
+      "name": "swap_fee_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seconds_to_maturity",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "protocol_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the explicit creator payee. Only meaningful (and only allowed) when the underlying has\\nno `admin()` to read live (SEP-57 RWA tokens).",
+      "name": "set_creator_payee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "swap_fee_tier_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "protocol_share_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_protocol_share",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol_share_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "tokenization_fee_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_protocol_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Which compliance model the underlying asset uses.",
+      "lib": "",
+      "name": "Kind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Classic Stellar asset exposed through its Stellar Asset Contract (covers SEP-8 assets).",
+            "name": "Sac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SEP-57 (T-REX) `RWAToken`: frozen flag + identity verifier + operator RBAC.",
+            "name": "Rwa"
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,658 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InsufficientShares",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticOverflow",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "PermissionDenied",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorizedOnSac",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "RecoveryEscrowAlreadySet",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NotRecoveryEscrow",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "IssuerMismatch",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "DepositCapExceeded",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidCap",
+          "value": 15
+        },
+        {
+          "doc": "`set_recovery_escrow` was given an address that does not point back at a RecoveryEscrow\\nconfigured for this same underlying -- most likely a stale address copied from a\\ndifferent market. Found during audit review: this wiring is one-shot and irreversible,\\nso an admin mistake here previously had no cross-check at all, unlike `initialize`.",
+          "name": "RecoveryEscrowMismatch",
+          "value": 16
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Underlying"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Permissioning"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RecoveryEscrow"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalUnderlying"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RiskControl"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "DepositCap"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "NetDeposited",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper call: extend this contract's *instance* storage (admin, config,\\nreserves, totals, settlement rate, fee buckets) for ~30 days. Soroban does not bump instance\\nTTL on ordinary reads or writes, so a long-dated market needs this called periodically (or\\nan archived instance restored) -- see docs/DEPLOYMENT.md.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Forcibly move `shares` from `account`'s SY balance to the caller's own balance, without\\n`account`'s authorization. Callable only by the configured `RecoveryEscrow` -- this\\ncontract does not itself verify the issuer's admin signature or check whether `account`\\nhas actually been deauthorized; that verification happens once, in the escrow, shared\\nacross every position type instead of duplicated here. A pure forced transfer, not a\\nburn: `TotalShares`/`TotalUnderlying` are unaffected, since the value stays inside the\\nwrapper (now credited to the escrow) until the escrow separately calls `withdraw` to\\nunwrap it into raw underlying.\\n\\nDeliberately callable while paused: `set_paused` blocks ordinary user activity, but a\\nseizure already gated on caller-is-the-escrow shouldn't become unusable during an\\noperational pause (e.g. triggered by the same incident that justifies a legal freeze).",
+      "name": "seize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposit `amount` of the underlying asset; returns shares minted to `from`. Reverts\\n`SlippageExceeded` if fewer than `min_shares_out` shares would be minted,\\n`DepositCapExceeded` if `from`'s net deposits would pass the per-address cap, and -- when\\na RiskControl is wired -- `CircuitBreakerTripped`/`Paused` from RiskControl itself.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_shares_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Move `amount` shares from `from` to `to`, both still subject to the same two-layer\\ncompliance check as `deposit`/`withdraw`. This is what lets `PrincipalManager` take\\ncustody of a user's SY shares when splitting them into PT + YT, and is otherwise a plain\\nSEP-41-style balance move: no change to `TotalUnderlying`/`TotalShares`, no external\\ntoken call, so there is no reentrancy surface here the way there is in deposit/withdraw.",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `shares` and return the equivalent underlying amount to `to`. Reverts\\n`SlippageExceeded` if less than `min_underlying_out` would be returned.\\n\\nReleases the per-address deposit cap against `from` -- correct whenever `from` is the\\nreal economic depositor withdrawing their own position, which is every caller of this\\nfunction today. A custodian contract unwinding SY it holds in *its own* name on behalf of\\na different end user (e.g. `PrincipalManager`, between `mint` and `redeem`/`claim_yield`)\\nmust use `withdraw_crediting` instead, or the cap release is a silent no-op against the\\ncustodian's own (never-charged) `NetDeposited` entry -- see that function's doc comment\\nand `NetDeposited`'s own doc comment for the full limitation this closes. Found during\\naudit review.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initialize with the admin address, the underlying SAC address, and the Permissioning\\nregistry used as an additional eligibility layer. `admin` must be the underlying SAC's\\nactual admin (`admin()`, read live) and must authorize this call -- this is what ties\\nmarket creation to the entity that actually controls the regulated asset, rather than\\nletting any third party stand up a market for someone else's asset.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "permissioning",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The per-address deposit cap in underlying units (`0` = disabled).",
+      "name": "deposit_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "risk_control",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_shares",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `from`'s *entire* SY balance and return the equivalent underlying to `to`. Unlike\\n`withdraw`, there is no `shares` argument: the authorized invocation is `(from, to,\\nmin_underlying_out)` only, and `shares` is read live from `from`'s own balance at\\nexecution time instead of being passed in.\\n\\nThis exists for callers -- in practice, Router functions that chain a `MarketPool` swap's\\noutput straight into a withdrawal -- where the swap's payout is a curve-derived amount:\\n`MarketPool`'s price depends on `seconds_to_maturity`, read live from the ledger, so the\\nexact payout computed during a client's pre-submission simulation can differ by a few raw\\nunits from what real execution computes moments later. Passing that payout as an explicit\\n`shares` argument to `withdraw` would need Soroban's pre-signed authorization for *that*\\ncall to match an amount that can drift between those two passes, reverting\\n`Error(Auth, InvalidAction)` even though nothing about the trade itself was wrong. Reading\\nthe balance instead of ta",
+      "name": "withdraw_all",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current exchange rate: underlying units per share, scaled by RATE_SCALE.",
+      "name": "exchange_rate",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Underlying `account` has deposited, net of what it withdrew (floored at 0). This is the\\nquantity the per-address cap applies to.\\n\\nReleased correctly by `withdraw`/`withdraw_all`/`withdraw_gained` whenever `account` is\\nthe address that actually calls one of those functions (the ordinary case). It is\\n*not* released by a plain `withdraw`-family call made by some other custodian contract on\\n`account`'s behalf while holding `account`'s SY in the custodian's own name -- e.g.\\n`PrincipalManager`, between `mint` (which moves a user's SY into the manager's own custody\\nwith a plain `transfer`, untouched by the cap) and `redeem`/`claim_yield` (which unwind\\nthat custodied SY back to the user). A naive `withdraw` call there would credit the\\nrelease against the manager's own `NetDeposited` entry -- which was never charged -- so\\nthe real depositor's cap would stay stuck at its deposited level forever, even after\\nfully exiting, silently blocking any further deposit. `PrincipalManager` closes this by\\ncalling `withdraw_creditin",
+      "name": "net_deposited",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "recovery_escrow",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the per-address deposit cap (underlying units); `0` disables it. Existing balances\\nabove a newly lowered cap are not clawed back -- the cap only gates further deposits.",
+      "name": "set_deposit_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw only the SY `from` gained *since* `baseline` -- the balance `from` already held\\nbefore whatever produced the gain, read by the caller (typically a Router composing a\\nwrap-then-flash-mint flow) via a plain `balance_of` call immediately before that step.\\n\\nUnlike `withdraw_all`, pre-existing SY above `baseline` is left untouched, so a caller\\nwho already holds unrelated SY for another position does not need to clear it first --\\nfound to matter live while composing `Router.flash_mint_yt_from_underlying`: its surplus\\n(the wrapped budget minus the real net cost) could previously only be swept with\\n`withdraw_all`, which refuses to run at all if the caller holds any other SY, costing an\\nextra signature to clear it first.\\n\\n`shares = balance_of(from) - baseline` is computed internally rather than taken as a\\ndirect argument, for the same reason `withdraw_all` reads the balance instead of a\\npassed-in amount: the gain itself is usually a curve- or oracle-derived amount that can\\ndrift by a few raw units between a c",
+      "name": "withdraw_gained",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "baseline",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Wire the RiskControl this wrapper reports deposits to. The wrapper must also be registered\\nas a consumer on that RiskControl (`RiskControl.add_consumer`) or every deposit reverts.\\n\\nUnlike `set_recovery_escrow`, this is updatable (no \"already set\" guard), so a wrong\\naddress here is not irreversible the same way -- but an admin mistake (e.g. a copy-pasted\\naddress of some other contract entirely) would otherwise only surface the next time a\\nuser deposits. This calls back into the given address's own `is_consumer` -- the one\\nread-only view every real RiskControl exposes -- so a non-RiskControl address (wrong\\ncontract type, unrelated address) fails this call instead of silently being wired in.\\nDeliberately does not require the *result* to be `true`: every deployment path in this\\nrepo (see `scripts/create_market.sh`, `MarketFactory`) calls `set_risk_control` before the\\nmatching `RiskControl.add_consumer`, so this wrapper is not registered yet at this point.",
+      "name": "set_risk_control",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "risk_control",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_underlying",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "underlying_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Same as `withdraw`, except the per-address deposit-cap release is credited to\\n`beneficiary` instead of `from`. For a custodian contract that holds SY in its own name on\\nbehalf of a specific end user -- today, only `PrincipalManager`'s `redeem` (the PT leg) and\\nits internal `pay_yield` (the YT leg and `claim_yield`) -- `from` here is the custodian's\\nown address, not the real depositor who originally paid into the per-address cap at\\n`deposit` time. Crediting `from` (plain `withdraw`'s behavior) would be a no-op against an\\naddress whose `NetDeposited` was never charged, leaving the real depositor's cap stuck at\\nits deposited level forever, even after they fully exit -- found during audit review (see\\n`NetDeposited`'s doc comment). `beneficiary` does not need any standing of its own here:\\nit is only a storage key for the release, not a party to the transfer.\\n\\nMirrors `withdraw_all`/`withdraw_gained`'s existing pattern of a clearly named variant\\nrather than an extra parameter threaded through the one common functio",
+      "name": "withdraw_crediting",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "beneficiary",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time wiring of the RecoveryEscrow contract authorized to call `seize`. Mirrors the\\n`set_minter` pattern used on PTToken/YTToken: settable once, never reassigned, breaking\\nthe circular dependency between SYWrapper and RecoveryEscrow at deployment time -- which\\nalso means an admin mistake here (wrong address, a stale address copied from a different\\nmarket) is otherwise permanent. Mirroring `PrincipalManager::initialize`'s\\n`assert_topology_matches` and `RecoveryEscrow::initialize`'s own cross-check of every\\nposition's `underlying_address()`, this calls back into the given address and requires its\\nown `underlying_address()` to match this wrapper's underlying before accepting it. Found\\nduring audit review.",
+      "name": "set_recovery_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "escrow",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "permissioning_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Which compliance model the underlying asset uses.",
+      "lib": "",
+      "name": "Kind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Classic Stellar asset exposed through its Stellar Asset Contract (covers SEP-8 assets).",
+            "name": "Sac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SEP-57 (T-REX) `RWAToken`: frozen flag + identity verifier + operator RBAC.",
+            "name": "Rwa"
+          }
+        }
+      ]
+    }
+  }
+]

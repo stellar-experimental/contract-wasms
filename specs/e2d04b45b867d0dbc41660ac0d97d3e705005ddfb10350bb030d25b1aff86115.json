@@ -1,0 +1,686 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotMature",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AlreadyMature",
+          "value": 6
+        },
+        {
+          "doc": "Also raised when the oracle *is* fresh but returns a non-positive reference value --\\nfreshness and positivity are independent properties, and this contract must not trust\\nthe latter blindly (defense-in-depth against a buggy/compromised oracle; found during\\nan audit review).",
+          "name": "OracleStale",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "PermissionDenied",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorizedOnSac",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "IssuerMismatch",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "TopologyMismatch",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NothingToClaim",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticOverflow",
+          "value": 15
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SYWrapper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PTToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "YTToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Oracle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Permissioning"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Underlying"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Maturity"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RiskControl"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SettledRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AccruedProtocol"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "AccruedCreator"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintResult",
+      "fields": [
+        {
+          "doc": "SY shares withheld as the tokenization fee.",
+          "name": "fee_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_minted",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_minted",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedeemResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "underlying_from_pt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_yt",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper call: extend this contract's *instance* storage (admin, config,\\nreserves, totals, settlement rate, fee buckets) for ~30 days. Soroban does not bump instance\\nTTL on ordinary reads or writes, so a long-dated market needs this called periodically (or\\nan archived instance restored) -- see docs/DEPLOYMENT.md.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Split `sy_shares` into PT + YT. The caller must already hold these shares in the\\nSYWrapper and must authorize both this call and the resulting SYWrapper transfer. The\\ntokenization fee is withheld from `sy_shares` before the PT/YT notional is computed.\\n\\nReturns the PT and YT minted (equal at issuance) and the fee withheld.",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MintResult"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Redeem PT and/or YT after maturity. Both can be supplied in any combination.\\n\\n* `pt_amount` \\xe2\\x80\\x94 PT tokens to burn (0 = skip PT redemption)\\n* `yt_amount` \\xe2\\x80\\x94 YT tokens to burn (0 = skip YT redemption)\\n\\nBurns the caller's real PT/YT balances and releases real underlying via SYWrapper at the\\nfrozen settlement rate. Returns the underlying units actually transferred for each type.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "RedeemResult"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "maturity",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_pt",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_yt",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_mature",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read-only counterpart to `set_paused`. Before this existed, a dApp could only infer the\\npaused state indirectly, by attempting a call and catching `Error::Paused`.",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Before maturity: burn `amount` PT and `amount` YT and return `amount * SCALE / rate` SY\\nshares at the current oracle rate. Yield the YT already accrued stays claimable.",
+      "name": "recombine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time initialization.\\n\\n* `sy_wrapper`    \\xe2\\x80\\x94 address of the SYWrapper contract\\n* `pt_token`      \\xe2\\x80\\x94 address of the PTToken contract (this contract must later be\\nregistered as its minter via `PTToken.set_minter`)\\n* `yt_token`      \\xe2\\x80\\x94 address of the YTToken contract (same two-phase pattern)\\n* `oracle`        \\xe2\\x80\\x94 address of the OracleAdapter contract\\n* `permissioning` \\xe2\\x80\\x94 address of the Permissioning contract\\n* `underlying`    \\xe2\\x80\\x94 address of the underlying asset; `admin` must be its issuer authority\\n* `maturity`      \\xe2\\x80\\x94 Unix timestamp at which PT and YT can be redeemed\\n* `market_config` \\xe2\\x80\\x94 the market's MarketConfig (fees and fee split); its underlying and\\nmaturity must match\\n\\n`admin` must be the underlying's issuer authority (for a SAC: `admin()`, read live) and\\nmust authorize this call -- creating a new market (even a new maturity on an existing\\nasset) requires the issuer's participation, matching `SYWrapper`'s market-creation gate.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_wrapper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "permissioning",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "market_config",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pt_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pt_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Freeze the market's settlement rate. Permissionless; callable once the market has matured\\nand the oracle is fresh. Advances (and thereby freezes) `YTToken`'s index and records its\\nfinal rate as the rate every redemption uses. Idempotent: later calls return the recorded\\nrate.",
+      "name": "settle_all",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "yt_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "yt_balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accrued YT yield without redeeming (burning) the underlying YT position. Available\\nbefore maturity -- continuous accrual is the point of holding YT ahead of redemption --\\nunlike `redeem`, this does not require the market to have matured. The YT fee is deducted\\nfrom the payout. Returns the underlying paid to `from`.",
+      "name": "claim_yield",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SY shares accrued but not yet claimed: (protocol, creator).",
+      "name": "accrued_fees",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "risk_control",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The frozen settlement rate, once `settle_all` (or the first redemption) has run.",
+      "name": "settled_rate",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "oracle_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Wire the RiskControl this market reports mints to. This contract must also be registered\\nas a consumer on that RiskControl or every mint reverts.\\n\\nUnlike `set_recovery_escrow`-style setters elsewhere, this is updatable (no \"already set\"\\nguard), so a wrong address here is not irreversible the same way -- but an admin mistake\\n(e.g. a copy-pasted address of some other contract entirely) would otherwise only surface\\nthe next time a user mints. This calls back into the given address's own `is_consumer` --\\nthe one read-only view every real RiskControl exposes -- so a non-RiskControl address\\n(wrong contract type, unrelated address) fails this call instead of silently being wired\\nin. Deliberately does not require the *result* to be `true`: every deployment path in\\nthis repo (see `scripts/create_market.sh`, `MarketFactory`) calls `set_risk_control`\\nbefore the matching `RiskControl.add_consumer`, so this contract is not registered yet at\\nthis point.",
+      "name": "set_risk_control",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "risk_control",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay the market creator's accrued share, in SY shares, to the creator (the underlying's\\ncurrent issuer authority). Permissionless. Returns the shares paid.",
+      "name": "claim_creator_fees",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "sy_wrapper_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "underlying_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay Principal's accrued share of the market's fees, in SY shares, to the config's\\ntreasury. Permissionless -- the payee is fixed by configuration. Returns the shares paid.",
+      "name": "claim_protocol_fees",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "permissioning_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Which compliance model the underlying asset uses.",
+      "lib": "",
+      "name": "Kind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Classic Stellar asset exposed through its Stellar Asset Contract (covers SEP-8 assets).",
+            "name": "Sac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SEP-57 (T-REX) `RWAToken`: frozen flag + identity verifier + operator RBAC.",
+            "name": "Rwa"
+          }
+        }
+      ]
+    }
+  }
+]

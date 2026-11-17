@@ -1,0 +1,740 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "InsufficientAllowance",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "PermissionDenied",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "MinterAlreadySet",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "MinterNotSet",
+          "value": 9
+        },
+        {
+          "doc": "Also raised when the oracle *is* fresh but returns a non-positive reference value --\\n`is_available()` only attests freshness, not positivity, and this contract must not\\ntrust the latter blindly (defense-in-depth against a buggy/compromised oracle; found\\nduring an audit review).",
+          "name": "OracleStale",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorizedOnSac",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "IssuerMismatch",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "RecoveryEscrowAlreadySet",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NotRecoveryEscrow",
+          "value": 14
+        },
+        {
+          "doc": "A fixed-point intermediate overflowed `i128`. Found during an audit review: declared\\nhere but never actually raised anywhere in this contract until `settle`'s pending-yield\\ncalculation was wired to it below, so it previously relied entirely on the workspace's\\n`overflow-checks = true` release-profile setting to fail closed, as a generic Rust panic\\nrather than this contract's own observable error code.",
+          "name": "ArithmeticOverflow",
+          "value": 15
+        },
+        {
+          "doc": "`set_recovery_escrow` was given an address that does not point back at a RecoveryEscrow\\nconfigured for this same underlying -- most likely a stale address copied from a\\ndifferent market. Found during audit review: this wiring is one-shot and irreversible,\\nso an admin mistake here previously had no cross-check at all, unlike `initialize`.",
+          "name": "RecoveryEscrowMismatch",
+          "value": 16
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Minter"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Permissioning"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Underlying"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RecoveryEscrow"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Oracle"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Maturity"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Name"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Symbol"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Decimals"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalSupply"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Allowance",
+            "type_": [
+              "address",
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "YieldIndex"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastOracleRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Frozen"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "LastClaimedIndex",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "PendingClaim",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper call: extend this contract's *instance* storage (admin, config,\\nreserves, totals, settlement rate, fee buckets) for ~30 days. Soroban does not bump instance\\nTTL on ordinary reads or writes, so a long-dated market needs this called periodically (or\\nan archived instance restored) -- see docs/DEPLOYMENT.md.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "burn",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AllowanceValue",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Forcibly move `amount` from `account`'s YT balance to the caller's own balance, without\\n`account`'s authorization. Callable only by the configured `RecoveryEscrow` \\xe2\\x80\\x94 see\\n`SYWrapper::seize` for the full rationale. Settles both sides' pending yield first, same\\nas any other balance-changing path, so the seizure doesn't shift already-accrued yield\\nbetween the flagged account and the escrow.",
+      "name": "seize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "minter",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "maturity",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "True once the yield index has been frozen at maturity.",
+      "name": "is_frozen",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`admin` must be the underlying SAC's actual admin and must authorize this call.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "permissioning",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "decimals",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_minter",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "minter",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settles `from`'s pending yield up to the current index, then zeroes and returns it.\\nCallable only by the registered minter (`PrincipalManager`), which is responsible for\\nconverting the returned amount into a real underlying payment via `SYWrapper.withdraw`\\nin the same call -- see this module's doc comment (H-03).",
+      "name": "claim_yield",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "oracle_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "recovery_escrow",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The highest oracle rate the index has been advanced to. After `is_frozen()` this is the\\nmarket's final settlement rate.",
+      "name": "last_oracle_rate",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "last_claimed_index",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "underlying_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless: advances the global yield index to `INDEX_SCALE * SCALE / oracle_rate`.\\nNo-op if the rate hasn't increased since the last recorded high-water mark, matching\\nthe protocol-wide invariant that YT never accrues negative yield. Because the index is a\\nclosed form of the current rate, the number of intermediate calls cannot change any\\nholder's total -- see this module's doc comment.",
+      "name": "update_yield_index",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The current yield index `INDEX_SCALE * SCALE / rate` (see module docs) -- it only ever\\ndecreases as the oracle rate rises. Meaningful relative to an account's own\\n`last_claimed_index`.",
+      "name": "accrued_yield_index",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time wiring of the RecoveryEscrow contract authorized to call `seize`. Settable once,\\nnever reassigned -- so an admin mistake here (wrong address, a stale address copied from a\\ndifferent market) would otherwise be permanent. Mirroring `PrincipalManager::initialize`'s\\n`assert_topology_matches` and `RecoveryEscrow::initialize`'s own cross-check of every\\nposition's `underlying_address()`, this calls back into the given address and requires its\\nown `underlying_address()` to match this token's underlying before accepting it. Found\\nduring audit review.",
+      "name": "set_recovery_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "escrow",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "permissioning_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Which compliance model the underlying asset uses.",
+      "lib": "",
+      "name": "Kind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Classic Stellar asset exposed through its Stellar Asset Contract (covers SEP-8 assets).",
+            "name": "Sac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SEP-57 (T-REX) `RWAToken`: frozen flag + identity verifier + operator RBAC.",
+            "name": "Rwa"
+          }
+        }
+      ]
+    }
+  }
+]

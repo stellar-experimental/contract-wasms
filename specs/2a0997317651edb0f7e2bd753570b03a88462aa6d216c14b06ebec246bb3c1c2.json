@@ -1,0 +1,1588 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "MarketNotRegistered",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExpired",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "TopologyMismatch",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRegistered",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirrors `MarketPool`'s own `Quote` shape (PT/SY-denominated, field-for-field) -- used for a\\nRouter quote whose `amount_out` is already PT, not underlying, because only the *input* leg\\nof that flow involves a unit conversion.",
+      "lib": "",
+      "name": "Quote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Market",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Everything the Router needs to know about one market, resolved from its pool at registration.",
+      "lib": "",
+      "name": "MarketInfo",
+      "fields": [
+        {
+          "doc": "",
+          "name": "manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_minted",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_minted",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Preview for `add_liquidity_keep_yt`. `mint_amount`, `pt_desired` and `sy_desired` are exactly\\nwhat the real call's own arguments of the same names expect -- all three are now solved via\\n`MarketPool.keep_yt_split` against the pool's raw reserve ratio (the ratio `add_liquidity`'s\\nproportional deposit actually targets), not `zap_swap_amount`'s curve-swap ratio, which a\\nlater integration review found recommended the wrong split and left SY stranded. `lp_estimate`\\npreviews `add_liquidity`'s own `lp_minted` using the same `(pt_desired * total_lp /\\npt_reserve).min(sy_desired * total_lp / sy_reserve)` formula -- like every quote in this\\nprotocol, exact only if reserves/`total_lp` do not move between this read and the real call.",
+      "lib": "",
+      "name": "KeepYtQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "lp_estimate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "mint_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "mint_fee_underlying",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_desired",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_desired",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper call: extend this contract's *instance* storage (admin, config,\\nreserves, totals, settlement rate, fee buckets) for ~30 days. Soroban does not bump instance\\nTTL on ordinary reads or writes, so a long-dated market needs this called periodically (or\\nan archived instance restored) -- see docs/DEPLOYMENT.md.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KeepYtResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "lp_minted",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_used",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_used",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_minted",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedeemResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "underlying_from_pt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_yt",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SY -> underlying.",
+      "name": "unwrap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Mirrors `MarketPool`'s own `FlashMintQuote` shape, field-for-field.",
+      "lib": "",
+      "name": "FlashMintQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "mint_fee_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap_fee_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_back",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A `MarketPool`-style quote restated entirely in underlying units -- `amount_out` and the fee\\nboth converted via `SYWrapper.exchange_rate()` -- for a Router flow whose final leg unwraps\\nSY back to underlying (`quote_pt_for_underlying`, `quote_yt_for_underlying`).",
+      "lib": "",
+      "name": "UnderlyingQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_underlying",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "PT + YT -> SY before maturity.",
+      "name": "recombine",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_sy_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accrued YT yield as underlying without burning YT.",
+      "name": "claim_yield",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_lp_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**True flash-mint** of YT: forwards to `MarketPool.flash_mint_yt`, which funds the mint\\nleg from the pool's own SY reserves instead of `from`'s balance. `from` pays only the net\\ncost (`MarketPool.flash_mint_yt`'s own docs explain the accounting identity), not the full\\n`sy_in` notional `swap_sy_for_yt` above requires. Returns `(yt_out, net_cost)`.",
+      "name": "flash_mint_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_yt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_net_cost",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Underlying -> SY -> PT + YT in one transaction. Reverts if fewer than `min_pt_out` PT are\\nminted (the tokenization fee is withheld before PT/YT are sized).\\n\\n`sy_in` is a caller-supplied literal (quote `SYWrapper.exchange_rate()` off-chain, the same\\n`amount * RATE_SCALE / exchange_rate()` convention `add_liquidity_single_underlying` uses\\nfor its own `sy_in`), **not** derived from `deposit`'s return value -- chaining `deposit`'s\\nlive-rate-dependent output straight into `mint`'s authorized call has exactly the\\n`Error(Auth, InvalidAction)` drift risk the module docs describe. The wrap leg is unguarded\\n(`min_shares_out = 0`); `min_pt_out` protects the whole round trip.",
+      "name": "wrap_and_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MintResult"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "swap_pt_for_sy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_sy_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "swap_sy_for_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**Flash-mint** buy of YT. Tokenizes `sy_in` SY into PT + YT, sells all of the PT back into\\nthe pool in the same transaction, and leaves the user with the YT plus the SY the PT\\nfetched. Net cost of the YT is `sy_in - sy_back` SY. Returns `(yt_out, sy_back)`.\\n\\n`pt_in` is a caller-supplied literal (quoted off-chain the same way `PrincipalManager.mint`\\ncomputes `pt_minted`: tokenization fee withheld, then valued at the live oracle rate --\\ne.g. via `MarketPool.quote_sy_for_yt(sy_in).yt_out`, which replicates that exact formula),\\n**not** derived from `mint`'s return value -- chaining `minted.pt_minted` straight into\\n`swap_pt_for_sy`'s authorized call has exactly the `Error(Auth, InvalidAction)` drift risk\\nthe module docs describe, since `mint`'s output depends on the live oracle rate. If `pt_in`\\ndoesn't match what `mint` actually produced, `swap_pt_for_sy`'s own balance check simply\\nfails closed (an ordinary revert, not an auth error); a caller can never benefit from\\nquoting `pt_in` higher than the real `pt_minted`",
+      "name": "swap_sy_for_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_yt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_net_cost",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**Flash-redeem** sale of YT: the pool recombines the YT with PT from its own reserve and\\npays the difference in SY. Returns the SY received; reverts below `min_sy_out`.",
+      "name": "swap_yt_for_sy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_sy_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a market by its pool, after checking that the pool, its manager and the tokens the\\npool trades all describe the same market. Admin-only.",
+      "name": "register_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "MarketInfo"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "remove_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lp_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_sy_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "`FlashMintQuote` restated in underlying units, for `quote_underlying_for_yt`.",
+      "lib": "",
+      "name": "UnderlyingFlashMintQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "mint_fee_underlying",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap_fee_underlying",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_back",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Remove a market from the registry (a mistaken or retired listing). Admin-only; users can no\\nlonger route through it, existing positions are unaffected.",
+      "name": "unregister_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "PT and/or YT -> underlying after maturity.",
+      "name": "redeem_at_maturity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "RedeemResult"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Preview for `add_liquidity_single_underlying`. `sy_in` is exactly the value to pass as the\\nreal call's own `sy_in` argument (quoted via `SYWrapper.exchange_rate()`, the same conversion\\nevery other `_for_underlying`/`_single_underlying` quote in this Router uses); `pt_used`,\\n`sy_used` and `lp_minted` preview `MarketPool.add_liquidity_single_sy`'s own return exactly\\n(`MarketPool.quote_add_liquidity_single_sy`). Found missing in a dApp-integration review (\"no\\nquote for the two new USDY LP functions\").",
+      "lib": "",
+      "name": "SingleSidedUnderlyingQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "lp_minted",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_used",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_used",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pendle's \"keep YT\" deposit: `underlying_amount` of underlying becomes LP *and* YT, with no\\nswap and so no price-impact slippage (the only guard that applies is `min_lp_out`, exactly\\nas `add_liquidity`'s own proportional deposit already works). Wraps to SY, mints PT+YT from\\n`mint_amount` of it, then adds PT and SY as a normal proportional deposit -- keeping the YT\\ninstead of selling it, which is the one difference from `add_liquidity_single_sy`.\\n\\n`mint_amount`, `pt_desired` and `sy_desired` are all plain arguments, computed off-chain\\n(quote `MarketPool.keep_yt_split` and `reserves()`/`lp_total_supply()` -- or just call\\n`quote_add_liquidity_keep_yt`, which does exactly that -- before building this call, the\\nsame way every other min-out in this Router is quoted beforehand) rather than anything\\nthis function derives mid-execution. That distinction matters: an earlier version derived\\n`sy_remaining` from `deposit`'s live-exchange-rate-dependent output and `pt_desired` from\\n`mint`'s live-oracle-rate-dependent output",
+      "name": "add_liquidity_keep_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "mint_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_desired",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_desired",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_lp_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "KeepYtResult"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `remove_liquidity_to_underlying`. Named `quote_lp_to_underlying` -- the full\\nfunction name with a `quote_` prefix is 36 bytes, over Soroban's 32-byte export-name cap.\\nEntirely delegated to `MarketPool.quote_lp_exit` (the proportional split and the PT-sale\\npricing both live there, since the sale must be priced against the reserves *after* the\\nsplit, not before it -- a first version of this quote got that wrong, pricing the sale\\nagainst pre-removal reserves and overstating the real payout); this function only adds\\nthe underlying-unit conversion.",
+      "name": "quote_lp_to_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lp_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "RemoveLiquidityUnderlyingQuote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "PT -> SY (`MarketPool`) -> underlying (`SYWrapper.withdraw_gained`), in one transaction.\\nThe swap leg is unguarded; `min_underlying_out` protects the whole round trip at the\\nfinal, underlying-denominated output -- the same reasoning `swap_underlying_for_pt` uses\\nin reverse.\\n\\nReads `baseline = from`'s SY balance *before* the swap, then unwraps only what the swap\\ngained (`withdraw_gained`) rather than sweeping `from`'s entire SY balance\\n(`withdraw_all`) -- a caller who already held unrelated SY no longer needs to clear it\\nfirst. The swap's SY payout is a curve-derived amount that can drift by a few raw units\\nbetween simulation and real execution, so a plain `withdraw` reverted `Error(Auth,\\nInvalidAction)` live on Testnet while this function was first written -- confirmed in\\n`docs/DAPP_SMART_CONTRACT_INTEGRATION_GUIDE.md`. `withdraw_gained` reads the balance at\\nexecution time instead, so there is nothing curve-derived left in the authorized\\ninvocation. An earlier version used `withdraw_all` and a zero-pre-existi",
+      "name": "swap_pt_for_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Underlying -> SY (`SYWrapper.deposit`) -> PT (`MarketPool`), in one transaction and one\\nsignature, for a user who holds the underlying rather than SY. The wrap leg is unguarded\\n(`min_shares_out = 0`); `min_pt_out` protects the whole round trip, matching\\n`wrap_and_mint`'s existing pattern of guarding only the final output.\\n\\n`sy_in` is a caller-supplied literal (quote `SYWrapper.exchange_rate()` off-chain, the same\\nconvention `add_liquidity_single_underlying` and `wrap_and_mint` use for their own `sy_in`),\\n**not** derived from `deposit`'s return value -- chaining `deposit`'s live-rate-dependent\\noutput straight into `swap_sy_for_pt`'s authorized call has exactly the `Error(Auth,\\nInvalidAction)` drift risk the module docs describe.",
+      "name": "swap_underlying_for_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Same flash-mint as `swap_sy_for_yt`, but for a caller who holds the underlying rather than\\nSY: wraps `underlying_amount` into SY first, runs the identical flash-mint, then unwraps\\nthe SY the PT sale fetched back into underlying, so the whole round trip -- pay underlying,\\nreceive YT plus underlying change -- is one transaction and one signature. The pool never\\nadvances anything: `from` still needs `underlying_amount` in hand up front, exactly as\\n`swap_sy_for_yt` needs `sy_in` up front (see the Router's module docs on why this is not a\\ntrue flash loan).\\n\\n`sy_in` is a caller-supplied literal (quote `SYWrapper.exchange_rate()` off-chain:\\n`underlying_amount * RATE_SCALE / exchange_rate()`, matching `SYWrapper.deposit`'s own\\nrounding), **not** derived from `deposit`'s return value -- a later integration review\\nfound that chaining `deposit`'s live-rate-dependent output straight into `mint`'s\\nauthorized call had exactly the `Error(Auth, InvalidAction)` drift risk the Router's\\nmodule docs describe, just not yet fixed ",
+      "name": "swap_underlying_for_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_yt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_net_cost",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Same flash-redeem as `swap_yt_for_sy`, but unwraps the SY proceeds into underlying in the\\nsame transaction, for a caller who wants to receive the underlying directly. Reads\\n`baseline = from`'s SY balance before the swap, then unwraps only the gain\\n(`withdraw_gained`) -- see `swap_pt_for_underlying`'s docs for why.",
+      "name": "swap_yt_for_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Preview for `remove_liquidity_to_underlying`. `pt_out`/`sy_out` are `remove_liquidity`'s own\\nproportional split for `lp_in`; `underlying_out` previews the whole round trip (selling the\\nPT leg via `MarketPool.quote_lp_exit`, which correctly prices that sale against the reserves\\n*after* the removal, not before it, then unwrapping everything via\\n`SYWrapper.exchange_rate()`) -- the value to compare `min_underlying_out` against. Found\\nmissing in the same dApp-integration review as `SingleSidedUnderlyingQuote` above.",
+      "lib": "",
+      "name": "RemoveLiquidityUnderlyingQuote",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "swap_fee_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_out",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_liquidity_single_sy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_lp_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `swap_pt_for_underlying`: `MarketPool.quote_pt_for_sy`'s SY-denominated\\n`amount_out`/`fee_shares`, both converted to underlying via the same `exchange_rate()`\\nread `SYWrapper.withdraw_all` would apply to the swap's real SY payout.",
+      "name": "quote_pt_for_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UnderlyingQuote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `swap_underlying_for_pt`. `amount_out` is PT (unaffected by the wrap leg);\\n`fee_shares` is the AMM swap fee, in SY, exactly as `MarketPool.quote_sy_for_pt` reports it\\n-- there is nothing to convert on the output side, only the input (`underlying_amount` ->\\nSY shares) feeds into the pool quote.",
+      "name": "quote_underlying_for_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Quote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `swap_underlying_for_yt`: wraps `underlying_amount` to SY shares, previews the\\nflash-mint via `MarketPool.quote_sy_for_yt`, then converts `sy_back` and both fee legs to\\nunderlying the same way the real call's final `withdraw_all` would.",
+      "name": "quote_underlying_for_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UnderlyingFlashMintQuote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `swap_yt_for_underlying`: `MarketPool.quote_yt_for_sy`'s SY-denominated payout and\\nfee, converted to underlying.",
+      "name": "quote_yt_for_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "UnderlyingQuote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `add_liquidity_keep_yt`. Returns the exact `mint_amount` to pass into that call\\n(the SY split `MarketPool.zap_swap_amount` recommends for `underlying_amount`'s worth of\\nwrapped shares), the SY left over for the proportional deposit leg, and the YT the mint\\nalone would produce (via `MarketPool.quote_sy_for_yt`'s mint leg -- its sell-PT leg is\\nirrelevant here since this flow deposits the minted PT as liquidity instead of selling it).",
+      "name": "quote_add_liquidity_keep_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "KeepYtQuote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Same true flash-mint as `flash_mint_yt`, for a caller who holds the underlying rather than\\nSY. Wraps `underlying_budget` of underlying into SY first -- not the full `sy_in` notional,\\nsince the whole point of this function is that the caller never needs the full notional --\\nso `from`'s SY balance covers whatever the real net cost turns out to be, as long as the\\ncaller chose `underlying_budget` generously enough to cover `max_net_cost` SY shares at the\\ncurrent `SYWrapper.exchange_rate()` (a plain off-chain conversion, the same kind every other\\n`_for_underlying` caller already does). `max_net_cost` is SY-denominated and passed through\\nto the pool unchanged -- kept as its own parameter, not derived from `underlying_budget`,\\nbecause the two are only numerically equal while `exchange_rate()` is exactly 1.0 (true for\\nevery `SYWrapper` deployed today, not guaranteed forever; see `docs/ROUTER_QUOTES.md` \\xc2\\xa72).\\n\\nAny surplus (`underlying_budget` wrapped minus the real net cost) is unwrapped back to\\nunderlying before this",
+      "name": "flash_mint_yt_from_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_yt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_net_cost",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_budget",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_back",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Preview `add_liquidity_single_underlying`. Named `quote_add_liquidity_underlying`, not\\nthe full function name with \"single\" in it too -- Soroban caps exported function names\\nat 32 bytes, and `quote_add_liquidity_single_underlying` is 37. No ambiguity results:\\n`add_liquidity_keep_yt`'s own quote already has its own distinct name.",
+      "name": "quote_add_liquidity_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SingleSidedUnderlyingQuote"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "LP -> PT + SY (`MarketPool.remove_liquidity`) -> sell the PT leg for SY\\n(`MarketPool.swap_gained_pt_for_sy`) -> unwrap to underlying (`SYWrapper.withdraw_gained`),\\nin one transaction and one signature -- found missing in an integration review (landing in\\nunderlying previously needed 2-3 separate calls: remove, sell the PT, unwrap).\\n\\nReads `baseline_pt`/`baseline_sy` -- `from`'s PT and SY balances *before* `remove_liquidity`\\n-- then sells and unwraps only what this call itself produced on top of those, via\\n`swap_gained_pt_for_sy`/`withdraw_gained`, rather than chaining `remove_liquidity`'s PT/SY\\npayout straight into further authorized calls as explicit arguments -- see the module\\ndocs. An earlier version used the full-sweep primitives (`swap_all_pt_for_sy`,\\n`withdraw_all`) with a zero-pre-existing-balance precondition instead; the dApp team found\\nthis failed routinely, since both the \"LP only\" zap and Keep YT deposits can themselves\\nleave small PT/SY remainders in `from`'s wallet, and simply having bought PT o",
+      "name": "remove_liquidity_to_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lp_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_underlying_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Underlying -> SY (`SYWrapper.deposit`) -> single-sided LP deposit (`MarketPool\\n.add_liquidity_single_sy`), in one transaction and one signature, for a user who holds\\nthe underlying rather than SY -- found missing in an integration review (single-sided LP\\nfrom underlying previously needed a separate `deposit` first, two signatures).\\n\\n`sy_in` is a caller-supplied literal (quote `SYWrapper.exchange_rate()` off-chain, the\\nsame `underlying_amount * RATE_SCALE / exchange_rate()` used throughout this Router), not\\nderived from `deposit`'s return value, for the same reason `swap_underlying_for_yt` takes\\n`sy_in` as an argument rather than deriving it -- see the module docs. The wrap leg is\\nunguarded (`min_shares_out = 0`); `min_lp_out` protects the whole round trip.",
+      "name": "add_liquidity_single_underlying",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_lp_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,714 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidValue",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TimestampTooOld",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "ValueDecreased",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "TimestampInFuture",
+          "value": 7
+        },
+        {
+          "doc": "No fresh value from any configured source -- raised only by `assert_available()`; the\\nusual way to observe this is reading `is_available()`, which returns `false` instead of\\npanicking. Kept distinct from `ValueDecreased`/`TimestampTooOld`/`DeviationTooHigh`: this\\nis about the *current* feed state, not about rejecting one submission.",
+          "name": "OracleUnavailable",
+          "value": 8
+        },
+        {
+          "doc": "A new value (above the current one) moved by more than `max_deviation_bps`. Checked only\\nfor increases: a decrease is already rejected first by `ValueDecreased`, so this exists\\nspecifically to catch large upward jumps a compromised or malfunctioning feed could push.",
+          "name": "DeviationTooHigh",
+          "value": 9
+        },
+        {
+          "doc": "`source` does not match the configured primary source, nor the configured fallback (if\\nany).",
+          "name": "InvalidSource",
+          "value": 10
+        },
+        {
+          "doc": "`max_deviation_bps` is zero (would reject every legitimate increase, bricking the feed)\\nor above `BPS_SCALE` (100%, a meaningless ceiling).",
+          "name": "InvalidDeviation",
+          "value": 11
+        },
+        {
+          "doc": "`max_stale_seconds` is zero (would make the feed permanently unavailable).",
+          "name": "InvalidStaleness",
+          "value": 12
+        },
+        {
+          "doc": "`source` does not match the primary source, and no fallback source is configured at all\\n-- so whatever the caller intended, it cannot be a fallback submission either.",
+          "name": "FallbackNotConfigured",
+          "value": 13
+        },
+        {
+          "doc": "A submitted value fell outside the admin-configured sane range (`set_value_bounds`), if\\none has been set. Checked before the deviation guard and even for a value otherwise\\nexempt from it (the first-ever submission) -- see `set_value_bounds`'s doc for why.",
+          "name": "ValueOutOfBounds",
+          "value": 14
+        },
+        {
+          "doc": "`sync_from_feed` called before any `set_feed_source` -- a setup mistake, not routine feed\\nnoise, so (unlike everything that feed itself can return) this panics.",
+          "name": "FeedNotConfigured",
+          "value": 15
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Price"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Timestamp"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PrimarySource"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FallbackSource"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ActiveSource"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxStaleSeconds"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxDeviationBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastRejectedValue"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastRejectedTimestamp"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastRejectReason"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MinSaneValue"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "MaxSaneValue"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeedSource"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeedAsset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastUpdateWasFeed"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FeedMinIntervalSeconds"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "LastFeedAcceptLedgerTs"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "SEP-40's own asset discriminant (ecosystem/sep-0040.md) -- a feed may quote several assets\\nagainst one `base()`, so a pull must say which one.",
+      "lib": "",
+      "name": "Sep40Asset",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Stellar",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Other",
+            "type_": [
+              "symbol"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "SEP-40's own return shape, field-for-field: `price` scaled by the feed's own `decimals()`\\n(not necessarily this contract's convention -- `sync_from_feed` rescales), `timestamp` in\\nUnix seconds.",
+      "lib": "",
+      "name": "Sep40PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The most recent `set_reference_value` call this contract refused, if any. `reason` is one of\\na small fixed set of short symbols (`decrease`, `stale_ts`, `deviate`, `fb_value`, and, from\\n`sync_from_feed`, `oob`, `throttle` -- too soon after the last accepted feed update, see\\n`set_feed_min_interval` -- and `feed_err`, the latter covering both a feed returning an error\\nand a feed panicking internally, since `try_decimals`/`try_lastprice` surface both the same\\nway) rather than a free-form string, so a dashboard can map it to display text without\\nparsing.",
+      "lib": "",
+      "name": "OracleRejection",
+      "fields": [
+        {
+          "doc": "",
+          "name": "reason",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true when the stored timestamp is within `max_stale_seconds` of the ledger clock.\\nUses `env.ledger().timestamp()` \\xe2\\x80\\x94 callers cannot manipulate this value. Kept as a\\ncaller-supplied-threshold primitive alongside `is_available()`; most callers should prefer\\n`is_available()` so the threshold lives in one place (this contract's own config) instead\\nof being duplicated as a constant in every consumer.",
+      "name": "is_fresh",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "max_stale_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. `max_stale_seconds` and `max_deviation_bps` are this feed's own safety\\npolicy (previously a caller-supplied argument to `is_fresh`, now centralized here so every\\nconsumer enforces the same thresholds without duplicating a constant). Sources are not set\\nhere -- call `set_sources` separately, before the first `set_reference_value`.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_stale_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_deviation_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configured SEP-40 feed contract and asset, or `None` if `set_feed_source` has never\\nbeen called.",
+      "name": "feed_source",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "tuple": {
+                "value_types": [
+                  "address",
+                  {
+                    "udt": {
+                      "name": "Sep40Asset"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure (or reconfigure) the primary and optional fallback source IDs. Each is a\\ndeterministic `BytesN<32>` -- for an off-chain feed, `sha256(\"principal-oracle-source:\\n<network>:<asset>:<provider>:<feed>\")` (see `docs/ORACLE_SAFETY_EXTENSION.md`); for an\\non-chain source, its contract address hash. Passing `fallback_source: None` removes any\\nexisting fallback.",
+      "name": "set_sources",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "primary_source",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fallback_source",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`is_fresh` against this contract's own configured `max_stale_seconds`, so a consumer needs\\nno threshold of its own. This is this feed's definition of \"a usable price is available.\"",
+      "name": "is_available",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configured `(min_value, max_value)` sane range, or `None` if `set_value_bounds` has\\nnever been called.",
+      "name": "value_bounds",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most recent submission this contract refused by policy (not a malformed call -- see\\nthe module doc), or `None` if nothing has ever been rejected.",
+      "name": "last_rejection",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "OracleRejection"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Scale this feed's price to `PROTOCOL_DECIMALS`, then run it through this contract's own\\nfreshness/monotonic-value/deviation/sane-bounds policy, exactly as a primary-source\\n`set_reference_value` submission would -- except every failure here is a graceful\\nrejection, never a panic (see the module doc for why `sync_from_feed` cannot treat a bad\\nfeed tick the way a malformed admin call is treated). Callable by anyone; there is\\nnothing to authorize, since it only ever *reads* the configured feed.\\n\\nReturns `true` if accepted (`Price`/`Timestamp` updated, `last_update_was_feed() == true`\\nafterward), `false` otherwise -- `last_rejection()` explains why, same as the push path.",
+      "name": "sync_from_feed",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Single-step admin transfer: current admin authorizes and immediately names a new admin\\n(no separate acceptance step from the new admin), matching every other contract's\\ntransfer_admin in this codebase.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure (or reconfigure) which SEP-40-compliant contract `sync_from_feed` pulls from,\\nand which `Sep40Asset` to ask it for (one feed contract can quote several assets). Fully\\nindependent of `set_sources`/`set_reference_value` above -- both mechanisms can be\\nconfigured at once, and whichever last successfully updated `Price`/`Timestamp` wins,\\nsame as primary vs. fallback already works for the push path.",
+      "name": "set_feed_source",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "feed",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": {
+            "udt": {
+              "name": "Sep40Asset"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Panics `OracleUnavailable` unless `is_available()` is true. Gives a caller that wants a\\ncrisp revert (rather than reading a boolean and deciding itself) a single cross-contract\\ncall to make that happen, propagating this contract's own error code unchanged.",
+      "name": "assert_available",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Configure an optional sane absolute range checked against *every* accepted value,\\nincluding the first-ever submission (which is otherwise exempt from the deviation guard,\\nsince there is nothing yet to deviate from). Unset by default -- no bound is enforced\\nuntil this is called at least once.\\n\\nThis exists to catch an operational mistake the deviation guard cannot: a relay\\ndecimal/scale bug (e.g. submitting an 18-decimal raw amount where the feed expects 8)\\nthat inflates the very first accepted value by many orders of magnitude. Once such a\\nvalue were accepted, every subsequent *correct* submission would read as a `decrease`\\nand be rejected forever -- there is no admin override that can move the stored value\\nback down, because that would reopen exactly the insolvency path the monotonic-value\\ninvariant exists to close (see the module doc). A sane range catches the bad value before\\nit is ever stored, which is the only safe place to catch it.",
+      "name": "set_value_bounds",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "min_value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_value",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Which configured source (primary or fallback) the currently-stored value last came from.\\n`None` before the first accepted `set_reference_value`. Only meaningful when\\n`last_update_was_feed() == false`: a successful `sync_from_feed` updates `Price`/\\n`Timestamp` but never touches `ActiveSource`, so after it this getter still reports\\nwhichever push-path source last won, not the feed that actually produced the current\\nvalue.",
+      "name": "get_active_source",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_deviation_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_stale_seconds",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Update the feed's own safety thresholds without touching the configured sources.",
+      "name": "set_safety_params",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_stale_seconds",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_deviation_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_primary_source",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_fallback_source",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reference_value",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submit a new value from `source`, which must be the configured primary or fallback.\\nReturns `true` if accepted (`Price`/`Timestamp`/`ActiveSource` updated), `false` if a\\n*legitimate* submission was rejected by policy (see the module doc for which outcomes\\npanic instead). `caller` must match the stored admin and authorize.\\n\\nThe fallback source may only refresh the timestamp of the *current* value (it must submit\\nexactly the current price); it can never move the value itself. Primary-source updates get\\nthe full monotonic-value and deviation checks.",
+      "name": "set_reference_value",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "source",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether the currently-stored `Price`/`Timestamp` came from the last successful\\n`sync_from_feed` (`true`) or the last successful `set_reference_value` (`false`).\\n`false` before either has ever succeeded.",
+      "name": "last_update_was_feed",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Minimum real-time gap, in seconds, between two *accepted* `sync_from_feed` updates.\\n`0` disables the throttle entirely (intended for tests and tightly-controlled ops, not\\nfor a live market). Admin-only. Does not apply to the admin-only push path\\n(`set_reference_value`): the throttle exists specifically because `sync_from_feed` is\\ncallable by anyone, for free, at every ledger -- see that function's doc for the bound.",
+      "name": "set_feed_min_interval",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reference_timestamp",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Effective throttle, i.e. the configured value or\\n`DEFAULT_FEED_MIN_INTERVAL_SECONDS` if `set_feed_min_interval` was never called.",
+      "name": "feed_min_interval_seconds",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  }
+]

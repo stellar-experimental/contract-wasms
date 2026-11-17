@@ -1,0 +1,515 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "CircuitBreakerTripped",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotPauser",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AlreadyPauser",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotConsumer",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AlreadyConsumer",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "AssetLimitTripped",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidLimit",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InvalidWindow",
+          "value": 13
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Pauser",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Registered caller authorized to invoke `check_deposit` (e.g. SYWrapper, PrincipalManager).",
+            "name": "Consumer",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Circuit breaker: max cumulative deposit in one window (underlying units, 0 = disabled).",
+            "name": "CbLimit"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Raw cumulative deposit volume, across all assets, counted in the *current* protocol-wide\\nwindow so far (see the module doc's sliding-window-counter section).",
+            "name": "CbVolume"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Ledger sequence at which the current protocol-wide window started.",
+            "name": "CbWindowStart"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Raw cumulative deposit volume counted in the protocol-wide window immediately preceding\\nthe current one. 0 if there was no such window, or it is old enough that it no longer\\noverlaps the trailing lookback at all (see `WindowState::at`).",
+            "name": "CbPrevVolume"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Window length in ledgers.",
+            "name": "WindowLedgers"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset limit (underlying units, 0 = none).",
+            "name": "AssetLimit",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-asset window: (start ledger of the *current* window, its raw volume so far, the raw\\nvolume of the immediately preceding window). See `WindowState`.",
+            "name": "AssetWindow",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause the protocol. Callable by admin or any registered pauser.",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Unpause the protocol. Admin only \\xe2\\x80\\x94 pausers cannot unpause.",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true if `account` is the admin or a registered pauser.",
+      "name": "is_pauser",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "add_pauser",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pauser",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cb_limit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_consumer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register `consumer` (e.g. SYWrapper, PrincipalManager) as authorized to call\\n`check_deposit`. Same shape as `add_pauser`: reverts if already registered, catching\\naccidental double-registration.",
+      "name": "add_consumer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "consumer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_cb_limit",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the protocol-wide window limit (underlying units); `0` disables it.",
+      "name": "set_cb_limit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_limit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Called by a registered consumer (SYWrapper/PrincipalManager) from inside its own\\n`deposit`/`mint`. Reverts if the caller isn't registered, if paused, if `amount <= 0`, if\\nthe protocol-wide limit would be exceeded, or if `asset`'s own limit would be exceeded.\\nRecords the volume against both windows.\\n\\n`caller` must be a registered consumer, not just any authenticated address -- without\\nthis, anyone could call this directly with an arbitrary amount to exhaust the window's\\nbudget and block every legitimate depositor, at zero cost beyond a transaction fee.",
+      "name": "check_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The *effective* (weighted) volume against which the protocol-wide limit is currently\\nchecked -- see the module doc's sliding-window-counter section for why this, not the raw\\ncurrent-window counter, is what this getter returns. Decays smoothly rather than jumping\\nto `0` the instant a window boundary is crossed.",
+      "name": "get_cb_volume",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "remove_pauser",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pauser",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_asset_limit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "remove_consumer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "consumer",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set the limit for one underlying asset (underlying units); `0` disables it.",
+      "name": "set_asset_limit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_limit",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The *effective* (weighted) volume against which `asset`'s limit is currently checked --\\nsee `get_cb_volume`.",
+      "name": "get_asset_volume",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ledger sequence at which the current protocol-wide window started, normalized to `now`\\nthe same way `get_cb_volume` is -- so this reflects the window `now` actually falls in\\neven if no `check_deposit` has landed since a boundary was crossed, rather than a stale\\nraw value left over from before the roll-over.",
+      "name": "get_window_start",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_window_ledgers",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the window length, in ledgers. Takes effect for the next `check_deposit`.",
+      "name": "set_window_ledgers",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
