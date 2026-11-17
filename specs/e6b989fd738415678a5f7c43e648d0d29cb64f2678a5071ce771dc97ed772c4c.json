@@ -1,0 +1,1288 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "Take profit and stop loss over a follower's whole position in a token, measured against its cost.",
+      "lib": "",
+      "name": "Exit",
+      "fields": [
+        {
+          "doc": "",
+          "name": "slippage_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "3,000 sells everything at -30%. Zero for none.",
+          "name": "stop_loss_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "5,000 sells everything at +50%. Zero for none.",
+          "name": "take_profit_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Sold",
+      "prefix_topics": [
+        "sold"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "BadRules",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotFollowing",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NothingToCopy",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotYet",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TooLittle",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotAllowed",
+          "value": 7
+        },
+        {
+          "doc": "The follower already holds as much of the token as its max wallet allows.",
+          "name": "MaxWallet",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A follower's limits for one leader. Amounts in stroops of XLM.",
+      "lib": "",
+      "name": "Rules",
+      "fields": [
+        {
+          "doc": "Copy only the first buy of each token.",
+          "name": "buy_once",
+          "type_": "bool"
+        },
+        {
+          "doc": "How much worse than the leader's own price a copy may still go in at, or come out at.",
+          "name": "chase_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Sell along with the leader.",
+          "name": "copy_sells",
+          "type_": "bool"
+        },
+        {
+          "doc": "Only tokens younger than this many seconds. Zero for any. Daily's own tokens only when set.",
+          "name": "max_age",
+          "type_": "u64"
+        },
+        {
+          "doc": "A copied sale never fetches less than this share of what the tokens cost.",
+          "name": "min_sell_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Most XLM copies of this leader may cost in a day (UTC): the buys, their run fees and the copy fee. Zero for no limit.",
+          "name": "per_day",
+          "type_": "i128"
+        },
+        {
+          "doc": "Most XLM copied into one token from this leader over time. Zero for no limit.",
+          "name": "per_token",
+          "type_": "i128"
+        },
+        {
+          "doc": "Most XLM one copied buy may spend.",
+          "name": "per_trade",
+          "type_": "i128"
+        },
+        {
+          "doc": "The leader's own size times this, before the limits. 10,000 copies the same size.",
+          "name": "size_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "How far the trade itself may slip from the quote at the moment of copying.",
+          "name": "slippage_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What this follower last copied of this leader in this token.",
+      "lib": "",
+      "name": "Copied",
+      "fields": [
+        {
+          "doc": "",
+          "name": "buy_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "What the leader held of the token when this follower last copied them, so a copied sale follows how far the leader's\\nholding really fell since then, not only their latest sale.",
+          "name": "leader_held",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sell_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "spent",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Follow",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "Days since the Unix epoch, of `spent_today`.",
+          "name": "day",
+          "type_": "u64"
+        },
+        {
+          "doc": "The terminal's copy fee as it stood when the follower followed, in basis points of each copied buy.",
+          "name": "fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "rules",
+          "type_": {
+            "udt": {
+              "name": "Rules"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "spent_today",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Exited",
+      "prefix_topics": [
+        "exited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "take_profit",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ExitSet",
+      "prefix_topics": [
+        "exit_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "exit",
+          "type_": {
+            "udt": {
+              "name": "Exit"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "XLM the tokens cost, so take profit, stop loss and the copied-sale floor have a reference.",
+          "name": "cost",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Followed",
+      "prefix_topics": [
+        "followed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "rules",
+          "type_": {
+            "udt": {
+              "name": "Rules"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CopiedBuy",
+      "prefix_topics": [
+        "copied_buy"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposited",
+      "prefix_topics": [
+        "deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Copies stopped (`paused` true, by the guardian or the owner) or resumed (by the owner).",
+      "lib": "",
+      "name": "PausedSet",
+      "prefix_topics": [
+        "paused"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Withdrawn",
+      "prefix_topics": [
+        "withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CopiedSell",
+      "prefix_topics": [
+        "copied_sell"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The copy fee for follows from now on.",
+      "lib": "",
+      "name": "CopyFeeSet",
+      "prefix_topics": [
+        "copy_fee"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Unfollowed",
+      "prefix_topics": [
+        "unfollowed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RunnerCredited",
+      "prefix_topics": [
+        "runner_credited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "runner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokensWithdrawn",
+      "prefix_topics": [
+        "tokens_out"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sells a follower's whole position in `token` once their take profit or stop loss is reached.",
+      "name": "exit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "runner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hint",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PadHint"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sells part of the follower's own position here, at their own minimum. No run fee.",
+      "name": "sell",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "hint",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PadHint"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stops copies (`copy_buy`, `copy_sell`). The guardian or the owner may; only the owner resumes. Deposits, withdrawals,\\na follower's own sales and their take-profit and stop-loss exits keep working.",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Starts copying `leader` on these terms, or changes the terms. What was copied today still counts toward today's limit.\\n`per_trade` must be above zero; `per_token` and `per_day` of zero mean no limit.",
+      "name": "follow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rules",
+          "type_": {
+            "udt": {
+              "name": "Rules"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "router",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "exit_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Exit"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fee_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The copy fee for follows from now on, at most MAX_COPY_FEE_BPS. A follower keeps the fee they followed under.",
+      "name": "set_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fee_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Copies `leader`'s latest buy of `token` for `follower`, within the follower's limits. Pays `runner` the run fee.",
+      "name": "copy_buy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "runner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hint",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PadHint"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "guardian",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_exit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "exit",
+          "type_": {
+            "udt": {
+              "name": "Exit"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unfollow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "copied_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Copied"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Copies `leader`'s latest sale of `token` for `follower`: the same share of the follower's position.",
+      "name": "copy_sell",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "runner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "hint",
+          "type_": {
+            "option": {
+              "value_type": {
+                "udt": {
+                  "name": "PadHint"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "follow_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "leader",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Follow"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "XLM a follower has here for copying, in stroops.",
+      "name": "balance_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "position_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Position"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_guardian",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guardian",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`owner` can set the copy fee (capped), name the guardian and resume copies; `treasury` gets the copy fee. The guardian\\nstarts as the owner.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "launchpad",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "runner_credit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "runner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Takes tokens out of the vault to any address. Their share of the cost goes with them.",
+      "name": "withdraw_tokens",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "follower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Run fees that couldn't be paid to a runner as they came, sent wherever it names.",
+      "name": "collect_runner_credit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "runner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "* The one pool call an outside launchpad of the Lumen kind makes for whoever trades through it, which that trader has to\\n * authorise. A contract can only authorise a call it doesn't make itself by naming it exactly, so a keeper reads these\\n * figures from a simulation of the same fill and passes them in. A wrong figure authorises nothing: the call it names\\n * never happens and the trade fails, so the keeper can't make it do anything else.",
+      "lib": "",
+      "name": "PadHint",
+      "fields": [
+        {
+          "doc": "The pool's `swap_strict_receive(user, in_idx, out_idx, out_amount, in_max)` arguments after `user`.",
+          "name": "in_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "in_max",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "out_amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "out_idx",
+          "type_": "u32"
+        },
+        {
+          "doc": "What the pool then takes from the trader, in the input coin.",
+          "name": "pay",
+          "type_": "i128"
+        },
+        {
+          "doc": "The Aquarius pool the launchpad swaps on.",
+          "name": "pool",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]

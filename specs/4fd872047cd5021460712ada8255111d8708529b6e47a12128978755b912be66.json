@@ -1,0 +1,537 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "The running state of the stream.",
+      "lib": "",
+      "name": "Pool",
+      "fields": [
+        {
+          "doc": "When the stream runs dry, unless more comes in.",
+          "name": "finish",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "last",
+          "type_": "u64"
+        },
+        {
+          "doc": "XLM earned per staked unit since the start, scaled by 10^18.",
+          "name": "per_share",
+          "type_": "i128"
+        },
+        {
+          "doc": "XLM per second, scaled by 10^18.",
+          "name": "rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadySet",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NoToken",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TooMuch",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NothingToClaim",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "BadConfig",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotOwner",
+          "value": 7
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The contract's settings and figures, for readers. `rate_per_day` is in stroops of XLM.",
+      "lib": "",
+      "name": "State",
+      "fields": [
+        {
+          "doc": "",
+          "name": "finish",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "funded_week",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "rate_per_day",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_funded",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_staked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Funded",
+      "prefix_topics": [
+        "funded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "rate_per_day",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "finish",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Staked",
+      "prefix_topics": [
+        "staked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "staked",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Claimed",
+      "prefix_topics": [
+        "claimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Unstaked",
+      "prefix_topics": [
+        "unstaked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "staked",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ThresholdSet",
+      "prefix_topics": [
+        "fee_free_threshold"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakeTokenSet",
+      "prefix_topics": [
+        "stake_token"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds `amount` XLM of `from`'s to the rewards. It streams out over the next seven days, with whatever was still streaming.",
+      "name": "fund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pool",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Pool"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pays a staker what they've earned. Anyone may call it: the XLM only ever goes to `who`.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "state",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "State"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Takes stake out, any amount at any time. What it earned stays to be claimed.",
+      "name": "unstake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "XLM a staker could claim right now.",
+      "name": "earned_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Once only: the platform token, the one thing that can be staked here.",
+      "name": "set_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "staked_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "XLM funded in the last seven days (today and the six before, in UTC days): what an APR is worked out from.",
+      "name": "funded_week",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether a wallet trades without the terminal's cut: it stakes, or stakes and holds, at least the threshold.",
+      "name": "is_fee_free",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_owner",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "propose_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "How much of the platform token a wallet has to stake, or stake and hold, to trade without the terminal's cut. Zero\\nturns it off.",
+      "name": "set_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]

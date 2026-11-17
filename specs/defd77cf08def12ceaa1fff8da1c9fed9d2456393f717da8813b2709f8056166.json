@@ -1,0 +1,363 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotKeeper",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "BadConfig",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "AlreadySet",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NoToken",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TooSoon",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TooMuch",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NoRouter",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NoStaking",
+          "value": 8
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "State",
+      "fields": [
+        {
+          "doc": "",
+          "name": "balance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "last_buyback",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_spent",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Buyback",
+      "prefix_topics": [
+        "buyback"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "xlm_spent",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tokens_burned",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "KeeperUpdated",
+      "prefix_topics": [
+        "keeper"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StakingFunded",
+      "prefix_topics": [
+        "staking_funded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "staking",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BuybackTokenSet",
+      "prefix_topics": [
+        "buyback_token"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "state",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "State"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Spends `xlm_amount` of the vault's XLM on the buyback token and burns everything it bought. At most once an hour and at\\nmost a tenth of the balance each time.",
+      "name": "buyback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The staking contract, when/if set, the last time the vault funded it and how much it has sent it in all.",
+      "name": "staking",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "option": {
+                  "value_type": "address"
+                }
+              },
+              "u64",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Once only: the router needs this vault's address as its treasury, so it can only exist after the vault does.",
+      "name": "set_router",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Once only: the staking contract the vault may fund.",
+      "name": "set_staking",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "staking",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sends `xlm_amount` of the vault's XLM to the stakers, streamed by the staking contract over seven days. At most once an\\nhour and at most a tenth of the balance each time, like a buyback, and counted apart from them.",
+      "name": "fund_staking",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm_amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "xlm",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Once only: the token this treasury will ever buy.",
+      "name": "set_buyback_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
