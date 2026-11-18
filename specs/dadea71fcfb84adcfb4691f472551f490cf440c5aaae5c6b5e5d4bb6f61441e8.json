@@ -1,0 +1,622 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TargetStillAuthorized",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "ZeroAmount",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "PositionUnderlyingMismatch",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "BatchTooLarge",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "RecordNotFound",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AlreadyFinalized",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "NothingToSeize",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "NothingToFinalize",
+          "value": 11
+        },
+        {
+          "doc": "A new YT seizure was attempted while this escrow instance already holds an unfinalized YT\\nrecord. YT's yield accounting is pooled by this escrow's own holding *address*, not per\\n`RecoveryRecord` -- so two unfinalized YT records held at once would both accrue against\\nthe same shared pending-claim bucket, and whichever is `finalize_record`'d first would\\ndrain yield that was actually accruing against the *other* record too. Total funds stay\\nconserved, but per-record attribution would be wrong, which matters for a compliance/legal\\nrecovery trail. Rather than a full per-record proportional-yield redesign, this prevents\\nthe unsafe state from ever occurring: finalize the outstanding YT record first. Found\\nduring audit review. PT-only seizures are unaffected -- PT has no pooled yield accounting.",
+          "name": "UnfinalizedYtRecordExists",
+          "value": 12
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Underlying"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SYWrapper"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PTToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "YTToken"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PrincipalManager"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Pool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "RecordCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Record",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AccountRecords",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Present (holding that record's id) whenever this escrow currently holds an unfinalized YT\\nrecord; absent otherwise. At most one at a time -- see `Error::UnfinalizedYtRecordExists`.",
+            "name": "UnfinalizedYtRecord"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedeemResult",
+      "fields": [
+        {
+          "doc": "",
+          "name": "underlying_from_pt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_yt",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One account's positions to seize in a batch. A zero field means \"leave that position alone\".",
+      "lib": "",
+      "name": "SeizeRequest",
+      "fields": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "lp_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "sy_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The permanent trace of one recovery event for one account.",
+      "lib": "",
+      "name": "RecoveryRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "Set by `finalize_record`: the underlying the held PT and YT settled into.",
+          "name": "finalized",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "LP seized, and what the pool paid out for it: PT (held), SY shares and their underlying.",
+          "name": "lp_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "lp_pt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "lp_sy_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "PT seized directly / YT seized, held in escrow until `finalize_record`.",
+          "name": "pt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "SY shares seized directly, and the underlying they unwrapped to.",
+          "name": "sy_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_lp",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_pt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_sy",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "underlying_from_yt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Yield the seized YT had already accrued (underlying units, before the YT fee). It moves to\\nthe escrow's pending claim with the position, so it is recovered rather than stranded on a\\ndeauthorized account. Exact per record. Yield accruing *after* the seizure is pooled by\\nthe escrow's own holding address, not per record -- which is exactly why only one\\nunfinalized YT record is ever allowed to exist at a time (see the module doc's \"At most\\none unfinalized YT record at a time\" section): with that guard in place, this record is\\nalways the sole contributor to the pool between seizure and `finalize_record`, so\\n`underlying_from_yt` is exact too, not just `yt_yield_at_seize`.",
+          "name": "yt_yield_at_seize",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper call: extend this contract's *instance* storage (admin, config,\\nreserves, totals, settlement rate, fee buckets) for ~30 days. Soroban does not bump instance\\nTTL on ordinary reads or writes, so a long-dated market needs this called periodically (or\\nan archived instance restored) -- see docs/DEPLOYMENT.md.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seize `amount` of `account`'s LP: burn it in the pool for PT + SY, unwrap the SY leg at once\\nand hold the PT leg. Writes a record; returns `(pt_received, underlying_from_sy_leg)`.",
+      "name": "seize_lp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seize `amount` of `account`'s PT, held here until `finalize_record`. Writes a record.",
+      "name": "seize_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seize `shares` of `account`'s SY and unwrap it into raw underlying held here, ready for the\\nissuer's native clawback. `caller` must be the issuer authority; `account` must already be\\ndeauthorized. Writes a recovery record; returns the underlying recovered.",
+      "name": "seize_sy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seize `amount` of `account`'s YT, held here until `finalize_record`. Writes a record.",
+      "name": "seize_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_record",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "RecoveryRecord"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time wiring. Every position contract (and the manager and pool) must report the same\\nunderlying as `underlying`. `caller` must be the live issuer authority for `underlying`\\n(the same standing every other market-creation `initialize` in this codebase already\\nrequires) -- without this, deployment and initialization being necessarily separate\\ntransactions left a window where anyone could front-run the legitimate operator's own\\n`initialize` call with attacker-controlled sub-contracts that merely echo the right\\n`underlying_address()`, permanently hijacking this instance (`AlreadyInitialized` blocks\\nany correction afterward) and silently no-opping every future seizure. Found during a\\nfollow-up review after this contract's first audit pass; closes the same root-cause class\\nas C-1/M-12, on a window `scripts/create_market.sh`'s own two-step deploy-then-initialize\\ngenuinely leaves open today.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "underlying",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sy_wrapper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "principal_manager",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "market_pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seize several accounts' positions in one transaction. The issuer is authenticated once;\\nevery account is still individually checked for deauthorization, and one record is written\\nper account. Reverts as a whole if any account is still authorized. Returns the record ids.",
+      "name": "seize_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "requests",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SeizeRequest"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "record_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ids of every recovery record written for `account`, oldest first.",
+      "name": "account_records",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle the PT and YT a record still holds (`pt_amount + lp_pt` PT and `yt_amount` YT) into\\nthe underlying, at or after maturity, and write the result onto that record. Only the issuer\\nauthority; once per record. Returns `(underlying_from_pt, underlying_from_yt)`.",
+      "name": "finalize_record",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "underlying_address",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seize *everything* the listed accounts hold across SY, PT, YT and LP, in one transaction.\\nAccounts with no positions are skipped; reverts `NothingToSeize` if none had any.",
+      "name": "seize_all_positions",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "accounts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Which compliance model the underlying asset uses.",
+      "lib": "",
+      "name": "Kind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Classic Stellar asset exposed through its Stellar Asset Contract (covers SEP-8 assets).",
+            "name": "Sac"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "SEP-57 (T-REX) `RWAToken`: frozen flag + identity verifier + operator RBAC.",
+            "name": "Rwa"
+          }
+        }
+      ]
+    }
+  }
+]
