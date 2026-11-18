@@ -1,0 +1,2456 @@
+[
+  {
+    "function_v0": {
+      "doc": "Returns the withdrawal Groth16 verifying key.",
+      "name": "get_vk",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "VerifyingKey"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the withdrawal verifying key. Admin-only.\\nValidates that `ic.len() == n_public_inputs + 1`.\\nReverts with `VKLocked` once `lock_vks` has been called.",
+      "name": "set_vk",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vk",
+          "type_": {
+            "udt": {
+              "name": "VerifyingKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "n_public_inputs",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits tokens into the pool. Returns `(label, commitment)`.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "precommitment_hash",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "u256",
+                  "u256"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Upgrades the contract WASM. Admin-only.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-shot, irreversible lock on both verifying keys. Admin-only.\\nAfter calling this, `set_vk` and `set_vk_ragequit` revert with `VKLocked`.",
+      "name": "lock_vks",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency withdrawal by the original depositor. Sacrifices privacy.",
+      "name": "ragequit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "RagequitProof"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Privacy-preserving withdrawal via ZK proof. Supports partial withdrawals.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": {
+            "udt": {
+              "name": "WithdrawContext"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "WithdrawProof"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the depositor address associated with a given label.",
+      "name": "depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "label",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the pool scope (unique ID) for a token. Errors with\\n`PoolNotExists` if no pool has been created for this token -\\ncallers (e.g. frontends) can rely on this as an existence check.",
+      "name": "get_scope",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PoolId"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns just the token address for the given scope. Used by satellite\\ncontracts (e.g. lumenshade-withdrawer) that don't want to depend on the full\\n`PoolConfig` layout.",
+      "name": "get_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns true once VKs have been locked permanently.",
+      "name": "vk_locked",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the pool configuration for the given scope.",
+      "name": "get_config",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PoolConfig"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Toggles the pool's `is_active` flag. Pool admin only.",
+      "name": "set_active",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "is_active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Creates a new privacy pool for the given token. Admin-only.",
+      "name": "create_pool",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_tree_depth",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "deposit_fee_bps",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "minimum_deposit",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "minimum_fee",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "asp_postman",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 2 of the global-admin two-step transfer. Pending admin claims the\\nrole; reverts if no transfer is pending.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current Merkle tree root for the given pool.",
+      "name": "current_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current ASP root hash for the given pool.",
+      "name": "get_asp_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u256",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "history_head",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "HistoryHead"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Initializes the contract with the given admin address.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the ASP root. Only callable by the pool's `asp_postman`.",
+      "name": "save_asp_root",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "dataset_key",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks if a nullifier has been spent (used in a withdrawal or ragequit).",
+      "name": "nullifier_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 1 of the global-admin two-step transfer. Current admin proposes a\\nnew address; the new admin must call `accept_admin` to finalise.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the ragequit Groth16 verifying key.",
+      "name": "get_vk_ragequit",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "VerifyingKey"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotates the ASP postman.",
+      "name": "set_asp_postman",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_postman",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the pool's fee floor without making minimum-sized notes unusable.",
+      "name": "set_minimum_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "minimum_fee",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the ragequit verifying key. Admin-only.\\nValidates that `ic.len() == n_public_inputs + 1`.\\nReverts with `VKLocked` once `lock_vks` has been called.",
+      "name": "set_vk_ragequit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vk",
+          "type_": {
+            "udt": {
+              "name": "VerifyingKey"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "n_public_inputs",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 2 of the per-pool admin two-step transfer.",
+      "name": "accept_pool_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of commitments (leaves) in the Merkle tree.",
+      "name": "current_tree_size",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_fee_recipient",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_fee_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the current depth of the Merkle tree.",
+      "name": "current_tree_depth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Increases (only) the pool's `max_tree_depth`. Decreases are rejected to\\npreserve outstanding withdrawal proofs whose `state_tree_depth` is already\\nat the previous limit.",
+      "name": "set_max_tree_depth",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "max_tree_depth",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the dataset key of the current ASP tree data.",
+      "name": "get_asp_dataset_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "string",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the deposit fee. Reverts with `InvalidFee` if `>= 10_000` (100%):\\na 100% fee silently confiscates every deposit, so the contract treats the\\npool as dead and refuses the transition.",
+      "name": "set_deposit_fee_bps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "deposit_fee_bps",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Updates the gross minimum while preserving a privately withdrawable net note.",
+      "name": "set_minimum_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "minimum_deposit",
+          "type_": "u128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Step 1 of the per-pool admin two-step transfer.",
+      "name": "transfer_pool_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "ContractErrors"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Checks if a precommitment hash has already been used in a deposit.",
+      "name": "used_precommitment_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": "u256"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Unique identifier for a privacy pool, derived from `keccak256(contract || network || token) mod p`.",
+      "lib": "",
+      "name": "PoolId",
+      "fields": [
+        {
+          "doc": "",
+          "name": "0",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Configuration for a single privacy pool.",
+      "lib": "",
+      "name": "PoolConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asp_postman",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit_fee_bps",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "is_active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "max_tree_depth",
+          "type_": "u32"
+        },
+        {
+          "doc": "Gross minimum. Its net credit defines the relayer's minimum withdrawal.",
+          "name": "minimum_deposit",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "minimum_fee",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HistoryHead",
+      "fields": [
+        {
+          "doc": "",
+          "name": "deposit_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "leaf_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ragequit_count",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ContractErrors",
+      "cases": [
+        {
+          "doc": "",
+          "name": "PoolAlreadyExists",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "PoolNotActive",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "PoolNotExists",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "UnknownAdmin",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "MinimumDepositNotMet",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "PreCommitmentAlreadyUsed",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "InvalidFee",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InvalidMaxTreeDepth",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "InvalidContext",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "InvalidTreeDepth",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "NullifierAlreadySpent",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "UnknownRoot",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "UnknownASPRoot",
+          "value": 30
+        },
+        {
+          "doc": "",
+          "name": "InvalidVerifyingKey",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "InvalidProof",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofLength",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofPublicInput",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "InvalidProofIC",
+          "value": 44
+        },
+        {
+          "doc": "",
+          "name": "ValueOutOfBounds",
+          "value": 45
+        },
+        {
+          "doc": "",
+          "name": "IMTInvalidStorage",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "IMTInvalidLeaf",
+          "value": 51
+        },
+        {
+          "doc": "",
+          "name": "IMTLeafAlreadyExists",
+          "value": 52
+        },
+        {
+          "doc": "",
+          "name": "IMTLevelOutOfBounds",
+          "value": 53
+        },
+        {
+          "doc": "",
+          "name": "IMTNeighborOutOfBounds",
+          "value": 54
+        },
+        {
+          "doc": "",
+          "name": "IMTIndexOutOfBounds",
+          "value": 55
+        },
+        {
+          "doc": "",
+          "name": "IMTInsertError",
+          "value": 56
+        },
+        {
+          "doc": "",
+          "name": "IMTRootError",
+          "value": 57
+        },
+        {
+          "doc": "",
+          "name": "IMTTreeFull",
+          "value": 58
+        },
+        {
+          "doc": "",
+          "name": "OnlyOriginalDepositor",
+          "value": 60
+        },
+        {
+          "doc": "",
+          "name": "InvalidCommitment",
+          "value": 61
+        },
+        {
+          "doc": "",
+          "name": "UnknownDepositor",
+          "value": 70
+        },
+        {
+          "doc": "",
+          "name": "UnknownRootIndex",
+          "value": 71
+        },
+        {
+          "doc": "",
+          "name": "CantGetNonce",
+          "value": 72
+        },
+        {
+          "doc": "",
+          "name": "UnknownVKWithdraw",
+          "value": 73
+        },
+        {
+          "doc": "",
+          "name": "UnknownVKRagequit",
+          "value": 74
+        },
+        {
+          "doc": "",
+          "name": "VKLocked",
+          "value": 75
+        },
+        {
+          "doc": "",
+          "name": "NoPendingAdmin",
+          "value": 76
+        },
+        {
+          "doc": "",
+          "name": "ConversionError",
+          "value": 80
+        },
+        {
+          "doc": "",
+          "name": "UnknownData",
+          "value": 81
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 82
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeConfiguration",
+          "value": 83
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeRecipient",
+          "value": 84
+        },
+        {
+          "doc": "",
+          "name": "InvalidHistoryCounters",
+          "value": 85
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a ragequit (emergency withdrawal) completes. The caller is the original\\ndepositor who sacrificed privacy to recover their funds.",
+      "lib": "",
+      "name": "EventRagequit",
+      "prefix_topics": [
+        "event_ragequit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "label",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a deposit completes successfully. Contains the full deposit details\\nincluding the commitment, label, and amounts before/after fees.",
+      "lib": "",
+      "name": "EventDeposited",
+      "prefix_topics": [
+        "event_deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "label",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_after_fees",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "precommitment_hash",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `lock_vks` once the VKs have been permanently locked.",
+      "lib": "",
+      "name": "EventVKsLocked",
+      "prefix_topics": [
+        "event_v_ks_locked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when either Groth16 verifying key is rotated. The full VK is not\\ninlined (too large for events); off-chain consumers can read it via `get_vk`.",
+      "lib": "",
+      "name": "EventVKUpdated",
+      "prefix_topics": [
+        "event_vk_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_n_public_inputs",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_n_public_inputs",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a withdrawal completes. The `processooor` is the relayer (or direct user)\\nwho executed the withdrawal and received the funds.",
+      "lib": "",
+      "name": "EventWithdrawn",
+      "prefix_topics": [
+        "event_withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "processooor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nullifier",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_commitment",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `set_active`.",
+      "lib": "",
+      "name": "EventActiveUpdated",
+      "prefix_topics": [
+        "event_active_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the ASP (Anonymity Set Provider) root is updated by the asp_postman.\\nThe dataset key points to the full ASP tree data off-chain.",
+      "lib": "",
+      "name": "EventASPRootUpdated",
+      "prefix_topics": [
+        "event_asp_root_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "root",
+          "type_": "u256",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "dataset_key",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a new privacy pool is created via `create_pool`.",
+      "lib": "",
+      "name": "EventPoolRegistered",
+      "prefix_topics": [
+        "event_pool_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asp_postman",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "max_tree_depth",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit_fee_bps",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "minimum_deposit",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "minimum_fee",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the global admin is rotated after `accept_admin` (step 2 of 2).",
+      "lib": "",
+      "name": "EventAdminTransferred",
+      "prefix_topics": [
+        "event_admin_transferred"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `upgrade` when the contract WASM is rotated.",
+      "lib": "",
+      "name": "EventContractUpgraded",
+      "prefix_topics": [
+        "event_contract_upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `set_asp_postman`.",
+      "lib": "",
+      "name": "EventASPPostmanUpdated",
+      "prefix_topics": [
+        "event_asp_postman_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `set_deposit_fee_bps`.",
+      "lib": "",
+      "name": "EventDepositFeeUpdated",
+      "prefix_topics": [
+        "event_deposit_fee_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EventMinimumFeeUpdated",
+      "prefix_topics": [
+        "event_minimum_fee_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a per-pool admin transfer is proposed.",
+      "lib": "",
+      "name": "EventPoolAdminProposed",
+      "prefix_topics": [
+        "event_pool_admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted whenever a commitment is inserted into the Merkle tree.\\nFires on both deposits (new commitment) and withdrawals (remainder commitment).",
+      "lib": "",
+      "name": "EventInsertedCommitment",
+      "prefix_topics": [
+        "event_inserted_commitment"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "commitment",
+          "type_": "u256",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_root",
+          "type_": "u256",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EventFeeRecipientUpdated",
+      "prefix_topics": [
+        "event_fee_recipient_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `set_max_tree_depth`.",
+      "lib": "",
+      "name": "EventMaxTreeDepthUpdated",
+      "prefix_topics": [
+        "event_max_tree_depth_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when a per-pool admin is rotated after `accept_pool_admin`.",
+      "lib": "",
+      "name": "EventPoolAdminTransferred",
+      "prefix_topics": [
+        "event_pool_admin_transferred"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted when the global admin transfer is proposed (step 1 of 2).",
+      "lib": "",
+      "name": "EventAdminTransferProposed",
+      "prefix_topics": [
+        "event_admin_transfer_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Emitted by `set_minimum_deposit`.",
+      "lib": "",
+      "name": "EventMinimumDepositUpdated",
+      "prefix_topics": [
+        "event_minimum_deposit_updated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old",
+          "type_": "u128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new",
+          "type_": "u128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A Groth16 proof consisting of three curve points (A, B, C).\\nGenerated off-chain by the prover using snarkjs.",
+      "lib": "",
+      "name": "Proof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "a",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "b",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "c",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Groth16 verifying key generated during the trusted setup ceremony.\\n`ic` has length = number_of_public_inputs + 1.",
+      "lib": "",
+      "name": "VerifyingKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "alpha",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "beta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "delta",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "gamma",
+          "type_": {
+            "bytes_n": {
+              "n": 128
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "ic",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 64
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DeliveryMode",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Direct",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "DirectWithTrust",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Deferred",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Proof data for a ragequit (emergency withdrawal by the original depositor).\\nUses a separate circuit from the standard withdrawal.\\nPublic inputs: [commitment_hash, nullifier_hash, value, label]",
+      "lib": "",
+      "name": "RagequitProof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "commitment_hash",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "label",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "nullifier_hash",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Proof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "u256"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Proof data for a privacy-preserving withdrawal.\\nContains the Groth16 proof plus all public inputs that the contract validates on-chain.",
+      "lib": "",
+      "name": "WithdrawProof",
+      "fields": [
+        {
+          "doc": "",
+          "name": "asp_root",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "asp_tree_depth",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "context",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "existing_nullifier_hash",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "new_commitment_hash",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "proof",
+          "type_": {
+            "udt": {
+              "name": "Proof"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "state_root",
+          "type_": "u256"
+        },
+        {
+          "doc": "",
+          "name": "state_tree_depth",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "withdrawn_value",
+          "type_": "u128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The withdrawal context binds a proof to a specific execution environment.\\n- `processooor`: the relayer (or withdrawer contract) authorized to submit the tx\\n- `recipient`: the final recipient account or contract\\n- `fee_recipient`: the relayer to be paid the fee\\n- `relay_fee_bps`: relayer fee in basis points (of `withdrawn_value`, /10_000)\\n- `min_xlm_out`: XLM the withdrawer buys to fund the recipient (0 = no swap)\\n- `max_x_in`: most pool tokens the withdrawer may spend buying `min_xlm_out`\\n- `deadline`: last ledger timestamp at which the withdrawal may execute\\n- `scope`: the pool being withdrawn from\\n- `delivery`: direct, recipient-authorized setup, or deferred collection\\n\\nThe context is hashed on-chain and compared against the proof's committed context value,\\npreventing front-running and ensuring the proof can only be used in this exact context.",
+      "lib": "",
+      "name": "WithdrawContext",
+      "fields": [
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "delivery",
+          "type_": {
+            "udt": {
+              "name": "DeliveryMode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_x_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_xlm_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "minimum_fee",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "processooor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "relay_fee_bps",
+          "type_": "u128"
+        },
+        {
+          "doc": "",
+          "name": "scope",
+          "type_": {
+            "udt": {
+              "name": "PoolId"
+            }
+          }
+        }
+      ]
+    }
+  }
+]
