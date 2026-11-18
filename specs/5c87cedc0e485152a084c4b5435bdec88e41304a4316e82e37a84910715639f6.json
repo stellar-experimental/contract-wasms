@@ -1,0 +1,443 @@
+[
+  {
+    "function_v0": {
+      "doc": "Enforce the threshold policy.\\n\\nValidates that the number of authenticated signers meets the\\nconfigured threshold, records that authorization occurred and\\nemits an event.",
+      "name": "enforce",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context",
+          "type_": {
+            "udt": {
+              "name": "Context"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "authenticated_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Install the threshold policy for a smart account.\\n\\nStores the threshold configuration for the given context rule.",
+      "name": "install",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "install_params",
+          "type_": {
+            "udt": {
+              "name": "SimpleThresholdAccountParams"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Uninstall the threshold policy for a smart account.\\n\\nRemoves the threshold configuration for the given context rule.",
+      "name": "uninstall",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Get the current threshold for a smart account",
+      "name": "get_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set a new threshold for a smart account",
+      "name": "set_threshold",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "context_rule",
+          "type_": {
+            "udt": {
+              "name": "ContextRule"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Represents different types of signers in the smart account system.",
+      "lib": "",
+      "name": "Signer",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "A delegated signer that uses built-in signature verification.",
+            "name": "Delegated",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "An external signer with custom verification logic.\\nContains the verifier contract address and the public key data.",
+            "name": "External",
+            "type_": [
+              "address",
+              "bytes"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A complete context rule defining authorization requirements.",
+      "lib": "",
+      "name": "ContextRule",
+      "fields": [
+        {
+          "doc": "The type of context this rule applies to.",
+          "name": "context_type",
+          "type_": {
+            "udt": {
+              "name": "ContextRuleType"
+            }
+          }
+        },
+        {
+          "doc": "Unique identifier for the context rule.",
+          "name": "id",
+          "type_": "u32"
+        },
+        {
+          "doc": "Human-readable name for the context rule.",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "List of policy contracts that must be satisfied.",
+          "name": "policies",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Global registry IDs for each policy, positionally aligned with\\n`policies`.",
+          "name": "policy_ids",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "Global registry IDs for each signer, positionally aligned with\\n`signers`.",
+          "name": "signer_ids",
+          "type_": {
+            "vec": {
+              "element_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "List of signers authorized by this rule.",
+          "name": "signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Optional expiration ledger sequence for the rule.",
+          "name": "valid_until",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Types of contexts that can be authorized by smart account rules.",
+      "lib": "",
+      "name": "ContextRuleType",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Default rules that can authorize any context.",
+            "name": "Default"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Rules specific to calling a particular contract.",
+            "name": "CallContract",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Rules specific to creating a contract with a particular WASM hash.",
+            "name": "CreateContract",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a simple threshold policy is enforced.",
+      "lib": "",
+      "name": "SimpleEnforced",
+      "prefix_topics": [
+        "simple_enforced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "context",
+          "type_": {
+            "udt": {
+              "name": "Context"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "authenticated_signers",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Signer"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a simple threshold policy is installed.",
+      "lib": "",
+      "name": "SimpleInstalled",
+      "prefix_topics": [
+        "simple_installed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when a simple threshold policy is uninstalled.",
+      "lib": "",
+      "name": "SimpleUninstalled",
+      "prefix_topics": [
+        "simple_uninstalled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when the threshold of a simple threshold policy is changed.",
+      "lib": "",
+      "name": "SimpleThresholdChanged",
+      "prefix_topics": [
+        "simple_threshold_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "smart_account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "context_rule_id",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "threshold",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Installation parameters for the simple threshold policy.",
+      "lib": "",
+      "name": "SimpleThresholdAccountParams",
+      "fields": [
+        {
+          "doc": "The minimum number of signers required for authorization.",
+          "name": "threshold",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]
