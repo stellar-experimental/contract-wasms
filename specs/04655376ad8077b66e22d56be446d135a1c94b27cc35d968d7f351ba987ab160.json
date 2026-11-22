@@ -1,0 +1,1020 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InsufficientEscrowBalance",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "ContractPaused",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "NoUntaggedFunds",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "TokenNotAllowed",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "UnregisteredIntegrator",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InsufficientVaultBalance",
+          "value": 9
+        },
+        {
+          "doc": "A migration step changed a per-token ledger total.",
+          "name": "MigrationInvariantViolated",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "SchemaVersionMismatch",
+          "value": 100
+        },
+        {
+          "doc": "",
+          "name": "InvalidMigrationTarget",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "MigrationInProgress",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "NoMigrationInProgress",
+          "value": 103
+        },
+        {
+          "doc": "",
+          "name": "InvalidMigrationBatch",
+          "value": 104
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Namespaced escrow tag. `owner` is the integrator whose namespace the\\ntag lives in (e.g. options_market's own address), `kind` separates id\\nspaces inside one integrator (`series` vs `position`), and `id` is the\\nintegrator's own identifier. Two integrators \\xe2\\x80\\x94 or two kinds inside one\\nintegrator \\xe2\\x80\\x94 can never collide on the same ledger entry, because the\\nfull triple is the storage key.\\n\\nStored as a plain struct rather than a `BytesN<32>` hash: the key is\\nonly an address + a short symbol + a u64 larger than a hash, and in\\nexchange events and storage stay self-describing (no preimage registry\\nneeded to tell what a hash refers to).",
+      "lib": "",
+      "name": "Tag",
+      "fields": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The token passed to `initialize`: the default token the `_legacy`\\nwrappers operate on.",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Namespace owner that `u64` legacy tags map into \\xe2\\x80\\x94 the admin at\\ninitialize time, fixed thereafter so a later transfer_admin can't\\norphan legacy balances.",
+            "name": "LegacyOwner"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Token allowlist: only allowed tokens accept new deposits.",
+            "name": "AllowedToken",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Integrator registry: only registered integrators may create tags.",
+            "name": "Integrator",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-(token, tag) escrow ledger.",
+            "name": "Escrow",
+            "type_": [
+              "address",
+              {
+                "udt": {
+                  "name": "Tag"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-token ledger sum.",
+            "name": "TotalEscrowed",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Recorded on a tag's first deposit; gates withdraw/transfer_tag.",
+            "name": "TagOwner",
+            "type_": [
+              {
+                "udt": {
+                  "name": "Tag"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Schema v2: every token with a `TotalEscrowed` entry, so migrations\\nand invariant checks can enumerate the ledger.",
+            "name": "Tokens"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Storage keys of the pre-multi-token, pre-namespace vault. Encodes\\nidentically to the old `DataKey::Escrow(u64)` / `DataKey::TotalEscrowed`\\nso `migrate_legacy` can read (and clear) entries written by it.",
+      "lib": "",
+      "name": "LegacyKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Escrow",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalEscrowed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless keeper entrypoint: extends the contract instance and\\nevery named persistent entry that exists, per the TTL policy in\\nttl.rs. Anyone may pay the rent to keep long-lived entries alive.",
+      "name": "bump",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "DataKey"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Hands off control to a new address. Requires the CURRENT admin's\\nsignature, not the incoming one. The admin configures the vault\\n(token allowlist, integrator registry, pause, sweep) but owns no\\nintegrator's tags, so this never hands over escrowed funds.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless alternative to transfer_admin: cross-calls a\\ndeployed Multisig and checks is_approved(action_id) instead of\\nrequiring the current admin's own signature \\xe2\\x80\\x94 same pattern as\\noptions_market's and price_oracle's transfer_admin_via_multisig.",
+      "name": "transfer_admin_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency stop: blocks deposit, withdraw, and transfer_tag. Both\\nsides, unlike options_market's pause (which only blocks new\\nexposure, not winding existing positions down) \\xe2\\x80\\x94 a vault holding\\nreal funds should be freezable outright if something's gone wrong.",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless alternative to pause(), same rationale and pattern\\nas options_market's and price_oracle's pause_via_multisig.",
+      "name": "pause_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Adds or removes `token` from the allowlist. Removing a token only\\nblocks NEW deposits of it: existing balances stay withdrawable,\\ntransferable, and sweepable.",
+      "name": "set_token_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_token_allowed_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_token_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registers (or deregisters) an integrator allowed to create tags in\\nits own namespace. Deregistering blocks new tags only; tags it\\nalready owns keep working.",
+      "name": "set_integrator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "integrator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_integrator_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "integrator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_integrator",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "integrator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pulls `amount` of `token` from `from` into the vault, crediting\\n`(token, tag)`. `from` must authorize the transfer. The first\\ndeposit into a tag records `tag.owner` as its owner; that requires\\n`tag.owner` to be a registered integrator and to authorize (which\\nit already has when it is also `from`). End users can therefore\\ndeposit into a contract-owned tag only with that contract's auth.\\n\\nCredits the measured balance delta, not `amount`, and returns it:\\nwith a fee-on-transfer token the tag is credited what actually\\narrived. Costs two extra token balance reads per deposit.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pays `amount` of `(token, tag)`'s escrow to `to`. Requires the\\ntag owner's signature \\xe2\\x80\\x94 in the intended integration that is the\\ncalling contract itself, so the contract-to-contract call\\nsatisfies require_auth() through the call itself.\\n\\nPanics with InsufficientEscrowBalance if `tag` doesn't have that\\nmuch earmarked, regardless of other tags' deposits. Emits\\n`shortfall_detected` if the vault's actual balance of `token` is\\nbelow its ledger (e.g. after a clawback), and panics with\\nInsufficientVaultBalance instead of a token error if it can't\\ncover this payout.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency payout without the tag owner: requires multisig approval\\n(e.g. the owning contract is being replaced and can't sign). Same\\nInsufficientEscrowBalance cap applies \\xe2\\x80\\x94 approval changes who can\\ncall this, not how much any tag is entitled to.",
+      "name": "withdraw_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moves `amount` of `token` escrow from `from_tag` to `to_tag` with\\nno token movement \\xe2\\x80\\x94 e.g. options_market's roll_position. Requires\\n`from_tag`'s owner; if `to_tag` belongs to (or would be created\\nfor) a different owner, that owner must authorize too.",
+      "name": "transfer_tag",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from_tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to_tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Emergency alternative to transfer_tag, gated on multisig approval.\\nA `to_tag` that doesn't exist yet is recorded as owned by\\n`to_tag.owner`, so funds only ever land in their namespace owner's\\ncontrol.",
+      "name": "transfer_tag_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from_tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "to_tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_total_escrowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`max(0, TotalEscrowed(token) \\xe2\\x88\\x92 actual balance)`: how much of the\\nledger the vault can no longer back, e.g. after a SAC clawback.",
+      "name": "get_shortfall",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_tag_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The default token the `_legacy` wrappers operate on.\\nTokens the ledger has a total for (see `DataKey::Tokens`).",
+      "name": "get_tokens",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Recovers tokens that landed on the vault's own address OUTSIDE\\ndeposit() \\xe2\\x80\\x94 e.g. a direct token transfer sent straight to this\\ncontract's address by mistake, rather than through deposit(),\\nwhich is the only path that actually credits a tag's ledger. Those\\ntokens sit in the vault's real balance but aren't accounted for\\nunder any tag, so they'd otherwise be stuck forever: no tag's\\nwithdraw could ever reach them (withdraw is capped at that tag's\\nOWN escrowed balance), and get_total_escrowed's ledger sum would\\npermanently under-report the vault's actual token balance.",
+      "name": "sweep_untagged",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless alternative to sweep_untagged, gated on multisig\\napproval.",
+      "name": "sweep_untagged_via_multisig",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "multisig_contract",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The namespaced tag a legacy `u64` id maps to:\\n`(legacy owner, \"legacy\", id)`, where the legacy owner is the\\nadmin at initialize time.",
+      "name": "legacy_tag",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Tag"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deposit_legacy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "withdraw_legacy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "transfer_tag_legacy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "to_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "balance_of_legacy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Moves pre-upgrade `Escrow(u64)` entries (single-token, bare-u64\\ntags) to `Escrow(default token, legacy_tag(id))`, owned by the\\ncurrent admin. The old `TotalEscrowed` moves on the first call.\\nIdempotent: ids with no legacy entry are skipped.",
+      "name": "migrate_legacy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": "u64"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
