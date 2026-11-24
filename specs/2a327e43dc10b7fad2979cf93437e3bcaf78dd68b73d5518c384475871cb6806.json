@@ -1,0 +1,613 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "The owner's execution window and minimum amount receivable for each lot asset.",
+      "lib": "",
+      "name": "AuctionGuard",
+      "fields": [
+        {
+          "doc": "",
+          "name": "auction_block",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "fill_percent",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_lot",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buy the scaled BLNT bid with bounded USDC and fill the protocol-fee auction.",
+      "name": "fill_protocol_fee",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": {
+            "udt": {
+              "name": "AuctionGuard"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "blnt",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_usdc_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapRoute"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sweep tokens from contract to `to`. Owner only.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "map": {
+            "key_type": "address",
+            "value_type": "i128"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_owner",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Store the owner, the pool family's backstop and USDC. Makes no calls:\\nthe tiered backstop has no single LP token to bind, and the type-0\\npath never touches the backstop.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "backstop",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "fill_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fill_percent",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_usdc_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pre_swap_routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapRoute"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "create_liquidation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bid",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "lot",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "percent",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "AuctionData"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Take a tiered bad-debt auction, repay the assumed liabilities, and\\nreturn the tier reward and unused funding to the owner atomically.",
+      "name": "fill_bad_debt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": {
+            "udt": {
+              "name": "AuctionGuard"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "lot_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_usdc_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapRoute"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Positional loss-waterfall tier used by the V3 backstop.",
+      "lib": "",
+      "name": "BackstopTier",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FirstLoss"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "SecondLoss"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "ThirdLoss"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fill a V3 interest auction, paying its selected tier from at most\\n`max_usdc_in` of the owner's USDC. The same call funds, fills and\\nreturns the proceeds under the owner's ledger and receipt guards.",
+      "name": "fill_interest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guard",
+          "type_": {
+            "udt": {
+              "name": "AuctionGuard"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tier",
+          "type_": {
+            "udt": {
+              "name": "BackstopTier"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "bid_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payment_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_usdc_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "routes",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "SwapRoute"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Request",
+      "fields": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_type",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Positions",
+      "fields": [
+        {
+          "doc": "",
+          "name": "collateral",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "liabilities",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "supply",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One independent source-to-bid-asset route.\\n\\nA liquidation may contain several routes because one Blend auction can have\\nseveral bid assets. The contract already holds the route funds and keeps\\nthe output, so a route names only the input, the expected output, the\\nminimum output and the operations.",
+      "lib": "",
+      "name": "SwapRoute",
+      "fields": [
+        {
+          "doc": "",
+          "name": "input_amt",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "input_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ops",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "symbol",
+                    "address",
+                    {
+                      "vec": {
+                        "element_type": "address"
+                      }
+                    },
+                    "address",
+                    "address"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "out_amt_min",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "output_token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AuctionData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "bid",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "block",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "lot",
+          "type_": {
+            "map": {
+              "key_type": "address",
+              "value_type": "i128"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Contract errors, with the exact numeric codes of the Blend v2/v2.1\\nLiquidator so callers decode both contracts' failures the same way.\\n\\nThe type-0 path raises `InvalidFillPercent`, `SlippageExceeded` and\\n`BadCallData`. The remaining codes are reserved by the Liquidator's\\ninterest and LP entry points and are kept so the numbering stays shared.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidFillPercent",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InsufficientProfit",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "SlippageExceeded",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "BadCallData",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "AuctionBlockMismatch",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "LandingOutOfBounds",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "LotBelowMinimum",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "InsufficientFunding",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "BadGuard",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "ReserveNotFound",
+          "value": 500
+        }
+      ]
+    }
+  }
+]
