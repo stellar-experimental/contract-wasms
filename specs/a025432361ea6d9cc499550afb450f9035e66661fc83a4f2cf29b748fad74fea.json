@@ -1,0 +1,345 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "BadAmount",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "BadOrderId",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "OrderExists",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "OrderNotFound",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotOpen",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "DeadlineNotReached",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "BadConfig",
+          "value": 10
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "band_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "platform",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "refund_secs",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Escrow",
+      "fields": [
+        {
+          "doc": "",
+          "name": "band",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "fan",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "item_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "shipping_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Status",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Open",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Released",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Refunded",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fan only, after the deadline, if the order is still open: return the\\nitem price and shipping to the fan.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fan",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Fan deposits `item_amount + shipping_amount` of `token`. `refund_secs`\\nof 0 uses the contract default (30 days unless changed).",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "fan",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "band",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "item_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "shipping_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "refund_secs",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Signer only: pay the band 90% of the item plus all shipping, and the\\nplatform 10% of the item.",
+      "name": "release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_escrow",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "order_id",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Escrow"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-time setup. `band_share_bps` of 0 uses 9000 (90%). `refund_secs` of\\n0 uses 30 days.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "platform",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "band_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "refund_secs",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

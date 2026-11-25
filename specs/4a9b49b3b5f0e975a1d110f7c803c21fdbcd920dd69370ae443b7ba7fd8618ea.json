@@ -1,0 +1,284 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "The anchored mirror for one (asset, guest): `credited`\\nis the cumulative event-rebuilt total the admin has\\nanchored, `claimed` the cumulative paid out against it,\\n`last_anchor_ledger` the ledger the latest anchor read\\nthrough.",
+      "lib": "",
+      "name": "Book",
+      "fields": [
+        {
+          "doc": "",
+          "name": "claimed",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "credited",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_anchor_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The contract-side half of a shelf entry: what money and\\nproof need. `claim_id` / `policy_id` are the guest's\\nregistry v2 binding (empty string = no record yet; the\\nguest stands on the shelf as unproven until one binds).\\nResolution is a read-time act by the page against\\nregistry v2; this contract never resolves at tip time.",
+      "lib": "",
+      "name": "Guest",
+      "fields": [
+        {
+          "doc": "",
+          "name": "claim_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "closed_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "payout",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "policy_id",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "anchor_seat",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "books",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Book"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The guest's keeper claims (pull, never push): pays\\nfrom the contract's balance of `asset` to the guest's\\npayout account, at most `credited - claimed`, under\\nthe payout account's own authorization. The operator\\ncannot initiate, block selectively, or skim a claim \\xe2\\x80\\x94\\nthe cap is arithmetic, not permission.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Leave the shelf: callable by the admin or by the\\npayout account itself. Closing stops new listing, not\\nvalue \\xe2\\x80\\x94 a W address cannot be un-published, so credits\\ncan still arrive for a closed ID; they anchor and\\nremain claimable on the same rule as open ones.\\nNothing is seized or stranded by a close.",
+      "name": "close",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "guest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Guest"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Post the anchored mirror for one (asset, guest): the\\ncumulative credited total rebuilt from the event\\nstream through `through_ledger`, with the digest of\\nthe event batch it was rebuilt from. Monotonic: a\\nposting that would lower `credited`, or whose ledger\\nmoves backwards, refuses. Re-posting the same total\\nis a no-op state (the anchor event still records the\\ncheck). Anchoring to an unassigned ID refuses \\xe2\\x80\\x94 books\\nexist only for assigned guests (falsifier F1's\\non-chain half).",
+      "name": "anchor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "new_total",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "through_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "batch_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Join the shelf: one posting, one ID (falsifier F2's\\nshape \\xe2\\x80\\x94 a guest who needed anything deployed for them\\nwould fail the experiment's own check). IDs are\\nsequential from 1; ID 0 is never assigned, so a credit\\ncarrying ID 0 or any unassigned ID is unattributed by\\ndefinition and lands on the reconciliation's anomaly\\nline, never silently on a guest.",
+      "name": "assign",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payout",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "claim_id",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "policy_id",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "next_id",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change a guest's payout account. Only the CURRENT\\npayout account's own authorization moves money's\\ndestination \\xe2\\x80\\x94 the operator cannot redirect a guest's\\nmoney, by construction.",
+      "name": "set_payout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "new_payout",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  }
+]
