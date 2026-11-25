@@ -1,0 +1,234 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "The anchored mirror for one (asset, cause): `anchored`\\nis the cumulative event-rebuilt total, `settled` the\\ncumulative paid out by settlements, `last_anchor_ledger`\\nthe ledger the latest anchor read through.",
+      "lib": "",
+      "name": "Book",
+      "fields": [
+        {
+          "doc": "",
+          "name": "anchored",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_anchor_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "settled",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A cause entry, stored in the contract and readable by\\nanyone by simulation. `performer_bps` is fixed at\\nregistration and immutable for this ID \\xe2\\x80\\x94 a cause that\\nwants new terms registers a new ID, so every settlement\\nfor an ID is graded against the one number its entry has\\nalways carried.",
+      "lib": "",
+      "name": "Cause",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cause_account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "performer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "performer_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "init",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "books",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Book"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Cause"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Post the anchored mirror for one (asset, cause): the\\ncumulative credited total rebuilt from the event\\nstream through `through_ledger`, with the digest of\\nthe event batch it was rebuilt from. Monotonic, as\\nthe shelf's: lowering the total or moving the ledger\\nbackwards refuses. Anchoring to an unregistered\\ncause refuses.",
+      "name": "anchor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "new_total",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "through_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "batch_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Execute the split for everything anchored and not\\nyet settled, under the cause entry's stored rule.\\nPermissionless: anyone may call it and the caller\\ngains nothing by calling. Returns (total settled,\\nperformer amount, cause amount); a call with nothing\\nunsettled returns zeros and moves nothing. The\\nsettlement event carries every amount and the bps it\\nwas graded under, so the split is as public as the\\ntips themselves.",
+      "name": "settle",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "next_id",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register a cause: one posting, one ID, its split\\nrule stored in the same write and immutable from\\nthat moment. IDs are sequential from 1; ID 0 is\\nnever a cause, so a credit carrying ID 0 or any\\nunregistered ID is unattributed by definition.",
+      "name": "register_cause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "performer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cause_account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "performer_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  }
+]

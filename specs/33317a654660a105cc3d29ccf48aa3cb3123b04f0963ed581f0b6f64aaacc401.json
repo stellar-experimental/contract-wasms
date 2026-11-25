@@ -1,0 +1,288 @@
+[
+  {
+    "function_v0": {
+      "doc": "Spend a one-time Stellar hop slot.\\n\\nAnyone (user or fee sponsor) may submit this transaction; only the holder\\nof the private key for `pk` can produce a valid `sig` for `(slot_id, target)`.\\n\\nPanics if:\\n- `env.ledger().timestamp() >= expires_at` (`slot_expired` \\xe2\\x80\\x94 auto-slept to Autonomi)\\n- `slot_id` was already spent (`already_spent` \\xe2\\x80\\x94 double-spend rejected)\\n- `sig` does not verify under `pk`",
+      "name": "spend",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pk",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "sig",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SpendEntry"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read a spent slot (returns `None` if never spent).",
+      "name": "get_slot",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "SpendEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read an anchored STARK batch root (returns `None` if absent).",
+      "name": "get_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "batch_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "BatchAnchor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Persistent storage keys.",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "One-time spend slot (`slot_id` -> `SpendEntry`).",
+            "name": "Slot",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Write-once STARK-proved batch root (`batch_root` -> `BatchAnchor`).",
+            "name": "Batch",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deterministically compute `slot_id` for `(pk, expires_at)`.",
+      "name": "slot_id_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pk",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Current Stellar ledger close timestamp (Unix seconds).",
+      "name": "ledger_time",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anchor a STARK-proved batch of spends (write-once per `batch_root`).",
+      "name": "anchor_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "anchor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "batch_root",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "stark_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "BatchAnchor"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable record stored when a Stellar hop slot is spent.",
+      "lib": "",
+      "name": "SpendEntry",
+      "fields": [
+        {
+          "doc": "Stellar ledger sequence that accepted the spend.",
+          "name": "ledger_seq",
+          "type_": "u32"
+        },
+        {
+          "doc": "Opaque 32-byte commitment: `BLAKE3(\"eddies.rail.v1\", rail_byte || next_id || salt)`.",
+          "name": "target",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Stellar ledger close timestamp (Unix seconds, strictly `< expires_at`).",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable record stored when a STARK-proved batch of spends is anchored.",
+      "lib": "",
+      "name": "BatchAnchor",
+      "fields": [
+        {
+          "doc": "Account that submitted the anchor transaction.",
+          "name": "anchor",
+          "type_": "address"
+        },
+        {
+          "doc": "Number of active spends inside the batch.",
+          "name": "count",
+          "type_": "u32"
+        },
+        {
+          "doc": "Stellar ledger sequence that accepted the anchor.",
+          "name": "ledger_seq",
+          "type_": "u32"
+        },
+        {
+          "doc": "Final Poseidon2 digest verified by `eddies-pqspend` batch STARK.",
+          "name": "stark_digest",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Stellar ledger close timestamp (Unix seconds).",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  }
+]
