@@ -1,0 +1,1201 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "The strategy's books next to the upstream's.",
+      "lib": "",
+      "name": "PositionView",
+      "fields": [
+        {
+          "doc": "Upstream shares the books count. Lower than `upstream_shares` after a donation; higher\\nonly if the upstream took shares away, which `harvest` then writes down.",
+          "name": "counted_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "Whether `deposit` is refused (`pause_deposits`). Exits are never paused.",
+          "name": "deposits_paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "Upstream's instant-exit bound for the strategy (0 if unreadable or paused).",
+          "name": "max_withdraw",
+          "type_": "i128"
+        },
+        {
+          "doc": "Upstream value of `counted_shares` (`LastNav` if unreadable).",
+          "name": "nav",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "Upstream shares the strategy's address holds (0 if unreadable).",
+          "name": "upstream_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The underlying asset, fixed at construction.",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`floor(shares * (NAV + 1) / (total_shares + 10^6))`, NAV from the upstream or `LastNav`.\\nTotal and a pure read: no storage write, no TTL bump, and no revert on any upstream\\nfailure. Reverts only on an uninitialised contract.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pulls `amount` from the allowlisted `from`, forwards it to the upstream and mints floor\\nshares on the measured NAV delta (not on `amount`), so the upstream's rounding is borne by\\nthe depositor. Refused with `NotAuthorized` while deposits are paused, before any upstream\\ncall.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper-only (dual check). Three steps:\\n1. If `data` is given and a reward distributor is set, claims the strategy's Merkl reward.\\n`data` is the cumulative amount (16 bytes big-endian) followed by the proof siblings\\n(32 bytes each); any other shape is `InvalidArgument`. The user and token of the claim\\nare always the strategy and its asset.\\n2. Deposits every idle unit of the asset upstream for the current holders: NAV rises, no\\nstrategy shares are minted. Skipped while fewer than `MIN_SWEEP_SHARES` strategy shares\\nare outstanding (nobody, or dust, holds the strategy): the asset stays idle.\\n3. Writes the counted upstream shares down to what the strategy's address really holds,\\nif that is less (never up: shares sent in by others stay uncounted), refreshes\\n`LastNav` when the read succeeds and emits the event with the swept amount.\\n\\nA claim the distributor refuses, a deposit the upstream refuses and a failed read do not\\nrevert it. It does fail on malformed `data`, on an upstream mint report that overflows\\nthe count",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pays `amount` to `to` straight from the upstream. Never allowlist-gated. Needs a live NAV\\nread (`ExternalError` otherwise). Burns ceil shares on `max(amount, value of the upstream\\nshares the exit burned)`, so an upstream exit cost or rounding is paid by the leaver.\\nFails `InsufficientBalance` (nothing moved) above the vault's balance or when the exit\\ncosts more shares than the vault holds (except a one-unit round-up on an exit of the whole\\nposted balance, which takes all the vault's shares); an upstream refusal, including an exit above the\\nupstream's instant liquidity, is `ExternalError`. Any failure reverts everything.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The current admin and keeper.",
+      "name": "get_roles",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Roles"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The immutable configuration: asset, venue, target and (Templar) the Templar vault.",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replaces the keeper, immediately. The admin and the new keeper both sign, so the role\\ncannot be handed to an address nobody controls.",
+      "name": "set_keeper",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Completes the transfer; the pending admin must sign.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The strategy's books next to the upstream's: shares held and counted, NAV, the upstream's\\ninstant-exit bound, the strategy shares outstanding and whether deposits are paused. Never\\nreverts on an upstream failure.",
+      "name": "get_position",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "PositionView"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether `depositor` is allowlisted by exact address (the wasm-hash list is separate).",
+      "name": "is_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`asset` is USDC. `init_args`, in order: `admin: Address`, `keeper: Address`,\\n`venue: u32` (0 Upshift, 1 TemplarProxy), `target: Address` (the Upshift vault, or the\\nTemplar proxy), and for TemplarProxy only a fifth `templar_vault: Address`. The target's\\nasset must equal `asset`; a Templar vault must report the same asset. Panics on bad input.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "init_args",
+          "type_": {
+            "vec": {
+              "element_type": "val"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin only. Allows `depositor` to call `deposit`.",
+      "name": "add_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pauses (`true`) or re-opens (`false`) `deposit`. `caller` signs and must be the admin or\\nthe keeper. Never affects `withdraw`, `balance` or `harvest`: a paused strategy still pays\\nevery exit.",
+      "name": "pause_deposits",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Starts a two-step admin transfer.",
+      "name": "transfer_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether the wasm `hash` is allowlisted.",
+      "name": "is_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin only. Allows every contract running the wasm `hash` to call `deposit`: any vault\\ndeployed from that code, by anyone.",
+      "name": "add_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin only. Revokes `depositor`. Never affects withdrawals.",
+      "name": "remove_depositor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin only. Revokes `hash`. Never affects withdrawals.",
+      "name": "remove_allowed_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The reward distributor `harvest` claims from; `None` when claiming is off.",
+      "name": "get_reward_distributor",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "option": {
+                "value_type": "address"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Admin only. Sets the reward distributor `harvest` claims from (Merkl's, on the Upshift\\nvenue), or clears it with `None`, which switches claiming off. The distributor is only\\never called, never given authority over the strategy's funds.",
+      "name": "set_reward_distributor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "distributor",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`deposit` was paused (`true`) or re-opened (`false`).",
+      "lib": "",
+      "name": "PauseEvent",
+      "prefix_topics": [
+        "pause_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A `harvest` that was given a claim, or that found idle asset to move upstream. `claimed` is\\nwhat the distributor paid in this call; `swept` is the idle asset deposited upstream (the\\nclaim plus anything that was already sitting on the strategy).",
+      "lib": "",
+      "name": "RewardsEvent",
+      "prefix_topics": [
+        "rewards_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "claimed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "swept",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SetKeeperEvent",
+      "prefix_topics": [
+        "set_keeper_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_keeper",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_keeper",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SetDepositorEvent",
+      "prefix_topics": [
+        "set_depositor_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SetAllowedHashEvent",
+      "prefix_topics": [
+        "set_allowed_hash_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferredEvent",
+      "prefix_topics": [
+        "admin_transferred_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "old_admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminTransferStartedEvent",
+      "prefix_topics": [
+        "admin_transfer_started_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pending_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The reward distributor `harvest` claims from was set, or cleared (`None`).",
+      "lib": "",
+      "name": "SetRewardDistributorEvent",
+      "prefix_topics": [
+        "set_reward_distributor_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "distributor",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Roles",
+      "fields": [
+        {
+          "doc": "Multisig: allowlists, keeper rotation, admin transfer, pause, reward distributor.",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Bot: harvest (with the reward claim), pause.",
+          "name": "keeper",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Which ERC-4626-shaped upstream the strategy holds shares of. Fixed at construction.",
+      "lib": "",
+      "name": "Venue",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Upshift `AugustVault` (target is the vault and its share token).",
+            "name": "Upshift"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Templar proxy-4626 (target is the proxy; the Templar vault is `Config.templar_vault`).",
+            "name": "TemplarProxy"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable strategy configuration, set once at construction.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "Underlying asset (USDC).",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "The upstream vault (Upshift) or the proxy (Templar).",
+          "name": "target",
+          "type_": "address"
+        },
+        {
+          "doc": "`Some(templar vault)` iff `venue == TemplarProxy`; always `None` for Upshift.",
+          "name": "templar_vault",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "venue",
+          "type_": {
+            "udt": {
+              "name": "Venue"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Roles"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Last good upstream value of the position; the `balance()` fallback when the read fails.",
+            "name": "LastNav"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Upstream shares the books count: minted by our deposits, less burned by our exits.\\nShares sent to the strategy's address by anyone else are not counted.",
+            "name": "UpstreamShares"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "`true` while `deposit` is refused. Absent means not paused.",
+            "name": "DepositsPaused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The reward distributor `harvest` claims from. Absent means claiming is off.",
+            "name": "RewardDistributor"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent. Strategy shares held by a vault.",
+            "name": "VaultPos",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent. Deposit allowlist by exact address.",
+            "name": "Depositor",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Persistent. Deposit allowlist by wasm code hash.",
+            "name": "AllowedHash",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 401
+        },
+        {
+          "doc": "",
+          "name": "NegativeNotAllowed",
+          "value": 410
+        },
+        {
+          "doc": "",
+          "name": "InvalidArgument",
+          "value": 411
+        },
+        {
+          "doc": "",
+          "name": "InsufficientBalance",
+          "value": 412
+        },
+        {
+          "doc": "",
+          "name": "UnderflowOverflow",
+          "value": 413
+        },
+        {
+          "doc": "",
+          "name": "ArithmeticError",
+          "value": 414
+        },
+        {
+          "doc": "",
+          "name": "DivisionByZero",
+          "value": 415
+        },
+        {
+          "doc": "",
+          "name": "InvalidSharesMinted",
+          "value": 416
+        },
+        {
+          "doc": "",
+          "name": "OnlyPositiveAmountAllowed",
+          "value": 417
+        },
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 418
+        },
+        {
+          "doc": "",
+          "name": "ProtocolAddressNotFound",
+          "value": 420
+        },
+        {
+          "doc": "",
+          "name": "DeadlineExpired",
+          "value": 421
+        },
+        {
+          "doc": "",
+          "name": "ExternalError",
+          "value": 422
+        },
+        {
+          "doc": "",
+          "name": "SoroswapPairError",
+          "value": 423
+        },
+        {
+          "doc": "",
+          "name": "AmountBelowMinDust",
+          "value": 451
+        },
+        {
+          "doc": "",
+          "name": "UnderlyingAmountBelowMin",
+          "value": 452
+        },
+        {
+          "doc": "",
+          "name": "BTokensAmountBelowMin",
+          "value": 453
+        },
+        {
+          "doc": "",
+          "name": "InternalSwapError",
+          "value": 454
+        },
+        {
+          "doc": "",
+          "name": "SupplyNotFound",
+          "value": 455
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DepositEvent",
+      "prefix_topics": [
+        "deposit_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HarvestEvent",
+      "prefix_topics": [
+        "harvest_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "price_per_share",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "WithdrawEvent",
+      "prefix_topics": [
+        "withdraw_event"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy_name",
+          "type_": "string",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

@@ -1,0 +1,1603 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "fx_pool's rate in force (INR per USD, 7 decimals).",
+      "lib": "",
+      "name": "Fix",
+      "fields": [
+        {
+          "doc": "",
+          "name": "inr_per_usd",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "set_by",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "valid_until",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Residency (R24), fixed at acceptance.",
+      "lib": "",
+      "name": "Tag",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Offshore",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Domestic",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A loss cover the trust proposed for `union`: at most `usdc`, paid at `eta` or later.",
+      "lib": "",
+      "name": "Cover",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAdmin",
+          "value": 101
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 102
+        },
+        {
+          "doc": "",
+          "name": "AmountZero",
+          "value": 103
+        },
+        {
+          "doc": "Not an investor the trust accepted.",
+          "name": "NotAccepted",
+          "value": 104
+        },
+        {
+          "doc": "The deposit would take the senior USDC above the trust's cap.",
+          "name": "AboveCap",
+          "value": 105
+        },
+        {
+          "doc": "No rate in force (fx_pool), or it ran out.",
+          "name": "StaleRate",
+          "value": 106
+        },
+        {
+          "doc": "An investor's residency is set once.",
+          "name": "TagFixed",
+          "value": 112
+        },
+        {
+          "doc": "",
+          "name": "UpgradeNotReady",
+          "value": 113
+        },
+        {
+          "doc": "",
+          "name": "BadDelay",
+          "value": 114
+        },
+        {
+          "doc": "",
+          "name": "Overflow",
+          "value": 115
+        },
+        {
+          "doc": "Today's senior USDC out would pass the daily cap: the rest waits for the next day (UTC).",
+          "name": "AboveDailyCap",
+          "value": 119
+        },
+        {
+          "doc": "The exit's 14 days, or the cover's 48 hours, have not passed.",
+          "name": "NotReady",
+          "value": 121
+        },
+        {
+          "doc": "No cover proposed, or the pool does not hold it.",
+          "name": "NoCover",
+          "value": 122
+        },
+        {
+          "doc": "More shares than the investor holds free.",
+          "name": "AboveShares",
+          "value": 123
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CapSet",
+      "prefix_topics": [
+        "cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Usdc"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FundCore"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "FxPool"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Roles"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The most senior USDC this contract takes in, in all (the trust; 0 until set).",
+            "name": "Cap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "USDC the pool holds for its investors: deposits and fees, less covers and exits.",
+            "name": "Total"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Investor",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Senior USDC out a day (19 Nov); unset = `DEFAULT_DAILY_CAP`. Instance.",
+            "name": "DailyCap"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "USDC `redeem` paid out on a day (day index). Temporary.",
+            "name": "DayOut",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The pool's index (ray); unset = `RAY`. Instance.",
+            "name": "Index"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "All shares, free and pending. Instance.",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Holding",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The one loss cover waiting (instance).",
+            "name": "PendingCover"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An investor's shares: free, and asked out (`pending`, since `request_ts`).",
+      "lib": "",
+      "name": "Holding",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pending",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "request_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeePaid",
+      "prefix_topics": [
+        "fee_paid"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "inr",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Investor",
+      "fields": [
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminSet",
+      "prefix_topics": [
+        "admin_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Redeemed",
+      "prefix_topics": [
+        "redeemed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CoverPaid",
+      "prefix_topics": [
+        "cover_paid"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "nin",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Deposited",
+      "prefix_topics": [
+        "deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausedSet",
+      "prefix_topics": [
+        "paused_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DailyCapSet",
+      "prefix_topics": [
+        "daily_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "InvestorSet",
+      "prefix_topics": [
+        "investor_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The pool's index (ray): USDC per share \\xc3\\x97 10^27.",
+      "name": "index",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CoverProposed",
+      "prefix_topics": [
+        "cover_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "fx_pool only, at a Collect's confirm (senior first, 23 Nov): an LP took `inr` rupees of the union's voucher\\ninterest and `usdc` came here; the index rises for every share.",
+      "name": "fee_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "inr",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "usdc_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "After the 14 days: the pending shares at the index of now, in USDC, within today's cap. Returns the USDC.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CoverCancelled",
+      "prefix_topics": [
+        "cover_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "USDC in; shares out at today's index. Returns the shares.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "An investor's holding and the USDC its shares (free and pending) are worth now.",
+      "name": "holding",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              {
+                "udt": {
+                  "name": "Holding"
+                }
+              },
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most senior USDC in all (0 until the contract is audited).",
+      "name": "set_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedeemRequested",
+      "prefix_topics": [
+        "redeem_requested"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "investor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Investor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "daily_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Senior USDC paid out today (UTC).",
+      "name": "paid_today",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stops deposits, exits and covers.",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_cover",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The trust accepts (or stops) an investor after KYC at the anchor; the residency tag is fixed once.",
+      "name": "set_investor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "accepted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "kyc_ref",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tag",
+          "type_": {
+            "udt": {
+              "name": "Tag"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_shares",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fund_core",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fx_pool",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "roles",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "After the 48 hours: the USDC for the union's voucher loss at the rate in force (at most what was proposed and\\nwhat the pool holds) goes to the union through fx_pool, which pays it as nIN into the junior pool; the index\\nfalls by it. Returns the USDC paid.",
+      "name": "execute_cover",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_cover",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Cover"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The trust proposes to cover the union's voucher loss (fund_core's `voucher_loss`, reported at a default as\\n`LoanDefaulted.senior_applied`): at most `usdc`, after 48 hours. One at a time.",
+      "name": "propose_cover",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "union",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Senior USDC out a day (executive decision 19 Nov), evented.",
+      "name": "set_daily_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "usdc",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade_delay",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ask `shares` out: they keep their share of fees and losses for 14 days, then `redeem` pays them.",
+      "name": "request_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "investor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "execute_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingUpgrade"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_upgrade_delay",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "delay_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Loan",
+      "fields": [
+        {
+          "doc": "",
+          "name": "borrower",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "defaulted",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "drawdown_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "interest_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interest_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "maturity_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "overdue",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "principal_paid",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "rate_bp",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Oracle",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Attester",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Core",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Tranche",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Junior",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Senior",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UnionRole",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Treasurer",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Secretary",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MarketLite",
+      "fields": [
+        {
+          "doc": "",
+          "name": "cash",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "claimable_principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "index",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_borrows",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_shares",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgDelay"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPending"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "UpgPendingDelay"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingDelay",
+      "fields": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeApplied",
+      "prefix_topics": [
+        "upgrade_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeDelaySet",
+      "prefix_topics": [
+        "upgrade_delay_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "delay",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeProposed",
+      "prefix_topics": [
+        "upgrade_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RateParams",
+      "fields": [
+        {
+          "doc": "",
+          "name": "base_rate_bp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "kink_util_bp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_rate_bp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slope1_bp",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slope2_bp",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]
