@@ -1,0 +1,319 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "BadAmount",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "BadState",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "TooEarly",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "PastDeadline",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "CapExceeded",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "EmptyBatch",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "TooLarge",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AlreadyCredited",
+          "value": 9
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "(live SAC balance, credited sum, claimed sum, swept\\ntotal) \\xe2\\x80\\x94 the audit invariant in one read.",
+      "name": "audit",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless claim of one ID's standing credit, paid\\nto the beneficiary bound at credit time. Uncredited or\\nalready-claimed IDs pay 0.",
+      "name": "claim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "Error"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless sweep after the deadline: ONE transfer\\nof the exact unclaimed total to the donor, then the\\ndistribution is closed. Before the deadline it is\\nrejected; a repeat sweep pays 0.",
+      "name": "sweep",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "Error"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "Error"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "credit_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless batched claim, cap 32. Returns the\\ntotal paid. A bad ID inside the batch (past deadline)\\nrejects the whole batch before any leg of it moves\\nvalue out of turn \\xe2\\x80\\x94 claims are state writes first, so\\nan error aborts the invocation atomically.",
+      "name": "claim_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": "u64"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "Error"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "deadline_of",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Write the books for a batch of credits whose SAC\\ntransfers to W(id) have already landed in the pool.\\nAdmin-only. The whole batch is validated before any\\nbook moves: amounts positive, no ID already credited,\\nno ID repeated inside the batch, and the batch total\\nkeeps credited <= the vault's live SAC balance.",
+      "name": "credit_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "items",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "tuple": {
+                  "value_types": [
+                    "u64",
+                    "address",
+                    "i128"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "Error"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "donor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deadline",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "beneficiary_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "claimed_sum_of",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "credited_sum_of",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  }
+]
