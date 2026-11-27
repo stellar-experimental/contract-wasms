@@ -1,0 +1,732 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "A score write from an address the factory never registered.",
+          "name": "NotAnEvent",
+          "value": 3
+        },
+        {
+          "doc": "`accept_admin` with nobody proposed, or after the proposal was withdrawn.",
+          "name": "NoPendingAdmin",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A member's attendance record, counted rather than scored.\\n\\n**This struct is frozen.** It is the *stored* type at `DataKey::Score`, and\\nevery entry in the live ledger was written by an older wasm \\xe2\\x80\\x94 so adding a\\nfield to it does not give those entries the field, it makes every client\\ngenerated from the new spec fail to decode them. The first engagement's\\nscores are graded evidence and have to stay readable at the same address.\\n\\nIt is also what the event contract reads through `interfaces::Score` to\\nenforce a `Score` gate, and *that* contract is deployed. Changing the shape\\nhere would break admission on every gated event already on the factory.\\n\\nEverything the record has grown since lives under its own key and is\\nassembled at read time by `get_record`. See `Extras`.",
+      "lib": "",
+      "name": "Score",
+      "fields": [
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a record carries beyond turning up, stored separately so it can grow.\\n\\nOne key rather than three, because these are always read together and a\\nSoroban storage entry is rented individually: three keys per member would be\\nthree leases to renew for a record that is one thing.",
+      "lib": "",
+      "name": "Extras",
+      "fields": [
+        {
+          "doc": "Events this member created, counted when each one settles.",
+          "name": "events_organised",
+          "type_": "u32"
+        },
+        {
+          "doc": "How many of those turned out to be for somebody who never showed up.\\n\\nThe half of vouching that makes it cost something: a vouch is a public\\nstatement with the voucher's own record behind it.",
+          "name": "vouches_broken",
+          "type_": "u32"
+        },
+        {
+          "doc": "Vouches this member has signed for other people.",
+          "name": "vouches_given",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The whole record, assembled at read time.\\n\\nA return-only struct, never stored \\xe2\\x80\\x94 which is exactly why it is allowed to\\nkeep growing where `Score` is not. A client built against an older spec\\nsimply does not call this.",
+      "lib": "",
+      "name": "Record",
+      "fields": [
+        {
+          "doc": "Events they created, took deposits for, and never settled.\\n\\nSafe to add here where it would not be on `Extras`: `Record` is never\\nstored, only assembled at read time.",
+          "name": "events_abandoned",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "events_organised",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vouches_broken",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vouches_given",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Proposed, not yet in force. See `propose_admin`.",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The only address allowed to register events.",
+            "name": "Factory"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Allowlist membership for one event contract.",
+            "name": "Event",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Score",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Added after the first revision, and keyed separately for that reason \\xe2\\x80\\x94\\nsee `Score`. A member who predates it has no such entry, which is why\\nthe reader below defaults rather than unwraps.",
+            "name": "Extras",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Events this member created, took deposits for, and never settled.\\n\\nIts own key rather than a field on `Extras`, for the reason stated\\nthere: `Extras` is stored, so it cannot grow without making every entry\\nalready written undecodable.",
+            "name": "Abandoned",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published on every write, so a reviewer can watch a score rise on a check-in\\nand fall on a finalized no-show without reading contract state at all.",
+      "lib": "",
+      "name": "ScoreChanged",
+      "prefix_topics": [
+        "score_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published on both halves of a handover, so the move of the key that governs\\nthis ledger is watchable without reading contract state.",
+      "lib": "",
+      "name": "AdminProposed",
+      "prefix_topics": [
+        "admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when a lease is renewed, so a record kept alive by a stranger is\\nvisible as exactly that rather than looking like it never expired.",
+      "lib": "",
+      "name": "RecordRenewed",
+      "prefix_topics": [
+        "record_renewed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published on both halves of a vouch's life, so the cost of a broken one is\\nwatchable without reading contract state.",
+      "lib": "",
+      "name": "VouchRecorded",
+      "prefix_topics": [
+        "vouch_recorded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "voucher",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "broken",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when an organizer's event is first reclaimed against.\\n\\nWorth watching on its own: this is the ledger recording that somebody took\\ndeposits and walked away from them.",
+      "lib": "",
+      "name": "EventAbandoned",
+      "prefix_topics": [
+        "event_abandoned"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EventRegistered",
+      "prefix_topics": [
+        "event_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Renew a record's lease. **Anyone may call this, and anyone pays.**\\n\\nSoroban rents state: an entry nobody touches for long enough is archived\\nand stops being readable. Every write here already extends the lease of\\nwhat it wrote, which quietly means a record only survives while its owner\\nkeeps attending things \\xe2\\x80\\x94 so a reputation would expire precisely for the\\nperson who stopped needing to prove it, and the only way back would be\\nthrough us.\\n\\nSo this takes no auth and no admin. A record is a claim its owner should\\nnot have to ask permission to keep, and anyone who cares about it \\xe2\\x80\\x94 the\\nmember, a friend, an organizer who wants to admit them next month \\xe2\\x80\\x94 can\\npay the few stroops to keep it alive. That is what makes the ledger\\noutlive our goodwill, which is the durability the SOW scopes explicitly.\\n\\nRenewing a record nobody has ever written is a no-op rather than an\\nerror: there is no lease to extend, and creating an empty one to renew\\nwould let anybody fill the ledger with blank entries at our expense.",
+      "name": "renew",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace this contract's own code, keeping its address and its state.\\nAdmin only.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A member's record. Unknown addresses read as `{0, 0}`.\\n\\nDeliberately unchanged, and it must stay that way: this is what the\\ndeployed event contract calls to enforce a `Score` gate, without a\\n`try_`. A different shape here would trap every gated `rsvp` on the\\nfactory rather than refusing it.",
+      "name": "get_score",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Score"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The whole record: turning up, vouching, and organising.\\n\\nEverything `get_score` returns and everything added since, in one read,\\nbecause a profile page needs all of it and each extra call is latency in\\nfront of somebody deciding whether to vouch for a stranger.",
+      "name": "get_record",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Record"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Bind the ledger to its admin and to the factory that may register events.\\n\\nThe factory address is a parameter rather than something discovered\\nlater because of the deployment order: the factory is deployed first,\\nthis contract second with the factory's address in hand, and only then is\\nthe factory pointed back at this one. Both directions stay changeable \\xe2\\x80\\x94\\nsee `set_factory`.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_factory",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Point the ledger at a different factory. Admin only.\\n\\nThe factory has to be redeployed whenever the event wasm changes in a way\\nits own `upgrade` cannot absorb; without this setter, that would strand\\nevery score already recorded here.",
+      "name": "set_factory",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Take the admin role. Callable only by the address `propose_admin` named.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether the gate is open for `event` \\xe2\\x80\\x94 the one read that lets a reviewer\\nverify the allowlist from outside.",
+      "name": "is_registered",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Nominate the next admin. Admin only, and it changes nothing on its own.\\n\\nTwo transactions rather than one, the second signed by the key being\\nhanded to. A plain setter would mean a mistyped address leaves this\\nledger permanently ungovernable \\xe2\\x80\\x94 no `set_factory` and no `upgrade` \\xe2\\x80\\x94\\nwhile every score ever recorded stays at this address. An address nobody\\ncontrols can never call `accept_admin`, so the mistake cannot complete.\\n\\nBoth halves stay ordinary single-signer transactions, which is what a\\nhardware wallet can sign; requiring the new admin to authorise inside the\\nsame call would need a signed authorization entry from an address that is\\nnot the transaction's source.\\n\\nProposing again replaces the previous nomination.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record that `member` showed up to `event`.",
+      "name": "record_checkin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record that `member` reserved a spot at `event` and never checked in.",
+      "name": "record_no_show",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Let an event contract write scores. Factory only, idempotent.\\n\\nThis is the whole gate. The factory calls it in the same transaction that\\ndeploys the event, so the allowlist can only ever contain contracts the\\nfactory itself built from a wasm hash the admin chose.",
+      "name": "register_event",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Count an abandoned event against the address that created it.\\nRegistered events only.\\n\\nThe other half of `record_organised`, and the one that matters on\\nMainnet: an event that took deposits and was never settled. Called by the\\nevent's **first `reclaim`**, because there is no settlement to carry it \\xe2\\x80\\x94\\nthat is precisely what happened.\\n\\nIdempotence lives in the event contract rather than here: it only calls\\nthis when its reclaim list was empty, the same way `record_checkin` is\\nguarded by attendance rather than by a second storage entry per member.",
+      "name": "record_abandoned",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Count an event against the address that created it. Registered events only.\\n\\nCalled by the event contract when it settles, so the count means \"ran an\\nevent to the end\" rather than \"deployed a contract once\". An organizer\\nwho abandons an event never earns the line.",
+      "name": "record_organised",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Who has been nominated but has not accepted yet.",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record that `voucher` put their name behind somebody. Registered events only.",
+      "name": "record_vouch_given",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "voucher",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Record that somebody they vouched for never turned up. Registered events only.\\n\\nThis is what makes a vouch cost something. It is deliberately not a\\ndeduction from `shows`: the voucher did turn up to everything they turned\\nup to, and rewriting that would make the attendance count mean two things\\nat once. It is its own number, and `Event::vouch` refuses anybody whose\\nis above zero.",
+      "name": "record_vouch_broken",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "voucher",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]

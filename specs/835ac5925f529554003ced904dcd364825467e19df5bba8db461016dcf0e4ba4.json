@@ -1,0 +1,944 @@
+[
+  {
+    "function_v0": {
+      "doc": "`[id_this, id_market(this, data), id_collateral(share_token)]`. `InvalidData` unless\\n`data` names the Templar vault.",
+      "name": "ids",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "bytes_n": {
+                    "n": 32
+                  }
+                }
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The asset, fixed at construction.",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The batch `seq` while it exists: settled batches stay until every member has\\ncollected its part.",
+      "name": "batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seq",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Batch"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`vault`'s claims as stored: `(batch, shares)`, settled or not.",
+      "name": "claims",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "u32",
+                  "i128"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`(held, units, cash, parked)`: the strategy's free Templar shares, the sum of every\\nvault's units, the USDC it holds for vaults' paid claims, and the shares it holds for\\nthe open batch and for refunded claims not yet collected.",
+      "name": "ledger",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The batch in flight and the open batch, if any:\\n`(seq, stage, shares, expected, counted, members)`. At most two.",
+      "name": "batches",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "tuple": {
+                "value_types": [
+                  "u32",
+                  "u32",
+                  "i128",
+                  "i128",
+                  "i128",
+                  "u32"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper only. Settles the batch in flight, files the open batch when it can, and moves\\nthe price anchor on; claims nothing (this vault has no incentive to claim). Emits\\n`Harvest`. `data` is ignored.",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The Templar vault this strategy holds shares of.",
+      "name": "templar",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deposits `assets`, pulled from the vault, into the Templar vault with Templar's\\nown `convert_to_shares(assets)` as the minimum, and credits the vault with units for\\nthe shares its balance rose by. The vault first collects its parts of settled\\nbatches. `InvalidAmount` unless the strategy holds `assets` of USDC beyond what it\\nholds for vaults' paid claims; `ProtocolRejected` while\\nTemplar's price stands above the gain bound, or if Templar refuses (paused, busy, its\\nvalue too old) or mints nothing. `change` is the position's value now minus the\\nvalue last recorded. The protocol total grows by `assets` (Q89), less what the\\nposition's principal stood above its value (Q90).",
+      "name": "allocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`vault`'s position, with its settled claims as if collected: units, value last\\nreported, principal, what its claims still waiting on Templar count for, the USDC paid\\nfor it and waiting, and how many claims still wait (at most two).",
+      "name": "position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128",
+              "i128",
+              "i128",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pays `assets` to the vault, after it collects its parts of settled batches: first from\\nthe USDC Templar paid for the vault's claims, then the rest by an atomic exit from the Templar vault's idle USDC, which may burn at\\nmost the vault's own free shares. Units are burned for the shares the exit burned,\\nrounded up. The vault must receive exactly `assets`. Never gated by approval or the\\nprotocol cap. `InsufficientPosition` if `assets` is above what the position can pay\\nnow (its paid USDC plus its free shares at their counted value);\\n`InsufficientLiquidity` when the rest is above Templar's `max_withdraw` for the\\nstrategy (its idle USDC; 0 while it is paused or busy); `ProtocolRejected` if Templar\\nrefuses anyway or pays the vault anything but exactly `assets`. The\\nprotocol total loses the principal taken out (Q89), and whatever of the rest stands\\nabove the position's value (Q90).",
+      "name": "deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: settles the batch in flight from what Templar sent back (see `settle`), then\\nfiles the open batch if none is in flight and Templar takes it.",
+      "name": "sync_exits",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault's free shares and its shares in the open batch at their counted value\\n(Templar's `convert_to_assets`, rounded down, and no more than the gain-bounded price),\\nplus its claim on the batch in flight at that batch's counted payout (pro rata,\\nrounded down), plus the USDC paid for it; settled claims count as if collected. The\\nvalue last recorded when Templar does not answer. Never fails and never writes.",
+      "name": "real_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The cap on `total_allocated()`; 0 means none.",
+      "name": "protocol_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A core vault's allocator or sentinel (`caller`, in that vault's own `config()`) queues\\nan exit of about `assets` of the vault's position at the Templar vault: the shares an\\nexit of `assets` takes leave the vault's free position and join the open batch, which\\ngoes to Templar as one request, paid to the strategy itself, as soon as no batch is in\\nflight (this call files it when none is). Until then the shares keep earning; once\\nfiled, the claim counts at the payout Templar fixed and earns nothing. Returns the\\nbatch joined. `NotAuthorized` for any other caller; `InsufficientPosition` if the\\nshares are more than the vault's free shares; `InvalidAmount` if they are worth less\\nthan Templar's minimum request; `ProtocolRejected` if Templar does not answer.",
+      "name": "request_exit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One instance per Templar vault. `factory` decides which vaults may allocate;\\n`cap_authority` alone sets the protocol cap; `keeper` alone may call `harvest`;\\n`withdrawal_period` is the Templar vault's cooldown, in seconds, shown to the API.\\n`InvalidConfig` unless `templar` answers `proxy_view` with `asset` and `share_token` as\\nits asset and share token.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap_authority",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "templar",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "share_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "withdrawal_period",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: lowers `vault`'s principal, and the protocol total by the same amount, to the\\nposition's value now when that is lower, and emits `PrincipalSynced`. Never raises it,\\nmoves no money and reports no `change`. A position that does not exist, or a Templar\\nvault that does not answer, is left as it is (Q90). `InvalidData` unless `data` names\\nthe Templar vault.",
+      "name": "sync_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What `deallocate(vault, data, x)` can pay right now: the USDC paid for the vault's\\nclaims plus what an atomic exit of its free shares can take from Templar's idle\\n(`max_withdraw` of the strategy, which counts every vault's shares, so it is taken\\nwith the vault's own counted value). Settled claims count as if collected; claims\\nstill waiting on Templar are not in it. 0 on malformed `data` or a failed read. Never\\nwrites.",
+      "name": "max_deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sum of the principal every vault has put in and not taken out (Q89).",
+      "name": "total_allocated",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cap authority only. 0 removes the cap.",
+      "name": "set_protocol_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seconds a queued exit waits at least: the Templar vault's cooldown, fixed at\\ndeployment. Non-zero: this strategy is never a liquidity strategy. The payout itself\\nhas no deadline.",
+      "name": "withdrawal_period",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The batch `batch` went to Templar as one request, `templar_id` (0 if Templar's receipt had\\nnone), paying `expected` for `shares`.",
+      "lib": "",
+      "name": "BatchFiled",
+      "prefix_topics": [
+        "batch_filed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "batch",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "templar_id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "expected",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Templar paid the batch in flight (`paid`), or handed its shares back.",
+      "lib": "",
+      "name": "BatchSettled",
+      "prefix_topics": [
+        "batch_settled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "batch",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "paid",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`vault` collected its part of a settled batch: `assets` of a payout, now waiting in the\\nstrategy for it, or `shares` handed back, now its units again.",
+      "lib": "",
+      "name": "ExitCollected",
+      "prefix_topics": [
+        "exit_collected"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "batch",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A vault's allocator or sentinel added `shares` of the vault's position to the open batch\\n`batch`.",
+      "lib": "",
+      "name": "ExitRequested",
+      "prefix_topics": [
+        "exit_requested"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "batch",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Requests gathered into one Templar request. Stages: `STAGE_OPEN` (gathering, its shares\\nstill in the strategy), `STAGE_FILED` (Templar's escrow; at most one batch at a time),\\n`STAGE_PAID` (Templar paid `expected`), `STAGE_REFUNDED` (Templar handed the shares back).\\nA settled batch is removed once every member has collected its part.",
+      "lib": "",
+      "name": "Batch",
+      "fields": [
+        {
+          "doc": "USDC of a paid batch not collected yet.",
+          "name": "assets_left",
+          "type_": "i128"
+        },
+        {
+          "doc": "What it counts for while in flight: `expected`, bounded like any reported value.",
+          "name": "counted",
+          "type_": "i128"
+        },
+        {
+          "doc": "What Templar pays for it, fixed when it was filed.",
+          "name": "expected",
+          "type_": "i128"
+        },
+        {
+          "doc": "Members' shares not collected yet.",
+          "name": "left",
+          "type_": "i128"
+        },
+        {
+          "doc": "How many vaults hold a claim on it.",
+          "name": "members",
+          "type_": "u32"
+        },
+        {
+          "doc": "The members' shares together.",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "stage",
+          "type_": "u32"
+        },
+        {
+          "doc": "Templar's request id, for reference.",
+          "name": "templar_id",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a strategy returns from `allocate` and `deallocate`.",
+      "lib": "",
+      "name": "Allocation",
+      "fields": [
+        {
+          "doc": "Signed change of the vault's position value under those IDs.",
+          "name": "change",
+          "type_": "i128"
+        },
+        {
+          "doc": "Risk IDs this move touched; never empty; the first is `id_this`.",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors shared by every strategy: 5400\\xe2\\x80\\x935449. 5450\\xe2\\x80\\x935499 are for codes only one strategy needs.",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 5400
+        },
+        {
+          "doc": "",
+          "name": "VaultNotApproved",
+          "value": 5401
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 5402
+        },
+        {
+          "doc": "",
+          "name": "InvalidData",
+          "value": 5403
+        },
+        {
+          "doc": "The vault holds less than it asked to take out.",
+          "name": "InsufficientPosition",
+          "value": 5404
+        },
+        {
+          "doc": "The protocol cannot pay right now.",
+          "name": "InsufficientLiquidity",
+          "value": 5405
+        },
+        {
+          "doc": "",
+          "name": "ProtocolCapExceeded",
+          "value": 5406
+        },
+        {
+          "doc": "The protocol refused the call for another reason.",
+          "name": "ProtocolRejected",
+          "value": 5407
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 5408
+        },
+        {
+          "doc": "",
+          "name": "TooManyMarkets",
+          "value": 5409
+        },
+        {
+          "doc": "",
+          "name": "AssetNotInMarket",
+          "value": 5410
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 5411
+        },
+        {
+          "doc": "The oracle has no live price and the call needs one.",
+          "name": "PriceUnavailable",
+          "value": 5451
+        },
+        {
+          "doc": "An OTC fill priced further from the oracle than the band allows, against the strategy.",
+          "name": "PriceOutsideBand",
+          "value": 5452
+        },
+        {
+          "doc": "The position would end outside its leverage or LTV bounds, or the move is not toward\\nthe target.",
+          "name": "LeverageOutOfBounds",
+          "value": 5453
+        },
+        {
+          "doc": "No such change is waiting on the timelock.",
+          "name": "ActionNotPending",
+          "value": 5454
+        },
+        {
+          "doc": "The change's timelock has not elapsed.",
+          "name": "TimelockNotElapsed",
+          "value": 5455
+        },
+        {
+          "doc": "The fill's cost away from the oracle price would pass what the band budget has left.",
+          "name": "BandBudgetExceeded",
+          "value": 5456
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Harvest",
+      "prefix_topics": [
+        "harvest"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy's protocol cap changed. Published by the registry, and by the strategy itself with\\nits own address as `strategy`.",
+      "lib": "",
+      "name": "ProtocolCapSet",
+      "prefix_topics": [
+        "protocol_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy lowered a position's principal to its value, and `total_allocated` with it\\n(Q90). `principal` and `total_allocated` are the new values.",
+      "lib": "",
+      "name": "PrincipalSynced",
+      "prefix_topics": [
+        "principal_synced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "market",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

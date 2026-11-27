@@ -1,0 +1,355 @@
+[
+  {
+    "function_v0": {
+      "doc": "The entry of `strategy`, if registered.",
+      "name": "entry",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "StrategyEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner. Adds a strategy under a protocol name. Add-only: a strategy is registered at\\nmost once, deprecated ones included, and the list holds at most\\n`MAX_REGISTRY_STRATEGIES`.",
+      "name": "register",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "symbol"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner. Stops vaults from adding `strategy`; one-way. It never reaches into a vault\\nthat already has it.",
+      "name": "deprecate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Registered and not deprecated. Vaults ask this when a strategy is added.",
+      "name": "is_listed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Every registered strategy, deprecated ones included, in registration order.",
+      "name": "strategies",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "udt": {
+                "name": "StrategyEntry"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The proposed owner takes over.",
+      "name": "accept_owner",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the owner.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner. First step of an owner handover: `new_owner` must then call `accept_owner`.",
+      "name": "propose_owner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner. Pushes a protocol-wide cap to a registered strategy, which enforces it on every\\n`allocate`. Works only where this registry is the strategy's cap authority; the\\nstrategy's own refusal reaches the caller unchanged.",
+      "name": "set_protocol_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "RegistryError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One strategy in a registry.",
+      "lib": "",
+      "name": "StrategyEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "deprecated",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "symbol"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors of the strategy registry: 5150\\xe2\\x80\\x935199. No `NotAuthorized`, as in the factory.",
+      "lib": "",
+      "name": "RegistryError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyRegistered",
+          "value": 5151
+        },
+        {
+          "doc": "",
+          "name": "NotRegistered",
+          "value": 5152
+        },
+        {
+          "doc": "",
+          "name": "AlreadyDeprecated",
+          "value": 5153
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 5154
+        },
+        {
+          "doc": "",
+          "name": "NoPendingOwner",
+          "value": 5155
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "OwnerSet",
+      "prefix_topics": [
+        "owner_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy's protocol cap changed. Published by the registry, and by the strategy itself with\\nits own address as `strategy`.",
+      "lib": "",
+      "name": "ProtocolCapSet",
+      "prefix_topics": [
+        "protocol_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyDeprecated",
+      "prefix_topics": [
+        "strategy_deprecated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyRegistered",
+      "prefix_topics": [
+        "strategy_registered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "protocol",
+          "type_": "symbol",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

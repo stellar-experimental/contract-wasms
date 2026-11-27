@@ -1,0 +1,578 @@
+[
+  {
+    "function_v0": {
+      "doc": "`[id_this, id_market(this, data), id_market(this, xdr(HubAssetKey))]` (Q129). Accepts\\nthe market the first time.",
+      "name": "ids",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "bytes_n": {
+                    "n": 32
+                  }
+                }
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The asset fixed at construction.",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: extends `vault`'s XOXNO account in the market named by `data` (the strategy\\nowns it, so it may call XOXNO's `renew_account`) and the strategy's own entries for\\nit. XOXNO extends an account's storage only when it is touched. Moves no money; a\\nvault without an account there is left as it is.",
+      "name": "renew",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The XOXNO account `vault` holds in the market named by `data`; 0 for none.",
+      "name": "account",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper only. XOXNO pays suppliers no reward on Stellar (Q130), so this claims nothing;\\nit emits `Harvest` so the trait is the same as for strategies that do. `data` is\\nignored.",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Supplies `assets`, pulled from the vault, to the vault's own XOXNO account in the\\nmarket named by `data`, opening one when the vault has none (or XOXNO says the one\\nrecorded is gone). `change` is the position's value now minus the value last recorded.\\nAny refusal by XOXNO (its global pause, a paused or frozen listing, a full supply cap,\\n...) is `ProtocolRejected`, and the core vault keeps the deposit idle (revised Q59).\\nThe protocol total grows by `assets` (Q89), less what the position's principal stood\\nabove its value (Q90).",
+      "name": "allocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws `assets` from the vault's XOXNO account in the market named by `data` and\\nsends exactly that to the vault. The whole value is a full exit: XOXNO burns every\\nshare and pays their floor value, the value, and the vault's record of the account is\\ncleared (XOXNO's adapter, fix `6995a33`). A paused listing, short cash, the utilization\\nceiling and an insolvent pool are `InsufficientLiquidity`, and nothing moves. Never\\ngated by approval or the protocol cap. The protocol total loses the principal taken\\nout (Q89), and whatever of the rest stands above the position's value (Q90).",
+      "name": "deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Value of every position of `vault`: its account's shares at the supply index accrued to\\nnow, `floor(floor(shares \\xc3\\x97 index / RAY) / 10^(27\\xe2\\x88\\x92d))`; the value last recorded for a\\nmarket that cannot be read. Never fails and never writes.",
+      "name": "real_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The cap on `total_allocated()`; 0 means none.",
+      "name": "protocol_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One instance per asset and XOXNO controller. `factory` decides which vaults may\\nallocate; `cap_authority` alone sets the protocol cap; `keeper` alone may call\\n`harvest`. The pool's address is read from `controller`, and the asset's decimals from\\nthe token, once. All fixed: there is no admin (rule 10).",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap_authority",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "controller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: lowers `vault`'s principal in the market named by `data`, and the protocol\\ntotal by the same amount, to the position's value when that is lower, and emits\\n`PrincipalSynced` (its `market` is the controller; the market itself is in no event).\\nNever raises it, moves no money and reports no `change`. A position that does not\\nexist, or a market that cannot be read, is left as it is (Q90).",
+      "name": "sync_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What `deallocate(vault, data, x)` can pay in this ledger: the smallest of the\\nposition's value, the pool's cash and, below a 100% ceiling with debt in the market,\\nwhat keeps utilization within `max_utilization` after the exit. 0 while the spoke's\\nlisting is paused, on malformed `data` or on any failed read (Q128). Never writes.",
+      "name": "max_deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sum of the principal every vault has put in and not taken out (Q89).",
+      "name": "total_allocated",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cap authority only. 0 removes the cap.",
+      "name": "set_protocol_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a strategy returns from `allocate` and `deallocate`.",
+      "lib": "",
+      "name": "Allocation",
+      "fields": [
+        {
+          "doc": "Signed change of the vault's position value under those IDs.",
+          "name": "change",
+          "type_": "i128"
+        },
+        {
+          "doc": "Risk IDs this move touched; never empty; the first is `id_this`.",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors shared by every strategy: 5400\\xe2\\x80\\x935449. 5450\\xe2\\x80\\x935499 are for codes only one strategy needs.",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 5400
+        },
+        {
+          "doc": "",
+          "name": "VaultNotApproved",
+          "value": 5401
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 5402
+        },
+        {
+          "doc": "",
+          "name": "InvalidData",
+          "value": 5403
+        },
+        {
+          "doc": "The vault holds less than it asked to take out.",
+          "name": "InsufficientPosition",
+          "value": 5404
+        },
+        {
+          "doc": "The protocol cannot pay right now.",
+          "name": "InsufficientLiquidity",
+          "value": 5405
+        },
+        {
+          "doc": "",
+          "name": "ProtocolCapExceeded",
+          "value": 5406
+        },
+        {
+          "doc": "The protocol refused the call for another reason.",
+          "name": "ProtocolRejected",
+          "value": 5407
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 5408
+        },
+        {
+          "doc": "",
+          "name": "TooManyMarkets",
+          "value": 5409
+        },
+        {
+          "doc": "",
+          "name": "AssetNotInMarket",
+          "value": 5410
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 5411
+        },
+        {
+          "doc": "The oracle has no live price and the call needs one.",
+          "name": "PriceUnavailable",
+          "value": 5451
+        },
+        {
+          "doc": "An OTC fill priced further from the oracle than the band allows, against the strategy.",
+          "name": "PriceOutsideBand",
+          "value": 5452
+        },
+        {
+          "doc": "The position would end outside its leverage or LTV bounds, or the move is not toward\\nthe target.",
+          "name": "LeverageOutOfBounds",
+          "value": 5453
+        },
+        {
+          "doc": "No such change is waiting on the timelock.",
+          "name": "ActionNotPending",
+          "value": 5454
+        },
+        {
+          "doc": "The change's timelock has not elapsed.",
+          "name": "TimelockNotElapsed",
+          "value": 5455
+        },
+        {
+          "doc": "The fill's cost away from the oracle price would pass what the band budget has left.",
+          "name": "BandBudgetExceeded",
+          "value": 5456
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Harvest",
+      "prefix_topics": [
+        "harvest"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy's protocol cap changed. Published by the registry, and by the strategy itself with\\nits own address as `strategy`.",
+      "lib": "",
+      "name": "ProtocolCapSet",
+      "prefix_topics": [
+        "protocol_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy lowered a position's principal to its value, and `total_allocated` with it\\n(Q90). `principal` and `total_allocated` are the new values.",
+      "lib": "",
+      "name": "PrincipalSynced",
+      "prefix_topics": [
+        "principal_synced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "market",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

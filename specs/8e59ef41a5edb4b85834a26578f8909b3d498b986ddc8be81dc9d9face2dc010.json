@@ -1,0 +1,592 @@
+[
+  {
+    "function_v0": {
+      "doc": "`[id_this, id_market(this, data), id_collateral(token)...]` for every collateral\\ntoken of the pool. Reads the pool the first time (`MarketSynced`).",
+      "name": "ids",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "bytes_n": {
+                    "n": 32
+                  }
+                }
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The asset fixed at construction.",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper only. Precept has no rewards to claim, so this records nothing; it emits\\n`Harvest` so the trait is the same as for strategies that do. `data` is ignored.",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Supplies `assets`, pulled from the vault, to the pool and credits the vault with the\\nb-tokens the pool minted. `data` must be the pool's XDR (`InvalidData` otherwise).\\n`change` is the position's value now minus the value last recorded for it. The\\nprotocol total grows by `assets`, the principal put in (Q89), less what the\\nposition's principal stood above its value (Q90).",
+      "name": "allocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraws exactly `assets` from the pool (`data` as in `allocate`) straight to the\\nvault and debits the vault with the b-tokens the pool burned. Never gated by approval or the\\nprotocol cap. The protocol total loses the principal taken out (Q89), and whatever of\\nthe rest stands above the position's value (Q90).",
+      "name": "deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Value of every position of `vault`: `floor(b_tokens \\xc3\\x97 b_rate / 1e12)` per pool, with\\n`b_rate` read through `try_get_reserve`; the value last recorded for a pool that\\ncannot be read. Never fails and never writes.",
+      "name": "real_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: reads `pool`'s reserve index for the asset and its collateral tokens again,\\nstores them and emits `MarketSynced`. `InvalidData` unless `pool` is the strategy's\\npool.",
+      "name": "sync_market",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The cap on `total_allocated()`; 0 means none.",
+      "name": "protocol_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One instance per pool, shared by every approved core vault. `factory` decides which\\nvaults may allocate; `cap_authority` alone sets the protocol cap; `keeper` alone may\\ncall `harvest`; `pool` is the one pool accepted (Q136). `InvalidConfig` unless\\n`pool_factory` deployed `pool` (Q77) and `pool` has a reserve for `asset`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap_authority",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool_factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: lowers `vault`'s principal in `pool`, and the protocol total by the same\\namount, to the position's value at the pool's `b_rate` when that is lower, and emits\\n`PrincipalSynced`. Never raises it, moves no money and reports no `change`. A position\\nthat does not exist, or a pool that cannot be read, is left as it is (Q90).",
+      "name": "sync_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pool",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What `deallocate(vault, data, x)` can pay right now: the smallest of the position's\\nvalue, what the pool can release with utilization staying below 100%, and the\\npool's token balance. 0 when `data` is not the pool's XDR, or on any failed read.\\nNever writes.",
+      "name": "max_deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sum of the principal every vault has put in and not taken out (Q89).",
+      "name": "total_allocated",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cap authority only. 0 removes the cap.",
+      "name": "set_protocol_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a strategy returns from `allocate` and `deallocate`.",
+      "lib": "",
+      "name": "Allocation",
+      "fields": [
+        {
+          "doc": "Signed change of the vault's position value under those IDs.",
+          "name": "change",
+          "type_": "i128"
+        },
+        {
+          "doc": "Risk IDs this move touched; never empty; the first is `id_this`.",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors shared by every strategy: 5400\\xe2\\x80\\x935449. 5450\\xe2\\x80\\x935499 are for codes only one strategy needs.",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 5400
+        },
+        {
+          "doc": "",
+          "name": "VaultNotApproved",
+          "value": 5401
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 5402
+        },
+        {
+          "doc": "",
+          "name": "InvalidData",
+          "value": 5403
+        },
+        {
+          "doc": "The vault holds less than it asked to take out.",
+          "name": "InsufficientPosition",
+          "value": 5404
+        },
+        {
+          "doc": "The protocol cannot pay right now.",
+          "name": "InsufficientLiquidity",
+          "value": 5405
+        },
+        {
+          "doc": "",
+          "name": "ProtocolCapExceeded",
+          "value": 5406
+        },
+        {
+          "doc": "The protocol refused the call for another reason.",
+          "name": "ProtocolRejected",
+          "value": 5407
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 5408
+        },
+        {
+          "doc": "",
+          "name": "TooManyMarkets",
+          "value": 5409
+        },
+        {
+          "doc": "",
+          "name": "AssetNotInMarket",
+          "value": 5410
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 5411
+        },
+        {
+          "doc": "The oracle has no live price and the call needs one.",
+          "name": "PriceUnavailable",
+          "value": 5451
+        },
+        {
+          "doc": "An OTC fill priced further from the oracle than the band allows, against the strategy.",
+          "name": "PriceOutsideBand",
+          "value": 5452
+        },
+        {
+          "doc": "The position would end outside its leverage or LTV bounds, or the move is not toward\\nthe target.",
+          "name": "LeverageOutOfBounds",
+          "value": 5453
+        },
+        {
+          "doc": "No such change is waiting on the timelock.",
+          "name": "ActionNotPending",
+          "value": 5454
+        },
+        {
+          "doc": "The change's timelock has not elapsed.",
+          "name": "TimelockNotElapsed",
+          "value": 5455
+        },
+        {
+          "doc": "The fill's cost away from the oracle price would pass what the band budget has left.",
+          "name": "BandBudgetExceeded",
+          "value": 5456
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Harvest",
+      "prefix_topics": [
+        "harvest"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy read a market's configuration from the protocol and stored it.",
+      "lib": "",
+      "name": "MarketSynced",
+      "prefix_topics": [
+        "market_synced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "market",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reserve_index",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "collaterals",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy's protocol cap changed. Published by the registry, and by the strategy itself with\\nits own address as `strategy`.",
+      "lib": "",
+      "name": "ProtocolCapSet",
+      "prefix_topics": [
+        "protocol_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy lowered a position's principal to its value, and `total_allocated` with it\\n(Q90). `principal` and `total_allocated` are the new values.",
+      "lib": "",
+      "name": "PrincipalSynced",
+      "prefix_topics": [
+        "principal_synced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "market",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

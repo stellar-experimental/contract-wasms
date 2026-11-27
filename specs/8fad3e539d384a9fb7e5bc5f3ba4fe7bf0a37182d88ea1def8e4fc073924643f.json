@@ -1,0 +1,788 @@
+[
+  {
+    "event_v0": {
+      "doc": "`harvest` supplied the asset the strategy held to K2.",
+      "lib": "",
+      "name": "IdleReinvested",
+      "prefix_topics": [
+        "idle_reinvested"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "`harvest` claimed a reward. `claimed` is the reward that arrived and `proceeds` the asset\\nit became (both measured by balance change); `vest_end` is when everything harvested so\\nfar has vested.",
+      "lib": "",
+      "name": "RewardHarvested",
+      "prefix_topics": [
+        "reward_harvested"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "reward_token",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "claimed",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "proceeds",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "vest_end",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`[id_this, id_market(this, data), id_collateral(aToken)]` (Q109). `InvalidData` for\\nanything but this strategy's router.",
+      "name": "ids",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "vec": {
+                "element_type": {
+                  "bytes_n": {
+                    "n": 32
+                  }
+                }
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The asset fixed at construction.",
+      "name": "asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The strategy's books now. Never fails and never writes: with an index below the last\\none seen or a read that fails, the parts read so far are 0.",
+      "name": "books",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Books"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configuration fixed at construction.",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Keeper only (Q108). With `data` (a `HarvestInstruction`), claims all of one reward\\naccrued on the aToken, swaps it to the asset when it is another token, and adds the\\nproceeds to the vest. Then, with at least `REINVEST_THRESHOLD` idle, supplies all of it.\\nThe instruction is checked before any call (`InvalidData`); a claim or swap K2 or\\nSoroswap refuses is `ProtocolRejected` and reverts everything, so the reward stays\\nclaimable. A supply K2 refuses leaves the asset idle and is not an error.",
+      "name": "harvest",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": {
+            "option": {
+              "value_type": "bytes"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Supplies `assets`, pulled from the vault, to K2, and turns the reserve off as the\\nstrategy's collateral so no exit reads an oracle price (Q107). Only the bound vault,\\nand only while the factory approves it (`VaultNotApproved` otherwise). `change` is the\\nposition's value now minus the value last recorded. The protocol total grows by\\n`assets` (Q89), less what the principal stood above the value (Q90). K2's refusal\\n(paused, frozen, capped) is `ProtocolRejected`; an index below the last one seen is\\n`ProtocolRejected` before any call (V1's tripwire).",
+      "name": "allocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault's stored position.",
+      "name": "position",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Position"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pays exactly `assets` to the bound vault, from what the strategy holds first and the\\nrest withdrawn from K2 to the strategy (so K2's whitelist never gates the vault).\\nNever gated by approval or the protocol cap. `InsufficientPosition` above the\\nposition's value, or for any other vault. A paused pool or reserve, or too little cash\\nat K2, is `InsufficientLiquidity`; `max_deallocate` reports both. The protocol total\\nloses the principal taken out (all of it on a full exit) and whatever of the rest\\nstands above the value (Q89, Q90).",
+      "name": "deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Allocation"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The bound vault's position: NAV, rounded down. The value last recorded when the index\\nis below the last one seen or a read fails; 0 for any other vault. Never fails and\\nnever writes.",
+      "name": "real_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The cap on `total_allocated()`; 0 means none.",
+      "name": "protocol_cap",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Binds the instance to `vault` for good (Q106): no function changes it, and every other\\nvault is refused. `factory` decides whether `vault` may still allocate;\\n`cap_authority` alone sets the protocol cap; `keeper` alone may call `harvest`.\\n`router` is K2's router, which must list `asset` (its aToken and reserve id are read\\nhere); `incentives` pays the reserve's emissions; `swap_router` is Soroswap's router.\\n`InvalidConfig` if the router does not answer for `asset`, or unless `vest_seconds` is\\nwithin `[MIN_VEST_SECONDS, MAX_VEST_SECONDS]`.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap_authority",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "incentives",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "swap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "vest_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: lowers the vault's principal, and the protocol total by the same amount, to\\nthe position's value when that is lower (a deficit at K2 lowers it), and emits\\n`PrincipalSynced`. Never raises it, moves no money and reports no `change`. Another\\nvault, an index below the last one seen, or a read that fails leaves things as they\\nare (Q90). `InvalidData` for a `data` that is not this strategy's router.",
+      "name": "sync_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "What `deallocate(vault, data, x)` can pay now: the position's value, capped by idle\\nplus what K2 can pay (the aTokens' value and the cash the aToken holds). 0 while the\\npool is paused or the reserve is inactive or paused, with the index below the last one\\nseen, on malformed `data`, for another vault or on any failed read (Q107). Never writes.",
+      "name": "max_deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The vault's principal: put in and not taken out (Q89).",
+      "name": "total_allocated",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Cap authority only. 0 removes the cap.",
+      "name": "set_protocol_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "StrategyError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The strategy's books as `books()` reports them.",
+      "lib": "",
+      "name": "Books",
+      "fields": [
+        {
+          "doc": "`held` less the position's share of the reserve's deficit.",
+          "name": "counted",
+          "type_": "i128"
+        },
+        {
+          "doc": "The aTokens' value at the live index, rounded down.",
+          "name": "held",
+          "type_": "i128"
+        },
+        {
+          "doc": "The asset the strategy holds outside K2.",
+          "name": "idle",
+          "type_": "i128"
+        },
+        {
+          "doc": "The highest liquidity index seen by a state-changing call.",
+          "name": "last_index",
+          "type_": "u128"
+        },
+        {
+          "doc": "`max(0, counted + idle \\xe2\\x88\\x92 unvested)`: the vault's position.",
+          "name": "nav",
+          "type_": "i128"
+        },
+        {
+          "doc": "Harvested reward not vested yet.",
+          "name": "unvested",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Fixed at construction; nothing changes it.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "The reserve's aToken and id, read from the router at construction.",
+          "name": "a_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap_authority",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "K2's incentives controller, which pays the reserve's emissions.",
+          "name": "incentives",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reserve_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "K2's router; `data` must be its XDR.",
+          "name": "router",
+          "type_": "address"
+        },
+        {
+          "doc": "Soroswap's router, which the harvest swaps through (Q108).",
+          "name": "swap_router",
+          "type_": "address"
+        },
+        {
+          "doc": "The one core vault this instance serves (Q106).",
+          "name": "vault",
+          "type_": "address"
+        },
+        {
+          "doc": "Seconds a harvested reward takes to vest into the value.",
+          "name": "vest_seconds",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The vault's position.",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "What the vault put in and has not taken out, counted in the protocol total (Q89).",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "Value last reported to the vault in a `change`.",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What a strategy returns from `allocate` and `deallocate`.",
+      "lib": "",
+      "name": "Allocation",
+      "fields": [
+        {
+          "doc": "Signed change of the vault's position value under those IDs.",
+          "name": "change",
+          "type_": "i128"
+        },
+        {
+          "doc": "Risk IDs this move touched; never empty; the first is `id_this`.",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors shared by every strategy: 5400\\xe2\\x80\\x935449. 5450\\xe2\\x80\\x935499 are for codes only one strategy needs.",
+      "lib": "",
+      "name": "StrategyError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 5400
+        },
+        {
+          "doc": "",
+          "name": "VaultNotApproved",
+          "value": 5401
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 5402
+        },
+        {
+          "doc": "",
+          "name": "InvalidData",
+          "value": 5403
+        },
+        {
+          "doc": "The vault holds less than it asked to take out.",
+          "name": "InsufficientPosition",
+          "value": 5404
+        },
+        {
+          "doc": "The protocol cannot pay right now.",
+          "name": "InsufficientLiquidity",
+          "value": 5405
+        },
+        {
+          "doc": "",
+          "name": "ProtocolCapExceeded",
+          "value": 5406
+        },
+        {
+          "doc": "The protocol refused the call for another reason.",
+          "name": "ProtocolRejected",
+          "value": 5407
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 5408
+        },
+        {
+          "doc": "",
+          "name": "TooManyMarkets",
+          "value": 5409
+        },
+        {
+          "doc": "",
+          "name": "AssetNotInMarket",
+          "value": 5410
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 5411
+        },
+        {
+          "doc": "The oracle has no live price and the call needs one.",
+          "name": "PriceUnavailable",
+          "value": 5451
+        },
+        {
+          "doc": "An OTC fill priced further from the oracle than the band allows, against the strategy.",
+          "name": "PriceOutsideBand",
+          "value": 5452
+        },
+        {
+          "doc": "The position would end outside its leverage or LTV bounds, or the move is not toward\\nthe target.",
+          "name": "LeverageOutOfBounds",
+          "value": 5453
+        },
+        {
+          "doc": "No such change is waiting on the timelock.",
+          "name": "ActionNotPending",
+          "value": 5454
+        },
+        {
+          "doc": "The change's timelock has not elapsed.",
+          "name": "TimelockNotElapsed",
+          "value": 5455
+        },
+        {
+          "doc": "The fill's cost away from the oracle price would pass what the band budget has left.",
+          "name": "BandBudgetExceeded",
+          "value": 5456
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Harvest",
+      "prefix_topics": [
+        "harvest"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "keeper",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy's protocol cap changed. Published by the registry, and by the strategy itself with\\nits own address as `strategy`.",
+      "lib": "",
+      "name": "ProtocolCapSet",
+      "prefix_topics": [
+        "protocol_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A strategy lowered a position's principal to its value, and `total_allocated` with it\\n(Q90). `principal` and `total_allocated` are the new values.",
+      "lib": "",
+      "name": "PrincipalSynced",
+      "prefix_topics": [
+        "principal_synced"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "vault",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "market",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_allocated",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  }
+]

@@ -1,0 +1,3954 @@
+[
+  {
+    "function_v0": {
+      "doc": "Mints `shares` to `receiver` for assets taken from `from`, rounded up. Returns the\\nassets taken.",
+      "name": "mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the name for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "name",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: sends a token sent to the vault by mistake, whole, to the skim recipient.",
+      "name": "skim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sentinel or owner: stops deposits, mints and allocations; never exits.",
+      "name": "pause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The accounting as stored at the last state change, with no simulated accrual.",
+      "name": "state",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VaultState"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: applies a pending action whose timelock has elapsed, after an accrual.",
+      "name": "accept",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone. Runs the accrual and returns `(total_assets, total_supply)` after it.",
+      "name": "accrue",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": [
+                  "i128",
+                  "i128"
+                ]
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The whole configuration, including strategies, liquidity strategy and pause.",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VaultConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burns `shares` of `owner` and pays the assets, rounded down, to `receiver`. Returns\\nthe assets paid.",
+      "name": "redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A sentinel or anyone allowed to submit `action`: cancels it. Only the factory\\nrevokes `IncreaseProtocolShare` and only the owner revokes `SetSentinel`.",
+      "name": "revoke",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Submits a timelocked action. `caller` must be allowed to submit it (spec table\\n\"Who submits\") and the action must be risk-increasing and within every limit.",
+      "name": "submit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the symbol for this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sets the amount of tokens a `spender` is allowed to spend on behalf of\\nan `owner`. Overrides any existing allowance set between `spender` and\\n`owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.\\n* `amount` - The amount of tokens made available to `spender`.\\n* `live_until_ledger` - The ledger number at which the allowance\\nexpires.\\n\\n# Errors\\n\\n* [`FungibleTokenError::InvalidLiveUntilLedger`] - Occurs when\\nattempting to set `live_until_ledger` that is less than the current\\nledger number and greater than `0`.\\n* [`FungibleTokenError::LessThanZero`] - Occurs when `amount < 0`.\\n\\n# Events\\n\\n* topics - `[\"approve\", owner: Address, spender: Address]`\\n* data - `[amount: i128, live_until_ledger: u32]`",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens held by `account`.\\n\\n# Arguments\\n\\n* `e` - Access to the Soroban environment.\\n* `account` - The address for which the balance is being queried.",
+      "name": "balance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Every risk ID that ever had a cap.",
+      "name": "cap_ids",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Takes `assets` from `from` and mints shares to `receiver`; `operator` authorizes and,\\nwhen it is not `from`, spends `from`'s asset allowance. Returns the shares minted.",
+      "name": "deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Force-deallocate penalty of `strategy`, in bps; 0 if it was never added.",
+      "name": "penalty",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`executable_at` of a pending action, if it is pending.",
+      "name": "pending",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u64"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: lifts the pause.",
+      "name": "unpause",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Allocator: moves `assets` of idle into `strategy`'s market named by `data`, within\\nthe caps of every risk ID it touches. Stopped by pause.",
+      "name": "allocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the number of decimals used to represent amounts of this token.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Allocation and caps of a risk ID; zeros if it never had a cap.",
+      "name": "id_state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "IdState"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most shares `receiver` may mint now; 0 when paused or not allowed.",
+      "name": "max_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The timelock of `kind`, in seconds; 0 for `DecreaseTimelock`.",
+      "name": "timelock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "ActionKind"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SEP-41 `transfer`. With the allowlist on, `from` and `to` must both be on it\\n(`NotAllowed`). Never paused.",
+      "name": "transfer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "muxed_address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pays `assets` to `receiver` and burns `owner`'s shares, rounded up; `operator`\\nauthorizes and, when it is not `owner`, spends `owner`'s share allowance. Returns the\\nshares burned.",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Returns the amount of tokens a `spender` is allowed to spend on behalf\\nof an `owner`.\\n\\n# Arguments\\n\\n* `e` - Access to Soroban environment.\\n* `owner` - The address holding the tokens.\\n* `spender` - The address authorized to spend the tokens.",
+      "name": "allowance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone after `until`, the curator at any time: returns the whole reserve to\\n`refund_to` and clears the boost.",
+      "name": "end_boost",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Curator: starts a boost that releases from a reserve into `total_assets`, at\\n`value` units a second (`FixedRate`) or up to `value` bps a year per share\\n(`TargetApr`), until `until`. What is left goes back to `refund_to`.",
+      "name": "set_boost",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "BoostMode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "until",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "refund_to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Allocator or sentinel: moves `assets` back from `strategy` to idle. Never paused,\\nnever capped.",
+      "name": "deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone: adds `assets` to the reserve of a live boost.",
+      "name": "fund_boost",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "True when the allowlist is off, or when `account` is on it.",
+      "name": "is_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most shares `owner` may redeem now, within the vault's liquidity.",
+      "name": "max_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`refund_to` of the current boost, after `until`: starts a new boost that keeps the\\nreserve.",
+      "name": "roll_boost",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "BoostMode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "until",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most assets `receiver` may deposit now; 0 when paused or not allowed.",
+      "name": "max_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The asset the vault takes.",
+      "name": "query_asset",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: puts `account` on the allowlist (`allowed`) or takes it off. Only on a vault\\ndeployed with the allowlist.",
+      "name": "set_allowed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The most assets `owner` may withdraw now, within the vault's liquidity.",
+      "name": "max_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assets `mint(shares)` would take now, rounded up.",
+      "name": "preview_mint",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Total assets after the pending accrual.",
+      "name": "total_assets",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stored supply plus the fee shares of the pending accrual.",
+      "name": "total_supply",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Validates `init`, stores the configuration and the empty accounting, sets the share\\ntoken's metadata (asset decimals plus 6) and announces every setting by event.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "init",
+          "type_": {
+            "udt": {
+              "name": "CoreVaultInit"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The rates stored at the last accrual (per second, WAD) and the boost reserve.",
+      "name": "current_rates",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Rates"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Curator or sentinel: lowers the caps of `id`, each to at most its current value.",
+      "name": "decrease_caps",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "absolute",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "relative_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner or curator: lowers the fees, each to at most its current value, after an\\naccrual at the old fees.",
+      "name": "decrease_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "performance_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "management_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The state as `accrue()` would leave it now: fees minted, boost released. The fee\\nshares are in `total_supply`, not yet in the recipients' balances.",
+      "name": "preview_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "VaultState"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "SEP-41 `transfer_from`. With the allowlist on, `from` and `to` must both be on it\\n(`NotAllowed`). Never paused.",
+      "name": "transfer_from",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assets `redeem(shares)` would pay now, rounded down.",
+      "name": "preview_redeem",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`(total_assets, total_supply)` as `accrue` would leave them, without writing.",
+      "name": "preview_accrual",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Shares `deposit(assets)` would mint now, rounded down.",
+      "name": "preview_deposit",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Curator: removes a strategy that holds nothing. A non-empty one goes through the\\ntimelocked `RemoveStrategy`, which writes it off.",
+      "name": "remove_strategy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone, for `on_behalf`'s shares: moves `assets` back from `strategy` to idle and\\nburns the strategy's penalty in shares from `on_behalf`. Returns the shares burned.\\nNever paused: how a holder exits when allocators stall.",
+      "name": "force_deallocate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Shares `withdraw(assets)` would burn now, rounded up.",
+      "name": "preview_withdraw",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Assets for `shares`, rounded down.",
+      "name": "convert_to_assets",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Shares for `assets`, rounded down.",
+      "name": "convert_to_shares",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Curator or sentinel: lowers the growth limit, after an accrual.",
+      "name": "decrease_max_rate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: lengthens the timelock of `kind`, up to three weeks.",
+      "name": "increase_timelock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "ActionKind"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`mint`, attributed to `partner_id`, which the factory must have issued.",
+      "name": "mint_with_partner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "partner_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner or curator: sets who receives the curator's fee shares, after an accrual.",
+      "name": "set_fee_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Owner: sets where `skim` sends tokens sent to the vault by mistake.",
+      "name": "set_skim_recipient",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`deposit`, attributed to `partner_id`, which the factory must have issued\\n(`UnknownPartner` otherwise). Publishes `partner_deposit` after `deposit`.",
+      "name": "deposit_with_partner",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "partner_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The factory: lowers the protocol share, after an accrual.",
+      "name": "lower_protocol_share",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Allocator: sets or clears the strategy deposits go to and withdrawals come from.",
+      "name": "set_liquidity_strategy",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "CoreVaultError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Role",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Owner",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Curator",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Allocator",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Sentinel",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Rates",
+      "fields": [
+        {
+          "doc": "WAD per second.",
+          "name": "boost_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "boost_reserve",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual",
+          "type_": "u64"
+        },
+        {
+          "doc": "WAD per second, net of fees, signed.",
+          "name": "organic_rate",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Timelocked changes of a core vault. See `docs/spec/core-vault.md` for who may submit each.",
+      "lib": "",
+      "name": "Action",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SetOwner",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SetCurator",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Account, enabled.",
+            "name": "SetAllocator",
+            "type_": [
+              "address",
+              "bool"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Account, enabled.",
+            "name": "SetSentinel",
+            "type_": [
+              "address",
+              "bool"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "SetRegistry",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "AddStrategy",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Removing a non-empty strategy is a write-off.",
+            "name": "RemoveStrategy",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "ID, absolute cap, relative cap in bps.",
+            "name": "IncreaseCaps",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              },
+              "i128",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Performance fee bps, management fee bps.",
+            "name": "IncreaseFees",
+            "type_": [
+              "u32",
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Bps; only the factory may submit it.",
+            "name": "IncreaseProtocolShare",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Kind, seconds.",
+            "name": "DecreaseTimelock",
+            "type_": [
+              {
+                "udt": {
+                  "name": "ActionKind"
+                }
+              },
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Bps per year.",
+            "name": "IncreaseMaxRate",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Strategy, force-deallocate penalty in bps.",
+            "name": "SetPenalty",
+            "type_": [
+              "address",
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Allocation and caps of one risk ID in a core vault.",
+      "lib": "",
+      "name": "IdState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "absolute_cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "allocation",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "relative_cap_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BoostMode",
+      "cases": [
+        {
+          "doc": "",
+          "name": "FixedRate",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "TargetApr",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "One timelock duration per kind. `Action::X(..)` has kind `ActionKind::X`.",
+      "lib": "",
+      "name": "ActionKind",
+      "cases": [
+        {
+          "doc": "",
+          "name": "SetOwner",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "SetCurator",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "SetAllocator",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "SetSentinel",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "SetRegistry",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "AddStrategy",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "RemoveStrategy",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "IncreaseCaps",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "IncreaseFees",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "IncreaseProtocolShare",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "DecreaseTimelock",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "IncreaseMaxRate",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "SetPenalty",
+          "value": 12
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BoostState",
+      "fields": [
+        {
+          "doc": "The boost is accounted up to this timestamp.",
+          "name": "last",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "BoostMode"
+            }
+          }
+        },
+        {
+          "doc": "`TargetApr`: net organic gain per share since `start`, in RAY, signed. `FixedRate`: 0.",
+          "name": "organic_acc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "refund_to",
+          "type_": "address"
+        },
+        {
+          "doc": "Total assets released from the reserve by this boost.",
+          "name": "released",
+          "type_": "i128"
+        },
+        {
+          "doc": "`TargetApr`: released per share since `start`, in RAY. `FixedRate`: 0.",
+          "name": "released_acc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "start",
+          "type_": "u64"
+        },
+        {
+          "doc": "`TargetApr`: target accrued per share since `start`, in RAY. `FixedRate`: 0.",
+          "name": "target_acc",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "until",
+          "type_": "u64"
+        },
+        {
+          "doc": "`FixedRate`: asset units per second. `TargetApr`: bps per year.",
+          "name": "value",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A core vault's accounting. `state()` returns it as stored at the last state change;\\n`preview_state()` returns it with the pending accrual applied (fees minted, boost\\nreleased), which is what clients read.",
+      "lib": "",
+      "name": "VaultState",
+      "fields": [
+        {
+          "doc": "Empty: no boost. One element: the boost. Never more. A list and not an `Option`\\nbecause soroban-sdk 28 cannot compile an `Option` of a `#[contracttype]` struct as\\na struct field when `testutils` is on (see this crate's README).",
+          "name": "boost",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "BoostState"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "WAD per second at the last accrual.",
+          "name": "boost_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "boost_reserve",
+          "type_": "i128"
+        },
+        {
+          "doc": "Ledger sequence `first_total_assets` was taken in.",
+          "name": "first_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "first_total_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "RAY.",
+          "name": "high_water_mark",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "idle",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_accrual",
+          "type_": "u64"
+        },
+        {
+          "doc": "Management fee remainder carried to the next accrual.",
+          "name": "mgmt_rem",
+          "type_": "i128"
+        },
+        {
+          "doc": "WAD per second at the last accrual, net of fees, signed.",
+          "name": "organic_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Performance fee remainder carried to the next accrual.",
+          "name": "perf_rem",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_supply",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A core vault's configuration, as its `config` view returns it.",
+      "lib": "",
+      "name": "VaultConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "allocators",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "allowlist",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "curator",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "factory",
+          "type_": "address"
+        },
+        {
+          "doc": "Receives the protocol share.",
+          "name": "fee_receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "liquidity_strategy",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "management_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_rate_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "performance_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sentinels",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "skim_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "strategies",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Constructor configuration of a core vault.",
+      "lib": "",
+      "name": "CoreVaultInit",
+      "fields": [
+        {
+          "doc": "",
+          "name": "allocators",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Fixed for the life of the vault (Q57).",
+          "name": "allowlist",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "curator",
+          "type_": "address"
+        },
+        {
+          "doc": "Receives the curator's fee shares.",
+          "name": "fee_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "management_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Growth limit, bps per year.",
+          "name": "max_rate_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "performance_fee_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "protocol_share_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sentinels",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "skim_recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "string"
+        },
+        {
+          "doc": "Seconds, applied to every `ActionKind` at deploy.",
+          "name": "timelock",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyReport",
+      "fields": [
+        {
+          "doc": "",
+          "name": "real_assets",
+          "type_": "i128"
+        },
+        {
+          "doc": "The strategy could not be read and its last value was used.",
+          "name": "stale",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors of the core vault: 5000\\xe2\\x80\\x935099.",
+      "lib": "",
+      "name": "CoreVaultError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotAuthorized",
+          "value": 5000
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 5001
+        },
+        {
+          "doc": "Negative, or zero where it must be positive.",
+          "name": "InvalidAmount",
+          "value": 5002
+        },
+        {
+          "doc": "Positive assets would mint zero shares.",
+          "name": "ZeroShares",
+          "value": 5003
+        },
+        {
+          "doc": "Positive shares would return zero assets.",
+          "name": "ZeroAssets",
+          "value": 5004
+        },
+        {
+          "doc": "",
+          "name": "ExceededMaxDeposit",
+          "value": 5005
+        },
+        {
+          "doc": "",
+          "name": "ExceededMaxMint",
+          "value": 5006
+        },
+        {
+          "doc": "More than the owner's shares are worth.",
+          "name": "ExceededMaxWithdraw",
+          "value": 5007
+        },
+        {
+          "doc": "",
+          "name": "ExceededMaxRedeem",
+          "value": 5008
+        },
+        {
+          "doc": "Idle plus the liquidity strategy cannot pay.",
+          "name": "InsufficientLiquidity",
+          "value": 5009
+        },
+        {
+          "doc": "The allowlist is on and the account is not on it.",
+          "name": "NotAllowed",
+          "value": 5010
+        },
+        {
+          "doc": "",
+          "name": "UnknownPartner",
+          "value": 5011
+        },
+        {
+          "doc": "",
+          "name": "MathOverflow",
+          "value": 5012
+        },
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 5013
+        },
+        {
+          "doc": "",
+          "name": "StrategyNotEnabled",
+          "value": 5020
+        },
+        {
+          "doc": "",
+          "name": "StrategyAlreadyEnabled",
+          "value": 5021
+        },
+        {
+          "doc": "Not in the vault's registry, or deprecated.",
+          "name": "StrategyNotListed",
+          "value": 5022
+        },
+        {
+          "doc": "",
+          "name": "StrategyAssetMismatch",
+          "value": 5023
+        },
+        {
+          "doc": "",
+          "name": "StrategyNotEmpty",
+          "value": 5024
+        },
+        {
+          "doc": "",
+          "name": "TooManyStrategies",
+          "value": 5025
+        },
+        {
+          "doc": "",
+          "name": "AbsoluteCapExceeded",
+          "value": 5026
+        },
+        {
+          "doc": "",
+          "name": "RelativeCapExceeded",
+          "value": 5027
+        },
+        {
+          "doc": "",
+          "name": "InsufficientIdle",
+          "value": 5028
+        },
+        {
+          "doc": "`deallocate` did not return exactly the assets asked.",
+          "name": "StrategyTransferMismatch",
+          "value": 5029
+        },
+        {
+          "doc": "",
+          "name": "TooManyIds",
+          "value": 5030
+        },
+        {
+          "doc": "A strategy's `allocate` succeeded but returned something that is not an `Allocation`.",
+          "name": "InvalidStrategyReport",
+          "value": 5031
+        },
+        {
+          "doc": "",
+          "name": "FeeTooHigh",
+          "value": 5040
+        },
+        {
+          "doc": "",
+          "name": "ProtocolShareTooHigh",
+          "value": 5041
+        },
+        {
+          "doc": "",
+          "name": "MaxRateTooHigh",
+          "value": 5042
+        },
+        {
+          "doc": "",
+          "name": "PenaltyTooHigh",
+          "value": 5043
+        },
+        {
+          "doc": "",
+          "name": "TimelockTooLong",
+          "value": 5044
+        },
+        {
+          "doc": "`submit` used for a change that has an instant function.",
+          "name": "NotAnIncrease",
+          "value": 5045
+        },
+        {
+          "doc": "Instant function used for an increase.",
+          "name": "NotADecrease",
+          "value": 5046
+        },
+        {
+          "doc": "",
+          "name": "ActionAlreadyPending",
+          "value": 5047
+        },
+        {
+          "doc": "",
+          "name": "ActionNotPending",
+          "value": 5048
+        },
+        {
+          "doc": "",
+          "name": "TimelockNotElapsed",
+          "value": 5049
+        },
+        {
+          "doc": "",
+          "name": "TooManyMembers",
+          "value": 5050
+        },
+        {
+          "doc": "",
+          "name": "BoostActive",
+          "value": 5060
+        },
+        {
+          "doc": "",
+          "name": "NoActiveBoost",
+          "value": 5061
+        },
+        {
+          "doc": "",
+          "name": "BoostNotEnded",
+          "value": 5062
+        },
+        {
+          "doc": "",
+          "name": "InvalidBoost",
+          "value": 5063
+        },
+        {
+          "doc": "`skim` was asked for the vault's own asset.",
+          "name": "InvalidToken",
+          "value": 5070
+        },
+        {
+          "doc": "",
+          "name": "AllowlistOff",
+          "value": 5071
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A token that is not the vault's asset was swept to the skim recipient.",
+      "lib": "",
+      "name": "Skim",
+      "prefix_topics": [
+        "skim"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The caps of one risk ID changed.",
+      "lib": "",
+      "name": "CapSet",
+      "prefix_topics": [
+        "cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "absolute_cap",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "relative_cap_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_absolute_cap",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "old_relative_cap_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "What the vault read from each strategy at an accrual.",
+      "lib": "",
+      "name": "Report",
+      "prefix_topics": [
+        "report"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "idle",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Share price, in RAY.",
+          "name": "price",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "strategies",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "StrategyReport"
+                }
+              }
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One accrual of a core vault. Published at every accrual, with zeros when nothing accrued:\\na call must emit the same events whenever it runs.",
+      "lib": "",
+      "name": "Accrual",
+      "prefix_topics": [
+        "accrual"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "elapsed",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "Signed; negative is a loss.",
+          "name": "organic_gain",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "In assets.",
+          "name": "performance_fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "In assets.",
+          "name": "management_fee",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Fee shares minted to the fee recipient.",
+          "name": "curator_shares",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Fee shares minted to the fee receiver.",
+          "name": "protocol_shares",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "boost_released",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total_supply",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "RAY, after this accrual.",
+          "name": "high_water_mark",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeesSet",
+      "prefix_topics": [
+        "fees_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "performance_fee_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "management_fee_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "protocol_share_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_recipient",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A role was given or taken. Also published once per role member at construction. In a\\npartner vault `Role::Owner` stands for its admin and `Role::Curator` for the partner.",
+      "lib": "",
+      "name": "RoleSet",
+      "prefix_topics": [
+        "role_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "role",
+          "type_": {
+            "udt": {
+              "name": "Role"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "enabled",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Assets moved from idle into a strategy.",
+      "lib": "",
+      "name": "Allocate",
+      "prefix_topics": [
+        "allocate"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "`sha256(data)`.",
+          "name": "data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "change",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BoostSet",
+      "prefix_topics": [
+        "boost_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "BoostMode"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "until",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "refund_to",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PausedSet",
+      "prefix_topics": [
+        "paused_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AllowedSet",
+      "prefix_topics": [
+        "allowed_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "account",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "allowed",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A boost ended and what was left of its reserve went back to `refund_to`.",
+      "lib": "",
+      "name": "BoostEnded",
+      "prefix_topics": [
+        "boost_ended"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "leftover",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "refund_to",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Assets moved from a strategy back to idle.",
+      "lib": "",
+      "name": "Deallocate",
+      "prefix_topics": [
+        "deallocate"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "`sha256(data)`.",
+          "name": "data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "change",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MaxRateSet",
+      "prefix_topics": [
+        "max_rate_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "max_rate_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PenaltySet",
+      "prefix_topics": [
+        "penalty_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "penalty_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BoostFunded",
+      "prefix_topics": [
+        "boost_funded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "reserve",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "BoostRolled",
+      "prefix_topics": [
+        "boost_rolled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "BoostMode"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "value",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "until",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RegistrySet",
+      "prefix_topics": [
+        "registry_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The delay of one kind of action changed.",
+      "lib": "",
+      "name": "TimelockSet",
+      "prefix_topics": [
+        "timelock_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "ActionKind"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "seconds",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyAdded",
+      "prefix_topics": [
+        "strategy_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A deposit that named a partner ID, published with the SEP-56 `deposit` event.",
+      "lib": "",
+      "name": "PartnerDeposit",
+      "prefix_topics": [
+        "partner_deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "partner_id",
+          "type_": "u32",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A deallocation forced by a depositor, who pays the penalty in shares.",
+      "lib": "",
+      "name": "ForceDeallocate",
+      "prefix_topics": [
+        "force_deallocate"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "on_behalf",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "`sha256(data)`.",
+          "name": "data_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ids",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "change",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "penalty_assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "penalty_shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "StrategyRemoved",
+      "prefix_topics": [
+        "strategy_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "registry",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "`total_assets` before minus after the removal (Q88); 0 for an empty strategy, and\\nalso when the strategies that stay cover `total_assets`.",
+          "name": "written_off",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A pending action was cancelled.",
+      "lib": "",
+      "name": "TimelockRevoked",
+      "prefix_topics": [
+        "timelock_revoked"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A deposit's liquidity step did not run: the liquidity strategy refused or failed, or the\\ndeposit would have broken a cap of one of its IDs, so `assets` stayed idle and nothing\\nmoved (Q59).",
+      "lib": "",
+      "name": "LiquiditySkipped",
+      "prefix_topics": [
+        "liquidity_skipped"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SkimRecipientSet",
+      "prefix_topics": [
+        "skim_recipient_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A timelocked action was executed after its delay.",
+      "lib": "",
+      "name": "TimelockAccepted",
+      "prefix_topics": [
+        "timelock_accepted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A timelocked action was submitted. `hash` is `sha256(xdr(action))`.",
+      "lib": "",
+      "name": "TimelockSubmitted",
+      "prefix_topics": [
+        "timelock_submitted"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "action",
+          "type_": {
+            "udt": {
+              "name": "Action"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "executable_at",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "by",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The strategy withdrawals pull from when idle is short. `strategy` is absent from the data\\nwhen there is none.",
+      "lib": "",
+      "name": "LiquidityStrategySet",
+      "prefix_topics": [
+        "liquidity_strategy_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "strategy",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "data",
+          "type_": "bytes",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are burned.",
+      "lib": "",
+      "name": "Burn",
+      "prefix_topics": [
+        "burn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are minted.",
+      "lib": "",
+      "name": "Mint",
+      "prefix_topics": [
+        "mint"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when underlying assets are deposited into the vault.",
+      "lib": "",
+      "name": "Deposit",
+      "prefix_topics": [
+        "deposit"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when shares are exchanged back for underlying assets.",
+      "lib": "",
+      "name": "Withdraw",
+      "prefix_topics": [
+        "withdraw"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "operator",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "assets",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when an allowance is approved.",
+      "lib": "",
+      "name": "Approve",
+      "prefix_topics": [
+        "approve"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "owner",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "live_until_ledger",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred between addresses without a\\nmuxed destination.\\n\\nPer SEP-41, the event data is a bare `i128` when no muxed address is\\ninvolved. The `data_format = \"single-value\"` attribute ensures the\\n`amount` field is serialized as a bare value rather than a map.",
+      "lib": "",
+      "name": "Transfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "single_value"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Event emitted when tokens are transferred to a muxed address.\\n\\nPer SEP-41, when the destination is a [`MuxedAddress`] the event data\\ncarries both the amount and the muxed identifier so that off-chain\\nconsumers can attribute the transfer to the correct sub-account.\\n\\nUses `topics = [\"transfer\"]` so that both [`Transfer`] and\\n[`MuxedTransfer`] share the same `\"transfer\"` event symbol, as required\\nby SEP-41.",
+      "lib": "",
+      "name": "MuxedTransfer",
+      "prefix_topics": [
+        "transfer"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to_muxed_id",
+          "type_": {
+            "option": {
+              "value_type": "u64"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FungibleTokenError",
+      "cases": [
+        {
+          "doc": "Indicates an error related to the current balance of account from which\\ntokens are expected to be transferred.",
+          "name": "InsufficientBalance",
+          "value": 100
+        },
+        {
+          "doc": "Indicates a failure with the allowance mechanism when a given spender\\ndoesn't have enough allowance.",
+          "name": "InsufficientAllowance",
+          "value": 101
+        },
+        {
+          "doc": "Indicates an invalid value for `live_until_ledger` when setting an\\nallowance.",
+          "name": "InvalidLiveUntilLedger",
+          "value": 102
+        },
+        {
+          "doc": "Indicates an error when an input that must be >= 0",
+          "name": "LessThanZero",
+          "value": 103
+        },
+        {
+          "doc": "Indicates an overflow or underflow in an arithmetic operation",
+          "name": "MathOverflow",
+          "value": 104
+        },
+        {
+          "doc": "Indicates access to uninitialized metadata",
+          "name": "UnsetMetadata",
+          "value": 105
+        },
+        {
+          "doc": "Indicates that the operation would have caused `total_supply` to exceed\\nthe `cap`.",
+          "name": "ExceededCap",
+          "value": 106
+        },
+        {
+          "doc": "Indicates the supplied `cap` is not a valid cap value.",
+          "name": "InvalidCap",
+          "value": 107
+        },
+        {
+          "doc": "Indicates the Cap was not set.",
+          "name": "CapNotSet",
+          "value": 108
+        },
+        {
+          "doc": "Indicates the SAC address was not set.",
+          "name": "SACNotSet",
+          "value": 109
+        },
+        {
+          "doc": "Indicates a SAC address different than expected.",
+          "name": "SACAddressMismatch",
+          "value": 110
+        },
+        {
+          "doc": "Indicates a missing function parameter in the SAC contract context.",
+          "name": "SACMissingFnParam",
+          "value": 111
+        },
+        {
+          "doc": "Indicates an invalid function parameter in the SAC contract context.",
+          "name": "SACInvalidFnParam",
+          "value": 112
+        },
+        {
+          "doc": "The user is not allowed to perform this operation",
+          "name": "UserNotAllowed",
+          "value": 113
+        },
+        {
+          "doc": "The user is blocked and cannot perform this operation",
+          "name": "UserBlocked",
+          "value": 114
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,2296 @@
+[
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PriceData",
+      "fields": [
+        {
+          "doc": "",
+          "name": "price",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "timestamp",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Send `to` whatever the pool holds **above** its recorded reserves: PT or USTRY donated or\\nrestored by the issuer after LPs already exited with a clawback haircut, and any YT (the\\nmarket holds YT only inside a trade). Recorded reserves are never touched, so this cannot\\nreach LP funds; while the pool is short, the excess is zero. Lets the operator make a\\nhaircut LP whole after a restoration instead of the tokens being stranded.",
+      "name": "skim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Errors specific to the USTRY series binding. Numbered above every `spield_shared::Error`\\ncode so the two ranges never collide on the wire.",
+      "lib": "",
+      "name": "MarketError",
+      "cases": [
+        {
+          "doc": "The series' NAV feed could not be read or failed validation. YT buys wait for it.",
+          "name": "NavUnavailable",
+          "value": 120
+        },
+        {
+          "doc": "The newest NAV sample is older than the series' `max_age`. YT buys wait for a fresh one.",
+          "name": "NavStale",
+          "value": 121
+        },
+        {
+          "doc": "NAV is below its high-water mark, so the series refuses new splits. YT buys wait.",
+          "name": "NavDrawdown",
+          "value": 122
+        },
+        {
+          "doc": "The series is paused for new exposure. YT buys wait; everything else is open.",
+          "name": "SeriesPaused",
+          "value": 123
+        },
+        {
+          "doc": "The series' deposit cap is reached. YT buys mint new exposure, so they wait.",
+          "name": "SeriesCapReached",
+          "value": 124
+        },
+        {
+          "doc": "The series' USTRY custody is short (issuer clawback); it pays no USTRY until restored.",
+          "name": "SeriesCustodyFrozen",
+          "value": 125
+        },
+        {
+          "doc": "This pool holds less USTRY or PT than its recorded reserves (issuer clawback). Trading is\\nrefused until restored; LP exits stay open, paid pro-rata from what is held.",
+          "name": "PoolCustodyShortfall",
+          "value": 126
+        },
+        {
+          "doc": "The series has no bound receipt/PT/YT tokens, or they do not point back at it.",
+          "name": "SeriesNotBound",
+          "value": 127
+        },
+        {
+          "doc": "The series refused the operation for a reason not listed above.",
+          "name": "SeriesRejected",
+          "value": 128
+        },
+        {
+          "doc": "No fee-parameter change is scheduled.",
+          "name": "NoPendingChange",
+          "value": 129
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SeriesState",
+      "fields": [
+        {
+          "doc": "",
+          "name": "anchor",
+          "type_": {
+            "udt": {
+              "name": "PriceData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "backing",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "face",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "factor",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "finalized",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "high_water",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "last_observation",
+          "type_": {
+            "udt": {
+              "name": "PriceData"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "receipts",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_yt",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "expiry",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "series",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SeriesConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "cap",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiry",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "grace",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_age",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "max_apr_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "oracle",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "tokens",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "window",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SeriesStatus",
+      "fields": [
+        {
+          "doc": "",
+          "name": "boundary_seen",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "entry_open",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "finalizable",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "fresh",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "oracle_ok",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "SeriesState"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "synced",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Permissionless TTL keep-alive for an LP's share entry (`tofix.md` #30).",
+      "name": "bump_lp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "string"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "PT price in USD-face units (SCALAR_12): what one PT face is worth in high-water dollars.\\n`0` = no price.",
+      "name": "pt_price",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pt_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`(pt_reserve, asset_reserve)` \\xe2\\x80\\x94 PT face and USTRY units.",
+      "name": "reserves",
+      "inputs": [],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "timelock",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "treasury",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "yt_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "code_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "bytes_n": {
+            "n": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_paused",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether the pool holds at least its recorded reserves. `false` means a clawback hit the\\npool: trading is refused and LP exits are paid pro-rata from what is held.",
+      "name": "custody_ok",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "One-shot, admin-gated init. The market **discovers** PT, YT, the asset and expiry from the\\nseries, and checks that the claim tokens point back at it, so it cannot be wired to a\\nforeign settlement asset (`tofix.md` #19's class).\\n\\n* `scalar_root` \\xe2\\x80\\x94 curve steepness (price impact only; the anchor is dynamic). YT price\\nimpact is large because a small PT price move is a big share of YT's small price, so a\\nflatter curve matters more here than on Blend.\\n* `ln_fee_root` \\xe2\\x80\\x94 **annualized** fee root, SCALAR_12. A YT trader pays roughly\\n`ln_fee_root \\xc3\\xb7 yield` of the YT's value per side, which bites harder at USTRY's ~3.5% NAV\\ngrowth than on a higher-yield source. Both dials are swept in\\n`calibrate_the_fee_root_and_scalar_for_ustry`.\\n* `initial_apy` \\xe2\\x80\\x94 the rate the pool opens at, SCALAR_12 fraction (any seed ratio works).\\n* `treasury_fee_share_bps` \\xe2\\x80\\x94 protocol share of each swap fee, \\xe2\\x89\\xa4 [`MAX_TREASURY_FEE_SHARE_BPS`].",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "series",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "scalar_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ln_fee_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "initial_apy",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "treasury_fee_share_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "asset_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The fee a trader of `notional` PT face would pay right now, in USD-face units.",
+      "name": "fee_preview",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "notional",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Implied APY as a SCALAR_12 fraction. **This is the implied growth of the series' high-water\\nNAV, not a USD return** \\xe2\\x80\\x94 during a drawdown the two differ. `0` = none.",
+      "name": "implied_apy",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "ln_fee_root",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`(shares, pt, asset)` for an LP, at recorded reserves.",
+      "name": "lp_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "scalar_root",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "PT out for spending `asset_in` USTRY. `0` = no quote.",
+      "name": "quote_buy_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "USTRY the user pays for at least `yt_out` YT, mirroring `buy_yt_exact_out` step for step\\n(split size, minted face, pool price). Exact when no newer NAV sample is waiting to be\\nfolded. `0` = no quote. Does not check that YT entry is open \\xe2\\x80\\x94 see [`Self::yt_entry_open`].",
+      "name": "quote_buy_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "set_timelock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "secs",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Instant, unlike the fee parameters: it moves no trader or LP funds \\xe2\\x80\\x94 only where the\\nprotocol's own fee cut goes \\xe2\\x80\\x94 and a treasury that can no longer receive USTRY must be\\nreplaceable at once. The treasury must be able to receive USTRY (a contract, or an account\\nwith a trustline), or every fee-bearing trade fails.",
+      "name": "set_treasury",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "total_shares",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add `pt_in` PT and `asset_in` USTRY. The first LP sets the reserve ratio; because the\\nanchor is dynamic, **any** ratio opens the pool at the configured rate. Later LPs mint\\n`min(by_pt, by_asset)` and pass `min_shares` as their slippage bound (0 = the pool's own\\n0.1% ratio band).\\n\\n**Opening the pool needs the admin's signature as well as the LP's, and a ratio inside the\\nsafe band.** `MINIMUM_LIQUIDITY` locks a sliver of the first deposit's ratio in the pool for\\never, so a hostile first deposit at an extreme ratio would leave the market permanently\\nuntradeable (proper-test-of-ustry.md M-1; ustry-fixes-2026-11-17.md #2). The two checks are\\nindependent: the band also protects an admin seed from a fat-fingered ratio. The same goes\\nfor reopening a pool every LP has left (only the locked `MINIMUM_LIQUIDITY` shares remain,\\nso the dust ratio would otherwise let anyone re-seed it). A reopen is priced at the share\\nprice the locked shares imply, so the dust stays locked. Every deposit into a live pool is\\npermissionless.",
+      "name": "add_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_shares",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "apply_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "USTRY out for selling `pt_in` PT. `0` = no quote.",
+      "name": "quote_sell_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "USTRY the seller receives for `yt_in` YT. `0` = no quote.",
+      "name": "quote_sell_yt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "yt_in",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether `buy_yt_exact_out` can mint right now: exactly the series' `entry_open` (fresh,\\nnon-drawdown NAV; series unpaused and before expiry), plus this market being tradeable.",
+      "name": "yt_entry_open",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_upgrade",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_upgrade",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingUpgrade"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lifetime USTRY routed to the treasury from swap fees.",
+      "name": "treasury_earned",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Apply the scheduled fee change once its timelock has elapsed.",
+      "name": "apply_fee_params",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**Buy at least `yt_out` YT** (face, USD units). The user funds only the YT's price; the\\npool funds the rest of the notional and keeps the freshly split PT.\\n\\n1. size the split from the factor this market **last observed**. The factor only ever\\nfalls (high-water NAV only rises), so any observed factor is an upper bound and the\\nsplit yields \\xe2\\x89\\xa5 `yt_out` face\\n2. pull the user's `max_asset_in` (not the computed cost \\xe2\\x80\\x94 see below)\\n3. `deposit_split` the notional to the market. This is the series' strict NAV fold: it\\nrefuses stale or drawdown NAV and leaves the series' state freshly folded\\n4. price on that **post-split** factor, as \"the pool buys every PT just minted\": the pool\\npays the curve price for `face` PT, the user pays the rest of the notional for `face` YT\\n5. transfer all `face` YT to the user (the claim token settles both sides), refund the rest\\n\\nThe NAV is folded once per trade (inside the split) instead of twice, and the split is sized\\nwithout a separate read \\xe2\\x80\\x94 the two largest avoidable memory costs o",
+      "name": "buy_yt_exact_out",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "max_asset_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Burn `shares` and return the proportional PT + USTRY. **Open while paused, after expiry,\\nduring an oracle outage and after a clawback** \\xe2\\x80\\x94 it never calls the oracle.\\n\\nIf the pool holds less than its recorded reserves (issuer clawback), each leg is paid\\npro-rata from `min(reserve, held)` while the *full* pro-rata claim is retired from the\\nreserve. That keeps the held/reserve ratio identical for every remaining LP: everyone takes\\nthe same haircut whatever order they leave in, and a later restoration benefits whoever is\\nstill in the pool.",
+      "name": "remove_liquidity",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_asset_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "schedule_upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**Sell exactly `yt_in` YT.** The pool contributes matching PT, the pair is recombined\\nthrough the series (`redeem` before finalization burns PT + YT), and the released USTRY is\\nsplit: the pool keeps the PT's market value, the seller takes the rest.\\n\\nThe seller's accrued yield is settled by the YT transfer in step 1 \\xe2\\x80\\x94 **credited, not paid**.\\nCollect it with `series.claim_yield`. Needs no fresh NAV (the series' redeem never reads\\nthe oracle); refused only if the series' custody is frozen by a clawback.\\n\\nReturns the USTRY paid to the seller.",
+      "name": "sell_yt_exact_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "yt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_asset_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The USTRY reserve valued in USD-face units at the stored high-water factor \\xe2\\x80\\x94 what the curve\\ncompares against PT.",
+      "name": "asset_reserve_usd",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_fee_params",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The YT face `buy_yt_exact_out(yt_out)` will deliver: at least `yt_out`, more by the NAV rise\\nsince this market last traded (see `buy_yt_exact_out`). Same basis as [`Self::quote_buy_yt`].\\n`0` = no quote.",
+      "name": "quote_buy_yt_face",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "yt_out",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pending_fee_params",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PendingFeeParams"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "**Schedule** a new fee root and treasury share. They take effect only through\\n[`Self::apply_fee_params`], after the same governance timelock as an upgrade (\\xe2\\x89\\xa5 24 h), so\\ntraders and LPs see a fee change coming and can act before it lands. Scheduling again\\nreplaces the pending change and restarts its clock. Returns the earliest apply time.",
+      "name": "schedule_fee_params",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "ln_fee_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "treasury_fee_share_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "last_ln_implied_rate",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_admin_transfer",
+      "inputs": [],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "treasury_fee_share_bps",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Buy PT with exactly `asset_in` USTRY.",
+      "name": "swap_exact_asset_for_pt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_pt_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Sell exactly `pt_in` PT for USTRY.",
+      "name": "swap_exact_pt_for_asset",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "min_asset_out",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "deadline_ledger",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Swap",
+      "prefix_topics": [
+        "swap"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "trader",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "True for PT\\xe2\\x86\\x92asset, false for asset\\xe2\\x86\\x92PT.",
+          "name": "pt_in",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "Total fee charged, in asset units.",
+          "name": "fee_asset",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "The part of `fee_asset` sent to the treasury; the rest stayed with LPs.",
+          "name": "fee_to_treasury",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Tokens the pool held above its recorded reserves, sent out by `skim`.",
+      "lib": "",
+      "name": "Skimmed",
+      "prefix_topics": [
+        "skimmed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pt",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "yt",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "YtTrade",
+      "prefix_topics": [
+        "yt_trade"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "True for a buy, false for a sale.",
+          "name": "is_buy",
+          "type_": "bool",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "yt_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_asset",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "fee_to_treasury",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeRootSet",
+      "prefix_topics": [
+        "fee_root_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "ln_fee_root",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Initialized",
+      "prefix_topics": [
+        "initialized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "series",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pt",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "yt",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "expiry",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "scalar_root",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ln_fee_root",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "ln_implied_rate",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AddLiquidity",
+      "prefix_topics": [
+        "add_liquidity"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "pt_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_in",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "shares_minted",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RemoveLiquidity",
+      "prefix_topics": [
+        "remove_liquidity"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "lp",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "shares_burned",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "pt_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "asset_out",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "True when the pool held less than its recorded reserves (issuer clawback) and this exit was\\npaid pro-rata from what is actually held.",
+          "name": "haircut",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TreasuryShareSet",
+      "prefix_topics": [
+        "treasury_share_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeParamsCancelled",
+      "prefix_topics": [
+        "fee_params_cancelled"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeeParamsScheduled",
+      "prefix_topics": [
+        "fee_params_scheduled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "ln_fee_root",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "treasury_fee_share_bps",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Initialized"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The `spield-ustry-series` this market is bound to.",
+            "name": "Series"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The PT claim token (a pool reserve).",
+            "name": "Pt"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The YT claim token (held only for an instant inside a YT trade).",
+            "name": "Yt"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The underlying asset \\xe2\\x80\\x94 genuine USTRY (the other pool reserve, NAV-accreting).",
+            "name": "Asset"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Expiry"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Paused"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Curve steepness root, SCALAR_12.",
+            "name": "ScalarRoot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Annualized fee root, SCALAR_12: `fee_rate = exp(ln_fee_root * years)`.",
+            "name": "LnFeeRoot"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The last implied rate the pool priced, SCALAR_12 (makes the anchor dynamic).",
+            "name": "LastLnImpliedRate"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "PT reserve, in PT face (USD units, 7 decimals).",
+            "name": "PtReserve"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Asset reserve, in USTRY token units (7 decimals).",
+            "name": "AssetReserve"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalShares"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Shares",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Share of each swap fee routed to the treasury, bps. The remainder stays with LPs.",
+            "name": "TreasuryFeeShareBps"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Lifetime USTRY sent to the treasury from swap fees.",
+            "name": "TreasuryEarned"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The series factor this market last observed. The factor only ever falls, so this is\\nalways an upper bound on the current one \\xe2\\x80\\x94 used to size a YT buy's split without an\\nextra cross-contract read. Never used for pricing.",
+            "name": "LastFactor"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "A fee-root / treasury-share change waiting out the governance timelock.",
+            "name": "PendingFeeParams"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A scheduled fee change. Both values are replaced together when it is applied.",
+      "lib": "",
+      "name": "PendingFeeParams",
+      "fields": [
+        {
+          "doc": "Earliest ledger timestamp `apply_fee_params` may run.",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "ln_fee_root",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "treasury_fee_share_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A scheduled upgrade was applied \\xe2\\x80\\x94 the contract now runs `wasm_hash`.",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A proposed admin accepted the role (two-step rotation, step 2). `new_admin` is now in control.",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A new admin was proposed (two-step rotation, step 1).",
+      "lib": "",
+      "name": "AdminProposed",
+      "prefix_topics": [
+        "admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "proposed_admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A pending, scheduled upgrade.",
+      "lib": "",
+      "name": "PendingUpgrade",
+      "fields": [
+        {
+          "doc": "Earliest unix-second timestamp at which `apply_upgrade` may run (`scheduled_at + timelock`).",
+          "name": "eta",
+          "type_": "u64"
+        },
+        {
+          "doc": "The WASM hash the contract will be upgraded to.",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The upgrade timelock delay was changed.",
+      "lib": "",
+      "name": "TimelockChanged",
+      "prefix_topics": [
+        "timelock_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "secs",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A scheduled upgrade was cancelled before it was applied.",
+      "lib": "",
+      "name": "UpgradeCancelled",
+      "prefix_topics": [
+        "upgrade_cancelled"
+      ],
+      "params": [],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "An upgrade was scheduled; it may be applied at/after `eta`.",
+      "lib": "",
+      "name": "UpgradeScheduled",
+      "prefix_topics": [
+        "upgrade_scheduled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "eta",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A pending admin proposal was cancelled by the current admin.",
+      "lib": "",
+      "name": "AdminTransferCancelled",
+      "prefix_topics": [
+        "admin_transfer_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "current_admin",
+          "type_": "address",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Balance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Allowance",
+            "type_": [
+              {
+                "udt": {
+                  "name": "AllowanceKey"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TotalSupply"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Allowances are short-lived by design; balances live as long as the series. Both are persistent\\nentries bumped on write.",
+      "lib": "",
+      "name": "AllowanceKey",
+      "fields": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spender",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AllowanceValue",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiration_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single deposit's accounting record \\xe2\\x80\\x94 the unit that makes Spield's yield math correct.\\n\\n**Per-position, never overwritten** (fixes SCF #4): every `mint` creates a *new* `Position`\\nwith its own `entry_rate`, so topping up never clobbers an earlier tranche's entry point.\\n\\n**`settled_rate` travels with the YT** (fixes SCF #5/#6): yield is always measured from\\n`settled_rate`, which starts at `entry_rate` and is bumped to the current rate on every\\n`claim_yield` *without burning YT*. A position transferred to a new owner carries its\\n`settled_rate`, so the buyer can only ever claim yield accrued *after* they held it.",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "Blend `b_rate` (SCALAR_12) at the moment this position was minted. Immutable.",
+          "name": "entry_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "False once the position is fully redeemed/closed (all PT + YT gone).",
+          "name": "open",
+          "type_": "bool"
+        },
+        {
+          "doc": "Current owner of this position (and of the PT + YT it represents).",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "Underlying principal deposited for this position, in the underlying's decimals (USDC).\\nEqual to the PT amount still outstanding and the YT amount still outstanding (1:1:1 at\\nmint; PT and YT are only reduced by `redeem_pt` / `combine_and_redeem`).",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "PT still held in this position. Burned on `redeem_pt` (after maturity) and on `combine`.",
+          "name": "pt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Blend `b_rate` (SCALAR_12) up to which yield has already been settled/paid. Starts equal\\nto `entry_rate`; advanced to `current_rate` on each claim. Yield owed is measured from\\nhere, so the same YT can be claimed across many epochs.",
+          "name": "settled_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Blend bToken shares this position is backed by (its slice of the wrapper's total Blend\\nposition). `principal = shares * entry_rate / SCALAR_12` at mint.",
+          "name": "shares",
+          "type_": "i128"
+        },
+        {
+          "doc": "YT still held in this position. **Never burned by `claim_yield`** \\xe2\\x80\\x94 only by `combine`.",
+          "name": "yt_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Defence-in-depth bound on `b_rate` reads, stored in the strategy adapter's config.\\n\\nThe bound is **time-aware**: `b_rate` may rise by at most `max_apr_bps` per year, pro-rated by\\nthe seconds elapsed since `last_ts`. This makes the check independent of how often the strategy\\nis read (a long-untouched position no longer false-trips), so only `max_apr_bps` \\xe2\\x80\\x94 calibrated\\nagainst Blend's real max borrow APR \\xe2\\x80\\x94 needs tuning. See [`crate::math::check_rate_bound_timed`].",
+      "lib": "",
+      "name": "RateBound",
+      "fields": [
+        {
+          "doc": "Last `b_rate` the strategy observed (SCALAR_12). Used to enforce monotonicity + the ceiling.",
+          "name": "last_rate",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix-second timestamp at which `last_rate` was observed. The elapsed time since this is what\\nthe allowed increase is pro-rated by. `0` = no observation yet (first read bypasses the cap).",
+          "name": "last_ts",
+          "type_": "u64"
+        },
+        {
+          "doc": "Max allowed **annual** `b_rate` growth, in basis points (e.g. `30_000` = 300% APR). Set\\ngenerously above Blend's real max borrow APR so honest reads always pass.",
+          "name": "max_apr_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Read-only snapshot of the Fixed-Rate Vault's health, for the frontend / solvency dashboard.\\nThe vault is solvent iff `pt_inventory >= total_liability` (it holds enough PT to honor every\\noutstanding receipt at par).",
+      "lib": "",
+      "name": "VaultStats",
+      "fields": [
+        {
+          "doc": "`pt_inventory - total_liability`: spare PT available to back new coupons (the headroom\\nthat lets the vault quote a fixed rate). Negative would mean insolvency (never allowed).",
+          "name": "coupon_capacity",
+          "type_": "i128"
+        },
+        {
+          "doc": "The vault's maturity (unix seconds).",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "PT the vault currently holds (its bond inventory). Each unit redeems 1:1 at maturity.",
+          "name": "pt_inventory",
+          "type_": "i128"
+        },
+        {
+          "doc": "The current fixed APR the vault quotes, in basis points.",
+          "name": "rate_bps",
+          "type_": "u32"
+        },
+        {
+          "doc": "Sum of `payout` across all open receipts \\xe2\\x80\\x94 the vault's total obligation at maturity.",
+          "name": "total_liability",
+          "type_": "i128"
+        },
+        {
+          "doc": "YT the vault currently holds (the variable leg whose yield funds future coupons).",
+          "name": "yt_inventory",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A single Fixed-Rate Vault deposit (plan \\xc2\\xa711.2 / \\xc2\\xa77.5 \\xe2\\x80\\x94 the flagship \"lock X% fixed\" product).\\n\\nPT-passthrough model: the user deposits `principal` USDC and is promised exactly `payout`\\nUSDC at maturity (`payout = principal + coupon`, the coupon being the fixed return). The\\nvault backs every receipt with **PT it actually holds** (each PT redeems 1:1 at maturity),\\nso the fixed rate is solvent by construction \\xe2\\x80\\x94 the same rigor as the wrapper's invariant.\\nThere is no per-user yield accounting here: the user's outcome is fixed and known at deposit.",
+      "lib": "",
+      "name": "FixedReceipt",
+      "fields": [
+        {
+          "doc": "Unix seconds at which `payout` becomes redeemable (the vault's maturity).",
+          "name": "maturity",
+          "type_": "u64"
+        },
+        {
+          "doc": "False once redeemed.",
+          "name": "open",
+          "type_": "bool"
+        },
+        {
+          "doc": "Owner of this receipt (the only account that may redeem it).",
+          "name": "owner",
+          "type_": "address"
+        },
+        {
+          "doc": "USDC the user is guaranteed at maturity = principal + fixed coupon. Backed by PT the\\nvault holds 1:1, so it is always redeemable.",
+          "name": "payout",
+          "type_": "i128"
+        },
+        {
+          "doc": "USDC principal the user deposited.",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "The fixed APR quoted for this receipt, in basis points (for display / events only \\xe2\\x80\\x94 the\\neconomically binding figure is `payout`).",
+          "name": "rate_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A read-only snapshot returned to the frontend / solvency dashboard: the live, Blend-backed\\nvalue of a position, split into its principal and currently-claimable yield.",
+      "lib": "",
+      "name": "PositionValue",
+      "fields": [
+        {
+          "doc": "Yield claimable right now: `yt_amount * (current_rate - settled_rate) / SCALAR_12`.",
+          "name": "claimable_yield",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "open",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "position_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "principal",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pt_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "yt_amount",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "Spield error codes, shared across contracts. Numbering leaves gaps so each contract's\\ndomain stays grouped: 1\\xe2\\x80\\x9319 generic/lifecycle, 20\\xe2\\x80\\x9339 wrapper accounting, 40\\xe2\\x80\\x9359 strategy.",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "`initialize` called a second time (SCF #7: one-shot init guard).",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "A function needing prior `initialize` was called first.",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "Caller is not the configured admin.",
+          "name": "NotAuthorized",
+          "value": 3
+        },
+        {
+          "doc": "Contract is paused by the circuit breaker; mutating calls are halted.",
+          "name": "Paused",
+          "value": 4
+        },
+        {
+          "doc": "A supplied amount was zero or negative where a positive value is required.",
+          "name": "InvalidAmount",
+          "value": 5
+        },
+        {
+          "doc": "Arithmetic overflowed (should be unreachable with i128 + overflow-checks, but asserted).",
+          "name": "MathOverflow",
+          "value": 6
+        },
+        {
+          "doc": "`accept_admin` / `cancel_admin_transfer` called with no admin proposal pending.",
+          "name": "NoPendingAdmin",
+          "value": 7
+        },
+        {
+          "doc": "`apply_upgrade` / `cancel_upgrade` called with no upgrade scheduled.",
+          "name": "NoPendingUpgrade",
+          "value": 8
+        },
+        {
+          "doc": "`apply_upgrade` called before the scheduled upgrade's timelock `eta`.",
+          "name": "TimelockNotElapsed",
+          "value": 9
+        },
+        {
+          "doc": "`set_timelock` value outside the allowed `[MIN_TIMELOCK_SECS, MAX_TIMELOCK_SECS]` range.",
+          "name": "TimelockOutOfBounds",
+          "value": 10
+        },
+        {
+          "doc": "The underlying token's `decimals()` is not the value the fixed-point math is calibrated for\\n(7 on Stellar USDC). Asserted at init rather than assumed.",
+          "name": "UnexpectedDecimals",
+          "value": 11
+        },
+        {
+          "doc": "The referenced position id does not exist.",
+          "name": "PositionNotFound",
+          "value": 20
+        },
+        {
+          "doc": "Caller does not own the referenced position.",
+          "name": "NotPositionOwner",
+          "value": 21
+        },
+        {
+          "doc": "A post-maturity-only operation was called while the term is still running: `redeem_pt`\\n(PT redeems 1:1 only at/after maturity) or `stamp_maturity_rate` (there is no maturity rate\\nto pin yet).",
+          "name": "NotMatured",
+          "value": 22
+        },
+        {
+          "doc": "Tried to redeem/split more PT or YT than the position holds.",
+          "name": "InsufficientBalance",
+          "value": 23
+        },
+        {
+          "doc": "The solvency invariant would be violated by this operation \\xe2\\x80\\x94 refuse it.\\n(SCF #3: the vault can never promise value Blend hasn't actually accrued.)",
+          "name": "SolvencyViolation",
+          "value": 24
+        },
+        {
+          "doc": "The position has already been fully redeemed/closed.",
+          "name": "PositionClosed",
+          "value": 25
+        },
+        {
+          "doc": "`mint` called at/after the market's maturity. The bond term is over: the vault\\n(`ensure_before_maturity`) and the market (`ensure_tradeable`) already refuse post-maturity\\ninflows, and the wrapper now matches them. Exits (`redeem_pt`, `combine_and_redeem`,\\n`claim_yield`) are unaffected.",
+          "name": "MarketMatured",
+          "value": 26
+        },
+        {
+          "doc": "`split_position` was asked for a slice so small that one side would floor to **zero Blend\\nshares** \\xe2\\x80\\x94 a position holding principal with nothing backing it (or, in reverse, gutting the\\noriginal). Split a larger amount. Distinct from `InvalidAmount` so the dApp can tell \"this\\nnumber is nonsense\" (\\xe2\\x89\\xa4 0, or \\xe2\\x89\\xa5 the whole position) from \"this number is legal but too\\nsmall at the current `b_rate`\".",
+          "name": "SplitTooSmall",
+          "value": 27
+        },
+        {
+          "doc": "Blend returned a `bRate` outside the configured sanity bound (defence-in-depth).",
+          "name": "RateOutOfBounds",
+          "value": 40
+        },
+        {
+          "doc": "Blend reported no supplied position for the asset we expected to hold.",
+          "name": "NoStrategyPosition",
+          "value": 41
+        },
+        {
+          "doc": "Withdrawal from Blend returned less underlying than required (liquidity edge case).",
+          "name": "WithdrawShortfall",
+          "value": 42
+        },
+        {
+          "doc": "The referenced fixed-rate receipt id does not exist.",
+          "name": "ReceiptNotFound",
+          "value": 60
+        },
+        {
+          "doc": "Caller does not own the referenced receipt.",
+          "name": "NotReceiptOwner",
+          "value": 61
+        },
+        {
+          "doc": "`redeem` called before the vault's maturity.",
+          "name": "VaultNotMatured",
+          "value": 62
+        },
+        {
+          "doc": "The receipt has already been redeemed.",
+          "name": "ReceiptClosed",
+          "value": 63
+        },
+        {
+          "doc": "The vault lacks enough spare PT (coupon capacity) to back the coupon for this deposit.\\nRefusing keeps the vault solvent by construction (the SCF #3 bar): a fixed coupon is only\\never promised when the vault already holds the PT to honor it.",
+          "name": "InsufficientCapacity",
+          "value": 64
+        },
+        {
+          "doc": "The quoted fixed rate is out of the allowed range (e.g. above the admin-set ceiling).",
+          "name": "RateNotAllowed",
+          "value": 65
+        },
+        {
+          "doc": "Deposit rejected because the market has already matured (no time left to earn the coupon,\\nand PT can no longer be accumulated). Vault maturity is inherited from the wrapper.",
+          "name": "VaultExpired",
+          "value": 66
+        },
+        {
+          "doc": "A swap/liquidity op would empty a pool reserve (proportion must stay strictly in (0,1)).",
+          "name": "InsufficientLiquidity",
+          "value": 80
+        },
+        {
+          "doc": "The realized output was below the caller's `min_out` slippage guard \\xe2\\x80\\x94 reverted.",
+          "name": "SlippageExceeded",
+          "value": 81
+        },
+        {
+          "doc": "Trading attempted at/after the market's maturity (after maturity PT just redeems 1:1).",
+          "name": "MarketExpired",
+          "value": 82
+        },
+        {
+          "doc": "`remove_liquidity` for more LP shares than the caller holds (or than exist).",
+          "name": "InsufficientShares",
+          "value": 83
+        },
+        {
+          "doc": "`add_liquidity` deposit ratio doesn't match the pool's current reserves (would mis-price\\nexisting LPs). The caller must supply PT and USDC in the pool's current proportion.",
+          "name": "ImbalancedLiquidity",
+          "value": 84
+        },
+        {
+          "doc": "The swap fee (bps) exceeds the on-chain ceiling set at init (a guardrail).",
+          "name": "FeeNotAllowed",
+          "value": 85
+        },
+        {
+          "doc": "`market::initialize` was given a `maturity` that differs from the wrapper whose PT it\\ntrades. A mismatch in either direction is a live failure \\xe2\\x80\\x94 late-dated leaves the curve\\nquoting PT below par after it already redeems at par (a risk-free draw on the LPs);\\nearly-dated strands PT holders with no venue and no redemption between the two dates.",
+          "name": "MaturityMismatch",
+          "value": 86
+        },
+        {
+          "doc": "`market::initialize` was given a `pt` SAC that is not the one the wrapper mints.",
+          "name": "PtTokenMismatch",
+          "value": 87
+        },
+        {
+          "doc": "A market/vault was wired to a settlement asset that is not the one PT redeems into\\n(`tofix.md` #19). Distinct from the two above so the operator is told *which* argument\\nis wrong.",
+          "name": "UnderlyingMismatch",
+          "value": 88
+        },
+        {
+          "doc": "SEP-41: the spender's allowance over `from` is smaller than the amount being moved.",
+          "name": "InsufficientAllowance",
+          "value": 100
+        },
+        {
+          "doc": "The operation is only valid BEFORE the series expiry (e.g. `mint_py`, any swap).",
+          "name": "SeriesExpired",
+          "value": 101
+        },
+        {
+          "doc": "The operation is only valid AT/AFTER the series expiry (e.g. post-expiry index stamping).",
+          "name": "SeriesNotExpired",
+          "value": 102
+        },
+        {
+          "doc": "The caller is not the one contract permitted to drive this entrypoint (e.g. only the\\nregistered market may fund a split; only the yield contract may mint PT).",
+          "name": "NotRegistered",
+          "value": 103
+        },
+        {
+          "doc": "A protocol fee share was set above its on-chain ceiling.",
+          "name": "FeeShareTooHigh",
+          "value": 104
+        },
+        {
+          "doc": "SR `deposit`/`redeem` produced fewer shares/underlying than the caller's floor.",
+          "name": "MinOutNotMet",
+          "value": 105
+        },
+        {
+          "doc": "An SR/PY amount rounded to zero \\xe2\\x80\\x94 refuse rather than mint or burn nothing for something.",
+          "name": "DustAmount",
+          "value": 106
+        },
+        {
+          "doc": "A deposit would push deployed assets past the configured launch TVL cap (`tofix.md` #3).",
+          "name": "DepositCapExceeded",
+          "value": 107
+        },
+        {
+          "doc": "A venue loss has been recognized by the vault; new fixed-rate deposits are disabled while\\nexisting receipts redeem under the loss haircut.",
+          "name": "VaultLossRecognized",
+          "value": 108
+        },
+        {
+          "doc": "New exposure was attempted after the underlying venue fell below SR's high-water mark.",
+          "name": "VenueLossRecognized",
+          "value": 109
+        }
+      ]
+    }
+  }
+]

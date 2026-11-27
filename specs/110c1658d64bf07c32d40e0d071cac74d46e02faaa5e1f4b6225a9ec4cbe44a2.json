@@ -1,0 +1,588 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "`accept_admin` with nobody proposed, or after the proposal was withdrawn.",
+          "name": "NoPendingAdmin",
+          "value": 3
+        },
+        {
+          "doc": "The event counter, which is also the deploy salt, has no room left.",
+          "name": "CounterExhausted",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Proposed, not yet in force. See `propose_admin`.",
+            "name": "PendingAdmin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "EventWasmHash"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Events"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Monotonic counter; doubles as the deploy salt so every event gets its own\\naddress.",
+            "name": "Count"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The reputation ledger, if one is wired up. Absent is a valid state: the\\nfactory predates reputation and still has to work without it.",
+            "name": "Reputation"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the factory's own code, keeping its address and its event list.\\nAdmin only.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "AdminChanged",
+      "prefix_topics": [
+        "admin_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "previous",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "current",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EventCreated",
+      "prefix_topics": [
+        "event_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "event",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "Carried on the event so a feed or an indexer can show names without\\nreading every event contract one at a time.",
+          "name": "title",
+          "type_": "string",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "starts_at",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "capacity",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published on both halves of a handover, so the move of the key that governs\\nthis system is watchable without reading contract state.",
+      "lib": "",
+      "name": "AdminProposed",
+      "prefix_topics": [
+        "admin_proposed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register the factory against the uploaded event wasm.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "event_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "list_events",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Take the admin role. Callable only by the address `propose_admin` named.\\n\\nThe proposal is consumed whether or not it is ever used again, so an\\naccepted handover leaves nothing pending behind it.",
+      "name": "accept_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy and initialize an event owned by `organizer`.\\n\\nThe organizer authorizes this whole call tree, which is what lets the\\nevent's own `initialize` pull the fee pool out of their wallet as part of\\nthe same transaction.",
+      "name": "create_event",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "starts_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_allowance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "code_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "ForfeitPolicy"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "admission",
+          "type_": {
+            "udt": {
+              "name": "Admission"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Nominate the next admin. Admin only, and it changes nothing on its own.\\n\\nHanding the key over is two transactions rather than one, and the second\\nis signed by the key being handed to. A plain setter would mean a\\nmistyped address leaves the factory permanently ungovernable \\xe2\\x80\\x94 no\\n`set_event_wasm_hash`, no `set_reputation`, no `upgrade`, and no way\\nback. An address nobody controls can never call `accept_admin`, so the\\nmistake cannot complete.\\n\\nThat matters most for the move this was written for: taking the admin off\\na laptop keypair and onto a hardware wallet. It also keeps both halves as\\nordinary single-signer transactions, which is what a hardware wallet can\\nactually sign \\xe2\\x80\\x94 requiring the new admin to authorise inside the *same*\\ncall would need a signed authorization entry from an address that is not\\nthe transaction's source.\\n\\nProposing again replaces the previous nomination, so a wrong address is\\ncorrected by calling this a second time.",
+      "name": "propose_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "`None` until an admin wires one up.",
+      "name": "get_reputation",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Wire the factory to a reputation ledger, or move it to another one.\\nAdmin only.\\n\\nThis is the second half of the circular setup: reputation is deployed\\nknowing the factory's address, then the factory is pointed back here.",
+      "name": "set_reputation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reputation",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_event_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Who has been nominated but has not accepted yet. `None` most of the time\\n\\xe2\\x80\\x94 a handover in progress is the only state where this answers.",
+      "name": "get_pending_admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Which event revision new events get. Lets a reviewer check that the\\ndeployed factory really is pointing at the wasm the docs claim.",
+      "name": "get_event_wasm_hash",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Point new events at a new event wasm. Admin only.\\n\\nRead at deploy time on every `create_event`, so this takes effect on the\\nnext event and leaves every existing one exactly as it was \\xe2\\x80\\x94 an event\\npeople have already locked deposits in must never change underneath them.",
+      "name": "set_event_wasm_hash",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "event_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A member's attendance record, as the event contract reads it.\\n\\nMirrors the reputation contract's own `Score` field for field. It is copied\\nrather than shared because that contract deliberately does not link this\\ncrate \\xe2\\x80\\x94 doing so would publish a `ForfeitPolicy` type on a reputation\\nledger's spec \\xe2\\x80\\x94 and a `#[contracttype]` struct encodes as a map keyed by\\nfield name, so two identical declarations decode each other exactly.",
+      "lib": "",
+      "name": "Score",
+      "fields": [
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What an event needs to know about a would-be voucher.\\n\\nMirrors the reputation ledger's `Record` field for field, and copied rather\\nthan shared for the same reason as `Score` \\xe2\\x80\\x94 see below. Only the fields a\\ngate reads are here: `events_organised` is a profile-page number and putting\\nit on this trait would publish it into the event contract's spec for nothing.",
+      "lib": "",
+      "name": "Record",
+      "fields": [
+        {
+          "doc": "Events they created, took deposits for, and never settled.\\n\\n**Must stay field-for-field with the reputation contract's own `Record`.**\\nThe two are separate declarations on purpose (see below), and a\\n`#[contracttype]` struct is decoded by unpacking a host map into a slice\\nof exactly the declared length \\xe2\\x80\\x94 so a field added on one side and not the\\nother does not degrade, it fails the read outright with \"differing host\\nmap and output slice lengths\". That is what happened when this field was\\nadded to the ledger and not to here: every `vouch` on the event contract\\nstopped working, because the gate reads a record before it opens.",
+          "name": "events_abandoned",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "events_organised",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vouches_broken",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vouches_given",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Who is allowed to reserve a spot.\\n\\nFixed at creation and enforced inside the event contract rather than by a\\nscreen, because a gate a frontend applies is a suggestion: anyone can call\\n`rsvp` directly against the contract.",
+      "lib": "",
+      "name": "Admission",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Anyone, first come first served. What every event created so far is.",
+            "name": "Open"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Anyone whose reputation record shows at least this many check-ins.",
+            "name": "Score",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Anyone the organizer says yes to, one at a time.",
+            "name": "Approval"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Anyone vouched for by this many members with a record of their own.",
+            "name": "Vouch",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where the deposits of no-shows go when an event is finalized.",
+      "lib": "",
+      "name": "ForfeitPolicy",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Straight to the organizer.",
+            "name": "ToOrganizer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Split evenly among everyone who checked in.",
+            "name": "SplitAmongAttendees"
+          }
+        }
+      ]
+    }
+  }
+]

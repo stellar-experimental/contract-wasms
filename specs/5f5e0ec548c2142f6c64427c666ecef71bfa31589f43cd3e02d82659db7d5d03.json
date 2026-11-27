@@ -1,0 +1,1355 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidDeposit",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidCapacity",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "InvalidFeeAllowance",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "AlreadyReserved",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "EventFull",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotReserved",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "AlreadyCheckedIn",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "WrongCode",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "AlreadyFinalized",
+          "value": 11
+        },
+        {
+          "doc": "`rsvp` after the organizer opened check-in.",
+          "name": "ReservationsClosed",
+          "value": 12
+        },
+        {
+          "doc": "`check_in` before the organizer opened it.",
+          "name": "CheckInNotOpen",
+          "value": 13
+        },
+        {
+          "doc": "`open_checkin` / `reopen_rsvp` from a phase that doesn't allow it.",
+          "name": "WrongPhase",
+          "value": 14
+        },
+        {
+          "doc": "Empty, or longer than `MAX_TITLE_BYTES`.",
+          "name": "InvalidTitle",
+          "value": 15
+        },
+        {
+          "doc": "Zero. An event with no start time cannot be sorted or described.",
+          "name": "InvalidStartTime",
+          "value": 16
+        },
+        {
+          "doc": "`rsvp` on a `Score`-gated event from a record below the threshold.",
+          "name": "ScoreTooLow",
+          "value": 17
+        },
+        {
+          "doc": "`rsvp` on an `Approval` event from someone the organizer never approved.",
+          "name": "NotApplied",
+          "value": 18
+        },
+        {
+          "doc": "A second `apply` from the same guest.",
+          "name": "AlreadyApplied",
+          "value": 19
+        },
+        {
+          "doc": "A host-only call from an address that is not a host.",
+          "name": "NotAHost",
+          "value": 20
+        },
+        {
+          "doc": "A call that only makes sense under a different admission mode \\xe2\\x80\\x94 applying\\nto an open event, or vouching for a guest at one.",
+          "name": "WrongAdmissionMode",
+          "value": 21
+        },
+        {
+          "doc": "A gate that needs a reputation ledger on an event created without one.",
+          "name": "NoReputation",
+          "value": 22
+        },
+        {
+          "doc": "`remove_host` aimed at the creator, who is permanent.",
+          "name": "CannotRemoveCreator",
+          "value": 23
+        },
+        {
+          "doc": "A vouch from a record that cannot carry one: too few shows, or a vouch\\nof their own already broken.",
+          "name": "CannotVouch",
+          "value": 24
+        },
+        {
+          "doc": "A second vouch for the same guest from the same member.",
+          "name": "AlreadyVouched",
+          "value": 25
+        },
+        {
+          "doc": "A vouch for yourself, which would make the whole gate a formality.",
+          "name": "CannotVouchForYourself",
+          "value": 26
+        },
+        {
+          "doc": "Not enough members have vouched for this guest yet.",
+          "name": "NotEnoughVouches",
+          "value": 27
+        },
+        {
+          "doc": "`reclaim` before `starts_at + RECLAIM_GRACE_SECONDS`. The organizer\\nstill has time to settle.",
+          "name": "ReclaimTooEarly",
+          "value": 28
+        },
+        {
+          "doc": "A second `reclaim` from a guest who already took their deposit back.",
+          "name": "AlreadyReclaimed",
+          "value": 29
+        },
+        {
+          "doc": "`deposit + fee_allowance`, multiplied out across the whole capacity,\\ndoes not fit in an `i128`.\\n\\nRefused at creation rather than discovered at settlement: these three\\nnumbers are the organizer's to choose, and the only moment they can be\\nrejected without anybody's money already depending on them is before the\\nevent exists.",
+          "name": "AmountsTooLarge",
+          "value": 30
+        },
+        {
+          "doc": "Arithmetic in the money path went out of range, which it cannot do while\\nthis contract's own invariants hold.\\n\\nUnreachable by construction: the ceiling at `initialize` bounds every\\namount, the capacity guard bounds every list, and the attendance states\\nare mutually exclusive. It exists so that if one of those ever stops\\nbeing true, settlement **refuses with a name** instead of trapping with\\nan opaque host panic \\xe2\\x80\\x94 a refusal can be diagnosed and recovered from, a\\nwrong payout cannot.",
+          "name": "InvariantViolated",
+          "value": 31
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Phase",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Guests can reserve; nobody can check in yet.",
+            "name": "Reserving"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "The organizer has started check-in, so reservations are closed.",
+            "name": "CheckingIn"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Settled. Terminal \\xe2\\x80\\x94 there is deliberately no way back.",
+            "name": "Finalized"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Everything about an event that arrived after the first revision.\\n\\nThis exists because `Config` cannot grow. It is a **stored** struct, and\\nevery event already deployed holds one written by an older wasm \\xe2\\x80\\x94 so adding\\na field to it does not give those events the field, it gives every client\\ngenerated from the new spec a value it cannot decode. `get_config` on a live\\nevent failed with `vec not set` the moment `admission` was added to it.\\n\\n`Terms` is assembled at read time from separately keyed entries instead, so\\nit can keep growing: a client that asks an old event for its terms gets a\\nmissing-function error it can recognise and answer for itself, which is a\\nfar better failure than a config that will not decode at all.",
+      "lib": "",
+      "name": "Terms",
+      "fields": [
+        {
+          "doc": "Who may reserve a spot. Fixed at creation, like the deposit and the\\ncapacity: the terms somebody agreed to when they locked their money must\\nnot be editable by the person holding it.",
+          "name": "admission",
+          "type_": {
+            "udt": {
+              "name": "Admission"
+            }
+          }
+        },
+        {
+          "doc": "Everyone who may run the event: open check-in, reopen reservations,\\nanswer applications, finalize, and change this list.\\n\\nThe creator is always `hosts[0]` and cannot be removed, so this overlaps\\n`Config::organizer` by exactly one address on purpose. `organizer`\\nanswers \"whose event is this, and where does forfeited money go\" \\xe2\\x80\\x94 which\\nmust have one unambiguous answer no matter who else is helping \\xe2\\x80\\x94 and\\n`hosts` answers \"who may act\", which is a list.",
+          "name": "hosts",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "sha256 of the check-in secret. The secret itself never touches the chain\\nuntil a guest reveals it by checking in.",
+          "name": "code_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Locked by each guest to reserve a spot.",
+          "name": "deposit",
+          "type_": "i128"
+        },
+        {
+          "doc": "Paid back to each guest on check-in, on top of the deposit, to cover the\\nfees they spent on `rsvp` + `check_in`. Funded by the organizer upfront.",
+          "name": "fee_allowance",
+          "type_": "i128"
+        },
+        {
+          "doc": "Whoever created the event. Permanent, and the only address forfeited\\ndeposits are ever paid to \\xe2\\x80\\x94 see `Terms::hosts` for who may *act*.",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "ForfeitPolicy"
+            }
+          }
+        },
+        {
+          "doc": "Where show-up scores are recorded, if the factory had a ledger wired up\\nwhen this event was created. Fixed for the event's whole life: an event\\npeople have locked deposits in must not have its scoring moved\\nunderneath them, and `None` has to keep working because events created\\nbefore reputation existed still run.",
+          "name": "reputation",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "Unix seconds, UTC. **Informational.**\\n\\nThe phase machine is the single authority on what is allowed when, and a\\nsecond time-based authority would contradict it \\xe2\\x80\\x94 `reopen_rsvp` exists\\nprecisely so a latecomer can still reserve after the event has begun.\\nThis earns its place by making events sortable and by letting the UI say\\n\"starts in 3 hours\".",
+          "name": "starts_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "What the event is called. Up to `MAX_TITLE_BYTES` of UTF-8.\\n\\nOn-chain rather than in the off-chain index, and that is the whole reason\\nthe index needs no login: `/api/events/sync` can only store what it can\\nre-read from a contract, so a title it could not verify would be a title\\nanybody could set.",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Phase"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Reserved"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CheckedIn"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Attendance",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Added after the first revision, and keyed separately for that reason \\xe2\\x80\\x94\\nsee `Terms`. An event that predates them has neither key, which is why\\nboth readers below have a default rather than an `unwrap`.",
+            "name": "Admission"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Hosts"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Everyone who has taken their deposit back without the organizer.\\n\\nA list rather than a counter for the same reason `Vouchers` is one: the\\nevidence has to be able to name who, and `finalize` reads its length to\\nknow how much money has already left.",
+            "name": "Reclaimed"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Everyone who has vouched for this guest, at this event.\\n\\nA list rather than a counter because `finalize` has to charge them by\\nname when the guest does not turn up \\xe2\\x80\\x94 a number could say how many were\\nwrong but not which.",
+            "name": "Vouchers",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when somebody puts their record behind a guest.",
+      "lib": "",
+      "name": "Vouched",
+      "prefix_topics": [
+        "vouched"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "voucher",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "How many this guest now has, so a watcher can see the gate open.",
+          "name": "vouches",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Reserved",
+      "prefix_topics": [
+        "reserved"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "deposit",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "spots_left",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ScoreKind",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CheckIn"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NoShow"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "CheckedIn",
+      "prefix_topics": [
+        "checked_in"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "deposit + fee_allowance, returned in this same call.",
+          "name": "refunded",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Finalized",
+      "prefix_topics": [
+        "finalized"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "showed",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "Total deposits forfeited by no-shows.",
+          "name": "forfeited",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HostAdded",
+      "prefix_topics": [
+        "host_added"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where somebody stands with one event.\\n\\nThe first three exist only under `Admission::Approval` and none of them has\\nany money behind it \\xe2\\x80\\x94 an application is a question, and asking it costs\\nnothing. `Reserved` is the first state that means a deposit is locked, which\\nis why it is also the first state the reserved list and the capacity count\\nknow about.",
+      "lib": "",
+      "name": "Attendance",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Asked to come, not yet answered.",
+            "name": "Applied"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Answered yes. May now reserve, and that is when the deposit moves.",
+            "name": "Approved"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Answered no. Terminal, so a declined applicant cannot re-apply their way\\nback into an organizer's inbox.",
+            "name": "Declined"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Reserved"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "CheckedIn"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Took their own deposit back, because the organizer never settled.\\n\\n**Deliberately neither `CheckedIn` nor left as `Reserved`.** A reclaim is\\nnot attendance and it is not absence: the guest recovered their money\\nfrom an event that never happened properly, and the one number this\\nproduct sells must not record that as either. Being its own state is\\nwhat keeps `finalize`'s no-show loop from touching them \\xe2\\x80\\x94 see there.",
+            "name": "Reclaimed"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lock the deposit and reserve a spot. Only while the event is `Reserving`.",
+      "name": "rsvp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ask to come. `Admission::Approval` only, and it moves no money.\\n\\nThe SOW's promise is that nothing is taken before the organizer says\\nyes, so this is two transactions rather than one: `apply` here, then\\n`rsvp` after approval, and the deposit moves in that second one. It has\\nto be the applicant's own transaction. An approval that could pull\\nsomebody's deposit would mean anyone could be charged for being liked.",
+      "name": "apply",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Put your own record behind somebody else. `Admission::Vouch` only.\\n\\nThis is the mechanism that makes a vouch more than a whitelist entry: it\\nis a signed, public statement by a member with a record, and it costs\\nthem if the person they backed does not turn up \\xe2\\x80\\x94 see `finalize`.\\n\\nThree refusals, each closing a different hole:\\n\\n- **A voucher must qualify.** `VOUCH_QUALIFY_SHOWS` shows, *and* no\\nbroken vouch of their own. Without the second half, somebody could\\nwave in strangers forever at the cost of a record that never moves.\\n- **Nobody vouches twice for the same guest.** Otherwise one member\\nmeets a threshold of five on their own and the count means nothing.\\n- **Nobody vouches for themselves.** The same hole, one step shorter.\\n\\nIt moves no money and takes no spot. The guest still has to `rsvp`, and\\nthat is where the deposit goes \\xe2\\x80\\x94 a vouch is permission to reserve, not a\\nreservation.",
+      "name": "vouch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "voucher",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "HostRemoved",
+      "prefix_topics": [
+        "host_removed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PhaseChanged",
+      "prefix_topics": [
+        "phase_changed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "phase",
+          "type_": {
+            "udt": {
+              "name": "Phase"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Let an applicant reserve. Any host.",
+      "name": "approve",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "applicant",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Turn an applicant down. Any host.",
+      "name": "decline",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "applicant",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether `who` may run this event. Everything host-gated is behind the\\nsame check, so a screen can hide the controls it would refuse.",
+      "name": "is_host",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "who",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Start check-in, closing reservations. Any host.\\nTake your own deposit back when the organizer never settled.\\n\\n`open_checkin` and `finalize` both need a host signature, so without this\\nthere is **no path out of a reserved deposit that a guest can take on\\ntheir own**: an organizer who walks away leaves every deposit in this\\ncontract locked forever, recoverable by nobody \\xe2\\x80\\x94 not the guest, not the\\nadmin, not us. That is not a bug, which is why no audit would report it;\\nit is the design working exactly as written. On Mainnet it is the one way\\nShowup could take somebody's money and fail to give it back.\\n\\nThree properties make this safe to expose:\\n\\n- **It touches only the caller's own deposit.** There is no amount\\nargument and no recipient argument, so it can never become a way to\\nempty an event.\\n- **It cannot be used early.** Not until `starts_at` plus\\n`RECLAIM_GRACE_SECONDS`, by which point the organizer has had two days\\npast their own start time to settle.\\n- **It is not a way to dodge a no-show.** A reclaim leav",
+      "name": "reclaim",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Add someone who can run this event alongside the creator. Any host.\\n\\nIdempotent: adding an existing host changes nothing and succeeds, so a\\nretried transaction never turns into an error somebody has to read.",
+      "name": "add_host",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "new_host",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Prove attendance with the organizer's secret and take the deposit back.\\n\\nThis is the only place a guest gets paid on the happy path \\xe2\\x80\\x94 the deposit\\nand the fee reimbursement land in the same call, so there is nothing to\\ncome back and claim later.",
+      "name": "check_in",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "secret",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Close the event and settle the no-shows' deposits. Any host.",
+      "name": "finalize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_phase",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Phase"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The admission mode and the host list, in one read.\\n\\nOne call rather than two getters because a page needs both and every\\nextra RPC read is latency in front of somebody deciding whether to lock\\na deposit. Absent on events deployed before this revision \\xe2\\x80\\x94 a caller\\nthat gets \"function not found\" back is looking at an open event with one\\nhost, and can say so without asking anything else.",
+      "name": "get_terms",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Terms"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Config"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Create the event and fund the fee-reimbursement pool.\\n\\nThe organizer transfers `fee_allowance * capacity` in, so every guest who\\nshows up can be made whole for the fees they spend. Whatever is left over\\n(the no-shows never cost anything) goes back to the organizer on\\n`finalize`.",
+      "name": "initialize",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "organizer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "title",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "starts_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "deposit",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "fee_allowance",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "capacity",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "code_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "policy",
+          "type_": {
+            "udt": {
+              "name": "ForfeitPolicy"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "reputation",
+          "type_": {
+            "option": {
+              "value_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "admission",
+          "type_": {
+            "udt": {
+              "name": "Admission"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when a guest exits a deposit the organizer never settled.\\n\\nWorth watching on its own: every one of these is an event somebody took\\nmoney for and walked away from.",
+      "lib": "",
+      "name": "DepositReclaimed",
+      "prefix_topics": [
+        "deposit_reclaimed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "The deposit, and only the deposit \\xe2\\x80\\x94 see `reclaim`.",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "How many members have vouched for `guest` at this event.",
+      "name": "get_vouches",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Take someone's hosting rights away. Any host, except the creator's.\\n\\nAny host may remove any other, which means co-hosts can remove each\\nother \\xe2\\x80\\x94 deliberately. The creator is permanent, so the worst case is a\\nmess only they can be asked to clean up, and the alternative (only the\\ncreator may remove) leaves an event stuck the moment they are\\nunreachable, which is the exact situation co-hosting exists for.",
+      "name": "remove_host",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "target",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Go back to taking reservations, e.g. to let a latecomer in. Any host.\\n\\nGuests who already checked in keep their refund and stay on the list; this\\nonly reopens the door.",
+      "name": "reopen_rsvp",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "Published when a write to the reputation ledger failed and was swallowed.\\n\\nSwallowing it is deliberate \\xe2\\x80\\x94 see `record_score` \\xe2\\x80\\x94 but swallowing it\\n*silently* would mean a ledger could quietly stop recording and nobody would\\nfind out until someone compared two sets of numbers. This makes every\\ndropped write visible on-chain.",
+      "lib": "",
+      "name": "ReputationSkipped",
+      "prefix_topics": [
+        "reputation_skipped"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "member",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "ScoreKind"
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reserved",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_finalized",
+      "inputs": [],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "open_checkin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "host",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Everyone who took their own deposit back. Empty on a healthy event.",
+      "name": "get_reclaimed",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "One event for both answers, because the interesting thing to watch is that\\nan application was answered at all \\xe2\\x80\\x94 an organizer who approves everybody and\\none who is actually choosing look identical until you read the flag.",
+      "lib": "",
+      "name": "ApplicationAnswered",
+      "prefix_topics": [
+        "application_answered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "applicant",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "approved",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ApplicationReceived",
+      "prefix_topics": [
+        "application_received"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "applicant",
+          "type_": "address",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_attendance",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "guest",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Attendance"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_checked_in",
+      "inputs": [],
+      "outputs": [
+        {
+          "vec": {
+            "element_type": "address"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A member's attendance record, as the event contract reads it.\\n\\nMirrors the reputation contract's own `Score` field for field. It is copied\\nrather than shared because that contract deliberately does not link this\\ncrate \\xe2\\x80\\x94 doing so would publish a `ForfeitPolicy` type on a reputation\\nledger's spec \\xe2\\x80\\x94 and a `#[contracttype]` struct encodes as a map keyed by\\nfield name, so two identical declarations decode each other exactly.",
+      "lib": "",
+      "name": "Score",
+      "fields": [
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What an event needs to know about a would-be voucher.\\n\\nMirrors the reputation ledger's `Record` field for field, and copied rather\\nthan shared for the same reason as `Score` \\xe2\\x80\\x94 see below. Only the fields a\\ngate reads are here: `events_organised` is a profile-page number and putting\\nit on this trait would publish it into the event contract's spec for nothing.",
+      "lib": "",
+      "name": "Record",
+      "fields": [
+        {
+          "doc": "Events they created, took deposits for, and never settled.\\n\\n**Must stay field-for-field with the reputation contract's own `Record`.**\\nThe two are separate declarations on purpose (see below), and a\\n`#[contracttype]` struct is decoded by unpacking a host map into a slice\\nof exactly the declared length \\xe2\\x80\\x94 so a field added on one side and not the\\nother does not degrade, it fails the read outright with \"differing host\\nmap and output slice lengths\". That is what happened when this field was\\nadded to the ledger and not to here: every `vouch` on the event contract\\nstopped working, because the gate reads a record before it opens.",
+          "name": "events_abandoned",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "events_organised",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "no_shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "shows",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vouches_broken",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "vouches_given",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Who is allowed to reserve a spot.\\n\\nFixed at creation and enforced inside the event contract rather than by a\\nscreen, because a gate a frontend applies is a suggestion: anyone can call\\n`rsvp` directly against the contract.",
+      "lib": "",
+      "name": "Admission",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Anyone, first come first served. What every event created so far is.",
+            "name": "Open"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Anyone whose reputation record shows at least this many check-ins.",
+            "name": "Score",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Anyone the organizer says yes to, one at a time.",
+            "name": "Approval"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Anyone vouched for by this many members with a record of their own.",
+            "name": "Vouch",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "Where the deposits of no-shows go when an event is finalized.",
+      "lib": "",
+      "name": "ForfeitPolicy",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "Straight to the organizer.",
+            "name": "ToOrganizer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Split evenly among everyone who checked in.",
+            "name": "SplitAmongAttendees"
+          }
+        }
+      ]
+    }
+  }
+]
