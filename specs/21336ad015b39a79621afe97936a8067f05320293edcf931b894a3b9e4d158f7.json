@@ -1,0 +1,2709 @@
+[
+  {
+    "function_v0": {
+      "doc": "Pay this contract's storage rent without doing anything else.\\n\\nTakes no auth and names no caller. Topping up rent cannot harm\\nanyone -- the caller spends their own fee to extend an entry\\nnobody else is charged for -- and gating it behind a privileged\\nkey would mean a dormant contract could only be rescued by\\nwhoever still held that key.\\n\\nThe internal bumps are lazy on purpose: they act only once an\\nentry is within [`TTL_THRESHOLD`] of archival, so an ordinary\\ncaller almost never pays rent. The cost of that is a lottery.\\nWhen the threshold is finally crossed the whole top-up lands on\\nwhichever transaction is next through the door, and because the\\ninstance bump carries the contract's code entry with it, that is\\nthe largest single entry here. Measured on the roster, whose wasm\\nis half the size of this one: 21.79 XLM for the transaction that\\npaid, 0.095 XLM for the next one.\\n\\nThis is the other half of that design. A keeper calling `bump`\\ntops the entries back up whatever their remaining life, so the\\ncost tracks h",
+      "name": "bump",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Transfer ownership of a spend-mode token: move the owner pointer to\\n`new_owner_commitment`, burning the current owner's claim.\\n\\n`caller.require_auth()` covers the tx fee only \\xe2\\x80\\x94 **ownership is proven by\\nthe Ed25519 owner-key signature, not the tx source**, so any funded\\naccount may relay a spend. The current owner signs\\n`SHA-256(SPEND_AUTH || contract_xdr || slot_id (u32 BE) ||\\nephemeral_key || current_commitment || new_commitment ||\\nspend_nonce (u32 BE))` \\xe2\\x80\\x94 the format in\\n`docs/architecture/spend-mode.md`, which this must agree with letter\\nfor letter; a signer that signs the digest blind relies on it.\\n\\nEach field earns its place. Both commitments stop the spend being\\nreplayed against a moved state and stop an observer swapping the\\nsuccessor; the nonce makes the authorisation good for exactly one\\ntransfer, which the commitments alone do not, because a note that\\nreturns to a commitment it held before reproduces the old digest;\\nthe contract address stops a signature crossing deployments; the\\nslot is the recor",
+      "name": "spend",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "current_owner_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_owner_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "roster",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Dissolve the caller's registered pair. Either member may; the\\npartner's record goes too. Returns the former partner.",
+      "name": "unpair",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "address",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The pair `node` is registered in, if any.",
+      "name": "pair_of",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "RegisteredPair"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A print slot, assembled from its core and its draw. `lapsed` says\\nthe draw is gone.",
+      "name": "get_slot",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "PrintSlot"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "node_fee",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "TokenRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_pairs",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "min_pairs",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "pay_token",
+      "inputs": [],
+      "outputs": [
+        "address"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The selection parameters: beacon, claim window, serve timeout and\\nminimum node age.",
+      "name": "selection",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "SelectionConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay one note's storage rent.\\n\\nA note is persistent entries that nothing touches between\\n`register_token` and redemption, so a note simply *held* for\\nlonger than [`TTL_EXTEND`] is archived while its holder does\\nnothing wrong. Protocol 23 restores it automatically, but hands\\nthe restore fee to whoever next touches the entry -- the holder,\\nat redemption, which is the worst possible moment to surprise\\nsomeone holding a bearer instrument.\\n\\nA wallet can call this instead, for the price of the days that\\nhave passed. No auth, for the same reason as [`Self::bump`], and\\none more: the holder of a bearer note is not an address this\\ncontract knows, so there is nobody to require auth *from*.\\n\\nThe contract's own entries go with it ([`Self::bump_core`]). A\\nnote whose record is live inside a contract whose code or config\\nhas been archived is not redeemable, so paying for one and not\\nthe other buys nothing. With a keeper running, that part is\\nalready paid and costs nothing here.\\n\\nReturns false if the slot holds neither a print",
+      "name": "bump_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim accrued node fees. Callable by any node holding a positive balance,\\nat any time \\xe2\\x80\\x94 earnings are decoupled from the redemption moment, so a node\\nthat was offline when its tokens were redeemed still collects when it next\\ncomes online.",
+      "name": "claim_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seed a slot with its beacon round's signature. Anyone may call it:\\na BLS signature is unique, so whoever posts it has nothing to\\nchoose, and withholding it only delays the print.\\n\\n`signature` is the round's G1 signature, uncompressed. A point off\\nthe curve or outside the subgroup traps in the host before any\\npairing; a valid point that is not this round's signature is\\n`BadBeacon`.",
+      "name": "seed_print",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 96
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether this slot has been redeemed.\\n\\nInformational, and it can lapse: the marker is not bumped, so\\nonce it archives this answers `false` about a note that was\\nredeemed. Nothing safety-critical rests on it. A holder asking\\nwhether a note can still be cashed is answered by `get_token`,\\nwhich returns nothing for a redeemed note and fails closed.",
+      "name": "is_redeemed",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The ledger a slot was redeemed on, if the marker is still live.",
+      "name": "redeemed_at",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Accrued, unclaimed node-fee balance for `node` (0 if none).",
+      "name": "accrued_fees",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "cancel_print",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "confirm_link",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "link_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "partial_public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "All monetary parameters are immutable after construction.\\nNo admin keys, no upgrade path, no fund withdrawal.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "node_fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "pay_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "roster",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "max_print_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "selection",
+          "type_": {
+            "udt": {
+              "name": "SelectionConfig"
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Path A (pure bearer): redeem by proving knowledge of the composed\\nephemeral secret. The holder signs\\n`SHA-256(domain_tag || contract_xdr || slot_id (u32 BE) ||\\nephemeral_key || recipient_xdr)`.\\n\\nThe recipient is in the digest because `require_auth()` does **not**\\nbind it \\xe2\\x80\\x94 that binds whoever submits the transaction, while the\\nsignature would otherwise be a standalone credential anyone could\\nreuse. **Rejects spend-mode tokens** \\xe2\\x80\\x94 those must use\\n[`redeem_by_key_owned`](Self::redeem_by_key_owned).",
+      "name": "redeem_by_key",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "holder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "claim_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register `(node_a, node_b)` as a pair, so it may claim positions on\\nprints requested from the next ledger on.\\n\\nBoth sign; both must be selectable on the roster and old enough\\n(`min_node_age`); and each address is in at most one registered\\npair, so a set of addresses cannot be re-combined per draw. Returns\\nthe registration ledger.",
+      "name": "register_pair",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "node_a",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "node_b",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reserve a slot and escrow the deposit, naming only the depositor's\\nown two end pairs. The interior is chosen by the draw:\\n`seed_print`, then `claim_position`.",
+      "name": "request_print",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "total_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "first_pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "last_pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Seed a slot the beacon never seeded, once its round has been due for\\n`fallback_delay` seconds. Anyone may call it, and the seed is fixed\\nby the slot, so the caller has nothing to choose.\\n\\n**This keeps issuance alive if drand stops**, for minutes or for\\ngood; without it every print would wait out its window and be\\nrefunded. The price is that the fallback seed is computable from\\nthe request onward: while the beacon is down, a depositor can pick\\nthe moment they request, and so their draw. That buys fee capture,\\nthe same as steering always did (`docs/architecture/\\nnode-selection.md`), never another holder's funds. While the beacon\\nis up, round `R` is posted long before the fallback opens, so the\\nfallback is never used.\\n\\nEverything after the seed is unchanged: claims, the window, and the\\nforfeit, which treats a fallback-seeded slot as seeded.",
+      "name": "seed_fallback",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the selected pair at the next position with the best\\nrunner-up, because it did not confirm within `serve_timeout`.\\n\\n**The depositor pays one pair's fee, `2 * node_fee`, burned.** The\\ncontract cannot tell a dead node from a depositor who never sent the\\nextend request, so skipping has to cost something, or it would be a\\nfree way to steer positions toward one's own runners-up. It is\\ncharged from the depositor rather than the escrow, so the escrow\\nstays equal to the note's face.\\n\\nReturns the position skipped.",
+      "name": "skip_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Claim an interior position for the pair `(node_a, node_b)`.\\n\\nBoth members sign: otherwise anyone could enter an honest pair into\\na print it never agreed to serve. The score is\\ncomputed here from the seed and the pair, so it cannot be chosen,\\nand a later claim with a lower score displaces a higher one until\\nselection closes -- being first earns nothing.\\n\\nReturns the claim's rank, 0 being the lowest score so far.",
+      "name": "claim_position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "node_a",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "node_b",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "register_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "chain_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "TokenMode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "initial_owner_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "claim_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "bool",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_token_state",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "TokenState"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_slot_expired",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Path B (pure bearer): redeem by submitting the full signature chain.\\nOn-chain verification of dual Ed25519 signatures + hash chain. Node fees\\naccrue to participants. **Rejects spend-mode tokens** \\xe2\\x80\\x94 those must use\\n[`redeem_by_chain_owned`](Self::redeem_by_chain_owned).",
+      "name": "redeem_by_chain",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "holder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "chain_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "claim_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "max_print_ledgers",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "clear_expired_slot",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Path A for spend-mode tokens: as [`redeem_by_key`](Self::redeem_by_key),\\nplus the current owner opens the live `owner_commitment` and signs\\n`SHA-256(SPEND_REDEEM || contract_xdr || slot_id (u32 BE) ||\\nephemeral_key || owner_commitment || spend_nonce (u32 BE) ||\\nrecipient_xdr)`.",
+      "name": "redeem_by_key_owned",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "holder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Path B for spend-mode tokens: as [`redeem_by_chain`](Self::redeem_by_chain),\\nplus the current owner opens the live `owner_commitment` and signs\\n`SHA-256(SPEND_REDEEM || contract_xdr || slot_id (u32 BE) ||\\nephemeral_key || owner_commitment || spend_nonce (u32 BE) ||\\nrecipient_xdr)`.",
+      "name": "redeem_by_chain_owned",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "holder",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "chain_data",
+          "type_": "bytes"
+        },
+        {
+          "doc": "",
+          "name": "owner_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "owner_signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "i128",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A pair's claim on a print, ranked by `score`.",
+      "lib": "",
+      "name": "Claim",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "`sha256(seed || lower || higher)` over the pair's two addresses'\\nXDR, ordered bytewise. Computed by the mint, never supplied.",
+          "name": "score",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Each member's terms, from the roster at claim time.",
+          "name": "volunteer_a",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "volunteer_b",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidPairCount",
+          "value": 20
+        },
+        {
+          "doc": "",
+          "name": "NodeNotOnRoster",
+          "value": 21
+        },
+        {
+          "doc": "",
+          "name": "SlotNotFound",
+          "value": 22
+        },
+        {
+          "doc": "",
+          "name": "SlotNotPrinting",
+          "value": 23
+        },
+        {
+          "doc": "",
+          "name": "SlotExpired",
+          "value": 24
+        },
+        {
+          "doc": "",
+          "name": "NotAssignedPair",
+          "value": 25
+        },
+        {
+          "doc": "",
+          "name": "LinkOutOfOrder",
+          "value": 26
+        },
+        {
+          "doc": "",
+          "name": "PrintAlreadyComplete",
+          "value": 27
+        },
+        {
+          "doc": "",
+          "name": "NotDepositor",
+          "value": 28
+        },
+        {
+          "doc": "",
+          "name": "PrintNotComplete",
+          "value": 29
+        },
+        {
+          "doc": "",
+          "name": "SlotNotExpired",
+          "value": 30
+        },
+        {
+          "doc": "A pair whose two nodes are the same address, or a node that\\nappears in more than one pair of the same print.\\n\\nA \"pair\" of one node is not a pair: the two-party construction is\\nwhat makes a shard take two parties to produce, and one operator\\nholding both halves of a link -- or every link -- collapses that\\nto a single point of trust while still looking like a chain.",
+          "name": "NodesNotDistinct",
+          "value": 31
+        },
+        {
+          "doc": "This `event_id` has been used by an earlier print.",
+          "name": "EventIdInUse",
+          "value": 32
+        },
+        {
+          "doc": "The slot's beacon round has not been posted yet.",
+          "name": "NotSeeded",
+          "value": 33
+        },
+        {
+          "doc": "`seed_print` on a slot that already has its seed.",
+          "name": "AlreadySeeded",
+          "value": 34
+        },
+        {
+          "doc": "The signature does not verify as the beacon's for this slot's round.",
+          "name": "BadBeacon",
+          "value": 35
+        },
+        {
+          "doc": "No more claims: selection has closed, or the window has passed\\nwith every position filled.",
+          "name": "ClaimsClosed",
+          "value": 36
+        },
+        {
+          "doc": "The claim list is full and this score is not lower than its last.",
+          "name": "ClaimNotCompetitive",
+          "value": 37
+        },
+        {
+          "doc": "Interior links wait for selection: the window has not passed, or\\nfewer pairs than positions have claimed.",
+          "name": "SelectionNotReady",
+          "value": 38
+        },
+        {
+          "doc": "Every runner-up has been used.",
+          "name": "NoBackup",
+          "value": 39
+        },
+        {
+          "doc": "`seed_fallback` before the slot's round has been due for\\n`fallback_delay` seconds.",
+          "name": "FallbackNotReady",
+          "value": 60
+        },
+        {
+          "doc": "",
+          "name": "TokenNotFound",
+          "value": 40
+        },
+        {
+          "doc": "",
+          "name": "TokenNotActive",
+          "value": 41
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRedeemed",
+          "value": 42
+        },
+        {
+          "doc": "",
+          "name": "InvalidSignature",
+          "value": 43
+        },
+        {
+          "doc": "",
+          "name": "ChainVerificationFailed",
+          "value": 44
+        },
+        {
+          "doc": "A record already exists for this slot.\\n\\n**Unreachable in practice, and kept deliberately.** Registration\\nmust never write over an existing entry: `ephemeral_key` is the\\nsum of the partial public keys `confirm_link` publishes, so anyone\\nwatching the ledger can compute one.\\n\\nRecords are keyed by **slot**, and `register_token` requires a\\n`Printing` slot and deletes it, so a second registration is\\nrefused as `SlotNotFound` before this check runs. The check stays because it\\nguards the nullifier directly instead of relying on an invariant\\nabout a different key.\\n\\nNote what is *not* prevented: a redeemed `ephemeral_key` can be\\nregistered again under a **new slot**. That is a separate record\\nwith its own escrow, and it takes nothing from the first.",
+          "name": "TokenExists",
+          "value": 49
+        },
+        {
+          "doc": "",
+          "name": "NothingToClaim",
+          "value": 45
+        },
+        {
+          "doc": "",
+          "name": "NotSpendMode",
+          "value": 46
+        },
+        {
+          "doc": "",
+          "name": "SpendModeRequiresOwner",
+          "value": 47
+        },
+        {
+          "doc": "",
+          "name": "OwnerCommitmentMismatch",
+          "value": 48
+        },
+        {
+          "doc": "A payout or a participant slot named this contract.\\n\\nThe escrow would leave the books and arrive back in the same\\nbalance with nothing recording that it is owed to anyone -- not\\nstolen, but unreachable, and the note consumed.",
+          "name": "PayoutToSelf",
+          "value": 50
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 51
+        },
+        {
+          "doc": "The constructor was given parameters no print could ever satisfy.\\n\\nA mint is immutable, so a deployment that cannot mint is permanent:\\nthe only remedy is to deploy again and tell everyone the old address\\nis dead. Rejecting at construction is the one chance to catch it.",
+          "name": "InvalidConfig",
+          "value": 52
+        },
+        {
+          "doc": "The pair at this position has not yet had `serve_timeout` ledgers.",
+          "name": "ServeTimeoutNotReached",
+          "value": 53
+        },
+        {
+          "doc": "Only the next interior position can be skipped.",
+          "name": "NotSkippable",
+          "value": 54
+        },
+        {
+          "doc": "A member of the pair joined the roster less than `min_node_age`\\nledgers ago.",
+          "name": "NodeTooNew",
+          "value": 55
+        },
+        {
+          "doc": "One of the addresses is already in a registered pair; `unpair` first.",
+          "name": "AlreadyPaired",
+          "value": 56
+        },
+        {
+          "doc": "The caller is in no registered pair.",
+          "name": "NotPaired",
+          "value": 57
+        },
+        {
+          "doc": "The claim is not a pair registered before this slot was requested.",
+          "name": "PairNotRegistered",
+          "value": 58
+        },
+        {
+          "doc": "The slot's draw (`DataKey::Draw`) has lapsed while the slot is\\nstill inside its window. Reachable only on a mint whose window is\\nlonger than the network's `max_entry_ttl`, after that long with no\\nwrite. Cancel still settles it.",
+          "name": "DrawLapsed",
+          "value": 59
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Slot",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A registered note, keyed by the **slot** that produced it.\\n\\nNot keyed by `ephemeral_key`: that is a caller-named value that is\\npublic before its owner registers it (`confirm_link` publishes the\\npartial keys, and `ek` is their sum). With registration refusing to\\noverwrite, an `ek` key would make it \"first to name the key wins\":\\nanyone with a parked completed slot could claim a victim's key the\\nmoment it became computable, and the victim's print could never be\\nregistered at all.\\n\\nA slot id is issued by the contract, not chosen by a caller, so\\ntwo prints cannot collide. Two slots naming the same `ek`\\nare simply two records: each has its own escrow, chain hash and\\nclaim key, and a squatter only puts their own deposit within\\nreach of whoever holds that key.",
+            "name": "Token",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextSlotId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Claimable node-fee balance for a node address (churn-tolerant earnings).\\nCredited at redemption (both paths), drained by `claim_fees`.",
+            "name": "Accrued",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Marks an `event_id` as spent, so no second print can claim it.\\n\\nThe chain hash already binds a chain to its token, so this is not the thing standing between a forged chain and an\\nescrow -- but an `event_id` is how every off-chain party names a\\nprint, and two prints answering to one name is a reconciliation\\nproblem nobody can fix after the fact. Written once per print and\\nnever removed.",
+            "name": "EventIdUsed",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A redeemed slot, and the ledger it was redeemed on.\\n\\nThis replaces the whole `TokenRecord` once a note is paid out.\\nThe record is not needed as the nullifier: a second redemption is refused because\\nthe record it needs is *absent*, not because it is present and\\nsays `Redeemed`. Slot ids come from `NextSlotId` and are never\\nreused, so a deleted slot can never be resurrected -- the\\ncounter is the nullifier, and the ~450-byte record would only pay\\nrent to restate what the counter already guarantees.\\n\\nWhat the marker buys back is the difference between \"redeemed\"\\nand \"never existed\", which absence alone cannot express. It is\\ndeliberately *not* bumped: on-chain reads restore it\\nautomatically when a redemption attempt names it, so refusing a\\ndouble-redeem stays correct forever, while the off-ledger\\nconvenience of `is_redeemed` lapses when it archives. Safety\\ndoes not rest on it -- a holder asking \"can I redeem this?\" is\\nanswered by `get_token` returning nothing.",
+            "name": "Redeemed",
+            "type_": [
+              "u32"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "The pair an address is registered in, and when (`register_pair`).\\n\\nPairs are fixed before a draw so an operator cannot choose which of\\nits addresses to combine after the seed is public: a score is a hash\\nof the combination, so free re-pairing let `n` staked addresses try\\n`n(n-1)/2` pairings against every seed.",
+            "name": "PairOf",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "The growing half of a print slot, in **temporary** storage\\n(`docs/architecture/node-selection.md`, \"Where a slot lives\"): its\\npairs, seed, claims, partial keys and confirmers. `Slot(id)` keeps the escrow and every\\nfixed-size fact, and never changes size after `request_print`.\\n\\nRent is charged on an entry's growth for its whole remaining life,\\nand a persistent entry lives at least 120 days on mainnet whatever\\nthe contract asks. Kept on the slot, a claim would cost a node\\n~0.045 XLM; here it rents at the temporary rate for the print window.",
+            "name": "Draw",
+            "type_": [
+              "u32"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What `DataKey::Slot` stores: the escrow and every fixed-size fact of a\\nprint. Written at `request_print` and rewritten at the **same size**\\nafter, so its 120-day mainnet rent is paid once, by the depositor.\\nAssembled with [`SlotDraw`] into the\\n[`PrintSlot`] every reader sees.",
+      "lib": "",
+      "name": "SlotCore",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "beacon_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "0 until seeded, so it also says whether the slot was seeded.",
+          "name": "claim_deadline",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "completed_links",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "filled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "first_pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "last_pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "last_progress",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "TokenState"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "volunteers",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "What `DataKey::Draw` stores, in temporary storage: the parts of a\\nprint that grow as it is selected and built.",
+      "lib": "",
+      "name": "SlotDraw",
+      "fields": [
+        {
+          "doc": "",
+          "name": "claims",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Claim"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "confirmers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "pairs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "PairEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "partial_keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "seed",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PairEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "node_a",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "node_b",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A pair registered (`registered`) or dissolved (`!registered`).",
+      "lib": "",
+      "name": "PairEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "node_a",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "node_b",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "registered",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PrintSlot",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "The beacon round that seeds this slot, fixed at request.",
+          "name": "beacon_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "The last ledger of the claim window; 0 until seeded.",
+          "name": "claim_deadline",
+          "type_": "u32"
+        },
+        {
+          "doc": "Before closing: every competitive claim, lowest score first,\\ncapped at `2k`. After: the runners-up only, in the order they\\nreplace skipped pairs.",
+          "name": "claims",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Claim"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Whether the interior positions are fixed (`pairs` is complete).",
+          "name": "closed",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "completed_links",
+          "type_": "u32"
+        },
+        {
+          "doc": "Who confirmed each link, in link order.\\n\\n`confirm_link` accepts either member of the assigned pair, and a\\nshard is derivable by one of them alone -- so \"this pair worked\"\\nis not something the chain can see. Only \"this address\\nconfirmed\" is. Abandoned-slot settlement pays the confirmer and\\nnobody else, because that is the whole of what is provable.",
+          "name": "confirmers",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Whether the claim list ever held `k` claims. It never shrinks below\\n`k` before closing, so this is the one fact about the claims the\\nforfeit needs, kept where it outlives the draw.",
+          "name": "filled",
+          "type_": "bool"
+        },
+        {
+          "doc": "The draw (`DataKey::Draw`) has lapsed: `pairs` holds only the end\\npairs and `seed`, `claims`, `partial_keys` and `confirmers` are\\nempty because they are gone, not because nothing happened. Only\\nsettlement works on such a slot.",
+          "name": "lapsed",
+          "type_": "bool"
+        },
+        {
+          "doc": "The ledger the current position became current: when selection\\nclosed, or when the previous link was confirmed or skipped. A skip\\nis allowed `serve_timeout` ledgers after it.",
+          "name": "last_progress",
+          "type_": "u32"
+        },
+        {
+          "doc": "The pairs in chain order, once selection closes.\\n\\nUntil then it holds only the depositor's two end pairs,\\n`[first, last]`: the interior positions are nobody's to name\\nuntil the draw is in. Closing\\ninserts the `k` winning claims between them, and a skip replaces\\none interior entry with a runner-up.",
+          "name": "pairs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "PairEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Each confirmed link's partial public key, in link order.\\n\\n**Published, not checked.** Nothing on-chain reads these: Soroban\\nexposes no Curve25519 point addition, so the contract cannot sum\\nthem and compare against the `ephemeral_key` a depositor supplies\\nto `register_token`. They are here so that anyone watching the\\nledger can do that sum themselves and confirm the key a note\\nclaims is the key its construction produced.\\n\\nThey are therefore evidence for observers, not a constraint on\\nthe depositor. Their presence in the slot is not a binding, and\\nan on-chain reader must not treat it as one.",
+          "name": "partial_keys",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "Set by `seed_print` from that round's verified signature.",
+          "name": "seed",
+          "type_": {
+            "option": {
+              "value_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "TokenState"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "total_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "Which participants volunteer: bit `2i` is pair `i`'s `node_a`,\\nbit `2i + 1` its `node_b`, the same order as\\n`TokenRecord::participants`. A volunteer's fees are burned, not\\ncredited.\\n\\nTaken from the roster's `node_terms` once, when the pair claims\\n(recorded in its [`Claim`]), and set here when selection closes or\\na skip brings in a runner-up. A node is paid on the terms it had\\nwhen it claimed, and nothing after the print has to consult the\\nroster. End pairs are never set: they are the depositor's and draw\\nno fee.\\n`MAX_REDEEMABLE_PAIRS = 12` is 24 participants, inside a `u32`.",
+          "name": "volunteers",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The depositor skipped a selected pair that did not serve, and a\\nrunner-up took its place. `fee` is what the depositor paid to do it,\\nburned.",
+      "lib": "",
+      "name": "SkipEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "position",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "replacement",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "skipped",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "Per-token spend mode, fixed at `register_token`. See\\n`docs/architecture/spend-mode.md`.\\n\\n- `PureBearer` \\xe2\\x80\\x94 whoever holds the bytes can redeem;\\n`owner_commitment` is unused.\\n- `Spend` \\xe2\\x80\\x94 an on-ledger owner pointer (`owner_commitment`) that the current\\nowner moves via `spend` (burning their claim) and that redemption requires\\nopening (the owner-checked redeem paths). Prevents payer double-spend.",
+      "lib": "",
+      "name": "TokenMode",
+      "cases": [
+        {
+          "doc": "",
+          "name": "PureBearer",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Spend",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A claim was accepted at `rank` (0 is the lowest score so far).",
+      "lib": "",
+      "name": "ClaimEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "rank",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "score",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "MintConfig",
+      "fields": [
+        {
+          "doc": "",
+          "name": "max_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "max_print_ledgers",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "min_pairs",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "node_fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "pay_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "roster",
+          "type_": "address"
+        },
+        {
+          "doc": "How interior pairs are chosen.",
+          "name": "selection",
+          "type_": {
+            "udt": {
+              "name": "SelectionConfig"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "start_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "symbol"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The roster's `Node` record, as `get_node` returns it, read here only\\nfor `joined_at` (`min_node_age`).\\n\\nA `contracttype` struct crosses contracts as a map keyed by field\\nname, so this must name the same fields with the same types as\\n`kenter-roster`'s `Node`. The roster is immutable, so it cannot drift\\nunder a deployed mint; `test::the_mock_roster_node_matches` and the\\nsystem test against the real roster are what catch a mismatch here.",
+      "lib": "",
+      "name": "RosterNode",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "joined_at",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "last_heartbeat",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "staked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "unbonding_at",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "volunteer",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted on a spend-mode ownership transfer. Endpoints are opaque commitments;\\nan observer can see the token changed hands but not who to. Successive\\nspends of one token are linkable to each other; that per-token linkage\\nis accepted (see `docs/architecture/spend-mode.md`).",
+      "lib": "",
+      "name": "SpendEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "ephemeral_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "new_owner_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Which record moved. The key alone does not identify one.",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "The nonce **after** this spend. An observer rebuilding owner\\nhistory from events needs it to know where the next\\nauthorisation has to be made.",
+          "name": "spend_nonce",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenState",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Printing",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Redeemed",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Cancelled",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenRecord",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "SHA-256 of the canonical Path-B `chain_data` blob, committed by the\\ndepositor at registration. Binds redemption to the real signed chain so\\na chain cannot be forged from public data (see\\n`docs/architecture/security-model.md`).",
+          "name": "chain_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Public half of the note's **claim key**, fixed at registration.\\n\\nThe secret half travels inside the note container and is never sent\\nto this contract. Path B redemption presents a signature from it\\nrather than the chain preimage alone, which is what stops a\\nredemption being lifted out of the ledger: `chain_data` is published\\nby any attempt, successful or failed, and a failed one leaves the\\nnote Active with its secret in public view.\\n\\nThis does not make the note non-bearer. The key is in the file, not\\ntied to a person: copy the file and you copy the right to redeem.\\nSpend mode is the opposite trade and is already recipient-bound, so\\nit does not need one.",
+          "name": "claim_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "created_at",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Spend mode for this token (fixed at registration).",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "TokenMode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "node_fee",
+          "type_": "u32"
+        },
+        {
+          "doc": "The current owner commitment `SHA-256(\"kntr_v1:spend:owner\" || owner_pubkey)`.\\nOverwritten each `spend`. Unused (and unchecked) when `mode == PureBearer`.",
+          "name": "owner_commitment",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "participants",
+          "type_": {
+            "vec": {
+              "element_type": "address"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "redeemed_at",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "How many times this note has been spent on. Part of both owner\\ndigests, so a signature is good for exactly one transfer.\\n\\nWithout it the digest would be `(ek, current_commitment,\\nnew_commitment)`, which repeats whenever a note returns to an\\nowner commitment it held before \\xe2\\x80\\x94 and the static pay tag (owner\\nindex 0) is a reusable address, so a note coming back as change\\nor a refund does exactly that. The earlier signature would then\\nreplay, and a former payee could take the note back.",
+          "name": "spend_nonce",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "state",
+          "type_": {
+            "udt": {
+              "name": "TokenState"
+            }
+          }
+        },
+        {
+          "doc": "Copied from the slot: which `participants` volunteer. See\\n[`PrintSlot::volunteers`].",
+          "name": "volunteers",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Positions abandoned after a draw, burned out of the escrow at cancel or\\nexpiry.",
+      "lib": "",
+      "name": "ForfeitEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "positions",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A volunteer's fee, destroyed instead of credited.\\n\\nOne per volunteer per settlement, redemption included, so anyone can\\ncheck from events alone that a volunteer was never paid for the\\nsettlements it volunteered on.\\n\\nTerms are per address and fixed when a print is requested. An\\naddress that volunteered from its first join is never credited, so\\nits `Accrued` balance stays at zero. One that converted keeps what it\\naccrued while paid, and is still credited by prints requested before\\nit converted.\\n\\nIf the pay token refused the burn, the settlement also emits a\\n[`FeeLockedEvent`]: the amount stayed in the mint instead, where\\nnothing can move it.",
+      "lib": "",
+      "name": "FeeBurnedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The pay token refused a settlement's burn, so the volunteers' fees\\n(`amount`, the settlement's total) stay in the mint's balance. No\\nentry point can move them: they are no node's `Accrued` and no slot's\\nescrow, so they are as unreachable as burned. A burn that traps\\nwould instead have locked the holder's payout or the depositor's\\nrefund forever.",
+      "lib": "",
+      "name": "FeeLockedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "An address's registered pair (`DataKey::PairOf`).",
+      "lib": "",
+      "name": "RegisteredPair",
+      "fields": [
+        {
+          "doc": "",
+          "name": "partner",
+          "type_": "address"
+        },
+        {
+          "doc": "The ledger the pair was registered in. A pair may claim only on\\nslots requested after it.",
+          "name": "registered_at",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Emitted once per confirmer credited by an abandoned print.\\n\\nRedemption reports its payouts in aggregate on the `Redeem*` events.\\nWithout this, settling a cancelled or expired slot would publish\\nnothing, and a node that had earned a fee could learn of it only by\\npolling `get_accrued` against every slot it ever touched. The amount is what this settlement credited, not the running\\nbalance.",
+      "lib": "",
+      "name": "FeeAccruedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "How nodes select themselves into a print\\n(`docs/architecture/node-selection.md`).\\n\\nImmutable, like the rest of the config. The beacon fields name a drand\\nchain of scheme `bls-unchained-g1-rfc9380` (quicknet). The scheme\\nitself -- hash-to-curve DST, signature group, message -- is fixed in\\nthe contract, so only the chain's own constants are parameters.",
+      "lib": "",
+      "name": "SelectionConfig",
+      "fields": [
+        {
+          "doc": "Unix time of the beacon's round 1.",
+          "name": "beacon_genesis",
+          "type_": "u64"
+        },
+        {
+          "doc": "Rounds between a request and the round that seeds it. The round\\n`round_at(request time) + beacon_lead` must not exist yet when the\\nrequest lands, or a depositor could know the draw in advance.",
+          "name": "beacon_lead",
+          "type_": "u64"
+        },
+        {
+          "doc": "Seconds between rounds.",
+          "name": "beacon_period",
+          "type_": "u64"
+        },
+        {
+          "doc": "The beacon's group key: G2, uncompressed (Soroban's encoding).",
+          "name": "beacon_pk",
+          "type_": {
+            "bytes_n": {
+              "n": 192
+            }
+          }
+        },
+        {
+          "doc": "Ledgers after `seed_print` during which a lower score may still\\ndisplace a higher one.",
+          "name": "claim_window",
+          "type_": "u32"
+        },
+        {
+          "doc": "Seconds after round `R` is due before `seed_fallback` may seed a\\nslot nobody has seeded from the beacon. At least\\n`MIN_FALLBACK_DELAY`.",
+          "name": "fallback_delay",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledgers a node must have been on the roster before it may claim\\n0 turns the check off.",
+          "name": "min_node_age",
+          "type_": "u32"
+        },
+        {
+          "doc": "Ledgers a selected pair has to confirm its link before the\\ndepositor may skip it.",
+          "name": "serve_timeout",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "FeesClaimedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The slot is seeded: pairs may claim until `claim_deadline`.",
+      "lib": "",
+      "name": "PrintSeededEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "beacon_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "claim_deadline",
+          "type_": "u32"
+        },
+        {
+          "doc": "Interior positions to fill (`k`).",
+          "name": "positions",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "seed",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedeemByKeyEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Who submitted the transaction.\\n\\n**Not who was paid.** `redeem_*` takes a separate `recipient`, so\\nan indexer reading this as the payee is wrong every time the two\\ndiffer -- which is the ordinary case for a redemption directed\\nanywhere but the submitter's own account.",
+          "name": "holder",
+          "type_": "address"
+        },
+        {
+          "doc": "Total node fees credited to participants' accrual balances (claimable\\nvia `claim_fees`), not paid instantly.",
+          "name": "node_fees_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "Volunteers' fees, burned. `amount + node_fees_accrued +\\nnode_fees_burned` is the escrow.",
+          "name": "node_fees_burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "Who the escrow was actually paid to.",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Which record was redeemed.\\n\\nThe key does not identify one: records are keyed by slot, so two\\nmay legitimately name the same `ephemeral_key`. `TokenActive` and\\n`Spend` carry it too; the redemption events need it most, since\\nthey are the ones that say where the money went.",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "SlotExpiredEvent",
+      "fields": [
+        {
+          "doc": "As on `PrintCancelledEvent`.",
+          "name": "burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "As on `PrintCancelledEvent`: the settled part of the deposit.",
+          "name": "earned",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "As on `PrintCancelledEvent`.",
+          "name": "forfeited",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "refund",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TokenActiveEvent",
+      "fields": [
+        {
+          "doc": "The **gross** escrow. Node fees come off it at redemption, so\\nthis is not the figure a `Redeem*` event reports.",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "The chain commitment, and the claim key.\\n\\nWithout these an indexer following events alone cannot tell\\nwhich note a given `ephemeral_key` belongs to \\xe2\\x80\\x94 and since\\nrecords are keyed by slot, two of them may legitimately name\\nthe same key.",
+          "name": "chain_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "claim_pubkey",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Who registered it.",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Spend mode, fixed at registration.",
+          "name": "mode",
+          "type_": {
+            "udt": {
+              "name": "TokenMode"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PrintRequestEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "The beacon round whose signature will seed the slot.",
+          "name": "beacon_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "depositor",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "The depositor's own end pairs. The interior is chosen by the draw.",
+          "name": "first_pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "last_pair",
+          "type_": {
+            "udt": {
+              "name": "PairEntry"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "total_pairs",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "LinkConfirmedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "completed_links",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "confirmer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "link_index",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "partial_public_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "The slot was seeded by `seed_fallback` rather than the beacon. Published\\nbeside the ordinary `seeded` event, which carries the seed.",
+      "lib": "",
+      "name": "PrintFallbackEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "beacon_round",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Selection closed: `pairs` is the chain, end pairs included.",
+      "lib": "",
+      "name": "PrintSelectedEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "pairs",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "PairEntry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RedeemByChainEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "ephemeral_key",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Who submitted the transaction. **Not who was paid** -- see\\n[`RedeemByKeyEvent::holder`].",
+          "name": "holder",
+          "type_": "address"
+        },
+        {
+          "doc": "Total node fees credited to participants' accrual balances, claimable\\nvia `claim_fees`. Safe on Path B because the chain hash binds\\nredemption to the real chain.",
+          "name": "node_fees_accrued",
+          "type_": "i128"
+        },
+        {
+          "doc": "Volunteers' fees, burned -- see [`RedeemByKeyEvent::node_fees_burned`].",
+          "name": "node_fees_burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "Who the escrow was actually paid to.",
+          "name": "recipient",
+          "type_": "address"
+        },
+        {
+          "doc": "Which record was redeemed \\xe2\\x80\\x94 see [`RedeemByKeyEvent::slot_id`].",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "PrintCancelledEvent",
+      "fields": [
+        {
+          "doc": "Volunteer confirmers' fees, destroyed rather than paid.",
+          "name": "burned",
+          "type_": "i128"
+        },
+        {
+          "doc": "What the confirmers were paid out of the deposit. `refund +\\nearned + burned` is the whole of it, which is the check a\\ndepositor following events needs.",
+          "name": "earned",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "event_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Abandoned positions' fees, burned.\\n`refund + earned + burned + forfeited` is the deposit.",
+          "name": "forfeited",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "refund",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "slot_id",
+          "type_": "u32"
+        }
+      ]
+    }
+  }
+]

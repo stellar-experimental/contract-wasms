@@ -1,0 +1,577 @@
+[
+  {
+    "function_v0": {
+      "doc": "Pay this contract's storage rent without doing anything else.\\n\\nTakes no auth and names no caller. Topping up rent cannot harm\\nanyone -- the caller spends their own fee to extend an entry\\nnobody else is charged for -- and gating it behind an admin key\\nwould mean a dormant roster could only be rescued by an admin.\\n\\nThe internal bumps are lazy on purpose: [`Self::bump_core`] acts\\nonly once an entry is within [`TTL_THRESHOLD`] of archival, so an\\nordinary caller almost never pays rent. The cost of that is a\\nlottery. When the threshold is finally crossed the whole top-up\\nlands on whichever transaction is next through the door, and\\nbecause the instance bump carries the contract's code entry with\\nit, that is the largest single entry here. Measured on this\\ncontract's own first `join`: 21.79 XLM for the transaction that\\npaid it, 0.095 XLM for the next one, with byte-identical\\nfootprints.\\n\\nThis is the other half of that design. A keeper calling `bump`\\ntops the entries back up whatever their remaining life, so the\\ncost t",
+      "name": "bump",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Join as an ordinary node, paid `node_fee` by the mint for its work.\\n\\nAn address that has ever volunteered joins as a volunteer here\\ntoo: the choice is permanent (see [`Self::volunteer`]).",
+      "name": "join",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Node"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Begin unbonding: stop being selectable immediately, reclaim the stake\\nonly after `unbonding_ledgers` have passed.\\n\\nReturns the ledger at which [`Self::withdraw_stake`] becomes callable.\\n\\nThe delay is the point. Returning the stake on demand would make\\nregistration free in substance \\xe2\\x80\\x94 an attacker could register a fleet,\\nuse it, and exit with the capital intact. Making exit slow is the only\\nSybil lever available here, because node misbehaviour produces no\\non-chain evidence to slash on.",
+      "name": "leave",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "lookup",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "symbol",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "is_node",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_node",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Node"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "heartbeat",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "min_stake",
+      "inputs": [],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Serve without pay: join (or convert) as a node whose fees the\\nmint burns rather than credits.\\n\\n**Why it exists.** The mint and this roster take nothing, but\\nevery interior node is paid `node_fee` on redemption. An operator\\nthat wants to show its nodes collect no fees needs a way to prove\\nit on-chain. Open to anyone, so no list of addresses is fixed at\\ndeploy and the flag says \"takes no fees\", not whose node it is.\\n\\n**Burned, not waived.** A depositor pays the same whoever prints,\\nso volunteers do not undercut paid operators -- they compete on\\nequal terms and cannot profit.\\n\\n**Permanent.** The address is marked for good: a later `leave`,\\n`withdraw_stake` and `join` comes back as a volunteer. Otherwise\\na node could volunteer for a while and switch to paid\\nafterwards, which is the claim this exists to make checkable.\\n\\nA registered paid node converts in place: only the flag changes.\\n`name` and `tunnel_endpoint` are used for a new enrollment and\\nignored on conversion, so converting cannot erase an endpoint the\\nnod",
+      "name": "volunteer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Node"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "RosterConfig"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "[`Self::is_node`] and the node's terms in one read: `None` if the\\naddress is not in the selectable pool, otherwise `Some(volunteer)`.\\n\\nThe mint calls this in place of `is_node` when a node claims a\\nposition (`claim_position`) or a pair registers (`register_pair`),\\nand records the answer with the print -- so\\nredemption never has to ask the roster anything, and a node's\\nterms are the ones it had when it was named.",
+      "name": "node_terms",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "bool"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "update_node",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": {
+            "option": {
+              "value_type": "string"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": {
+            "option": {
+              "value_type": "bool"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Node"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Whether this address has ever volunteered, registered or not.",
+      "name": "is_volunteer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "No admin, and no fee, because there is nobody to collect one.\\n\\nNothing here can remove a node, forfeit a bond or redirect funds\\n(see `docs/architecture/security-model.md`):\\n\\n- **There is nothing provable to punish on.** Failing to serve a\\nshard is not provable and reconstructing a key off-chain leaves\\nno trace, so a removal power would be confiscation on someone's\\nsay-so, not punishment.\\n- **A forfeit could not work anyway.** Burning a stake goes\\nthrough the SAC's `burn`, which Stellar refuses for the native\\nasset, so on an XLM-staked roster every forfeit would revert.\\n- **It would be a liability to the mint.** `confirm_link` requires\\nlive roster membership for interior links, so removing a node\\nduring a print would strand the slot.\\n- **No party can redirect funds.** Every stroop the contract holds\\nbelongs to the node that posted it.\\n\\nThe Sybil price is cost-to-enter and time-to-exit: `min_stake`\\nlocked for `unbonding_ledgers` past `leave`. That is the only\\nlever that is enforceable on-chain.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "min_stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pay_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "unbonding_ledgers",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_node_count",
+      "inputs": [],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Reclaim the stake once unbonding has elapsed, removing the node record.\\n\\nReturns the amount transferred back: the node's whole bond.",
+      "name": "withdraw_stake",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Node",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "address",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "joined_at",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "last_heartbeat",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "staked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": "string"
+        },
+        {
+          "doc": "Ledger at which an unbonding stake becomes withdrawable; `None` when the\\nnode is not unbonding.\\n\\nAn `Option` rather than a `0` sentinel: with a zero unbonding delay at a\\nlow ledger sequence the computed value *is* 0, which a sentinel would\\nread as \"not unbonding\" and the withdrawal would be refused forever.",
+          "name": "unbonding_at",
+          "type_": {
+            "option": {
+              "value_type": "u32"
+            }
+          }
+        },
+        {
+          "doc": "A volunteer serves without pay: the mint burns its fees instead\\nof crediting them. One way only --\\nnothing sets this back to `false`.",
+          "name": "volunteer",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Node",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Config"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NodeCount"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "This address has volunteered. Written once and **never removed**.\\n\\nIt outlives the `Node` record on purpose: `withdraw_stake`\\ndeletes the record, and a flag that lived only there would let\\nan address volunteer for a while, leave, and come back as a\\npaid node. `join` reads this, so a returning volunteer is a\\nvolunteer again whichever entry point it uses.\\n\\n`join` and `heartbeat` bump it alongside the record it governs.\\nEven if it archives, it is restored automatically when a\\ntransaction lists it, and `join` lists it, so the guarantee holds;\\nonly an off-ledger read of the key can lapse, and `get_node`\\nanswers the same question for a node that is registered.",
+            "name": "Volunteer",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "RosterConfig",
+      "fields": [
+        {
+          "doc": "The bond, in stroops of `pay_token`.\\n\\n`i128`, not `u32`. A `u32` would cap one node's bond at\\n429.4967295 XLM -- a permanent ceiling on what a single roster\\nidentity could be made to cost, and the Sybil price is the\\nwhole point of the bond. Token amounts are `i128` everywhere\\nelse in Soroban, and the contract is immutable, so there is no\\nlater moment to widen it.",
+          "name": "min_stake",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "pay_token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "start_ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "symbol",
+          "type_": "symbol"
+        },
+        {
+          "doc": "Ledgers a node must wait between `leave` and reclaiming its stake.\\n\\nThis is what gives roster membership a *cost*. A stake returned on\\ndemand is a deposit, not a barrier: an attacker can register many\\nidentities, use them, and withdraw immediately, so the capital is never\\nactually at risk and the Sybil price is transaction fees. A delay\\nconverts it into capital locked for a period, which is the standard\\nSybil lever and needs no fraud proofs \\xe2\\x80\\x94 useful here precisely because\\nnode misbehaviour (failing to serve, or reconstructing a key off-chain)\\nleaves no on-chain evidence to slash on. See\\n`docs/architecture/security-model.md`.",
+          "name": "unbonding_ledgers",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NodeJoinEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "name",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "staked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": "string"
+        },
+        {
+          "doc": "Joined as a volunteer, whether through `volunteer` or through\\n`join` by an address that had volunteered before.",
+          "name": "volunteer",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NodeLeaveEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "stake_returned",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A node has begun unbonding: no longer selectable, stake not yet returned.",
+      "lib": "",
+      "name": "NodeUnbondEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "staked",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "unbonding_at",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "NodeUpdateEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "tunnel_endpoint",
+          "type_": "string"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A registered paid node has become a volunteer, permanently.",
+      "lib": "",
+      "name": "NodeVolunteerEvent",
+      "fields": [
+        {
+          "doc": "",
+          "name": "node",
+          "type_": "address"
+        }
+      ]
+    }
+  }
+]
