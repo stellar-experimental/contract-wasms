@@ -1,0 +1,863 @@
+[
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "BadAmount",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Exists",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "NotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "NotSender",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "Settled",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "NotMerchant",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "NotVerified",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "NotParty",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "WrongMerchant",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "NotVerifier",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "AlreadyVerified",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "CannotCancel",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "BadExpiry",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "NotExpired",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 15
+        },
+        {
+          "doc": "`register_receipt` before the admin set a receipt signer key.",
+          "name": "NoReceiptSigner",
+          "value": 16
+        },
+        {
+          "doc": "CID is too short, too long, or has non base58/base32 characters.",
+          "name": "BadCid",
+          "value": 17
+        },
+        {
+          "doc": "That receipt hash is already registered.",
+          "name": "ReceiptExists",
+          "value": 18
+        },
+        {
+          "doc": "Receipt not found in the registry.",
+          "name": "ReceiptNotFound",
+          "value": 19
+        },
+        {
+          "doc": "Receipt has already been used to settle a reservation.",
+          "name": "ReceiptAlreadyUsed",
+          "value": 20
+        },
+        {
+          "doc": "Action blocked because the reservation is disputed.",
+          "name": "Disputed",
+          "value": 21
+        },
+        {
+          "doc": "Caller is not authorized to dispute this reservation.",
+          "name": "NotAuthorizedToDispute",
+          "value": 22
+        },
+        {
+          "doc": "Caller is not the admin.",
+          "name": "NotAdmin",
+          "value": 23
+        },
+        {
+          "doc": "Reservation is not disputed.",
+          "name": "NotDisputed",
+          "value": 24
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Verifier"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Treasury"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "NextId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Reservation",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Merchant",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Maps receipt_hash -> reservation_id to prevent receipt reuse.",
+            "name": "ReceiptUsage",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Reservation",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "True if a dispute was opened on this reservation.",
+          "name": "disputed",
+          "type_": "bool"
+        },
+        {
+          "doc": "Unix time from the ledger. Cashout closes at this instant; `refund_expired` opens.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "settled",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "verified",
+          "type_": "bool"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReceiptKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "ed25519 public key (32 bytes) of the TIA receipt signer.",
+            "name": "Signer"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Number of receipts registered so far. Also the last id handed out.",
+            "name": "Count"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Record for one receipt, keyed by its sha256.",
+            "name": "Receipt",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ReceiptRecord",
+      "fields": [
+        {
+          "doc": "IPFS CID of the signed record.",
+          "name": "cid",
+          "type_": "string"
+        },
+        {
+          "doc": "Sequential id, starting at 1.",
+          "name": "id",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger sequence at registration.",
+          "name": "ledger",
+          "type_": "u32"
+        },
+        {
+          "doc": "Ledger timestamp (unix seconds) at registration.",
+          "name": "registered_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Key that signed this receipt. Kept so a later key rotation does not\\nchange what was verified at registration time.",
+          "name": "signer",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Account that paid for and authorized the registration.",
+          "name": "submitter",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set or rotate the ed25519 key whose signatures `register_receipt`\\naccepts. Admin only. Pass the raw 32 bytes of TIA's receipt key\\n(the `G\\xe2\\x80\\xa6` in `TIA_RECEIPT_SECRET`'s public half, decoded).",
+      "name": "set_receipt_signer",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "signer",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anchor a signed TIA receipt on Stellar.\\n\\n* `submitter` must authorize the call (it pays the fee and is recorded).\\n* `cid` must look like an IPFS CID.\\n* `receipt_hash` must not be registered yet.\\n* `signature` must be TIA's ed25519 signature over\\n`nirium-audit-v1:<hex(receipt_hash)>`; the contract verifies it with\\nthe configured signer key and traps if it does not match.\\n\\nStores the record, bumps the counter, emits\\n`(\"receipt\", receipt_hash) -> (id, cid, submitter)` and returns the id.",
+      "name": "register_receipt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "submitter",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receipt_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "cid",
+          "type_": "string"
+        },
+        {
+          "doc": "",
+          "name": "signature",
+          "type_": {
+            "bytes_n": {
+              "n": 64
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read a registered receipt by its sha256. `None` if it was never registered.",
+      "name": "get_receipt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "receipt_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "ReceiptRecord"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "How many receipts have been registered.",
+      "name": "receipt_count",
+      "inputs": [],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The configured receipt signer key, if any.",
+      "name": "receipt_signer",
+      "inputs": [],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "treasury",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "version",
+      "inputs": [],
+      "outputs": [
+        "symbol"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the protocol admin. Only the current admin can call this.",
+      "name": "set_admin",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_admin",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Rotate the verifier allowed to call `mark_verified`. Admin only.\\nThe constructor sets this to the admin.",
+      "name": "set_verifier",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_verifier",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Register or deactivate a merchant. Admin only. `active = false` blocks\\nlater cashouts for that merchant.",
+      "name": "set_merchant_status",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "active",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Lock `amount` of the configured USDC SAC from `sender`.\\nThe contract assigns the reservation id from an instance counter.\\n`merchant` is bound to the reservation and is the only merchant that\\ncan later cash it out. `expiry_seconds` must sit between\\n`MIN_EXPIRY_SECONDS` (1 hour) and `MAX_EXPIRY_SECONDS` (30 days).\\nThe reservation stores the resulting ledger timestamp in `expires_at`.",
+      "name": "initialize_reservation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "sender",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "receiver",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expiry_seconds",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u64",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Mark a reservation verified. The caller must be the TIA admin or the\\nconfigured verifier. The sender cannot verify their own reservation.",
+      "name": "mark_verified",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay the assigned merchant (gross \\xe2\\x88\\x92 25 bps) and treasury (25 bps).\\nRequires the merchant's authorization and the receiver's authorization\\n(proof the receiver collected cash). Fails with `Expired` once\\n`ledger.timestamp >= expires_at`, so cashout and `refund_expired`\\nnever both succeed for the same reservation.",
+      "name": "validate_cashout",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refund locked USDC to the sender if the reservation is not yet settled.",
+      "name": "cancel_reservation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return 100% of a verified, unsettled, expired reservation to the sender.\\nNo fee. The sender may call this, and so may the admin, unless that\\nadmin is the merchant or the receiver. The merchant and the receiver\\ncannot. At `expires_at` cashout is already closed.",
+      "name": "refund_expired",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Settle reservation with a registered TIA receipt. Like `validate_cashout`,\\nbut only releases escrowed funds if a receipt with `receipt_hash` is\\nalready registered and not used. Links the receipt to the reservation,\\nprevents reuse, marks reservation settled, and emits an event.",
+      "name": "settle_with_receipt",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "merchant",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "receipt_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Open a dispute on a reservation. Sender, admin, or verifier can freeze\\nan open reservation. While disputed, validate_cashout, settle_with_receipt,\\ncancel_reservation, and refund_expired are blocked.",
+      "name": "open_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "caller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "reason_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Resolve a dispute. Admin-only. Releases funds to merchant or refunds\\nthe sender, closes the dispute, and emits an event.",
+      "name": "resolve_dispute",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "release_to_merchant",
+          "type_": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "tuple": {
+                "value_types": []
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_reservation",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "reservation_id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Reservation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

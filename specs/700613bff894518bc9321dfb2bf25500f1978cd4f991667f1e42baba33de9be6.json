@@ -1,0 +1,1283 @@
+[
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "config",
+      "inputs": [],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Config"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A pledge by id, while it is still open.",
+      "name": "pledge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Pledge"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Send `amount` of USDC from `from` to recipient `to`, split per `to`'s\\nratio: the spendable part goes straight to `to`'s wallet and the savings\\npart is held here on `to`'s behalf.\\n\\nReturns `(spendable, savings)` amounts.",
+      "name": "receive",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "savings",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Replace the contract code, keeping its id and storage. Admin only.",
+      "name": "upgrade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "position",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "udt": {
+            "name": "Position"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "A recurring remittance by id, if it still has runs left.",
+      "name": "schedule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": {
+              "udt": {
+                "name": "Schedule"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The spendable ratio for `user`, defaulting to 70% if unset.",
+      "name": "get_split",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        }
+      ],
+      "outputs": [
+        "u32"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Choose the spendable ratio (in basis points) for the caller.\\n`spendable_bps` must be between 0 and 10_000; the remainder is saved.",
+      "name": "set_split",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "spendable_bps",
+          "type_": "u32"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Send to several people with one signature: each payment is split by\\nits recipient's own ratio, exactly as `receive` would. Up to\\n`MAX_BATCH` payments. Returns the total sent.",
+      "name": "send_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payments",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "Payment"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pause or resume new money in. Admin only. Exits keep working.",
+      "name": "set_paused",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Run a due recurring remittance. Anyone may call it (a keeper, the\\nrecipient, the sender): the terms were fixed and signed by the sender\\nwhen the schedule was created. If a run is late, the next one is\\ndue `interval` after now, so missed periods never stack up.",
+      "name": "run_schedule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        {
+          "tuple": {
+            "value_types": [
+              "i128",
+              "i128"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Change the per-person cap. Admin only. Lowering it below someone's\\nsavings never blocks remittances to them: new savings go to their\\nwallet until they are back under it.",
+      "name": "set_user_cap",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Runs once, atomically with the deploy, so nobody can initialize the\\ncontract before its owner does. `user_cap` is in token base units.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user_cap",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set aside `amount` for `beneficiary` to spend only on `payee` (school\\nfees, a clinic, rent). The funds leave the sender now and wait here,\\napart from anyone's savings. It can stay open up to 100 days, and\\nduring the beta the open pledges one beneficiary decides on are capped\\nat the per-person cap. Returns the pledge id.",
+      "name": "create_pledge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "beneficiary",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return a token someone sent to the contract by mistake. Admin only.\\nThe configured USDC is refused: it backs users' savings and pledges.",
+      "name": "recover_token",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "After a pledge expires unused, its sender takes the funds back.\\nNever paused.",
+      "name": "refund_pledge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "The beneficiary pays the pledge to its payee. Allowed until it\\nexpires; never paused.",
+      "name": "release_pledge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Stop a recurring remittance. Only its sender can cancel it.",
+      "name": "cancel_schedule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Set up a recurring remittance of `amount` to `to` every `interval`\\nseconds, `runs` times. The first run is due right away. Funds are\\npulled from `from`'s allowance on the token, so `from` must approve\\nthis contract for what all their open schedules still need (SEP-41\\napprove replaces the allowance; the API sums it). The interval is 1\\nminute to 92 days and the last run is at most 170 days after the\\nfirst, so one allowance can fund it. Returns the schedule id.",
+      "name": "create_schedule",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "runs",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        "u64"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Move `amount` of the caller's own USDC from their wallet into their\\nsavings, on top of what remittances already saved. Respects the\\nper-recipient cap and the pause switch. Returns the new savings total.",
+      "name": "deposit_savings",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Pay `amount` from the caller's savings straight to `to` (a school, a\\nclinic, a landlord) without passing through the caller's wallet.\\nLike a withdrawal, it is never paused. Returns the savings left.",
+      "name": "pay_from_savings",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Withdraw `amount` of the caller's savings back to their wallet.\\nReturns the savings left after the withdrawal.",
+      "name": "withdraw_savings",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        "i128"
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Global contract settings, returned by `config`.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool"
+        },
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "user_cap",
+          "type_": "i128"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A conditional remittance: `amount` the sender set aside for a purpose.\\n`beneficiary` (the family) releases it straight to `payee` (a school, a\\nclinic) until `expires_at`; after that only the sender can take it back.",
+      "lib": "",
+      "name": "Pledge",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "beneficiary",
+          "type_": "address"
+        },
+        {
+          "doc": "Ledger timestamp; release allowed up to it, refund only after it.",
+          "name": "expires_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "One payment in a `send_batch` call.",
+      "lib": "",
+      "name": "Payment",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A recipient's position, returned by `position`.",
+      "lib": "",
+      "name": "Position",
+      "fields": [
+        {
+          "doc": "",
+          "name": "savings",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "spendable_bps",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "A recurring remittance, paid from `from` to `to` every `interval` seconds\\nout of the allowance `from` granted this contract on the token.",
+      "lib": "",
+      "name": "Schedule",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address"
+        },
+        {
+          "doc": "Seconds between runs.",
+          "name": "interval",
+          "type_": "u64"
+        },
+        {
+          "doc": "Ledger timestamp from which the next run is allowed.",
+          "name": "next_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Runs left; the schedule is deleted after the last one.",
+          "name": "runs_left",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address"
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "InvalidSplit",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InsufficientSavings",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "CapExceeded",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "Paused",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "InvalidCap",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "ScheduleNotFound",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "ScheduleNotDue",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "InvalidSchedule",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "InvalidBatch",
+          "value": 11
+        },
+        {
+          "doc": "",
+          "name": "PledgeNotFound",
+          "value": 12
+        },
+        {
+          "doc": "",
+          "name": "PledgeExpired",
+          "value": 13
+        },
+        {
+          "doc": "",
+          "name": "PledgeNotExpired",
+          "value": 14
+        },
+        {
+          "doc": "",
+          "name": "InvalidPledge",
+          "value": 15
+        },
+        {
+          "doc": "",
+          "name": "RecoverForbidden",
+          "value": 16
+        },
+        {
+          "doc": "The contract itself cannot be a recipient, payee or beneficiary.",
+          "name": "InvalidRecipient",
+          "value": 17
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A recipient chose (or changed) their spendable/savings ratio.",
+      "lib": "",
+      "name": "SplitSet",
+      "prefix_topics": [
+        "split_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "spendable_bps",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The admin replaced the contract code (same id and storage).",
+      "lib": "",
+      "name": "Upgraded",
+      "prefix_topics": [
+        "upgraded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "new_wasm_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The admin paused or resumed new deposits.",
+      "lib": "",
+      "name": "PausedSet",
+      "prefix_topics": [
+        "paused_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "paused",
+          "type_": "bool",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The admin changed the per-recipient savings cap.",
+      "lib": "",
+      "name": "UserCapSet",
+      "prefix_topics": [
+        "user_cap_set"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user_cap",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A recurring remittance ran (its split is in the FundsReceived event).",
+      "lib": "",
+      "name": "ScheduleRun",
+      "prefix_topics": [
+        "schedule_run"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "runs_left",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A recipient paid someone else directly out of their savings.",
+      "lib": "",
+      "name": "SavingsSpent",
+      "prefix_topics": [
+        "savings_spent"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "remaining",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A remittance was received and split for a recipient.",
+      "lib": "",
+      "name": "FundsReceived",
+      "prefix_topics": [
+        "funds_received"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "spendable",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "savings",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A sender set aside funds for a specific payee (conditional remittance).",
+      "lib": "",
+      "name": "PledgeCreated",
+      "prefix_topics": [
+        "pledge_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "beneficiary",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "expires_at",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "An expired, unused pledge went back to its sender.",
+      "lib": "",
+      "name": "PledgeRefunded",
+      "prefix_topics": [
+        "pledge_refunded"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The beneficiary released a pledge: the payee got paid.",
+      "lib": "",
+      "name": "PledgeReleased",
+      "prefix_topics": [
+        "pledge_released"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "payee",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "The admin returned a token that was sent to the contract by mistake.",
+      "lib": "",
+      "name": "TokenRecovered",
+      "prefix_topics": [
+        "token_recovered"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "token",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A sender set up a recurring remittance.",
+      "lib": "",
+      "name": "ScheduleCreated",
+      "prefix_topics": [
+        "schedule_created"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "from",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "interval",
+          "type_": "u64",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "runs",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A recipient moved their own funds into savings.",
+      "lib": "",
+      "name": "SavingsDeposited",
+      "prefix_topics": [
+        "savings_deposited"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "user",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "total",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A recipient withdrew part or all of their savings.",
+      "lib": "",
+      "name": "SavingsWithdrawn",
+      "prefix_topics": [
+        "savings_withdrawn"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "to",
+          "type_": "address",
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "remaining",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "A sender cancelled a recurring remittance.",
+      "lib": "",
+      "name": "ScheduleCancelled",
+      "prefix_topics": [
+        "schedule_cancelled"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "id",
+          "type_": "u64",
+          "location": "topic_list"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "USDC token contract address used for transfers.",
+            "name": "Token"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Beta cap per person, in token base units: savings above it go to the\\nrecipient's wallet, and open pledges they decide on cannot exceed it.",
+            "name": "UserCap"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "When true, new money in is rejected (remittances, batches, schedules,\\npledges, deposits). Exits are never paused.",
+            "name": "Paused"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-recipient spendable ratio in basis points.",
+            "name": "Split",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Per-recipient savings held by this contract.",
+            "name": "Savings",
+            "type_": [
+              "address"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Id the next recurring remittance will get.",
+            "name": "NextScheduleId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A recurring remittance by id.",
+            "name": "Schedule",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "Id the next pledge will get.",
+            "name": "NextPledgeId"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "A conditional remittance by id.",
+            "name": "Pledge",
+            "type_": [
+              "u64"
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "USDC in open pledges a beneficiary decides on (checked against the cap).",
+            "name": "PledgedFor",
+            "type_": [
+              "address"
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

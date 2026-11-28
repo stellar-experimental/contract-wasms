@@ -1,0 +1,468 @@
+[
+  {
+    "function_v0": {
+      "doc": "Lock funds in escrow. Called by the SELLER.\\nReturns trade_id (32-byte hash).",
+      "name": "lock",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "platform_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "secret_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timeout_minutes",
+          "type_": "u32"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "bytes_n": {
+                "n": 32
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Refund seller after timeout. Can be called by anyone.",
+      "name": "refund",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Return locked funds to the seller before timeout.\\nOnly the buyer stored in the trade may authorize this early cancellation.",
+      "name": "decline",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Release funds to buyer by presenting the secret (preimage).\\nCalled by the BUYER.",
+      "name": "release",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "secret",
+          "type_": "bytes"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Read trade state (view function).",
+      "name": "get_trade",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "TradeEscrow"
+              }
+            },
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Ledger hasta el que la constancia de pago frena `refund` (view function).",
+      "name": "paid_report",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "option": {
+            "value_type": "u32"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Constancia de pago: el BUYER declara que ya entrego el efectivo.\\nSe deja una sola vez, mientras los fondos sigan bloqueados. No mueve\\ndinero: `release` y `decline` siguen igual, y `refund` espera hasta el\\nledger que devuelve (24 horas despues de la constancia, o el timeout si\\nes mas tarde).",
+      "name": "report_paid",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "trade_id",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": {
+              "udt": {
+                "name": "EscrowError"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Atomically configure the contract during deployment.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "token_id",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "platform_wallet",
+          "type_": "address"
+        }
+      ],
+      "outputs": []
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "DataKey",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Admin"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "TokenId"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "PlatformWallet"
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "",
+            "name": "Trade",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        },
+        {
+          "tuple_v0": {
+            "doc": "Constancia de pago del cliente: ledger hasta el que frena `refund`.",
+            "name": "PaidReport",
+            "type_": [
+              {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TradeEscrow",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "buyer",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "platform_fee",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "secret_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "seller",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "TradeStatus"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "timeout_ledger",
+          "type_": "u32"
+        }
+      ]
+    }
+  },
+  {
+    "udt_union_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "TradeStatus",
+      "cases": [
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Locked"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Released"
+          }
+        },
+        {
+          "void_v0": {
+            "doc": "",
+            "name": "Refunded"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "EscrowError",
+      "cases": [
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "AlreadyInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "TradeNotFound",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "InvalidSecret",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "TradeNotLocked",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "TimeoutNotReached",
+          "value": 6
+        },
+        {
+          "doc": "",
+          "name": "TimeoutReached",
+          "value": 7
+        },
+        {
+          "doc": "",
+          "name": "Unauthorized",
+          "value": 8
+        },
+        {
+          "doc": "",
+          "name": "InsufficientAmount",
+          "value": 9
+        },
+        {
+          "doc": "",
+          "name": "TradeAlreadyExists",
+          "value": 10
+        },
+        {
+          "doc": "",
+          "name": "AmountOverflow",
+          "value": 11
+        },
+        {
+          "doc": "El cliente ya dejo su constancia de pago en esta operacion.",
+          "name": "AlreadyReported",
+          "value": 12
+        },
+        {
+          "doc": "Hay constancia de pago y su plazo no ha terminado.",
+          "name": "PaymentReported",
+          "value": 13
+        }
+      ]
+    }
+  }
+]
