@@ -1,0 +1,596 @@
+[
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Kind",
+      "cases": [
+        {
+          "doc": "",
+          "name": "TimePromo",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Going",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "PromoCode",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Qr",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Consumption",
+          "value": 4
+        }
+      ]
+    }
+  },
+  {
+    "udt_error_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Error",
+      "cases": [
+        {
+          "doc": "",
+          "name": "InvalidConfig",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "NotInitialized",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "InvalidAmount",
+          "value": 3
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "State",
+      "fields": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "Unix seconds. 0 while active.",
+          "name": "closed_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "progress_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "progress_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "Immutable rules of the dynamic. `0` means \"not set\" for numeric fields.",
+      "lib": "",
+      "name": "Config",
+      "fields": [
+        {
+          "doc": "sha256 of the canonical config JSON kept in the database.",
+          "name": "config_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "Unix seconds. 0 = no end.",
+          "name": "ends_at",
+          "type_": "u64"
+        },
+        {
+          "doc": "Consumption amount goal in centavos (MXN * 100). Amount mode when > 0.",
+          "name": "goal_amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "Participations / charges that close the dynamic. Unused in amount mode.",
+          "name": "goal_count",
+          "type_": "u32"
+        },
+        {
+          "doc": "",
+          "name": "kind",
+          "type_": {
+            "udt": {
+              "name": "Kind"
+            }
+          }
+        },
+        {
+          "doc": "Consumption minimum ticket in centavos.",
+          "name": "min_ticket",
+          "type_": "i128"
+        },
+        {
+          "doc": "Unix seconds. 0 = starts immediately.",
+          "name": "starts_at",
+          "type_": "u64"
+        }
+      ]
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Status",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Active",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "Exhausted",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Closed",
+      "prefix_topics": [
+        "closed"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "status",
+          "type_": {
+            "udt": {
+              "name": "Status"
+            }
+          },
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "closed_at",
+          "type_": "u64",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "udt_enum_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Outcome",
+      "cases": [
+        {
+          "doc": "",
+          "name": "Recorded",
+          "value": 0
+        },
+        {
+          "doc": "",
+          "name": "AlreadyRecorded",
+          "value": 1
+        },
+        {
+          "doc": "",
+          "name": "Upcoming",
+          "value": 2
+        },
+        {
+          "doc": "",
+          "name": "Exhausted",
+          "value": 3
+        },
+        {
+          "doc": "",
+          "name": "Expired",
+          "value": 4
+        },
+        {
+          "doc": "",
+          "name": "WrongKind",
+          "value": 5
+        },
+        {
+          "doc": "",
+          "name": "BelowMinTicket",
+          "value": 6
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Anyone can pay to keep the contract alive until `ends_at` plus review time.",
+      "name": "bump",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "udt_struct_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ChargeEntry",
+      "fields": [
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        },
+        {
+          "doc": "",
+          "name": "charge_hash",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Closes as `exhausted` (manual close from an edit). No-op when not active.",
+      "name": "close",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Status"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "Participated",
+      "prefix_topics": [
+        "participated"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "participant",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "progress_count",
+          "type_": "u32",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "event_v0": {
+      "doc": "",
+      "lib": "",
+      "name": "ChargeApplied",
+      "prefix_topics": [
+        "charge_applied"
+      ],
+      "params": [
+        {
+          "doc": "",
+          "name": "charge",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          },
+          "location": "topic_list"
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "progress_count",
+          "type_": "u32",
+          "location": "data"
+        },
+        {
+          "doc": "",
+          "name": "progress_amount",
+          "type_": "i128",
+          "location": "data"
+        }
+      ],
+      "data_format": "map"
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Applies the goal/time transition without recording anything. Used by the close worker.",
+      "name": "evaluate",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Status"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "get_state",
+      "inputs": [],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "State"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_charge",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "charge",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Records one participation for going / promo_code / qr dynamics.",
+      "name": "participate",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "participant",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Outcome"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Migration only: loads already-known participations / charges without window checks.\\nCallable in batches while the dynamic is active. Duplicates are ignored.",
+      "name": "import_batch",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "participants",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "bytes_n": {
+                  "n": 32
+                }
+              }
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "charges",
+          "type_": {
+            "vec": {
+              "element_type": {
+                "udt": {
+                  "name": "ChargeEntry"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "u32",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Deploy and initialize in one transaction. `admin` is the custodial server account.",
+      "name": "__constructor",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "admin",
+          "type_": "address"
+        },
+        {
+          "doc": "",
+          "name": "config",
+          "type_": {
+            "udt": {
+              "name": "Config"
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": "void",
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "",
+      "name": "has_participated",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "participant",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        }
+      ],
+      "outputs": [
+        "bool"
+      ]
+    }
+  },
+  {
+    "function_v0": {
+      "doc": "Applies one credited charge to a consumption dynamic. Idempotent per charge.\\n`amount` is in centavos.",
+      "name": "apply_consumption",
+      "inputs": [
+        {
+          "doc": "",
+          "name": "charge",
+          "type_": {
+            "bytes_n": {
+              "n": 32
+            }
+          }
+        },
+        {
+          "doc": "",
+          "name": "amount",
+          "type_": "i128"
+        }
+      ],
+      "outputs": [
+        {
+          "result": {
+            "ok_type": {
+              "udt": {
+                "name": "Outcome"
+              }
+            },
+            "error_type": "error"
+          }
+        }
+      ]
+    }
+  }
+]
